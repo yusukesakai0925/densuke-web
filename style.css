@@ -1,0 +1,72 @@
+:root {
+  --bg: #f7f3ec;
+  --fg: #2a2620;
+  --muted: #7a7268;
+  --accent: #b8895a;
+  --rule: #e3dccf;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Hiragino Kaku Gothic ProN", "游ゴシック", "YuGothic", "Noto Sans JP", sans-serif;
+  line-height: 1.9;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 5rem 1.5rem 6rem;
+}
+
+header {
+  margin-bottom: 3rem;
+}
+
+h1 {
+  font-weight: 500;
+  font-size: 1.6rem;
+  letter-spacing: 0.1em;
+  margin: 0 0 0.6rem;
+}
+
+.lede {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.8;
+  margin: 0;
+}
+
+.about {
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  padding: 2rem 0;
+}
+
+.about p {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+}
+
+.about p:last-child {
+  margin-bottom: 0;
+}
+
+.note {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-style: italic;
+}
+
+footer {
+  margin-top: 4rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-align: center;
+  letter-spacing: 0.08em;
+}
