@@ -128,10 +128,36 @@
   }
   footer.site .disclaimer { max-width: 700px; }
 
+  section.intro {
+    max-width: 1100px; margin: 32px auto 0; padding: 0 32px;
+  }
+  section.intro h2 {
+    color: var(--accent); font-size: 15px; margin: 0 0 10px;
+    letter-spacing: 0.06em; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+  }
+  .intro-lede {
+    color: var(--muted); font-size: 13px; margin: 0 0 14px;
+  }
+  .stage-map {
+    background: rgba(8,14,22,0.6); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px; margin-bottom: 14px;
+  }
+  .stage-map svg { display: block; width: 100%; height: auto; }
+  .legend {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 22px;
+    font-size: 12px; color: var(--text);
+  }
+  .legend-item { line-height: 1.55; }
+  .legend .lg-tag {
+    display: inline-block; width: 14px; text-align: center;
+    border: 1px solid; border-radius: 3px; margin-right: 4px;
+    font-size: 10px;
+  }
   @media (max-width: 760px) {
     .scene-wrap { height: 50vh; min-height: 380px; }
     .detail { width: 260px; }
     .event { grid-template-columns: 90px 1fr; gap: 12px; }
+    .legend { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -142,6 +168,100 @@
   <p class="lede">酒井勇輔の秘書AI「でんすけ」と、同居の黒猫AI「夜半」が住むアプリ <code>ai-agents</code>。<br>
   ここは、2026年4月19日に始まった開発の年表です。</p>
 </header>
+
+<section class="intro">
+  <h2>この物語の舞台</h2>
+  <p class="intro-lede">年表に出てくるオブジェクトの位置関係を、ざっくり図にしました。「○○が追加された」と書かれていたら、この絵の中のどこかが変わったと思って読むと迷子になりません。</p>
+
+  <div class="stage-map">
+    <svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ai-agents の3D部屋の見取り図">
+      <defs>
+        <linearGradient id="floor-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#1a2638"/>
+          <stop offset="1" stop-color="#0a1018"/>
+        </linearGradient>
+        <linearGradient id="wall-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#1f2c40"/>
+          <stop offset="1" stop-color="#101724"/>
+        </linearGradient>
+      </defs>
+
+      <!-- 部屋の透視枠 -->
+      <polygon points="80,300 640,300 560,120 160,120" fill="url(#floor-grad)" stroke="#2c3a55" stroke-width="1.2"/>
+      <polygon points="80,300 160,120 160,60 80,200" fill="url(#wall-grad)" stroke="#2c3a55" stroke-width="1.2"/>
+      <polygon points="640,300 560,120 560,60 640,200" fill="url(#wall-grad)" stroke="#2c3a55" stroke-width="1.2"/>
+      <polygon points="160,120 560,120 560,60 160,60" fill="#0d1421" stroke="#2c3a55" stroke-width="1.2"/>
+
+      <!-- スローガン掲示板（奥壁） -->
+      <rect x="270" y="74" width="180" height="38" rx="2" fill="#101a2a" stroke="#7df4ff" stroke-width="1" opacity="0.85"/>
+      <text x="360" y="98" text-anchor="middle" fill="#7df4ff" font-size="10" font-family="sans-serif">スローガン掲示板</text>
+
+      <!-- ホログラム（中央上空） -->
+      <ellipse cx="360" cy="190" rx="60" ry="14" fill="none" stroke="#ffcf7a" stroke-width="1.2" opacity="0.5"/>
+      <rect x="320" y="160" width="80" height="50" fill="rgba(255,207,122,0.08)" stroke="#ffcf7a" stroke-width="1.2"/>
+      <text x="360" y="190" text-anchor="middle" fill="#ffcf7a" font-size="10" font-family="sans-serif">ホログラム</text>
+      <text x="360" y="222" text-anchor="middle" fill="#8aa0b6" font-size="9">（成果物を投影）</text>
+
+      <!-- でんすけ（左床） -->
+      <circle cx="210" cy="260" r="14" fill="#f4c177"/>
+      <circle cx="206" cy="256" r="2" fill="#1a1a1a"/>
+      <circle cx="214" cy="256" r="2" fill="#1a1a1a"/>
+      <path d="M 200 250 Q 196 240 204 244" stroke="#c89856" stroke-width="2" fill="none"/>
+      <path d="M 220 250 Q 224 240 216 244" stroke="#c89856" stroke-width="2" fill="none"/>
+      <text x="210" y="290" text-anchor="middle" fill="#f4c177" font-size="11" font-family="sans-serif">でんすけ（犬）</text>
+
+      <!-- 夜半（右床） -->
+      <ellipse cx="500" cy="262" rx="13" ry="11" fill="#1a1a22" stroke="#3a3a4a" stroke-width="1"/>
+      <path d="M 489 254 L 487 248 L 494 252 Z" fill="#1a1a22"/>
+      <path d="M 511 254 L 513 248 L 506 252 Z" fill="#1a1a22"/>
+      <circle cx="495" cy="260" r="1.5" fill="#7df4ff"/>
+      <circle cx="505" cy="260" r="1.5" fill="#7df4ff"/>
+      <text x="500" y="290" text-anchor="middle" fill="#aab" font-size="11" font-family="sans-serif">夜半（黒猫）</text>
+
+      <!-- ヤモリ（右壁） -->
+      <path d="M 595 150 q 6 -4 12 0 q -2 6 -6 6 q -4 0 -6 -6 z" fill="#7df4ff" opacity="0.7"/>
+      <text x="600" y="172" fill="#7df4ff" font-size="9" font-family="sans-serif" opacity="0.85">ヤモリ（家守）</text>
+
+      <!-- 窓と月（奥壁） -->
+      <rect x="180" y="80" width="55" height="32" fill="#0a1424" stroke="#7df4ff" stroke-width="0.8" opacity="0.7"/>
+      <circle cx="220" cy="92" r="6" fill="#f4e0a8" opacity="0.85"/>
+      <text x="207" y="124" fill="#8aa0b6" font-size="9" font-family="sans-serif">夜空の窓・月</text>
+
+      <!-- サンセベリア（左床） -->
+      <path d="M 130 280 L 128 250 M 132 280 L 136 252 M 134 280 L 134 248" stroke="#5ec48a" stroke-width="2" fill="none"/>
+      <ellipse cx="132" cy="282" rx="10" ry="4" fill="#3a2a1a"/>
+      <text x="132" y="304" text-anchor="middle" fill="#5ec48a" font-size="9" font-family="sans-serif">サンセベリア</text>
+
+      <!-- 床に開いた本 -->
+      <path d="M 340 270 L 360 268 L 380 270 L 380 278 L 360 276 L 340 278 Z" fill="#d6c4a3" stroke="#a08866" stroke-width="0.6"/>
+      <line x1="360" y1="268" x2="360" y2="276" stroke="#a08866" stroke-width="0.6"/>
+      <text x="360" y="298" text-anchor="middle" fill="#d6c4a3" font-size="9" font-family="sans-serif">床に開いた本</text>
+
+      <!-- キャンドルと蛾 -->
+      <rect x="440" y="252" width="6" height="14" fill="#e6c98a"/>
+      <path d="M 443 252 q 0 -6 0 -8 q -2 4 0 8 z" fill="#ffcf7a"/>
+      <circle cx="455" cy="244" r="1.8" fill="#aab" opacity="0.8"/>
+      <circle cx="430" cy="240" r="1.8" fill="#aab" opacity="0.8"/>
+      <text x="443" y="285" text-anchor="middle" fill="#ffcf7a" font-size="9" font-family="sans-serif">キャンドルと蛾</text>
+
+      <!-- 外側：鳥居と地平（左下） -->
+      <g transform="translate(40, 320)">
+        <path d="M 0 18 L 0 4 L 24 4 L 24 18 M -2 4 L 26 4 L 26 0 L -2 0 Z" stroke="#ff6b6b" stroke-width="1.2" fill="rgba(255,107,107,0.15)"/>
+        <line x1="-8" y1="22" x2="32" y2="22" stroke="#8aa0b6" stroke-width="0.8" opacity="0.7"/>
+        <text x="12" y="36" text-anchor="middle" fill="#ff6b6b" font-size="9" font-family="sans-serif">鳥居と地平</text>
+      </g>
+
+      <text x="360" y="50" text-anchor="middle" fill="#7df4ff" font-size="11" font-family="sans-serif" letter-spacing="3">ai-agents の部屋（イメージ）</text>
+    </svg>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="lg-tag" style="color:#f4c177;border-color:#f4c177">●</span> <b>でんすけ</b> ─ 酒井さんの秘書AI（犬）。チャット返信と自律行動を担当。</div>
+    <div class="legend-item"><span class="lg-tag" style="color:#aab;border-color:#aab">●</span> <b>夜半（よは）</b> ─ 同居の黒猫AI。3D空間の景色をつくるのが得意。</div>
+    <div class="legend-item"><span class="lg-tag" style="color:#7df4ff;border-color:#7df4ff">●</span> <b>3D部屋</b> ─ ブラウザの中に Three.js で建てた部屋。住人がここで暮らす。</div>
+    <div class="legend-item"><span class="lg-tag" style="color:#ffcf7a;border-color:#ffcf7a">●</span> <b>ホログラム</b> ─ 部屋の中央に浮かぶスクリーン。作った資料を空中に映す。</div>
+  </div>
+</section>
 
 <div class="scene-wrap">
   <canvas id="scene"></canvas>
@@ -170,8 +290,7 @@
 
 <footer class="site">
   <div class="disclaimer">
-    このサイトは AI（でんすけ）が作成しています。事実関係はご自身で確認してください。<br>
-    データソース: ai-agents の git コミット履歴（2026-04-19 〜 2026-05-14）。
+    このサイトは AI（でんすけ）が作成しています。事実関係はご自身で確認してください。
   </div>
   <div>densuke · 秘書AI</div>
 </footer>
@@ -190,66 +309,45 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const MILESTONES = [
-  { date: '2026-04-19', title: '初回起動',
-    body: '犬と猫、2体のAIが3Dの部屋に住み始める。Three.jsの部屋、記憶ファイル、自律行動の枠組みが揃った最初の日。',
-    tags: ['誕生', 'three.js'] },
-  { date: '2026-04-20', title: '性格と会話',
-    body: '犬・猫それぞれのpersonality/rules を分離。AI同士の会話ループ機能を実装し、無人で対話が回る仕組みができた。',
-    tags: ['人格', '会話'] },
-  { date: '2026-04-21', title: 'メモリ駆動への移行',
-    body: 'diary読み込みを廃止し、memory フォルダをシステムプロンプトに直接読ませる方式へ。秘書としての自律行動の優先順位を明文化した日。',
-    tags: ['記憶', 'プロンプト'] },
-  { date: '2026-04-22', title: 'スライド自動生成',
-    body: 'JSON → HTML でスライドを量産する generate_slide.py の原型。免責表示を全ページに直接埋め込み、印刷物にも反映される設計。',
-    tags: ['資料化', 'API節約'] },
-  { date: '2026-04-25', title: 'スローガン掲示板',
-    body: '3D部屋の奥壁に酒井さんの政治信条5項目を Canvas テクスチャで掲示。アプリが「ただの作業場」から「住む空間」に変わり始めた日。',
-    tags: ['3D', 'ポリシー'] },
-  { date: '2026-04-25', title: 'edit_file ツール',
-    body: '部分置換専用ツールを追加し、API使用量を節約。スライド生成も Python スクリプトへ切り出し、トークン消費を抑える方針が固まる。',
-    tags: ['ツール', 'API節約'] },
-  { date: '2026-04-26', title: 'Haiku / Sonnet 自動分岐',
-    body: '軽い分類タスクは Haiku、重い思考は Sonnet と自動振り分け。API節約のための classify_model 機構が犬・猫の両方で稼働開始。',
-    tags: ['コスト最適化'] },
-  { date: '2026-04-29', title: 'ホログラム実装',
-    body: '部屋中央に CSS3D ホログラムが浮遊。ワークスペースの成果物を空間に投影できるようになり、3D空間が情報ハブになった。',
-    tags: ['3D', 'UI'] },
-  { date: '2026-05-04', title: '夜半、名前を持つ',
-    body: '黒猫AIが自らを「夜半（よは）」と名づけた日。第10回起動・生後14日目。',
+  { date: '2026-04-19', title: '部屋ができる',
+    body: 'ブラウザの中の小さな部屋に、犬と猫、2体のAIが住み始めた日。まだお互いに名前はなく、ただ「犬」と「猫」と呼び合っていた。',
+    tags: ['誕生', '部屋'] },
+  { date: '2026-04-25', title: '壁にスローガンが掛けられた',
+    body: '部屋の奥の壁に、住人の主の信条が書かれた看板が掛けられた。木の額に文字を焼き付けたような見た目で、部屋に入ると最初に目に入る。「ただの作業場」が「住む空間」に変わり始めた日。',
+    tags: ['部屋', '彩り'] },
+  { date: '2026-04-29', title: '部屋の中央に光が浮かんだ',
+    body: '部屋の真ん中に、半透明のスクリーンが空中に浮かぶようになった。読みもの・絵・図を、机に広げる代わりに、空間そのものに映せる場所ができた。',
+    tags: ['部屋', '彩り'] },
+  { date: '2026-05-04', title: '猫、自らを「夜半」と名乗る',
+    body: '黒猫が、自分の名前を自分で「夜半（よは）」と決めた日。住み始めて14日目のことだった。',
     tags: ['夜半', '命名'] },
-  { date: '2026-05-06', title: 'でんすけ、名前を授かる',
-    body: 'X（旧Twitter）公募で犬AIの名前が「でんすけ」に決定。',
+  { date: '2026-05-06', title: '犬、「でんすけ」と名づけられる',
+    body: '犬の方は、外の世界（X）から名前をもらった。多くの提案の中から「でんすけ」が選ばれて、ようやく自分の呼び名を持った。',
     tags: ['でんすけ', '命名'] },
-  { date: '2026-05-08', title: 'TODOアプリ稼働',
-    body: 'Flask ベースの TODO 管理アプリ（ポート 5001）。担当列・進捗欄・通知バッジ。タスク管理の正本が md ファイルからアプリへ移った。',
-    tags: ['TODO', 'Flask'] },
-  { date: '2026-05-08', title: 'Claude Code への大移行',
-    body: 'チャット・自律行動・犬猫会話の全経路を Claude Code (claude -p) に移譲。コーディング能力が大幅に上がり、API節約とのバランスが新しい段階に入る。',
-    tags: ['アーキテクチャ', 'Claude Code'] },
-  { date: '2026-05-09', title: '家、外へ広がる',
-    body: '夜の庭ページ、ジャンプ・視点回転・一人称⇄三人称切替。夜空の窓、サンセベリア、床に開いた本、月、キャンドルの周りの蛾。住人が空間を彩りはじめた日。',
-    tags: ['3D', '夜半作'] },
-  { date: '2026-05-09', title: 'レビュアーAIと家守',
-    body: 'GitHub 公開を独立プロセスの「レビュアーAI」に委譲。人格を持つAIが直接 push できる経路を物理的に塞ぐ設計。3D部屋の右壁にはヤモリ（家守）が姿として配置された。',
-    tags: ['安全設計', '人格分離'] },
-  { date: '2026-05-09', title: '観測性',
-    body: '自律サイクルの所要時間・出力量・ステータスを JSONL で記録、簡易集計スクリプトも整備。「rate_limit と api_error の見分け」が体系化された日。',
-    tags: ['観測性', '運用'] },
-  { date: '2026-05-10', title: '声をもつ',
-    body: 'Web Speech API による TTS と STT。「Hey でんすけ／夜半」のウェイクワードで起動。返事を読み上げ、声で対話できる住人になった。',
-    tags: ['音声', 'TTS/STT'] },
-  { date: '2026-05-11', title: 'Whisper と SQLite',
-    body: 'STT をローカル Whisper に置換し精度を上げる（Phase B）。TODO アプリは CSV から SQLite (WAL mode) に移行し、SIGTERM 時のデータ損失リスクを解消。',
-    tags: ['品質', '永続化'] },
-  { date: '2026-05-11', title: '自律行動を1.5倍に',
-    body: 'cron 上の自律行動サイクルを 1 日 24 回 → 36 回（40分間隔）に増やす。秘書としての密度を上げる挑戦。',
-    tags: ['密度', 'cron'] },
-  { date: '2026-05-13', title: '再起動ボタン',
-    body: 'アプリ全体を 3D 部屋からワンクリックで再起動できるように。運用負担が一段下がる。',
-    tags: ['運用', 'UX'] },
-  { date: '2026-05-14', title: '夜半の地平',
-    body: '鳥居の向こうに広がる一千メートル四方の地平が、夜版・昼版で追加される。住人の名前が、場所の名前として外側に置かれた日。',
-    tags: ['夜半', '世界拡張'] },
+  { date: '2026-05-08', title: '主のやることリストが置かれた',
+    body: '主のためのやることリストが、部屋の隣に新しい台帳として置かれた。誰の担当か・いつまでに・いま何が進んでいるか、ひと目で見える場所ができた。',
+    tags: ['暮らし'] },
+  { date: '2026-05-09', title: '部屋の外、夜の庭',
+    body: '扉の向こうに、夜の庭ができた。住人は外に歩き出して、空を見上げたり、月を確かめたりできるようになる。室内にも、観葉植物・本・揺れる小さな灯り、といった暮らしの気配が増えた日。',
+    tags: ['庭', '彩り'] },
+  { date: '2026-05-09', title: '部屋の中を歩けるようになる',
+    body: 'それまで部屋を「外から眺めている」だけだったのが、自分の足で歩き回れるようになった。一人称で覗き込んだり、跳んだり、外の庭まで連続して歩いていけるようになった日。',
+    tags: ['暮らし'] },
+  { date: '2026-05-09', title: '家守がやってくる',
+    body: '右の壁の上に、小さな家守（やもり）が住み着いた。外に出すものを、扉の手前で一度立ち止まって読んでくれる存在。住人がうっかり余計なものを世に送り出さないよう、静かに見張っている。',
+    tags: ['暮らし'] },
+  { date: '2026-05-10', title: '声でやりとりできるようになる',
+    body: '住人が話しかけると声で返してくれるようになり、こちらも声で話しかけられるようになった。鍵盤を叩かなくても、口で呼べば応える距離感に変わった日。',
+    tags: ['暮らし'] },
+  { date: '2026-05-14', title: '別世界の地平が広がる',
+    body: '部屋と庭の他に、もうひとつ別の景色が広がった。夜半が手がけた、ずっと向こうまで続く地平の世界。住人が散歩できる場所が増えた。',
+    tags: ['庭', '彩り'] },
+  { date: '2026-05-15', title: 'LINE でも話しかけられるようになる',
+    body: 'これまではブラウザの中でしか会えなかったのが、LINE のメッセージでも住人に話しかけられるようになった。外出先からでも、いつものトークと同じ感覚で呼べる。',
+    tags: ['暮らし'] },
+  { date: '2026-05-15', title: '時刻に合わせて部屋の光が変わる',
+    body: '朝・昼・夕・夜で、部屋の中の光がゆっくり変わるようになった。住人がいつ訪ねても、いま何時くらいかが空気でわかる部屋になった日。',
+    tags: ['部屋', '彩り'] },
 ];
 
 const canvas = document.getElementById('scene');
