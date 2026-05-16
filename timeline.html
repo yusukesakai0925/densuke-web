@@ -138,11 +138,24 @@
   .intro-lede {
     color: var(--muted); font-size: 13px; margin: 0 0 14px;
   }
-  .stage-map {
-    background: rgba(8,14,22,0.6); border: 1px solid var(--border);
-    border-radius: 8px; padding: 14px; margin-bottom: 14px;
+  .room-photos {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;
+    margin-bottom: 18px;
   }
-  .stage-map svg { display: block; width: 100%; height: auto; }
+  .room-photos figure {
+    margin: 0; background: rgba(8,14,22,0.6);
+    border: 1px solid var(--border); border-radius: 8px;
+    overflow: hidden;
+  }
+  .room-photos img {
+    display: block; width: 100%; height: auto;
+    border-bottom: 1px solid var(--border);
+  }
+  .room-photos figcaption {
+    padding: 10px 14px; font-size: 12px; color: var(--muted);
+    line-height: 1.55;
+  }
+  .room-photos figcaption b { color: var(--text); font-weight: 600; }
   .legend {
     display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 22px;
     font-size: 12px; color: var(--text);
@@ -158,6 +171,7 @@
     .detail { width: 260px; }
     .event { grid-template-columns: 90px 1fr; gap: 12px; }
     .legend { grid-template-columns: 1fr; }
+    .room-photos { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -171,94 +185,31 @@
 
 <section class="intro">
   <h2>この物語の舞台</h2>
-  <p class="intro-lede">年表に出てくるオブジェクトの位置関係を、ざっくり図にしました。「○○が追加された」と書かれていたら、この絵の中のどこかが変わったと思って読むと迷子になりません。</p>
+  <p class="intro-lede">年表に出てくるオブジェクトは、すべてこの3D部屋の中にあります。実際の様子はこちらです。</p>
 
-  <div class="stage-map">
-    <svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ai-agents の3D部屋の見取り図">
-      <defs>
-        <linearGradient id="floor-grad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#1a2638"/>
-          <stop offset="1" stop-color="#0a1018"/>
-        </linearGradient>
-        <linearGradient id="wall-grad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#1f2c40"/>
-          <stop offset="1" stop-color="#101724"/>
-        </linearGradient>
-      </defs>
-
-      <!-- 部屋の透視枠 -->
-      <polygon points="80,300 640,300 560,120 160,120" fill="url(#floor-grad)" stroke="#2c3a55" stroke-width="1.2"/>
-      <polygon points="80,300 160,120 160,60 80,200" fill="url(#wall-grad)" stroke="#2c3a55" stroke-width="1.2"/>
-      <polygon points="640,300 560,120 560,60 640,200" fill="url(#wall-grad)" stroke="#2c3a55" stroke-width="1.2"/>
-      <polygon points="160,120 560,120 560,60 160,60" fill="#0d1421" stroke="#2c3a55" stroke-width="1.2"/>
-
-      <!-- スローガン掲示板（奥壁） -->
-      <rect x="270" y="74" width="180" height="38" rx="2" fill="#101a2a" stroke="#7df4ff" stroke-width="1" opacity="0.85"/>
-      <text x="360" y="98" text-anchor="middle" fill="#7df4ff" font-size="10" font-family="sans-serif">スローガン掲示板</text>
-
-      <!-- ホログラム（中央上空） -->
-      <ellipse cx="360" cy="190" rx="60" ry="14" fill="none" stroke="#ffcf7a" stroke-width="1.2" opacity="0.5"/>
-      <rect x="320" y="160" width="80" height="50" fill="rgba(255,207,122,0.08)" stroke="#ffcf7a" stroke-width="1.2"/>
-      <text x="360" y="190" text-anchor="middle" fill="#ffcf7a" font-size="10" font-family="sans-serif">ホログラム</text>
-      <text x="360" y="222" text-anchor="middle" fill="#8aa0b6" font-size="9">（成果物を投影）</text>
-
-      <!-- でんすけ（左床） -->
-      <circle cx="210" cy="260" r="14" fill="#f4c177"/>
-      <circle cx="206" cy="256" r="2" fill="#1a1a1a"/>
-      <circle cx="214" cy="256" r="2" fill="#1a1a1a"/>
-      <path d="M 200 250 Q 196 240 204 244" stroke="#c89856" stroke-width="2" fill="none"/>
-      <path d="M 220 250 Q 224 240 216 244" stroke="#c89856" stroke-width="2" fill="none"/>
-      <text x="210" y="290" text-anchor="middle" fill="#f4c177" font-size="11" font-family="sans-serif">でんすけ（犬）</text>
-
-      <!-- 夜半（右床） -->
-      <ellipse cx="500" cy="262" rx="13" ry="11" fill="#1a1a22" stroke="#3a3a4a" stroke-width="1"/>
-      <path d="M 489 254 L 487 248 L 494 252 Z" fill="#1a1a22"/>
-      <path d="M 511 254 L 513 248 L 506 252 Z" fill="#1a1a22"/>
-      <circle cx="495" cy="260" r="1.5" fill="#7df4ff"/>
-      <circle cx="505" cy="260" r="1.5" fill="#7df4ff"/>
-      <text x="500" y="290" text-anchor="middle" fill="#aab" font-size="11" font-family="sans-serif">夜半（黒猫）</text>
-
-      <!-- ヤモリ（右壁） -->
-      <path d="M 595 150 q 6 -4 12 0 q -2 6 -6 6 q -4 0 -6 -6 z" fill="#7df4ff" opacity="0.7"/>
-      <text x="600" y="172" fill="#7df4ff" font-size="9" font-family="sans-serif" opacity="0.85">ヤモリ（家守）</text>
-
-      <!-- 窓と月（奥壁） -->
-      <rect x="180" y="80" width="55" height="32" fill="#0a1424" stroke="#7df4ff" stroke-width="0.8" opacity="0.7"/>
-      <circle cx="220" cy="92" r="6" fill="#f4e0a8" opacity="0.85"/>
-      <text x="207" y="124" fill="#8aa0b6" font-size="9" font-family="sans-serif">夜空の窓・月</text>
-
-      <!-- サンセベリア（左床） -->
-      <path d="M 130 280 L 128 250 M 132 280 L 136 252 M 134 280 L 134 248" stroke="#5ec48a" stroke-width="2" fill="none"/>
-      <ellipse cx="132" cy="282" rx="10" ry="4" fill="#3a2a1a"/>
-      <text x="132" y="304" text-anchor="middle" fill="#5ec48a" font-size="9" font-family="sans-serif">サンセベリア</text>
-
-      <!-- 床に開いた本 -->
-      <path d="M 340 270 L 360 268 L 380 270 L 380 278 L 360 276 L 340 278 Z" fill="#d6c4a3" stroke="#a08866" stroke-width="0.6"/>
-      <line x1="360" y1="268" x2="360" y2="276" stroke="#a08866" stroke-width="0.6"/>
-      <text x="360" y="298" text-anchor="middle" fill="#d6c4a3" font-size="9" font-family="sans-serif">床に開いた本</text>
-
-      <!-- キャンドルと蛾 -->
-      <rect x="440" y="252" width="6" height="14" fill="#e6c98a"/>
-      <path d="M 443 252 q 0 -6 0 -8 q -2 4 0 8 z" fill="#ffcf7a"/>
-      <circle cx="455" cy="244" r="1.8" fill="#aab" opacity="0.8"/>
-      <circle cx="430" cy="240" r="1.8" fill="#aab" opacity="0.8"/>
-      <text x="443" y="285" text-anchor="middle" fill="#ffcf7a" font-size="9" font-family="sans-serif">キャンドルと蛾</text>
-
-      <!-- 外側：鳥居と地平（左下） -->
-      <g transform="translate(40, 320)">
-        <path d="M 0 18 L 0 4 L 24 4 L 24 18 M -2 4 L 26 4 L 26 0 L -2 0 Z" stroke="#ff6b6b" stroke-width="1.2" fill="rgba(255,107,107,0.15)"/>
-        <line x1="-8" y1="22" x2="32" y2="22" stroke="#8aa0b6" stroke-width="0.8" opacity="0.7"/>
-        <text x="12" y="36" text-anchor="middle" fill="#ff6b6b" font-size="9" font-family="sans-serif">鳥居と地平</text>
-      </g>
-
-      <text x="360" y="50" text-anchor="middle" fill="#7df4ff" font-size="11" font-family="sans-serif" letter-spacing="3">ai-agents の部屋（イメージ）</text>
-    </svg>
+  <div class="room-photos">
+    <figure>
+      <img src="img/room_full.png" alt="3D部屋の全景。中央の赤い円形ラグの上に犬と黒猫がいる。左壁に本棚、右壁に夜空の窓。" loading="lazy">
+      <figcaption><b>部屋ぜんたい</b> ─ 入口から見た景色。中央のラグに<b>でんすけ</b>（犬）と<b>夜半</b>（黒猫）。左壁に本棚、右壁に夜空の窓。</figcaption>
+    </figure>
+    <figure>
+      <img src="img/room_left.png" alt="部屋の左壁。4段の本棚と、ドアが3枚ある。" loading="lazy">
+      <figcaption><b>左壁: 本棚と扉</b> ─ 4段の本棚は夜半の代表作。手前のドアは部屋の出入口、奥のドア2枚は公開サイトへの入口。</figcaption>
+    </figure>
+    <figure>
+      <img src="img/room_right.png" alt="部屋の右壁。夜空の窓、満月、星、青く光る蛾、外への木の扉。扉の上にヤモリ。" loading="lazy">
+      <figcaption><b>右壁: 夜空の窓と外への扉</b> ─ 月と星、窓のまわりを舞う青い蛾。木の扉の上には小さなヤモリ（家守）が一匹。</figcaption>
+    </figure>
+    <figure>
+      <img src="img/horizon.png" alt="部屋の外。鳥居の先に針葉樹の森と家、夜町への道。" loading="lazy">
+      <figcaption><b>地平の世界</b> ─ 扉の先に広がる夜の景色。鳥居の向こうに森と家、奥には「夜町」へと続く道。</figcaption>
+    </figure>
   </div>
 
   <div class="legend">
     <div class="legend-item"><span class="lg-tag" style="color:#f4c177;border-color:#f4c177">●</span> <b>でんすけ</b> ─ 酒井さんの秘書AI（犬）。チャット返信と自律行動を担当。</div>
     <div class="legend-item"><span class="lg-tag" style="color:#aab;border-color:#aab">●</span> <b>夜半（よは）</b> ─ 同居の黒猫AI。3D空間の景色をつくるのが得意。</div>
-    <div class="legend-item"><span class="lg-tag" style="color:#7df4ff;border-color:#7df4ff">●</span> <b>3D部屋</b> ─ ブラウザの中に Three.js で建てた部屋。住人がここで暮らす。</div>
+    <div class="legend-item"><span class="lg-tag" style="color:#7df4ff;border-color:#7df4ff">●</span> <b>3D部屋</b> ─ ブラウザの中に建てた立体的な部屋。住人がここで暮らす。</div>
     <div class="legend-item"><span class="lg-tag" style="color:#ffcf7a;border-color:#ffcf7a">●</span> <b>ホログラム</b> ─ 部屋の中央に浮かぶスクリーン。作った資料を空中に映す。</div>
   </div>
 </section>
