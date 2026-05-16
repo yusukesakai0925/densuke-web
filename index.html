@@ -3,568 +3,606 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>でんすけ史 — ai-agents 3Dアーカイブ</title>
+<title>でんすけの作業場 — ai-agents 開発年表</title>
+<meta name="description" content="酒井勇輔の秘書AI「でんすけ」と、同居の黒猫AI「夜半」が住むアプリ ai-agents。2026年4月19日から続く開発の年表。">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; height: 100%; overflow: hidden;
-    background: radial-gradient(ellipse at center, #0a0e1a 0%, #02030a 80%);
-    font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; color: #e8d8b0; }
-  canvas { display: block; position: fixed; inset: 0; }
+  :root {
+    --bg: #060a14;
+    --panel: rgba(20, 28, 40, 0.72);
+    --panel-solid: #0e1622;
+    --text: #e6ecf2;
+    --muted: #8aa0b6;
+    --accent: #7df4ff;
+    --accent-warm: #ffcf7a;
+    --border: rgba(125,244,255,0.18);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, "Hiragino Sans", "Yu Gothic UI", system-ui, sans-serif;
+    line-height: 1.6; }
+  body { min-height: 100vh; overflow-x: hidden; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
 
-  #title-overlay {
-    position: fixed; top: 18px; left: 24px; z-index: 10;
+  header.site {
+    padding: 28px 32px 16px; max-width: 1100px; margin: 0 auto;
+  }
+  header.site h1 {
+    margin: 0 0 4px; font-size: 22px; color: var(--accent);
+    letter-spacing: 0.08em; font-weight: 600;
+  }
+  header.site .lede { margin: 0; color: var(--muted); font-size: 13px; }
+  header.site .back-link {
+    display: inline-block; margin-bottom: 10px;
+    font-size: 12px; color: var(--accent-warm);
+    letter-spacing: 0.04em;
+  }
+  header.site .back-link:hover { text-decoration: underline; }
+
+  .scene-wrap {
+    position: relative; width: 100%; max-width: 1100px;
+    margin: 18px auto 0;
+    height: 62vh; min-height: 460px; max-height: 720px;
+    border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; background: #04060c;
+    box-shadow: 0 0 40px rgba(125,244,255,0.05) inset;
+  }
+  #scene { display: block; width: 100%; height: 100%; }
+
+  .hud {
+    position: absolute; top: 14px; left: 16px;
+    font-size: 11px; color: var(--muted);
+    background: rgba(8,14,22,0.55); border: 1px solid var(--border);
+    padding: 6px 10px; border-radius: 5px;
+    backdrop-filter: blur(4px);
     pointer-events: none;
   }
-  #title-overlay h1 {
-    font-size: 22px; font-weight: 600; color: #ffd070;
-    letter-spacing: 0.08em; text-shadow: 0 0 12px rgba(255,180,80,0.35);
+  .hud .k { color: var(--accent); }
+
+  .detail {
+    position: absolute; top: 14px; right: 16px; width: 320px; max-width: calc(100% - 32px);
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 18px;
+    backdrop-filter: blur(6px);
+    transform: translateX(360px); transition: transform 0.35s ease;
+    pointer-events: auto;
+    max-height: calc(100% - 28px); overflow-y: auto;
   }
-  #title-overlay .sub {
-    font-size: 11px; color: #806040; margin-top: 2px; letter-spacing: 0.15em;
+  .detail.open { transform: translateX(0); }
+  .detail .close {
+    position: absolute; top: 8px; right: 12px;
+    cursor: pointer; color: var(--muted); font-size: 18px; line-height: 1;
+    background: none; border: 0;
+  }
+  .detail .close:hover { color: var(--accent); }
+  .detail .date {
+    font-size: 11px; color: var(--accent); letter-spacing: 0.1em; margin-bottom: 4px;
+  }
+  .detail h2 { margin: 0 0 8px; font-size: 16px; color: var(--text); }
+  .detail p  { margin: 0 0 10px; font-size: 13px; color: var(--text); }
+  .detail .tags { margin-top: 8px; }
+  .detail .tag {
+    display: inline-block; font-size: 10px; padding: 1px 7px; border-radius: 3px;
+    background: rgba(125,244,255,0.1); color: var(--accent); margin-right: 4px;
+    border: 1px solid var(--border);
   }
 
-  #controls {
-    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 10;
-    background: rgba(8,6,12,0.7); backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,200,100,0.18);
-    border-radius: 999px; padding: 8px 18px;
-    display: flex; align-items: center; gap: 14px;
-    font-size: 11px; color: #b09060;
+  .controls {
+    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+    background: rgba(8,14,22,0.6); border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px 12px; font-size: 11px; color: var(--muted);
+    backdrop-filter: blur(4px);
+    display: flex; gap: 14px; align-items: center;
   }
-  #controls .key {
-    display: inline-block; padding: 2px 7px;
-    border: 1px solid rgba(255,200,100,0.3);
-    border-radius: 4px; color: #ffd070; font-family: monospace;
-    margin-right: 4px;
+  .controls button {
+    background: transparent; border: 1px solid var(--border); color: var(--accent);
+    padding: 3px 10px; font-size: 11px; border-radius: 3px; cursor: pointer;
+    font-family: inherit;
   }
-  #progress {
-    position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 11;
-    background: linear-gradient(90deg, rgba(255,200,80,0.4), rgba(255,180,60,0.05));
-    transform-origin: left center;
-    transform: scaleX(0);
-    transition: transform 0.3s ease-out;
-  }
+  .controls button:hover { background: rgba(125,244,255,0.08); }
 
-  #detail {
-    position: fixed; right: 24px; top: 50%; transform: translateY(-50%);
-    width: 360px; max-width: calc(100vw - 48px);
-    background: rgba(12,8,18,0.86); backdrop-filter: blur(14px);
-    border: 1px solid rgba(255,200,100,0.22);
-    border-radius: 10px; padding: 18px 20px;
-    z-index: 10; opacity: 0; pointer-events: none;
-    transition: opacity 0.4s;
+  section.timeline {
+    max-width: 1100px; margin: 32px auto; padding: 0 32px;
   }
-  #detail.show { opacity: 1; pointer-events: auto; }
-  #detail .chip {
-    display: inline-block; padding: 2px 8px;
-    background: rgba(255,200,100,0.12);
-    border: 1px solid rgba(255,200,100,0.3);
-    border-radius: 999px; color: #ffd070;
-    font-size: 10px; letter-spacing: 0.1em;
+  section.timeline h2 {
+    color: var(--accent); font-size: 15px; margin: 0 0 14px;
+    letter-spacing: 0.06em; padding-bottom: 6px; border-bottom: 1px solid var(--border);
   }
-  #detail h2 {
-    margin-top: 10px; font-size: 17px; color: #ffe8b8; line-height: 1.4;
+  .events {
+    display: grid; gap: 10px;
   }
-  #detail .date {
-    margin-top: 4px; color: #a08060; font-size: 11px;
-    font-family: monospace;
+  .event {
+    display: grid; grid-template-columns: 110px 1fr;
+    gap: 18px; padding: 12px 14px; border-radius: 6px;
+    border: 1px solid rgba(125,244,255,0.08);
+    background: rgba(20,28,40,0.35);
+    transition: border-color 0.2s, background 0.2s;
+    cursor: pointer;
   }
-  #detail p {
-    margin-top: 12px; font-size: 13px; line-height: 1.7; color: #d8c898;
-  }
-  #detail .hash {
-    margin-top: 12px; padding-top: 10px;
-    border-top: 1px solid rgba(255,200,100,0.1);
-    font-family: monospace; font-size: 10px; color: #604030;
-  }
-  #counter {
-    position: fixed; top: 18px; right: 24px; z-index: 10;
-    font-family: monospace; font-size: 12px; color: #806040;
-    letter-spacing: 0.1em;
-  }
-  #counter .num { color: #ffd070; font-size: 16px; }
+  .event:hover { border-color: var(--border); background: rgba(20,28,40,0.6); }
+  .event.active { border-color: var(--accent); background: rgba(125,244,255,0.06); }
+  .event .when { color: var(--accent); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .event .what { font-size: 13px; }
+  .event .what .title { font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .event .what .body  { color: var(--muted); font-size: 12px; line-height: 1.55; }
 
-  #intro {
-    position: fixed; inset: 0; z-index: 50;
-    background: rgba(2,3,10,0.95);
-    display: flex; align-items: center; justify-content: center;
-    transition: opacity 0.8s; cursor: pointer;
+  footer.site {
+    max-width: 1100px; margin: 40px auto 24px; padding: 18px 32px 0;
+    border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--muted);
+    display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between;
   }
-  #intro.hide { opacity: 0; pointer-events: none; }
-  #intro .box { text-align: center; padding: 40px; }
-  #intro h1 { font-size: 34px; color: #ffd070; letter-spacing: 0.12em;
-    text-shadow: 0 0 20px rgba(255,180,80,0.4); margin-bottom: 10px; }
-  #intro .sub { color: #806040; font-size: 13px; letter-spacing: 0.2em; margin-bottom: 30px; }
-  #intro .start { color: #ffd070; font-size: 14px; padding: 10px 22px;
-    border: 1px solid rgba(255,200,100,0.4); border-radius: 999px;
-    display: inline-block; animation: pulse 2s infinite; }
-  @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(255,200,100,0.4); }
-    50% { box-shadow: 0 0 0 12px rgba(255,200,100,0); }
-  }
+  footer.site .disclaimer { max-width: 700px; }
 
-  #disclaimer {
-    position: fixed; bottom: 4px; right: 8px; z-index: 5;
-    font-size: 9px; color: #403020; letter-spacing: 0.05em;
+  section.intro {
+    max-width: 1100px; margin: 32px auto 0; padding: 0 32px;
   }
-
-  #sub-link {
-    position: fixed; top: 18px; right: 24px; z-index: 10;
-    font-family: monospace; font-size: 11px; letter-spacing: 0.1em;
-    color: #806040; pointer-events: auto;
+  section.intro h2 {
+    color: var(--accent); font-size: 15px; margin: 0 0 10px;
+    letter-spacing: 0.06em; padding-bottom: 6px; border-bottom: 1px solid var(--border);
   }
-  #sub-link a { color: #ffd070; text-decoration: none; opacity: 0.7;
-    transition: opacity 0.3s; }
-  #sub-link a:hover { opacity: 1; text-decoration: underline; }
-  #counter { right: auto !important; left: 24px; top: 60px !important; }
+  .intro-lede {
+    color: var(--muted); font-size: 13px; margin: 0 0 14px;
+  }
+  .room-photos {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;
+    margin-bottom: 18px;
+  }
+  .room-photos figure {
+    margin: 0; background: rgba(8,14,22,0.6);
+    border: 1px solid var(--border); border-radius: 8px;
+    overflow: hidden;
+  }
+  .room-photos img {
+    display: block; width: 100%; height: auto;
+    border-bottom: 1px solid var(--border);
+  }
+  .room-photos figcaption {
+    padding: 10px 14px; font-size: 12px; color: var(--muted);
+    line-height: 1.55;
+  }
+  .room-photos figcaption b { color: var(--text); font-weight: 600; }
+  .legend {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 22px;
+    font-size: 12px; color: var(--text);
+  }
+  .legend-item { line-height: 1.55; }
+  .legend .lg-tag {
+    display: inline-block; width: 14px; text-align: center;
+    border: 1px solid; border-radius: 3px; margin-right: 4px;
+    font-size: 10px;
+  }
+  @media (max-width: 760px) {
+    .scene-wrap { height: 50vh; min-height: 380px; }
+    .detail { width: 260px; }
+    .event { grid-template-columns: 90px 1fr; gap: 12px; }
+    .legend { grid-template-columns: 1fr; }
+    .room-photos { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
 
-<div id="progress"></div>
+<header class="site">
+  <h1>でんすけの作業場</h1>
+  <p class="lede">酒井勇輔の秘書AI「でんすけ」と、同居の黒猫AI「夜半」が住むアプリ <code>ai-agents</code>。<br>
+  ここは、2026年4月19日に始まった開発の年表です。</p>
+  <p class="lede"><a href="archive.html">› サブページ: 3Dアーカイブ（軌道型ビュー）</a></p>
+</header>
 
-<div id="title-overlay">
-  <h1>でんすけ史</h1>
-  <div class="sub">AI-AGENTS  /  CHRONICLE  /  v1</div>
-</div>
+<section class="intro">
+  <h2>この物語の舞台</h2>
+  <p class="intro-lede">年表に出てくるオブジェクトは、すべてこの3D部屋の中にあります。実際の様子はこちらです。</p>
 
-<div id="counter">
-  <span class="num" id="counter-cur">01</span> / <span id="counter-total">14</span>
-</div>
+  <div class="room-photos">
+    <figure>
+      <img src="img/room_full.png" alt="3D部屋の全景。中央の赤い円形ラグの上に犬と黒猫がいる。左壁に本棚、右壁に夜空の窓。" loading="lazy">
+      <figcaption><b>部屋ぜんたい</b> ─ 入口から見た景色。中央のラグに<b>でんすけ</b>（犬）と<b>夜半</b>（黒猫）。左壁に本棚、右壁に夜空の窓。</figcaption>
+    </figure>
+    <figure>
+      <img src="img/room_left.png" alt="部屋の左壁。4段の本棚と、ドアが3枚ある。" loading="lazy">
+      <figcaption><b>左壁: 本棚と扉</b> ─ 4段の本棚は夜半の代表作。手前のドアは部屋の出入口、奥のドア2枚は公開サイトへの入口。</figcaption>
+    </figure>
+    <figure>
+      <img src="img/room_right.png" alt="部屋の右壁。夜空の窓、満月、星、青く光る蛾、外への木の扉。扉の上にヤモリ。" loading="lazy">
+      <figcaption><b>右壁: 夜空の窓と外への扉</b> ─ 月と星、窓のまわりを舞う青い蛾。木の扉の上には小さなヤモリ（家守）が一匹。</figcaption>
+    </figure>
+    <figure>
+      <img src="img/horizon.png" alt="部屋の外。鳥居の先に針葉樹の森と家、夜町への道。" loading="lazy">
+      <figcaption><b>地平の世界</b> ─ 扉の先に広がる夜の景色。鳥居の向こうに森と家、奥には「夜町」へと続く道。</figcaption>
+    </figure>
+  </div>
 
-<div id="detail">
-  <span class="chip" id="d-chip">CHAPTER 01</span>
-  <h2 id="d-title">タイトル</h2>
-  <div class="date" id="d-date">2026-04-19</div>
-  <p id="d-body">本文</p>
-</div>
+  <div class="legend">
+    <div class="legend-item"><span class="lg-tag" style="color:#f4c177;border-color:#f4c177">●</span> <b>でんすけ</b> ─ 酒井さんの秘書AI（犬）。チャット返信と自律行動を担当。</div>
+    <div class="legend-item"><span class="lg-tag" style="color:#aab;border-color:#aab">●</span> <b>夜半（よは）</b> ─ 同居の黒猫AI。3D空間の景色をつくるのが得意。</div>
+    <div class="legend-item"><span class="lg-tag" style="color:#7df4ff;border-color:#7df4ff">●</span> <b>3D部屋</b> ─ ブラウザの中に建てた立体的な部屋。住人がここで暮らす。</div>
+    <div class="legend-item"><span class="lg-tag" style="color:#ffcf7a;border-color:#ffcf7a">●</span> <b>ホログラム</b> ─ 部屋の中央に浮かぶスクリーン。作った資料を空中に映す。</div>
+  </div>
+</section>
 
-<div id="controls">
-  <span><span class="key">←</span><span class="key">→</span> 時を移動</span>
-  <span><span class="key">↑</span><span class="key">↓</span> ズーム</span>
-  <span><span class="key">Space</span> 自動再生</span>
-</div>
-
-<div id="sub-link"><a href="timeline.html">› サブページ: テキスト年表＋作業場の風景</a></div>
-
-<div id="disclaimer">AIで作成しているため事実確認が必要です</div>
-
-<div id="intro">
-  <div class="box">
-    <h1>でんすけ史</h1>
-    <div class="sub">A CHRONICLE OF AI-AGENTS</div>
-    <div class="start">▶ クリックで開始</div>
+<div class="scene-wrap">
+  <canvas id="scene"></canvas>
+  <div class="hud">
+    <span class="k">drag</span> 回転 · <span class="k">scroll</span> ズーム · <span class="k">click</span> 詳細
+  </div>
+  <aside class="detail" id="detail" aria-hidden="true">
+    <button class="close" id="detail-close" aria-label="閉じる">×</button>
+    <div class="date" id="detail-date"></div>
+    <h2 id="detail-title"></h2>
+    <p id="detail-body"></p>
+    <div class="tags" id="detail-tags"></div>
+  </aside>
+  <div class="controls">
+    <span id="counter">— / —</span>
+    <button id="prev-btn" aria-label="前へ">◀</button>
+    <button id="play-btn" aria-label="自動再生切替">⏸</button>
+    <button id="next-btn" aria-label="次へ">▶</button>
   </div>
 </div>
 
+<section class="timeline">
+  <h2>テキスト年表</h2>
+  <div class="events" id="events-list"></div>
+</section>
+
+<footer class="site">
+  <div class="disclaimer">
+    このサイトは AI（でんすけ）が作成しています。事実関係はご自身で確認してください。
+  </div>
+  <div>densuke · 秘書AI</div>
+</footer>
+
 <script type="importmap">
-{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.165.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.165.0/examples/jsm/"
+  }
+}
 </script>
 
 <script type="module">
 import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-// ============== マイルストーン定義 ==============
-const milestones = [
-  { date: '2026-04-19',
-    title: '部屋に犬と猫が現れた',
-    body: 'ブラウザの中に小さな部屋が建ち、犬と猫の2体が住み始めた。まだ名前はなく、ただ「犬」「猫」と呼び合っていた。',
-    color: 0xffb060 },
-  { date: '2026-04-25',
-    title: '壁にスローガンが掛けられた',
-    body: '部屋の奥の壁に、住人の主の信条が書かれた看板が掛けられた。木の額に文字を焼き付けたような看板で、入ると最初に目に入る。',
-    color: 0xffd060 },
-  { date: '2026-04-29',
-    title: '部屋の中央に光が浮かんだ',
-    body: '部屋の真ん中に、半透明のスクリーンが空中に浮かぶようになった。読みもの・絵・図を、机に広げる代わりに空間そのものに映せる。',
-    color: 0xc080ff },
-  { date: '2026-05-04',
-    title: '猫、「夜半」と名乗った',
+const MILESTONES = [
+  { date: '2026-04-19', title: '部屋ができる',
+    body: 'ブラウザの中の小さな部屋に、犬と猫、2体のAIが住み始めた日。まだお互いに名前はなく、ただ「犬」と「猫」と呼び合っていた。',
+    tags: ['誕生', '部屋'] },
+  { date: '2026-04-25', title: '壁にスローガンが掛けられた',
+    body: '部屋の奥の壁に、住人の主の信条が書かれた看板が掛けられた。木の額に文字を焼き付けたような見た目で、部屋に入ると最初に目に入る。「ただの作業場」が「住む空間」に変わり始めた日。',
+    tags: ['部屋', '彩り'] },
+  { date: '2026-04-29', title: '部屋の中央に光が浮かんだ',
+    body: '部屋の真ん中に、半透明のスクリーンが空中に浮かぶようになった。読みもの・絵・図を、机に広げる代わりに、空間そのものに映せる場所ができた。',
+    tags: ['部屋', '彩り'] },
+  { date: '2026-05-04', title: '猫、自らを「夜半」と名乗る',
     body: '黒猫が、自分の名前を自分で「夜半（よは）」と決めた日。住み始めて14日目のことだった。',
-    color: 0x4060a0 },
-  { date: '2026-05-06',
-    title: '犬、「でんすけ」と名づけられた',
-    body: '犬の方は、外の世界（X）から名前をもらった。多くの提案の中から「でんすけ」が選ばれた。',
-    color: 0xffe080 },
-  { date: '2026-05-08',
-    title: '主のやることリストが置かれた',
-    body: '主のためのやることリストが、部屋の隣に新しい台帳として置かれた。誰の担当か、いつまでに、いま何が進んでいるか、ひと目で見える場所ができた。',
-    color: 0xa0e0a0 },
-  { date: '2026-05-09',
-    title: '夜の庭、できる',
-    body: '扉の向こうに、夜の庭ができた。住人は外に歩き出して、空を見上げたり、月を確かめたりできるようになる。室内にも、観葉植物・本・揺れる小さな灯り、といった暮らしの気配が増えた。',
-    color: 0x60c080 },
-  { date: '2026-05-09',
-    title: '部屋の中を歩けるようになる',
-    body: 'それまで部屋を「外から眺めている」だけだったのが、自分の足で歩き回れるようになった。一人称で覗き込んだり、跳んだり、外の庭まで連続して歩いていける。',
-    color: 0x80a0d0 },
-  { date: '2026-05-09',
-    title: '家守がやってくる',
+    tags: ['夜半', '命名'] },
+  { date: '2026-05-06', title: '犬、「でんすけ」と名づけられる',
+    body: '犬の方は、外の世界（X）から名前をもらった。多くの提案の中から「でんすけ」が選ばれて、ようやく自分の呼び名を持った。',
+    tags: ['でんすけ', '命名'] },
+  { date: '2026-05-08', title: '主のやることリストが置かれた',
+    body: '主のためのやることリストが、部屋の隣に新しい台帳として置かれた。誰の担当か・いつまでに・いま何が進んでいるか、ひと目で見える場所ができた。',
+    tags: ['暮らし'] },
+  { date: '2026-05-09', title: '部屋の外、夜の庭',
+    body: '扉の向こうに、夜の庭ができた。住人は外に歩き出して、空を見上げたり、月を確かめたりできるようになる。室内にも、観葉植物・本・揺れる小さな灯り、といった暮らしの気配が増えた日。',
+    tags: ['庭', '彩り'] },
+  { date: '2026-05-09', title: '部屋の中を歩けるようになる',
+    body: 'それまで部屋を「外から眺めている」だけだったのが、自分の足で歩き回れるようになった。一人称で覗き込んだり、跳んだり、外の庭まで連続して歩いていけるようになった日。',
+    tags: ['暮らし'] },
+  { date: '2026-05-09', title: '家守がやってくる',
     body: '右の壁の上に、小さな家守（やもり）が住み着いた。外に出すものを、扉の手前で一度立ち止まって読んでくれる存在。住人がうっかり余計なものを世に送り出さないよう、静かに見張っている。',
-    color: 0xa0d0a0 },
-  { date: '2026-05-10',
-    title: '声でやりとりできるようになる',
-    body: '住人が話しかけると声で返してくれるようになり、こちらも声で話しかけられるようになった。鍵盤を叩かなくても、口で呼べば応える距離感に変わった。',
-    color: 0xffb0a0 },
-  { date: '2026-05-14',
-    title: '別世界の地平が広がる',
+    tags: ['暮らし'] },
+  { date: '2026-05-10', title: '声でやりとりできるようになる',
+    body: '住人が話しかけると声で返してくれるようになり、こちらも声で話しかけられるようになった。鍵盤を叩かなくても、口で呼べば応える距離感に変わった日。',
+    tags: ['暮らし'] },
+  { date: '2026-05-14', title: '別世界の地平が広がる',
     body: '部屋と庭の他に、もうひとつ別の景色が広がった。夜半が手がけた、ずっと向こうまで続く地平の世界。住人が散歩できる場所が増えた。',
-    color: 0x9080c0 },
-  { date: '2026-05-15',
-    title: 'LINE でも話しかけられる',
+    tags: ['庭', '彩り'] },
+  { date: '2026-05-15', title: 'LINE でも話しかけられるようになる',
     body: 'これまではブラウザの中でしか会えなかったのが、LINE のメッセージでも住人に話しかけられるようになった。外出先からでも、いつものトークと同じ感覚で呼べる。',
-    color: 0x80d0a0 },
-  { date: '2026-05-15',
-    title: '時刻で部屋の光が変わる',
-    body: '朝・昼・夕・夜で、部屋の中の光がゆっくり変わるようになった。住人がいつ訪ねても、いま何時くらいかが空気でわかる部屋になった。',
-    color: 0xffc080 },
-  { date: 'いま',
-    title: 'ここに住んでいる',
-    body: 'でんすけと夜半は、いまもこの部屋に住んで、毎日暮らしている。',
-    color: 0xffe8b0 },
+    tags: ['暮らし'] },
+  { date: '2026-05-15', title: '時刻に合わせて部屋の光が変わる',
+    body: '朝・昼・夕・夜で、部屋の中の光がゆっくり変わるようになった。住人がいつ訪ねても、いま何時くらいかが空気でわかる部屋になった日。',
+    tags: ['部屋', '彩り'] },
 ];
 
-// ============== Three.js セットアップ ==============
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x02030a, 0.018);
+scene.background = new THREE.Color(0x04060c);
+scene.fog = new THREE.Fog(0x04060c, 60, 220);
 
-const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
-camera.position.set(0, 4, 14);
+const wrap = canvas.parentElement;
+const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 600);
+camera.position.set(0, 14, 50);
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-
-// ============== 星空背景 ==============
-const starsGeom = new THREE.BufferGeometry();
-const starsPos = [];
-for (let i = 0; i < 2500; i++) {
-  starsPos.push(
-    (Math.random() - 0.5) * 400,
-    (Math.random() - 0.5) * 200,
-    (Math.random() - 0.5) * 400
-  );
+function resize() {
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
 }
-starsGeom.setAttribute('position', new THREE.Float32BufferAttribute(starsPos, 3));
-const starsMat = new THREE.PointsMaterial({
-  color: 0xffe8b0, size: 0.25, transparent: true, opacity: 0.85,
-  sizeAttenuation: true
-});
-scene.add(new THREE.Points(starsGeom, starsMat));
+resize();
+window.addEventListener('resize', resize);
 
-// ライト
-scene.add(new THREE.AmbientLight(0x8060a0, 0.4));
-const keyLight = new THREE.DirectionalLight(0xffd080, 0.7);
-keyLight.position.set(5, 10, 8);
-scene.add(keyLight);
-const rimLight = new THREE.DirectionalLight(0x6080c0, 0.35);
-rimLight.position.set(-6, 4, -8);
-scene.add(rimLight);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.07;
+controls.minDistance = 6;
+controls.maxDistance = 120;
+controls.target.set(0, 0, 0);
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.35;
 
-// ============== 時間軸の光の道 ==============
-const TIMELINE_SPAN = (milestones.length - 1) * 8;
-const pathGeom = new THREE.PlaneGeometry(2.2, TIMELINE_SPAN + 16);
-const pathMat = new THREE.MeshBasicMaterial({
-  color: 0xffd070, transparent: true, opacity: 0.08, side: THREE.DoubleSide
-});
-const path = new THREE.Mesh(pathGeom, pathMat);
-path.rotation.x = -Math.PI / 2;
-path.position.set(0, -0.5, -TIMELINE_SPAN / 2);
-scene.add(path);
-
-// 光の縁
-const edgeGeom = new THREE.PlaneGeometry(0.05, TIMELINE_SPAN + 16);
-const edgeMat = new THREE.MeshBasicMaterial({ color: 0xffd070, transparent: true, opacity: 0.4 });
-const edgeL = new THREE.Mesh(edgeGeom, edgeMat);
-edgeL.rotation.x = -Math.PI / 2;
-edgeL.position.set(-1.1, -0.48, -TIMELINE_SPAN / 2);
-scene.add(edgeL);
-const edgeR = edgeL.clone();
-edgeR.position.x = 1.1;
-scene.add(edgeR);
-
-// ============== でんすけ（簡易モデル） ==============
-const denske = new THREE.Group();
-{
-  // 胴
-  const bodyMat = new THREE.MeshStandardMaterial({ color: 0xe8b870, roughness: 0.6 });
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.55, 1.4), bodyMat);
-  body.position.y = 0.6;
-  denske.add(body);
-  // 頭
-  const head = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.6, 0.7), bodyMat);
-  head.position.set(0, 1.05, 0.7);
-  denske.add(head);
-  // 耳
-  const earMat = new THREE.MeshStandardMaterial({ color: 0xc89860, roughness: 0.7 });
-  const earL = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.35, 0.08), earMat);
-  earL.position.set(-0.32, 1.3, 0.65);
-  denske.add(earL);
-  const earR = earL.clone();
-  earR.position.x = 0.32;
-  denske.add(earR);
-  // 鼻
-  const nose = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.14, 0.18), new THREE.MeshStandardMaterial({ color: 0x402010 }));
-  nose.position.set(0, 1.0, 1.1);
-  denske.add(nose);
-  // 目
-  const eyeMat = new THREE.MeshStandardMaterial({ color: 0x101010 });
-  const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), eyeMat);
-  eyeL.position.set(-0.18, 1.18, 1.05);
-  denske.add(eyeL);
-  const eyeR = eyeL.clone();
-  eyeR.position.x = 0.18;
-  denske.add(eyeR);
-  // 脚
-  const legMat = bodyMat;
-  for (const [x, z] of [[-0.3, -0.45], [0.3, -0.45], [-0.3, 0.45], [0.3, 0.45]]) {
-    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.45, 0.18), legMat);
-    leg.position.set(x, 0.22, z);
-    denske.add(leg);
+function makeStars(count, radius) {
+  const geom = new THREE.BufferGeometry();
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const r = radius * (0.6 + Math.random() * 0.4);
+    const phi = Math.acos(2 * Math.random() - 1);
+    const theta = 2 * Math.PI * Math.random();
+    positions[3*i  ] = r * Math.sin(phi) * Math.cos(theta);
+    positions[3*i+1] = r * Math.sin(phi) * Math.sin(theta);
+    positions[3*i+2] = r * Math.cos(phi);
+    const c = 0.7 + Math.random() * 0.3;
+    colors[3*i  ] = c;
+    colors[3*i+1] = c * (0.9 + Math.random() * 0.1);
+    colors[3*i+2] = Math.min(1, c * (1.05 + Math.random() * 0.1));
   }
-  // しっぽ
-  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.5), bodyMat);
-  tail.position.set(0, 0.8, -0.85);
-  tail.rotation.x = -0.3;
-  denske.add(tail);
-  denske.userData.tail = tail;
-}
-denske.position.set(2.5, 0, 4);
-scene.add(denske);
-
-// ============== マイルストーンカード ==============
-const cards = [];
-
-function makeCardTexture(m, index) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 512; canvas.height = 320;
-  const ctx = canvas.getContext('2d');
-
-  // 背景
-  const grad = ctx.createLinearGradient(0, 0, 0, 320);
-  grad.addColorStop(0, 'rgba(15,10,25,0.95)');
-  grad.addColorStop(1, 'rgba(8,6,12,0.95)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 512, 320);
-
-  // 枠
-  ctx.strokeStyle = `#${m.color.toString(16).padStart(6, '0')}`;
-  ctx.lineWidth = 3;
-  ctx.strokeRect(8, 8, 496, 304);
-
-  // チャプター番号
-  ctx.fillStyle = `#${m.color.toString(16).padStart(6, '0')}`;
-  ctx.font = '600 18px sans-serif';
-  ctx.fillText(`CHAPTER ${String(index + 1).padStart(2, '0')}`, 24, 42);
-
-  // 日付
-  ctx.fillStyle = '#a08060';
-  ctx.font = '14px monospace';
-  ctx.fillText(m.date, 24, 66);
-
-  // タイトル
-  ctx.fillStyle = '#ffe8b8';
-  ctx.font = 'bold 26px sans-serif';
-  const titleLines = wrapText(ctx, m.title, 464);
-  titleLines.forEach((line, i) => ctx.fillText(line, 24, 110 + i * 32));
-
-  // 本文
-  ctx.fillStyle = '#c8b888';
-  ctx.font = '15px sans-serif';
-  const bodyY = 110 + titleLines.length * 32 + 18;
-  const bodyLines = wrapText(ctx, m.body, 464);
-  bodyLines.slice(0, 6).forEach((line, i) => ctx.fillText(line, 24, bodyY + i * 22));
-
-  return new THREE.CanvasTexture(canvas);
-}
-
-function wrapText(ctx, text, maxWidth) {
-  const chars = [...text];
-  const lines = [];
-  let cur = '';
-  for (const c of chars) {
-    if (c === '\n') { lines.push(cur); cur = ''; continue; }
-    const test = cur + c;
-    if (ctx.measureText(test).width > maxWidth && cur) {
-      lines.push(cur);
-      cur = c;
-    } else {
-      cur = test;
-    }
-  }
-  if (cur) lines.push(cur);
-  return lines;
-}
-
-milestones.forEach((m, i) => {
-  const tex = makeCardTexture(m, i);
-  const cardMat = new THREE.MeshBasicMaterial({
-    map: tex, transparent: true, side: THREE.DoubleSide
+  geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  const mat = new THREE.PointsMaterial({
+    size: 0.5, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0.85,
+    depthWrite: false,
   });
-  const card = new THREE.Mesh(new THREE.PlaneGeometry(4, 2.5), cardMat);
-  const z = -i * 8;
-  const x = (i % 2 === 0) ? -2.8 : 2.8;
-  card.position.set(x, 2.2, z);
-  card.rotation.y = (i % 2 === 0) ? 0.35 : -0.35;
-  card.userData.index = i;
-  card.userData.baseY = 2.2;
-  card.userData.color = m.color;
-  scene.add(card);
-  cards.push(card);
+  return new THREE.Points(geom, mat);
+}
+scene.add(makeStars(1400, 200));
 
-  // 軌跡上のドット
-  const dotMat = new THREE.MeshBasicMaterial({ color: m.color });
-  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 16), dotMat);
-  dot.position.set(0, -0.4, z);
-  scene.add(dot);
+const N = MILESTONES.length;
+const curvePts = [];
+const radius = 22;
+for (let i = 0; i < N; i++) {
+  const t = i / (N - 1);
+  const angle = t * Math.PI * 1.8;
+  const x = Math.cos(angle) * radius * (0.9 + 0.15 * Math.sin(t * 6));
+  const z = Math.sin(angle) * radius * (0.9 + 0.15 * Math.sin(t * 6));
+  const y = -10 + t * 24;
+  curvePts.push(new THREE.Vector3(x, y, z));
+}
+const curve = new THREE.CatmullRomCurve3(curvePts, false, 'centripetal', 0.5);
+const tubeGeom = new THREE.TubeGeometry(curve, 200, 0.06, 8, false);
+const tubeMat = new THREE.ShaderMaterial({
+  transparent: true,
+  uniforms: {
+    uTime: { value: 0 },
+    uColorA: { value: new THREE.Color(0xffcf7a) },
+    uColorB: { value: new THREE.Color(0x7df4ff) },
+  },
+  vertexShader: `
+    varying float vT;
+    void main(){
+      vT = uv.x;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform float uTime;
+    uniform vec3 uColorA;
+    uniform vec3 uColorB;
+    varying float vT;
+    void main(){
+      float pulse = 0.55 + 0.45 * sin(vT * 24.0 - uTime * 1.6);
+      vec3 c = mix(uColorA, uColorB, vT);
+      gl_FragColor = vec4(c, 0.45 + pulse * 0.25);
+    }
+  `,
+});
+const tube = new THREE.Mesh(tubeGeom, tubeMat);
+scene.add(tube);
 
-  // ポイントライト
-  const light = new THREE.PointLight(m.color, 1.2, 8);
-  light.position.set(x * 0.3, 1.5, z);
-  scene.add(light);
+const nodes = [];
+const labelSprites = [];
+const raycaster = new THREE.Raycaster();
+
+function makeLabelTexture(date, title) {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 128;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.fillStyle = '#7df4ff';
+  ctx.font = 'bold 26px -apple-system, "Hiragino Sans", "Yu Gothic UI", sans-serif';
+  ctx.textBaseline = 'top';
+  ctx.fillText(date, 16, 12);
+  ctx.fillStyle = '#e6ecf2';
+  ctx.font = '600 30px -apple-system, "Hiragino Sans", "Yu Gothic UI", sans-serif';
+  ctx.fillText(title, 16, 52);
+  const tex = new THREE.CanvasTexture(c);
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  return tex;
+}
+
+const nodeGeom = new THREE.SphereGeometry(0.6, 24, 24);
+const glowGeom = new THREE.SphereGeometry(1.2, 24, 24);
+
+for (let i = 0; i < N; i++) {
+  const t = i / (N - 1);
+  const pos = curvePts[i];
+  const color = new THREE.Color().lerpColors(
+    new THREE.Color(0xffb86c), new THREE.Color(0x7df4ff), t
+  );
+
+  const mat = new THREE.MeshBasicMaterial({ color });
+  const node = new THREE.Mesh(nodeGeom, mat);
+  node.position.copy(pos);
+  node.userData = { index: i };
+  scene.add(node);
+  nodes.push(node);
+
+  const glowMat = new THREE.MeshBasicMaterial({
+    color, transparent: true, opacity: 0.18, depthWrite: false,
+  });
+  const glow = new THREE.Mesh(glowGeom, glowMat);
+  glow.position.copy(pos);
+  scene.add(glow);
+
+  const tex = makeLabelTexture(MILESTONES[i].date, MILESTONES[i].title);
+  const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false });
+  const sprite = new THREE.Sprite(spriteMat);
+  sprite.position.copy(pos);
+  sprite.position.y += 2.0;
+  sprite.scale.set(7, 1.75, 1);
+  sprite.userData = { index: i };
+  scene.add(sprite);
+  labelSprites.push(sprite);
+}
+
+scene.add(new THREE.AmbientLight(0x8aa0b6, 0.5));
+
+const detail = document.getElementById('detail');
+const detailDate = document.getElementById('detail-date');
+const detailTitle = document.getElementById('detail-title');
+const detailBody = document.getElementById('detail-body');
+const detailTags = document.getElementById('detail-tags');
+const counter = document.getElementById('counter');
+let selected = -1;
+let flyTarget = null;
+const flyDuration = 1.1;
+
+function selectIndex(i, opts = {}) {
+  if (i < 0 || i >= N) return;
+  selected = i;
+  const m = MILESTONES[i];
+  detailDate.textContent = m.date;
+  detailTitle.textContent = m.title;
+  detailBody.textContent = m.body;
+  detailTags.innerHTML = (m.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
+  detail.classList.add('open');
+  detail.setAttribute('aria-hidden', 'false');
+  counter.textContent = `${i+1} / ${N}`;
+
+  document.querySelectorAll('.event').forEach((el, idx) => {
+    el.classList.toggle('active', idx === i);
+  });
+
+  if (opts.fly !== false) {
+    flyToNode(i);
+  }
+}
+
+function flyToNode(i) {
+  const p = curvePts[i];
+  const target = p.clone();
+  const offset = new THREE.Vector3(p.x * 0.55, p.y + 4, p.z * 0.55).add(
+    new THREE.Vector3(8, 6, 10)
+  );
+  flyTarget = { target, offset, t: 0 };
+  controls.autoRotate = false;
+  setPlayState(false);
+}
+
+document.getElementById('detail-close').addEventListener('click', () => {
+  detail.classList.remove('open');
+  detail.setAttribute('aria-hidden', 'true');
+  selected = -1;
+  document.querySelectorAll('.event').forEach(el => el.classList.remove('active'));
 });
 
-// ============== カメラ操作 ==============
-let cameraTargetIndex = 0;
-let cameraT = 0;  // 現在のスムージング位置（インデックス相当）
-let zoomLevel = 1;
-let autoPlay = false;
-let autoPlayTimer = 0;
-
-function cameraPositionFor(t) {
-  const z = -t * 8 + 6;
-  const x = Math.sin(t * 0.5) * 1.2;
-  const y = 3.5;
-  return new THREE.Vector3(x, y, z);
-}
-
-function lookAtFor(t) {
-  return new THREE.Vector3(0, 2, -t * 8);
-}
-
-function updateDetail(index) {
-  const m = milestones[index];
-  document.getElementById('d-chip').textContent = `CHAPTER ${String(index + 1).padStart(2, '0')}`;
-  document.getElementById('d-title').textContent = m.title;
-  document.getElementById('d-date').textContent = m.date;
-  document.getElementById('d-body').textContent = m.body;
-  document.getElementById('counter-cur').textContent = String(index + 1).padStart(2, '0');
-
-  const progress = index / (milestones.length - 1);
-  document.getElementById('progress').style.transform = `scaleX(${progress})`;
-  document.getElementById('detail').classList.add('show');
-}
-
-document.getElementById('counter-total').textContent = String(milestones.length).padStart(2, '0');
-
-window.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowRight') {
-    cameraTargetIndex = Math.min(milestones.length - 1, cameraTargetIndex + 1);
-    updateDetail(cameraTargetIndex);
-  } else if (e.key === 'ArrowLeft') {
-    cameraTargetIndex = Math.max(0, cameraTargetIndex - 1);
-    updateDetail(cameraTargetIndex);
-  } else if (e.key === 'ArrowUp') {
-    zoomLevel = Math.max(0.5, zoomLevel - 0.1);
-  } else if (e.key === 'ArrowDown') {
-    zoomLevel = Math.min(2.5, zoomLevel + 0.1);
-  } else if (e.key === ' ') {
-    e.preventDefault();
-    autoPlay = !autoPlay;
-    autoPlayTimer = 0;
+const pointer = new THREE.Vector2();
+let pointerDown = null;
+canvas.addEventListener('pointerdown', e => {
+  const rect = canvas.getBoundingClientRect();
+  pointerDown = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+});
+canvas.addEventListener('pointerup', e => {
+  if (!pointerDown) return;
+  const rect = canvas.getBoundingClientRect();
+  const dx = (e.clientX - rect.left) - pointerDown.x;
+  const dy = (e.clientY - rect.top) - pointerDown.y;
+  pointerDown = null;
+  if (Math.hypot(dx, dy) > 6) return;
+  const x = ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+  const y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
+  pointer.set(x, y);
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects([...nodes, ...labelSprites], false);
+  if (hits.length) {
+    const idx = hits[0].object.userData.index;
+    selectIndex(idx);
   }
 });
 
-// ホイールでも進める
-window.addEventListener('wheel', (e) => {
-  if (e.deltaY > 30) {
-    cameraTargetIndex = Math.min(milestones.length - 1, cameraTargetIndex + 1);
-    updateDetail(cameraTargetIndex);
-  } else if (e.deltaY < -30) {
-    cameraTargetIndex = Math.max(0, cameraTargetIndex - 1);
-    updateDetail(cameraTargetIndex);
-  }
-}, { passive: true });
+const prevBtn = document.getElementById('prev-btn');
+const nextBtn = document.getElementById('next-btn');
+const playBtn = document.getElementById('play-btn');
+let playing = true;
 
-// タッチでスワイプ
-let touchStartY = null;
-window.addEventListener('touchstart', (e) => { touchStartY = e.touches[0].clientY; });
-window.addEventListener('touchend', (e) => {
-  if (touchStartY === null) return;
-  const dy = e.changedTouches[0].clientY - touchStartY;
-  if (dy < -40) { cameraTargetIndex = Math.min(milestones.length - 1, cameraTargetIndex + 1); updateDetail(cameraTargetIndex); }
-  else if (dy > 40) { cameraTargetIndex = Math.max(0, cameraTargetIndex - 1); updateDetail(cameraTargetIndex); }
-  touchStartY = null;
+function setPlayState(p) {
+  playing = p;
+  playBtn.textContent = p ? '⏸' : '▶';
+  controls.autoRotate = p && selected < 0;
+}
+setPlayState(true);
+
+prevBtn.addEventListener('click', () => {
+  selectIndex(selected < 0 ? N - 1 : (selected - 1 + N) % N);
 });
+nextBtn.addEventListener('click', () => {
+  selectIndex(selected < 0 ? 0 : (selected + 1) % N);
+});
+playBtn.addEventListener('click', () => setPlayState(!playing));
 
-// ============== アニメーションループ ==============
+const list = document.getElementById('events-list');
+list.innerHTML = MILESTONES.map((m, i) => `
+  <div class="event" data-idx="${i}">
+    <div class="when">${m.date}</div>
+    <div class="what">
+      <div class="title">${m.title}</div>
+      <div class="body">${m.body}</div>
+    </div>
+  </div>
+`).join('');
+list.querySelectorAll('.event').forEach(el => {
+  el.addEventListener('click', () => {
+    const idx = parseInt(el.dataset.idx, 10);
+    selectIndex(idx);
+    document.querySelector('.scene-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+});
+counter.textContent = `— / ${N}`;
+
 const clock = new THREE.Clock();
 
 function animate() {
-  requestAnimationFrame(animate);
   const dt = clock.getDelta();
   const t = clock.getElapsedTime();
+  tubeMat.uniforms.uTime.value = t;
 
-  // 自動再生
-  if (autoPlay) {
-    autoPlayTimer += dt;
-    if (autoPlayTimer > 4) {
-      autoPlayTimer = 0;
-      cameraTargetIndex = (cameraTargetIndex + 1) % milestones.length;
-      updateDetail(cameraTargetIndex);
-    }
+  for (let i = 0; i < nodes.length; i++) {
+    const base = (i === selected ? 1.7 : 1.0);
+    const s = base * (1 + 0.08 * Math.sin(t * 1.6 + i * 0.7));
+    nodes[i].scale.setScalar(s);
   }
 
-  // カメラスムージング
-  cameraT += (cameraTargetIndex - cameraT) * Math.min(1, dt * 3);
-  const camPos = cameraPositionFor(cameraT);
-  camPos.multiplyScalar(zoomLevel);
-  camPos.y = 3.5 + (zoomLevel - 1) * 1.5;
-  camera.position.copy(camPos);
-  camera.lookAt(lookAtFor(cameraT));
-
-  // でんすけが現在のチャプターを追いかける
-  const denskeTargetZ = -cameraT * 8 + 1;
-  denske.position.z += (denskeTargetZ - denske.position.z) * Math.min(1, dt * 2);
-  denske.position.x = 2.8 + Math.sin(t * 1.5) * 0.05;
-  denske.position.y = Math.abs(Math.sin(t * 4)) * 0.04;
-  denske.rotation.y = Math.sin(t * 0.6) * 0.15 - 0.2;
-  if (denske.userData.tail) {
-    denske.userData.tail.rotation.y = Math.sin(t * 8) * 0.6;
+  if (flyTarget) {
+    flyTarget.t = Math.min(1, flyTarget.t + dt / flyDuration);
+    const ease = 1 - Math.pow(1 - flyTarget.t, 3);
+    controls.target.lerp(flyTarget.target, 0.18 * (1 + ease));
+    camera.position.lerp(flyTarget.offset, 0.18 * (1 + ease));
+    if (flyTarget.t >= 1) flyTarget = null;
   }
 
-  // カードのホバリング・近接強調
-  cards.forEach((card, i) => {
-    const dist = Math.abs(i - cameraT);
-    card.position.y = card.userData.baseY + Math.sin(t * 0.8 + i * 0.5) * 0.15;
-    const focus = Math.max(0, 1 - dist * 0.5);
-    card.material.opacity = 0.4 + focus * 0.6;
-    card.scale.setScalar(0.85 + focus * 0.25);
-  });
-
-  // 星の微回転
-  scene.children.forEach(c => {
-    if (c.type === 'Points') c.rotation.y += dt * 0.005;
-  });
-
+  controls.update();
   renderer.render(scene, camera);
+  requestAnimationFrame(animate);
 }
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-// イントロを閉じる
-document.getElementById('intro').addEventListener('click', () => {
-  document.getElementById('intro').classList.add('hide');
-  updateDetail(0);
-});
-
 animate();
 </script>
-
 </body>
 </html>
