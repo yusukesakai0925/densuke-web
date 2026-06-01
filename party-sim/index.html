@@ -52,6 +52,29 @@
   .note{color:var(--sub);font-size:12.5px}
   code{background:var(--panel2);padding:1px 5px;border-radius:4px;font-size:12px}
   .legend{font-size:11.5px;color:var(--sub);margin-top:8px;display:flex;flex-wrap:wrap;gap:4px 14px}
+  /* はじめての方へガイド */
+  .onboard{background:linear-gradient(135deg,#16263f 0%,#1a2030 100%);
+    border:1px solid #33507d;border-radius:10px;padding:14px 18px;margin-bottom:14px}
+  .onboard .ob-title{font-weight:700;font-size:15px;color:#9cf;margin-bottom:8px}
+  .onboard ol{margin:0;padding-left:22px}
+  .onboard li{margin:5px 0;font-size:13.5px}
+  .onboard li b{color:var(--ink)}
+  /* 基本操作の番号ラベル */
+  .ctl label.step{color:var(--accent);font-weight:700;font-size:12px}
+  /* 主役ボタン（再生）*/
+  button.primary{font-size:15px;padding:11px 22px}
+  button.primary.hint{animation:pulse 1.2s ease-in-out 3}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(77,163,255,.0)}
+    50%{box-shadow:0 0 0 8px rgba(77,163,255,.35)}}
+  /* 詳細設定（折りたたみ）*/
+  details.adv{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:0 14px;margin-bottom:16px}
+  details.adv summary{cursor:pointer;padding:12px 2px;font-weight:600;color:var(--sub);
+    font-size:13px;list-style:none;user-select:none}
+  details.adv summary::-webkit-details-marker{display:none}
+  details.adv summary::before{content:"▸ ";color:var(--accent)}
+  details.adv[open] summary::before{content:"▾ "}
+  details.adv .controls{box-shadow:none;border:0;background:transparent;padding:0 0 12px;margin:0}
 </style>
 </head>
 <body>
@@ -73,20 +96,43 @@
 </header>
 
 <div class="wrap">
+  <div class="onboard">
+    <div class="ob-title">▶ はじめての方へ（30秒で遊べます）</div>
+    <ol>
+      <li><b>下の「▶ 再生」ボタンを押す</b> — 政党（◯印）が票をもとめて動き出します。</li>
+      <li><b>動きを眺める</b> — ピタッと止まれば「決着（＝収束）」、いつまでも動き続ければ「決着しない」。どちらになるかが見どころ。</li>
+      <li><b>「小選挙区／比例代表」を切り替える・🎲を押す</b> — 政党の数や勝ち方がどう変わるか見比べる。慣れたら下の「詳細設定」で細かくいじれます。</li>
+    </ol>
+  </div>
+
   <div class="controls card">
     <div class="ctl">
-      <label>選挙制度</label>
+      <label class="step">① 選挙制度をえらぶ</label>
       <div class="seg" id="regimeSeg">
         <button data-r="FPTP" class="on">小選挙区</button>
         <button data-r="PR">比例代表</button>
       </div>
     </div>
+    <div class="ctl" style="flex:1">
+      <label class="step">② 動かす</label>
+      <div class="btns">
+        <button id="playBtn" class="primary hint">▶ 再生</button>
+        <button id="stepBtn" class="ghost">⏭ 1ラウンドだけ</button>
+        <button id="diceBtn" class="ghost">🎲 別の地形で試す</button>
+        <button id="resetBtn" class="ghost">⟲ 最初から</button>
+      </div>
+    </div>
+  </div>
+
+  <details class="adv">
+    <summary>⚙ 詳細設定をひらく（政党数・棄権・表示軸など — 慣れてきたら）</summary>
+    <div class="controls">
     <div class="ctl">
       <label>初期政党数 <span class="val" id="vInit">6</span></label>
       <input type="range" id="nInit" min="1" max="10" value="6" step="1">
     </div>
     <div class="ctl">
-      <label>乱数シード</label>
+      <label>乱数シード（配置のタネ）</label>
       <input type="number" id="seed" value="42" style="width:90px">
     </div>
     <div class="ctl">
@@ -128,16 +174,8 @@
         <select id="axX"></select><select id="axY"></select><select id="axZ"></select>
       </div>
     </div>
-    <div class="ctl">
-      <label>&nbsp;</label>
-      <div class="btns">
-        <button id="playBtn">▶ 再生</button>
-        <button id="stepBtn" class="ghost">⏭ 1ラウンド</button>
-        <button id="diceBtn" class="ghost">🎲 ランダム再配置</button>
-        <button id="resetBtn" class="ghost">⟲ リセット</button>
-      </div>
     </div>
-  </div>
+  </details>
 
   <div class="grid">
     <div class="card">
@@ -646,7 +684,7 @@ window.addEventListener("mousemove",e=>{if(!dragging)return;
   yaw+=(e.clientX-lx)*0.01;pitch+=(e.clientY-ly)*0.01;
   pitch=Math.max(-1.45,Math.min(1.45,pitch));lx=e.clientX;ly=e.clientY;redraw();});
 window.addEventListener("mouseup",()=>{if(dragging){dragging=false;map.style.cursor=dim===3?"grab":"default";}});
-$("playBtn").onclick=()=>running?stop():play();
+$("playBtn").onclick=()=>{$("playBtn").classList.remove("hint");running?stop():play();};
 $("stepBtn").onclick=()=>{stop();stepRound();};
 $("resetBtn").onclick=reset;
 // 🎲 ランダム再配置: ランダム分布に切替＋シードを進めて有権者地形を作り直す
