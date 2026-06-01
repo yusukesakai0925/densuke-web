@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>政党競争シミュレータ（インタラクティブ）</title>
+<style>
+  :root{
+    --bg:#0f1117; --panel:#171a23; --panel2:#1d212c; --line:#2a2f3d;
+    --ink:#e8eaf0; --sub:#9aa3b2; --accent:#4da3ff; --warn:#ffb454;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+    line-height:1.6;font-size:14px}
+  header{padding:18px 22px 10px;border-bottom:1px solid var(--line)}
+  h1{font-size:19px;margin:0 0 4px}
+  .lead{color:var(--sub);font-size:13px;max-width:900px}
+  .disclaimer{background:#2a210f;border:1px solid #50421c;color:#ffce85;
+    font-size:11px;padding:4px 9px;border-radius:6px;display:inline-block;margin:8px 0}
+  .wrap{padding:16px 22px;max-width:1240px;margin:0 auto}
+  .grid{display:grid;grid-template-columns:minmax(0,1.3fr) 320px;gap:16px;align-items:start}
+  @media(max-width:980px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+  canvas{display:block;width:100%;background:#0b0d13;border-radius:8px}
+  .controls{display:flex;flex-wrap:wrap;gap:14px 18px;align-items:flex-end;margin:6px 0 12px}
+  .ctl{display:flex;flex-direction:column;gap:3px;min-width:120px}
+  .ctl label{font-size:11px;color:var(--sub);letter-spacing:.02em}
+  .ctl .val{color:var(--accent);font-weight:600}
+  input[type=range]{width:150px;accent-color:var(--accent)}
+  select,input[type=number]{background:var(--panel2);color:var(--ink);
+    border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:13px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap}
+  button{background:var(--accent);color:#06203d;border:0;border-radius:7px;
+    padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer}
+  button.ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+  button:active{transform:translateY(1px)}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+  .seg button{background:var(--panel2);color:var(--sub);border-radius:0;padding:7px 14px;font-weight:600}
+  .seg button.on{background:var(--accent);color:#06203d}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{text-align:left;padding:4px 6px;border-bottom:1px solid var(--line)}
+  th{color:var(--sub);font-weight:600}
+  .stat{display:flex;justify-content:space-between;padding:5px 2px;border-bottom:1px solid var(--line)}
+  .stat b{font-size:16px}
+  .swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}
+  .mini{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px}
+  @media(max-width:760px){.mini{grid-template-columns:1fr}}
+  .mini .card{padding:10px}
+  .mini h4{margin:0 0 6px;font-size:12px;color:var(--sub);font-weight:600}
+  h3{margin:22px 0 8px;font-size:15px}
+  .note{color:var(--sub);font-size:12.5px}
+  code{background:var(--panel2);padding:1px 5px;border-radius:4px;font-size:12px}
+  .legend{font-size:11.5px;color:var(--sub);margin-top:8px;display:flex;flex-wrap:wrap;gap:4px 14px}
+</style>
+</head>
+<body>
+<nav style="background:#1a2233;padding:10px 16px;margin:-8px -8px 16px;font-size:.9rem"><a href="index.html" style="color:#9cf;margin-right:14px;text-decoration:none">▶ シミュレーター</a><a href="about.html" style="color:#9cf;margin-right:14px;text-decoration:none">📄 仮定と各stepの説明</a><a href="report.html" style="color:#9cf;text-decoration:none">📊 分析レポート</a></nav>
+
+<header>
+  <h1>政党競争シミュレータ — 収束の推移を見る／初期条件を変えて遊ぶ</h1>
+  <div class="lead">
+    有権者が政策空間に複数の塊で分布するとき、各政党が「他党の位置を所与に自党の議席を最大化する点」へ
+    1党ずつ動く（逐次ベストレスポンス）。撤退・参入も内生的に起きる。
+    <b>そのラウンドごとの動きをアニメーションで再生</b>し、初期政党数・選挙制度・乱数シードを変えて何度でも試せる。
+  </div>
+  <div class="disclaimer">AIで作成しているため事実確認が必要です。有権者分布・政党行動はすべて仮置きの数理モデルで、実測データではありません。</div>
+  <div style="margin-top:8px">
+    <a href="about.html" style="display:inline-block;background:#1d212c;color:#e8eaf0;
+      border:1px solid #2a2f3d;text-decoration:none;font-weight:700;padding:7px 14px;border-radius:7px;font-size:13px">
+      📄 仮定と各stepの処理を読む</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="controls card">
+    <div class="ctl">
+      <label>選挙制度</label>
+      <div class="seg" id="regimeSeg">
+        <button data-r="FPTP" class="on">小選挙区 FPTP</button>
+        <button data-r="PR">比例 PR</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <label>初期政党数 <span class="val" id="vInit">6</span></label>
+      <input type="range" id="nInit" min="1" max="10" value="6" step="1">
+    </div>
+    <div class="ctl">
+      <label>乱数シード</label>
+      <input type="number" id="seed" value="42" style="width:90px">
+    </div>
+    <div class="ctl">
+      <label>棄権閾値 R <span class="val" id="vR">1.10</span></label>
+      <input type="range" id="rAbstain" min="0.4" max="2.0" value="1.10" step="0.05">
+    </div>
+    <div class="ctl">
+      <label>クラスタ散らばり ×<span class="val" id="vSig">1.0</span></label>
+      <input type="range" id="sigScale" min="0.4" max="2.0" value="1.0" step="0.1">
+    </div>
+    <div class="ctl">
+      <label>有権者分布</label>
+      <div class="seg" id="distSeg">
+        <button data-m="fixed" class="on">固定6塊</button>
+        <button data-m="random">ランダム</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <label>速度（ラウンド/秒）<span class="val" id="vSpd">4</span></label>
+      <input type="range" id="speed" min="1" max="20" value="4" step="1">
+    </div>
+    <div class="ctl">
+      <label>軸モード</label>
+      <div class="seg" id="axisSeg">
+        <button data-a="raw" class="on">生軸</button>
+        <button data-a="pca">主成分 PCA</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <label>次元</label>
+      <div class="seg" id="dimSeg">
+        <button data-dim="2" class="on">2D</button>
+        <button data-dim="3">3D</button>
+      </div>
+    </div>
+    <div class="ctl" id="rawAxisCtl">
+      <label>横軸 / 縦軸 / 奥行</label>
+      <div style="display:flex;gap:6px">
+        <select id="axX"></select><select id="axY"></select><select id="axZ"></select>
+      </div>
+    </div>
+    <div class="ctl">
+      <label>&nbsp;</label>
+      <div class="btns">
+        <button id="playBtn">▶ 再生</button>
+        <button id="stepBtn" class="ghost">⏭ 1ラウンド</button>
+        <button id="diceBtn" class="ghost">🎲 ランダム再配置</button>
+        <button id="resetBtn" class="ghost">⟲ リセット</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <canvas id="map" width="900" height="560"></canvas>
+      <div class="legend" id="legend"></div>
+      <div class="note" style="margin-top:6px">
+        薄い点＝有権者（色はクラスタ）。◯＝政党（大きさ＝シェア、尾＝直近の移動軌跡）。✕＝クラスタ中心。
+        <b>3D</b>はキャンバスをドラッグで回転（奥ほど暗く）。<b>主成分PCA</b>は有権者分布の分散が最大の方向を軸にとる。
+      </div>
+      <div class="note" id="pcaInfo" style="margin-top:6px;display:none"></div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="stat"><span>ラウンド</span><b id="sRound">0</b></div>
+        <div class="stat"><span>政党数</span><b id="sNP">–</b></div>
+        <div class="stat"><span>最大党シェア</span><b id="sMax">–</b></div>
+        <div class="stat"><span>実効政党数 (1/HHI)</span><b id="sENP">–</b></div>
+        <div class="stat"><span>投票率</span><b id="sTO">–</b></div>
+        <div class="stat"><span>最大移動量</span><b id="sMove">–</b></div>
+        <div class="stat" style="border:0"><span>状態</span><b id="sConv" style="font-size:13px">–</b></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h4 style="margin:0 0 8px;color:var(--sub);font-size:12px">政党一覧（シェア順）</h4>
+        <table><tbody id="ptable"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="mini">
+    <div class="card"><h4>政党数の推移</h4><canvas id="cNP" width="380" height="150"></canvas></div>
+    <div class="card"><h4>最大党シェアの推移</h4><canvas id="cShare" width="380" height="150"></canvas></div>
+    <div class="card"><h4>最大移動量（収束＝0付近）</h4><canvas id="cMove" width="380" height="150"></canvas></div>
+  </div>
+
+  <h3>このシミュレータの読み方</h3>
+  <div class="disclaimer">AIで作成しているため事実確認が必要です。</div>
+  <p class="note">
+    <b>コア仮説</b>：有権者が空間内で複数の塊（クラスタ）を作ると、塊ごとに「居心地のよい位置＝局所最適」ができ、
+    その数だけ政党が立ちうる。単峰（塊が1つ）なら中位投票者定理で全党が中央1点に収束し、政党は1つに潰れる。
+  </p>
+  <p class="note">
+    <b>収束について</b>：候補位置が「クラスタ重心＋ジッター」と離散的なため、党がラウンドごとに別クラスタへ飛び、
+    空いた重心へ参入が補充する循環（リミットサイクル）に入りやすい。<code>最大移動量</code>が0付近に貼り付けば均衡、
+    振動が続けば未収束＝政党数は「内生的に確定」ではなく「打ち切り時点の数」。右下グラフで判定できる。
+  </p>
+  <p class="note">
+    <b>遊び方の例</b>：① <code>R</code>（棄権閾値）を下げると周縁有権者が棄権し、中央党が相対的に強くなる。
+    ② シードを変えると初期配置が変わり、収束先が変わる（初期値依存＝未収束のサイン）。
+    ③ FPTP↔PR を切り替えて政党数・最大シェアの差を見る。
+    ④ クラスタ散らばりを上げると塊が融合し、政党が中央に集まりやすくなる。
+    ⑤ <code>有権者分布</code>を「ランダム」にすると、塊の数(3〜6)・位置・人口比をシードから乱数生成する。
+    シードを変えるたびに別の有権者地形になり、塊が偶然近接すれば単峰化して1党に潰れる／離れていれば多党になる、が観察できる。
+  </p>
+  <p class="note">
+    <b>まだ入っていない要素</b>：戦略投票（死票回避の乗り換え）と先行者の縄張り効果。
+    この2つを入れると小選挙区で「巨大与党＋少数野党乱立」が出やすくなる（現状の正直投票モデルでは多党のまま）。
+  </p>
+</div>
+
+<script>
+"use strict";
+// ===== モデル定数（party_competition_v1.py を移植）=====================
+const AXES = ["経済(左↔右)","社会(リベ↔保守)","エネルギー(脱原発↔推進)",
+  "外交安保(ハト↔タカ)","医療福祉(自助↔公助)","教育(自由↔統制)","地方分権(集権↔分権)"];
+const D = AXES.length;
+const BASE_CLUSTERS = [
+  {name:"中道保守マジョリティ", w:0.38, sigma:0.25, mu:[0.20,0.20,0.10,0.20,0.00,0.10,0.00]},
+  {name:"都市リベラル",         w:0.18, sigma:0.22, mu:[-0.30,-0.50,-0.50,-0.40,0.40,-0.30,0.20]},
+  {name:"地方保守",             w:0.15, sigma:0.22, mu:[0.30,0.50,0.30,0.50,-0.10,0.30,0.40]},
+  {name:"経済右派・小さな政府", w:0.10, sigma:0.18, mu:[0.70,-0.10,0.20,0.10,-0.60,-0.20,0.30]},
+  {name:"福祉左派",             w:0.12, sigma:0.20, mu:[-0.60,-0.20,-0.30,-0.20,0.70,0.00,0.00]},
+  {name:"環境・地方分権",       w:0.07, sigma:0.18, mu:[-0.20,-0.20,-0.80,-0.10,0.20,-0.10,0.70]},
+];
+const cloneClusters=cs=>cs.map(c=>({name:c.name,w:c.w,sigma:c.sigma,mu:c.mu.slice()}));
+let CLUSTERS = cloneClusters(BASE_CLUSTERS);
+let distMode = "fixed"; // "fixed" | "random"
+const COLORS = ["#4da3ff","#ff7a9c","#5fd08a","#ffb454","#b98bff","#4dd6d6","#ff9f6b","#8ad14d"];
+// ランダム塊: シードから塊の数(3〜6)・中心・人口比・散らばりを生成（有権者用RNGとは独立）
+function makeRandomClusters(seed){
+  const rg=mulberry32(((seed*2654435761)>>>0)^0x9e3779b9);
+  const rgauss=(mu,sd)=>{let u=0,v=0;while(u===0)u=rg();while(v===0)v=rg();
+    return mu+sd*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+  const K=3+Math.floor(rg()*4), out=[];
+  for(let k=0;k<K;k++){const mu=new Array(D);
+    for(let d=0;d<D;d++)mu[d]=clip(rgauss(0,0.5));
+    out.push({name:`塊${k+1}`, w:0.5+rg()*1.5, sigma:0.16+rg()*0.12, mu});}
+  return out;
+}
+// 実時間アニメ用に Python より軽量化（挙動は同型）
+const N_DISTRICTS=40, DISTRICT_SIZE=110, DISTRICT_SHIFT=0.30, N_VOTERS_PR=2200;
+const EXIT_SEAT_SHARE=0.03, ENTRY_GAIN=0.05, MAX_PARTIES=10, CONV_EPS=1e-3;
+
+// ===== シード付き乱数（mulberry32 + Box-Muller）=========================
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+let rand=mulberry32(42);
+function gauss(mu,sd){let u=0,v=0;while(u===0)u=rand();while(v===0)v=rand();
+  return mu+sd*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function clip(x){return x<-1?-1:x>1?1:x;}
+
+// ===== 状態 =============================================================
+let CW=[];
+function recomputeCW(){CW=CLUSTERS.map(c=>c.w);const s=CW.reduce((a,b)=>a+b,0)||1;CW=CW.map(w=>w/s);}
+recomputeCW();
+let sigScale=1.0, R_ABSTAIN=1.10;
+let VOTERS_PR=[], DISTRICTS=[], VIEW=[]; // VIEW: 描画用サブサンプル {pos,cluster}
+let parties=[]; // {pos:[7], id, trail:[[x,y]...]}
+let round=0, history=[], running=false, timer=null, nextId=0, converged=false;
+
+// ===== 有権者生成 =======================================================
+function multinomial(n,probs){
+  const counts=new Array(probs.length).fill(0);
+  for(let i=0;i<n;i++){let r=rand(),acc=0,k=0;
+    for(;k<probs.length;k++){acc+=probs[k];if(r<=acc)break;}
+    if(k>=probs.length)k=probs.length-1;counts[k]++;}
+  return counts;
+}
+function sampleVoters(n){
+  const counts=multinomial(n,CW), out=[];
+  for(let k=0;k<CLUSTERS.length;k++){
+    const mu=CLUSTERS[k].mu, sd=CLUSTERS[k].sigma*sigScale;
+    for(let i=0;i<counts[k];i++){
+      const v=new Float64Array(D);
+      for(let d=0;d<D;d++)v[d]=clip(gauss(mu[d],sd));
+      out.push({pos:v,cluster:k});
+    }
+  }
+  // shuffle
+  for(let i=out.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[out[i],out[j]]=[out[j],out[i]];}
+  return out;
+}
+function buildWorld(seed){
+  rand=mulberry32(seed>>>0);
+  // 比例用全国サンプル
+  VOTERS_PR=sampleVoters(N_VOTERS_PR);
+  // 小選挙区: 区ごとに局所電＋地域シフト
+  DISTRICTS=[];
+  for(let m=0;m<N_DISTRICTS;m++){
+    const base=sampleVoters(DISTRICT_SIZE);
+    const shift=new Float64Array(D);
+    for(let d=0;d<D;d++)shift[d]=gauss(0,DISTRICT_SHIFT);
+    const dist=base.map(v=>{const p=new Float64Array(D);
+      for(let d=0;d<D;d++)p[d]=clip(v.pos[d]+shift[d]);return p;});
+    DISTRICTS.push(dist);
+  }
+  // 描画用サブサンプル（PR母集団から最大1600点）
+  VIEW = VOTERS_PR.length>1600 ? VOTERS_PR.filter((_,i)=>i%Math.ceil(VOTERS_PR.length/1600)===0) : VOTERS_PR;
+  computePCA();
+}
+
+// ===== PCA（有権者分布の主成分）========================================
+// 共分散行列の固有分解（Jacobi 回転）で上位3主成分を求め、描画軸に使う
+let PCA={mean:new Float64Array(D),vecs:[],scale:[1,1,1],evr:[]};
+function jacobiEig(S){
+  const n=S.length, a=S.map(r=>Array.from(r));
+  const v=Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>i===j?1:0));
+  for(let sweep=0;sweep<100;sweep++){
+    let off=0;
+    for(let p=0;p<n;p++)for(let q=p+1;q<n;q++)off+=a[p][q]*a[p][q];
+    if(off<1e-20)break;
+    for(let p=0;p<n;p++)for(let q=p+1;q<n;q++){
+      if(Math.abs(a[p][q])<1e-18)continue;
+      const theta=(a[q][q]-a[p][p])/(2*a[p][q]);
+      const sgn=theta>=0?1:-1;
+      const t=sgn/(Math.abs(theta)+Math.sqrt(theta*theta+1));
+      const c=1/Math.sqrt(t*t+1), s=t*c;
+      for(let k=0;k<n;k++){const akp=a[k][p],akq=a[k][q];a[k][p]=c*akp-s*akq;a[k][q]=s*akp+c*akq;}
+      for(let k=0;k<n;k++){const apk=a[p][k],aqk=a[q][k];a[p][k]=c*apk-s*aqk;a[q][k]=s*apk+c*aqk;}
+      for(let k=0;k<n;k++){const vkp=v[k][p],vkq=v[k][q];v[k][p]=c*vkp-s*vkq;v[k][q]=s*vkp+c*vkq;}
+    }
+  }
+  return {vals:a.map((r,i)=>r[i]),vecs:v};
+}
+function computePCA(){
+  const data=VOTERS_PR, n=data.length||1;
+  const mean=new Float64Array(D);
+  for(const o of data)for(let d=0;d<D;d++)mean[d]+=o.pos[d];
+  for(let d=0;d<D;d++)mean[d]/=n;
+  const cov=Array.from({length:D},()=>new Float64Array(D));
+  for(const o of data)for(let a=0;a<D;a++){const da=o.pos[a]-mean[a];
+    for(let b=a;b<D;b++)cov[a][b]+=da*(o.pos[b]-mean[b]);}
+  for(let a=0;a<D;a++)for(let b=a;b<D;b++){cov[a][b]/=(n-1);cov[b][a]=cov[a][b];}
+  const {vals,vecs}=jacobiEig(cov);
+  const order=[...Array(D).keys()].sort((i,j)=>vals[j]-vals[i]);
+  const total=vals.reduce((s,x)=>s+Math.max(x,0),0)||1;
+  PCA.mean=mean;
+  PCA.vecs=order.slice(0,3).map(i=>{const vec=new Float64Array(D);
+    for(let d=0;d<D;d++)vec[d]=vecs[d][i];
+    // 符号規約: 絶対値最大の成分を正に揃える（向きの安定化）
+    let mi=0,ma=0;for(let d=0;d<D;d++)if(Math.abs(vec[d])>ma){ma=Math.abs(vec[d]);mi=d;}
+    if(vec[mi]<0)for(let d=0;d<D;d++)vec[d]=-vec[d];
+    return vec;});
+  PCA.evr=order.map(i=>Math.max(vals[i],0)/total);
+  PCA.scale=PCA.vecs.map(vec=>{let m=1e-6;
+    for(const o of data){let s=0;for(let d=0;d<D;d++)s+=(o.pos[d]-mean[d])*vec[d];if(Math.abs(s)>m)m=Math.abs(s);}
+    return m;});
+}
+function pcaCoord(pos,k){const vec=PCA.vecs[k];if(!vec)return 0;
+  let s=0;for(let d=0;d<D;d++)s+=(pos[d]-PCA.mean[d])*vec[d];return s/(PCA.scale[k]||1);}
+
+// ===== 距離・評価 =======================================================
+function nearestIdx(pos,P){let best=0,bd=Infinity;
+  for(let j=0;j<P.length;j++){let s=0;const q=P[j];
+    for(let d=0;d<D;d++){const x=pos[d]-q[d];s+=x*x;}
+    if(s<bd){bd=s;best=j;}}
+  return[best,Math.sqrt(bd)];}
+
+function prShares(P){
+  const shares=new Array(P.length).fill(0);let voted=0;
+  for(const v of VOTERS_PR){const[j,nd]=nearestIdx(v.pos,P);
+    if(nd<=R_ABSTAIN){shares[j]++;voted++;}}
+  if(voted===0)return[shares.map(_=>0),0];
+  return[shares.map(s=>s/voted),voted/VOTERS_PR.length];
+}
+function fptpShares(P){
+  const seats=new Array(P.length).fill(0);let totV=0,allV=0;
+  for(const dist of DISTRICTS){
+    const cnt=new Array(P.length).fill(0);
+    for(const pos of dist){allV++;const[j,nd]=nearestIdx(pos,P);
+      if(nd<=R_ABSTAIN){cnt[j]++;totV++;}}
+    let mx=-1,mj=0,any=false;
+    for(let j=0;j<P.length;j++){if(cnt[j]>0)any=true;if(cnt[j]>mx){mx=cnt[j];mj=j;}}
+    if(any)seats[mj]++;
+  }
+  const tot=seats.reduce((a,b)=>a+b,0);
+  if(tot===0)return[seats,totV/allV];
+  return[seats.map(s=>s/tot),totV/allV];
+}
+let REGIME="FPTP";
+function payoff(P){return REGIME==="PR"?prShares(P)[0]:fptpShares(P)[0];}
+
+// ===== ベストレスポンス =================================================
+let weightedCentroid=new Float64Array(D);
+function recomputeCentroid(){const c=new Float64Array(D);
+  for(let k=0;k<CLUSTERS.length;k++)for(let d=0;d<D;d++)c[d]+=CLUSTERS[k].mu[d]*CW[k];
+  weightedCentroid=c;}
+recomputeCentroid();
+function candidates(cur){
+  const cs=CLUSTERS.map(c=>Float64Array.from(c.mu));
+  cs.push(Float64Array.from(cur));
+  for(let t=0;t<4;t++){const p=new Float64Array(D);
+    for(let d=0;d<D;d++)p[d]=clip(cur[d]+gauss(0,0.15));cs.push(p);}
+  cs.push(Float64Array.from(weightedCentroid));
+  return cs;
+}
+function bestResponse(P,j){
+  const cands=candidates(P[j]);let bestPos=P[j],bestVal=-1;
+  for(const c of cands){const Pt=P.slice();Pt[j]=c;
+    const val=payoff(Pt)[j];
+    if(val>bestVal+1e-9){bestVal=val;bestPos=c;}}
+  return bestPos;
+}
+function dist(a,b){let s=0;for(let d=0;d<D;d++){const x=a[d]-b[d];s+=x*x;}return Math.sqrt(s);}
+function nearestCluster(pos){let bj=0,bd=Infinity;
+  for(let k=0;k<CLUSTERS.length;k++){let s=0;for(let d=0;d<D;d++){const x=pos[d]-CLUSTERS[k].mu[d];s+=x*x;}
+    if(s<bd){bd=s;bj=k;}}return bj;}
+
+// ===== 1ラウンド進める ==================================================
+function stepRound(){
+  if(converged)return;
+  let P=parties.map(p=>p.pos);
+  let move=0;
+  for(let j=0;j<P.length;j++){const np=bestResponse(P,j);move=Math.max(move,dist(np,P[j]));P[j]=np;parties[j].pos=np;}
+  let shares=payoff(P);
+  // 撤退
+  let keep=shares.map(s=>s>=EXIT_SEAT_SHARE);
+  if(!keep.some(x=>x)){let mi=shares.indexOf(Math.max(...shares));keep[mi]=true;}
+  let removed=keep.filter(x=>!x).length;
+  parties=parties.filter((_,j)=>keep[j]);
+  P=parties.map(p=>p.pos);
+  // 参入
+  let entered=0;
+  if(P.length<MAX_PARTIES){
+    let bestEntry=null,bestGain=ENTRY_GAIN;
+    for(let k=0;k<CLUSTERS.length;k++){const cand=Float64Array.from(CLUSTERS[k].mu);
+      const Pt=P.concat([cand]);const g=payoff(Pt)[Pt.length-1];
+      if(g>bestGain){bestGain=g;bestEntry=cand;}}
+    if(bestEntry){parties.push({pos:bestEntry,id:nextId++,trail:[]});entered=1;P=parties.map(p=>p.pos);}
+  }
+  shares=payoff(P);
+  // 軌跡更新（7次元posを保持し、描画時に投影する）
+  parties.forEach(p=>{p.trail.push(Float64Array.from(p.pos));if(p.trail.length>14)p.trail.shift();});
+  // 指標
+  const hhi=shares.reduce((a,s)=>a+s*s,0), enp=hhi>0?1/hhi:0;
+  const turnout=(REGIME==="PR"?prShares(P):fptpShares(P))[1];
+  round++;
+  history.push({round,n:P.length,maxShare:Math.max(...shares,0),move,enp,turnout});
+  if(move<CONV_EPS&&removed===0&&entered===0)converged=true;
+  drawAll(shares);
+  updatePanels(shares,enp,turnout,move,removed,entered);
+}
+
+// ===== リセット =========================================================
+function reset(){
+  stop();
+  sigScale=+sigScaleEl.value; R_ABSTAIN=+rAbstainEl.value;
+  const seed=+seedEl.value|0;
+  CLUSTERS = distMode==="random" ? makeRandomClusters(seed) : cloneClusters(BASE_CLUSTERS);
+  recomputeCW(); recomputeCentroid(); updateLegend();
+  buildWorld(seed);
+  // 初期政党: クラスタ重心の一部からランダム選択（重複なし）
+  const nInit=Math.min(+nInitEl.value,CLUSTERS.length);
+  const idx=[...Array(CLUSTERS.length).keys()];
+  for(let i=idx.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]];}
+  const pick=idx.slice(0,nInit);
+  nextId=0;
+  parties=pick.map(k=>({pos:Float64Array.from(CLUSTERS[k].mu),id:nextId++,trail:[]}));
+  round=0;history=[];converged=false;
+  const shares=payoff(parties.map(p=>p.pos));
+  const hhi=shares.reduce((a,s)=>a+s*s,0),enp=hhi>0?1/hhi:0;
+  const turnout=(REGIME==="PR"?prShares(parties.map(p=>p.pos)):fptpShares(parties.map(p=>p.pos)))[1];
+  drawAll(shares);updatePanels(shares,enp,turnout,0,0,0);
+  sConv.textContent="初期配置";
+}
+
+// ===== 描画 =============================================================
+const map=document.getElementById("map"),mx=map.getContext("2d");
+let axisMode="raw";   // "raw" | "pca"
+let dim=2;            // 2 | 3
+let yaw=0.7, pitch=0.45; // 3D 回転角
+let lastShares=[];   // 再描画用に最後のシェアを保持
+
+// pos(7次元) → 描画用の正規化座標 [x,y,z]（各 ~[-1,1]）
+function normCoord(pos){
+  if(axisMode==="pca") return [pcaCoord(pos,0),pcaCoord(pos,1),dim===3?pcaCoord(pos,2):0];
+  const xa=+axX.value,ya=+axY.value,za=+axZ.value;
+  return [pos[xa],pos[ya],dim===3?pos[za]:0];
+}
+// 正規化座標 → 画面座標 [sx,sy,depth]
+function projNorm(c){
+  const W=map.width,H=map.height;
+  if(dim===2){const pad=30;return [pad+(c[0]+1)/2*(W-2*pad), H-pad-(c[1]+1)/2*(H-2*pad), 0];}
+  let x=c[0],y=c[1],z=c[2]||0;
+  const x1=x*Math.cos(yaw)+z*Math.sin(yaw);
+  const z1=-x*Math.sin(yaw)+z*Math.cos(yaw);
+  const y2=y*Math.cos(pitch)-z1*Math.sin(pitch);
+  const z2=y*Math.sin(pitch)+z1*Math.cos(pitch);
+  const pad=70, scale=Math.min(W,H)/2-pad, persp=1/(1+z2*0.18);
+  return [W/2+x1*scale*persp, H/2-y2*scale*persp, z2];
+}
+function toScreen(pos){return projNorm(normCoord(pos));}
+function axisLabel(i){
+  if(axisMode==="pca") return `PC${i+1} (${((PCA.evr[i]||0)*100).toFixed(0)}%)`;
+  return AXES[+[axX,axY,axZ][i].value];
+}
+function drawFrame2D(){
+  const W=map.width,H=map.height;
+  mx.lineWidth=1;mx.strokeStyle="#1b2030";
+  const c0=projNorm([0,0,0]);
+  mx.beginPath();mx.moveTo(c0[0],18);mx.lineTo(c0[0],H-18);mx.moveTo(18,c0[1]);mx.lineTo(W-18,c0[1]);mx.stroke();
+  mx.fillStyle="#9aa3b2";mx.font="11px sans-serif";mx.textAlign="center";
+  mx.fillText("→ "+axisLabel(0),W/2,H-6);
+  mx.save();mx.translate(12,H/2);mx.rotate(-Math.PI/2);mx.fillText("→ "+axisLabel(1),0,0);mx.restore();
+}
+function drawFrame3D(){
+  const corners=[];
+  for(let i=0;i<8;i++)corners.push([(i&1)?1:-1,(i&2)?1:-1,(i&4)?1:-1]);
+  const edges=[[0,1],[0,2],[0,4],[1,3],[1,5],[2,3],[2,6],[3,7],[4,5],[4,6],[5,7],[6,7]];
+  mx.strokeStyle="#1b2030";mx.lineWidth=1;mx.beginPath();
+  edges.forEach(([a,b])=>{const sa=projNorm(corners[a]),sb=projNorm(corners[b]);
+    mx.moveTo(sa[0],sa[1]);mx.lineTo(sb[0],sb[1]);});
+  mx.stroke();
+  const O=projNorm([0,0,0]);
+  [["#ff7a9c",[1.18,0,0],0],["#5fd08a",[0,1.18,0],1],["#4da3ff",[0,0,1.18],2]].forEach(([col,v,i])=>{
+    const s=projNorm(v);mx.strokeStyle=col;mx.lineWidth=2;mx.beginPath();
+    mx.moveTo(O[0],O[1]);mx.lineTo(s[0],s[1]);mx.stroke();
+    mx.fillStyle=col;mx.font="11px sans-serif";mx.textAlign="center";mx.fillText(axisLabel(i),s[0],s[1]-5);});
+}
+function hexA(t){const al=Math.round(Math.max(0,Math.min(1,t))*255);return al.toString(16).padStart(2,"0");}
+function drawAll(shares){
+  lastShares=shares;
+  const W=map.width,H=map.height;
+  mx.clearRect(0,0,W,H);
+  if(dim===3)drawFrame3D();else drawFrame2D();
+  // 有権者点（3Dは奥行ソート＋陰影）
+  const pts=VIEW.map(v=>{const s=toScreen(v.pos);return{x:s[0],y:s[1],z:s[2],c:v.cluster};});
+  if(dim===3)pts.sort((a,b)=>a.z-b.z);
+  for(const p of pts){
+    const a=dim===3?hexA(0.30+0.55*((p.z+1.7)/3.4)):"aa";
+    mx.fillStyle=COLORS[p.c]+a;mx.beginPath();mx.arc(p.x,p.y,dim===3?2.0:2.2,0,7);mx.fill();}
+  // クラスタ中心 ✕
+  for(let k=0;k<CLUSTERS.length;k++){const s=toScreen(CLUSTERS[k].mu);
+    mx.strokeStyle=COLORS[k];mx.lineWidth=2;mx.beginPath();
+    mx.moveTo(s[0]-6,s[1]-6);mx.lineTo(s[0]+6,s[1]+6);mx.moveTo(s[0]+6,s[1]-6);mx.lineTo(s[0]-6,s[1]+6);mx.stroke();}
+  // 政党の軌跡（trail は7次元posを保持）
+  parties.forEach(p=>{const col=COLORS[nearestCluster(p.pos)];
+    if(p.trail.length>1){mx.strokeStyle=col+"66";mx.lineWidth=2;mx.beginPath();
+      p.trail.forEach((t,i)=>{const s=toScreen(t);i?mx.lineTo(s[0],s[1]):mx.moveTo(s[0],s[1]);});mx.stroke();}});
+  // 政党 ◯（大きさ=シェア、3Dは奥行ソート＋遠近スケール）
+  const pinfo=parties.map((p,j)=>({s:toScreen(p.pos),j,p}));
+  if(dim===3)pinfo.sort((a,b)=>a.s[2]-b.s[2]);
+  pinfo.forEach(({s,j,p})=>{const col=COLORS[nearestCluster(p.pos)];
+    const r=(8+Math.sqrt(Math.max(shares[j],0))*46)*(dim===3?1/(1+s[2]*0.18):1);
+    mx.beginPath();mx.arc(s[0],s[1],r,0,7);mx.fillStyle=col+"cc";mx.fill();
+    mx.lineWidth=2;mx.strokeStyle="#0b0d13";mx.stroke();
+    mx.fillStyle="#06203d";mx.font="bold 11px sans-serif";mx.textAlign="center";mx.textBaseline="middle";
+    mx.fillText(Math.round(shares[j]*100)+"%",s[0],s[1]);});
+  updatePcaInfo();
+}
+function updatePcaInfo(){
+  const el=$("pcaInfo");
+  if(axisMode!=="pca"){el.style.display="none";return;}
+  el.style.display="block";
+  const npc=dim===3?3:2;let html="<b>主成分の構成</b>（有権者分布の共分散から算出。±は軸の向き）<br>";
+  for(let i=0;i<npc;i++){const vec=PCA.vecs[i];if(!vec)continue;
+    const load=Array.from(vec,(w,d)=>[Math.abs(w),d,w]).sort((a,b)=>b[0]-a[0]).slice(0,3);
+    const terms=load.map(([,d,w])=>`${w>=0?"+":"−"}${AXES[d].split("(")[0]}`).join("　");
+    html+=`PC${i+1}（寄与率 ${((PCA.evr[i]||0)*100).toFixed(1)}%）: ${terms}<br>`;}
+  el.innerHTML=html;
+}
+function redraw(){drawAll(payoff(parties.map(p=>p.pos)));}
+
+// ===== ミニチャート =====================================================
+function lineChart(id,getY,color,y0,y1){
+  const cv=document.getElementById(id),c=cv.getContext("2d"),W=cv.width,H=cv.height,pad=22;
+  c.clearRect(0,0,W,H);c.strokeStyle="#23283a";c.lineWidth=1;
+  c.beginPath();c.moveTo(pad,H-pad);c.lineTo(W-4,H-pad);c.moveTo(pad,4);c.lineTo(pad,H-pad);c.stroke();
+  if(history.length<1)return;
+  const n=history.length,maxX=Math.max(n-1,1);
+  const X=i=>pad+i/maxX*(W-pad-6), Y=v=>H-pad-(v-y0)/(y1-y0)*(H-pad-6);
+  c.strokeStyle=color;c.lineWidth=2;c.beginPath();
+  history.forEach((h,i)=>{const v=getY(h);i?c.lineTo(X(i),Y(v)):c.moveTo(X(i),Y(v));});c.stroke();
+  c.fillStyle=color;const last=history[n-1];c.beginPath();c.arc(X(n-1),Y(getY(last)),3,0,7);c.fill();
+  c.fillStyle="#9aa3b2";c.font="10px sans-serif";c.textAlign="left";
+  c.fillText(y1.toFixed(y1>=10?0:1),2,10);c.fillText(y0.toFixed(0),2,H-pad);
+}
+function drawCharts(){
+  lineChart("cNP",h=>h.n,"#4da3ff",0,MAX_PARTIES);
+  lineChart("cShare",h=>h.maxShare,"#ff7a9c",0,1);
+  const mmax=Math.max(0.5,...history.map(h=>h.move));
+  lineChart("cMove",h=>h.move,"#ffb454",0,mmax);
+}
+
+// ===== パネル更新 =======================================================
+const $=id=>document.getElementById(id);
+function updatePanels(shares,enp,turnout,move,removed,entered){
+  $("sRound").textContent=round;
+  $("sNP").textContent=parties.length;
+  $("sMax").textContent=(Math.max(...shares,0)*100).toFixed(1)+"%";
+  $("sENP").textContent=enp.toFixed(2);
+  $("sTO").textContent=(turnout*100).toFixed(1)+"%";
+  $("sMove").textContent=move.toFixed(3);
+  let st=converged?"✅ 収束（均衡）":"周回中…";
+  if(removed||entered)st+=` (撤退${removed}・参入${entered})`;
+  $("sConv").textContent=round===0?"初期配置":st;
+  $("sConv").style.color=converged?"#5fd08a":"#ffb454";
+  // テーブル
+  const idx=shares.map((s,j)=>[s,j]).sort((a,b)=>b[0]-a[0]);
+  let html="<tr><th></th><th>シェア</th><th>最寄りクラスタ</th></tr>";
+  for(const[s,j] of idx){const p=parties[j];if(!p)continue;const k=nearestCluster(p.pos);
+    html+=`<tr><td><span class="swatch" style="background:${COLORS[k]}"></span></td>
+      <td>${(s*100).toFixed(1)}%</td><td>${CLUSTERS[k].name}</td></tr>`;}
+  $("ptable").innerHTML=html;
+  drawCharts();
+}
+
+// ===== 再生制御 =========================================================
+function play(){if(running||converged)return;running=true;$("playBtn").textContent="⏸ 一時停止";
+  const tick=()=>{if(!running)return;stepRound();
+    if(converged){stop();return;}
+    timer=setTimeout(tick,1000/(+speedEl.value));};
+  tick();}
+function stop(){running=false;if(timer)clearTimeout(timer);timer=null;$("playBtn").textContent="▶ 再生";}
+
+// ===== UI 配線 ==========================================================
+const nInitEl=$("nInit"),seedEl=$("seed"),rAbstainEl=$("rAbstain"),
+  sigScaleEl=$("sigScale"),speedEl=$("speed"),axX=$("axX"),axY=$("axY"),axZ=$("axZ"),sConv=$("sConv");
+AXES.forEach((a,i)=>{axX.add(new Option(a,i));axY.add(new Option(a,i));axZ.add(new Option(a,i));});
+axX.value=0;axY.value=1;axZ.value=2;
+function updateAxisUI(){
+  $("rawAxisCtl").style.display=axisMode==="raw"?"":"none";
+  axZ.style.display=dim===3?"":"none";
+  map.style.cursor=dim===3?"grab":"default";
+}
+nInitEl.oninput=()=>{$("vInit").textContent=nInitEl.value;};
+rAbstainEl.oninput=()=>{$("vR").textContent=(+rAbstainEl.value).toFixed(2);};
+sigScaleEl.oninput=()=>{$("vSig").textContent=(+sigScaleEl.value).toFixed(1);};
+speedEl.oninput=()=>{$("vSpd").textContent=speedEl.value;};
+[nInitEl,seedEl,rAbstainEl,sigScaleEl].forEach(el=>el.addEventListener("change",reset));
+axX.onchange=axY.onchange=axZ.onchange=redraw;
+// 軸モード（生軸 / PCA）切替
+document.querySelectorAll("#axisSeg button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("#axisSeg button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");axisMode=b.dataset.a;updateAxisUI();redraw();});
+// 次元（2D / 3D）切替
+document.querySelectorAll("#dimSeg button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("#dimSeg button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");dim=+b.dataset.dim;updateAxisUI();redraw();});
+// 3D ドラッグ回転
+let dragging=false,lx=0,ly=0;
+map.addEventListener("mousedown",e=>{if(dim!==3)return;dragging=true;lx=e.clientX;ly=e.clientY;map.style.cursor="grabbing";});
+window.addEventListener("mousemove",e=>{if(!dragging)return;
+  yaw+=(e.clientX-lx)*0.01;pitch+=(e.clientY-ly)*0.01;
+  pitch=Math.max(-1.45,Math.min(1.45,pitch));lx=e.clientX;ly=e.clientY;redraw();});
+window.addEventListener("mouseup",()=>{if(dragging){dragging=false;map.style.cursor=dim===3?"grab":"default";}});
+$("playBtn").onclick=()=>running?stop():play();
+$("stepBtn").onclick=()=>{stop();stepRound();};
+$("resetBtn").onclick=reset;
+// 🎲 ランダム再配置: ランダム分布に切替＋シードを進めて有権者地形を作り直す
+$("diceBtn").onclick=()=>{
+  distMode="random";
+  document.querySelectorAll("#distSeg button").forEach(x=>x.classList.toggle("on",x.dataset.m==="random"));
+  seedEl.value=((+seedEl.value|0)+1)%100000;
+  reset();
+};
+document.querySelectorAll("#regimeSeg button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("#regimeSeg button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");REGIME=b.dataset.r;reset();});
+// 凡例
+function updateLegend(){
+  $("legend").innerHTML=CLUSTERS.map((c,k)=>
+    `<span><span class="swatch" style="background:${COLORS[k%COLORS.length]}"></span>${c.name} (${Math.round((CW[k]||0)*100)}%)</span>`).join("");
+}
+// 有権者分布モード切替
+document.querySelectorAll("#distSeg button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("#distSeg button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");distMode=b.dataset.m;reset();});
+
+updateAxisUI();
+reset();
+</script>
+</body>
+</html>

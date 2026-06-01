@@ -1,0 +1,185 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>多党競争シミュレーション v1 — 局所最適は複数あるか</title>
+<style>
+ body{font-family:-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;line-height:1.7;color:#1a1a2e;max-width:900px;margin:0 auto;padding:24px;background:#fafafc}
+ h1{font-size:1.6rem;border-bottom:3px solid #4f46e5;padding-bottom:8px}
+ h2{font-size:1.25rem;margin-top:2.2em;color:#3730a3;border-left:5px solid #4f46e5;padding-left:10px}
+ h3{font-size:1.05rem;color:#4338ca}
+ table{border-collapse:collapse;width:100%;margin:12px 0;font-size:.9rem}
+ th,td{border:1px solid #d4d4e0;padding:6px 9px;text-align:left}
+ th{background:#eef2ff}
+ .mono{font-family:'SF Mono',Consolas,monospace;font-size:.82rem;color:#444}
+ .disclaimer{background:#fff7ed;border:1px solid #fdba74;color:#9a3412;font-size:.8rem;padding:6px 10px;border-radius:6px;margin:8px 0}
+ .kpi{display:flex;gap:14px;flex-wrap:wrap;margin:14px 0}
+ .kpi div{background:#fff;border:1px solid #ddd;border-radius:10px;padding:12px 18px;text-align:center;min-width:120px}
+ .kpi .num{display:block;font-size:1.7rem;font-weight:700;color:#4f46e5}
+ .kpi .lbl{font-size:.75rem;color:#666}
+ .formula{background:#f1f5f9;border-left:4px solid #64748b;padding:8px 12px;font-family:monospace;margin:8px 0;overflow-x:auto}
+ .box{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;margin:12px 0}
+ .warn{background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:12px 16px;margin:12px 0}
+ .ok{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin:12px 0}
+ code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+ figure{margin:16px 0;text-align:center}
+ figure img{max-width:100%;border:1px solid #e2e8f0;border-radius:8px;background:#fff}
+ figcaption{font-size:.82rem;color:#555;margin-top:6px}
+</style></head><body>
+<nav style="background:#1a2233;padding:10px 16px;margin:-8px -8px 16px;font-size:.9rem"><a href="index.html" style="color:#9cf;margin-right:14px;text-decoration:none">▶ シミュレーター</a><a href="about.html" style="color:#9cf;margin-right:14px;text-decoration:none">📄 仮定と各stepの説明</a><a href="report.html" style="color:#9cf;text-decoration:none">📊 分析レポート</a></nav>
+
+
+<h1>多党競争シミュレーション v1<br><small style="font-size:.95rem;color:#666;font-weight:400">仮説「党が複数あるのは局所最適が複数あるから」を検証する</small></h1>
+<p class="disclaimer">⚠️ このページはAI（でんすけ）が作成しています。数値・前提はすべて仮置きの計算値であり、事実確認が必要です。</p>
+
+<section>
+<h2>0. このページの主張（結論ファースト）</h2>
+<div class="ok"><b>コア仮説は再現された。</b> 有権者を6つの塊（混合ガウス）で置くと、
+小選挙区・比例どちらでも<b>6〜7党が安定して生き残り、各党が別々の塊に居着いた</b>。
+塊ごとに「そこを取るのが得」という局所最適があり、その数だけ政党が立つ
+＝<b>局所最適が複数あるから政党が複数になる</b>、が成立した。</div>
+<div class="warn"><b>ただし「巨大与党＋少数野党乱立（1強多弱）」は出なかった。</b>
+最大党のシェアは20〜22%にとどまり、小選挙区(FPTP)と比例(PR)で実効政党数もほぼ同じ
+（6.5 vs 6.8）。<b>制度を変えても1強にならない。</b>
+理由とその対処は §5 に書いた（鍵は「戦略投票」を入れていないこと）。</div>
+<figure><img src="figs/fig1.png" alt="図1: 有権者マップ（7軸→PCAで2次元に圧縮）。薄い点が有権者、丸が6クラスタの中心（人口比%）、★が均衡時の政党（FPTP）。各党が別々の塊に居着いている＝局所最適の数だけ政党が立つ、が見て取れる。"><figcaption>図1: 有権者マップ（7軸→PCAで2次元に圧縮）。薄い点が有権者、丸が6クラスタの中心（人口比%）、★が均衡時の政党（FPTP）。各党が別々の塊に居着いている＝局所最適の数だけ政党が立つ、が見て取れる。</figcaption></figure>
+</section>
+
+<section>
+<h2>1. 用語定義（式つき）</h2>
+<p class="disclaimer">⚠️ このページはAI（でんすけ）が作成しています。数値・前提はすべて仮置きの計算値であり、事実確認が必要です。</p>
+<h3>政策空間と政策ポジション</h3>
+<p>政党も有権者も、7本の政策軸からなる7次元空間上の1点で表す。各軸は約 −1〜+1。点 <code>x = (x₀,…,x₆)</code> を「政策ポジション」と呼ぶ。</p>
+<h3>距離</h3>
+<p>有権者 v と政党 p の近さは、両者のユークリッド距離で測る。</p>
+<div class="formula">距離(v, p) = √( Σₐ (vₐ − pₐ)² )   （a は7軸を走る）</div>
+<h3>近接投票（proximity voting）</h3>
+<p>各有権者は<b>最も距離の近い政党</b>に投票する。ただし最寄り政党までの距離が
+<b>棄権閾値 R = 1.1</b> を超えたら「自分に合う党が無い」とみなして<b>棄権</b>する。</p>
+<h3>得票シェア / 議席シェア</h3>
+<p>比例(PR)では各党の<b>得票シェア</b>＝（その党に投票した人数 ÷ 投票した人の総数）。
+小選挙区(FPTP)では国を 60 区に分け、<b>各区で得票1位の党がその区の議席を総取り</b>。
+<b>議席シェア</b>＝（取った区数 ÷ 全区数）。</p>
+<h3>ベストレスポンス均衡（ナッシュ均衡）</h3>
+<p>各党は「他党の位置を固定したまま、自党のシェアが最大になる点」へ動く。
+これを1党ずつ繰り返し、<b>どの党も動く動機が無くなった配置</b>＝ナッシュ均衡を探す。
+（前バージョンの遺伝的アルゴリズムは使っていない。今回は逐次ベストレスポンス。）</p>
+<h3>実効政党数（1/HHI）と HHI</h3>
+<p>政党の集中度の指標。シェア sⱼ から <code>HHI = Σ sⱼ²</code>。その逆数 <code>1/HHI</code> が
+「実質何党あるか」を表す（全党が同じシェアならちょうど政党数、1党独占なら1に近づく）。</p>
+</section>
+
+<section>
+<h2>2. 前提（でっち上げた仮置きの数字）</h2>
+<p class="disclaimer">⚠️ このページはAI（でんすけ）が作成しています。数値・前提はすべて仮置きの計算値であり、事実確認が必要です。</p>
+<p>これらは実測ではなく、<b>傾向を見るために手で置いた値</b>。前提を変えれば結果も動く。</p>
+<h3>7つの政策軸</h3>
+<table><thead><tr><th>軸番号</th><th>意味（−端 ↔ +端）</th></tr></thead><tbody><tr><td>0</td><td>経済(左↔右)</td></tr><tr><td>1</td><td>社会(リベ↔保守)</td></tr><tr><td>2</td><td>エネルギー(脱原発↔推進)</td></tr><tr><td>3</td><td>外交安保(ハト↔タカ)</td></tr><tr><td>4</td><td>医療福祉(自助↔公助)</td></tr><tr><td>5</td><td>教育(自由↔統制)</td></tr><tr><td>6</td><td>地方分権(集権↔分権)</td></tr></tbody></table>
+<h3>有権者の混合ガウス（6クラスタ）</h3>
+<p>「混合ガウス」＝山（ガウス分布）を複数足し合わせた分布。1つの山が有権者の1つの塊を表す。
+中道保守を最大の塊(38%)に置き、残りを周縁にばらした。</p>
+<table><thead><tr><th>有権者クラスタ</th><th>人口比 w</th><th>散らばり σ</th><th>理想立場 μ（7軸）</th></tr></thead><tbody><tr><td>中道保守マジョリティ</td><td>38%</td><td>0.25</td><td class='mono'>[+0.20, +0.20, +0.10, +0.20, +0.00, +0.10, +0.00]</td></tr><tr><td>都市リベラル</td><td>18%</td><td>0.22</td><td class='mono'>[-0.30, -0.50, -0.50, -0.40, +0.40, -0.30, +0.20]</td></tr><tr><td>地方保守</td><td>15%</td><td>0.22</td><td class='mono'>[+0.30, +0.50, +0.30, +0.50, -0.10, +0.30, +0.40]</td></tr><tr><td>経済右派・小さな政府</td><td>10%</td><td>0.18</td><td class='mono'>[+0.70, -0.10, +0.20, +0.10, -0.60, -0.20, +0.30]</td></tr><tr><td>福祉左派</td><td>12%</td><td>0.20</td><td class='mono'>[-0.60, -0.20, -0.30, -0.20, +0.70, +0.00, +0.00]</td></tr><tr><td>環境・地方分権</td><td>7%</td><td>0.18</td><td class='mono'>[-0.20, -0.20, -0.80, -0.10, +0.20, -0.10, +0.70]</td></tr></tbody></table>
+<h3>その他パラメータ</h3>
+<table><tbody>
+<tr><td>棄権閾値 R</td><td>1.1</td></tr>
+<tr><td>小選挙区の数 / 1区の有権者</td><td>60 区 / 200 人</td></tr>
+<tr><td>区ごとの地域差 σ</td><td>0.3（安全区・激戦区を生む）</td></tr>
+<tr><td>比例計算用の全国サンプル</td><td>6,000 人</td></tr>
+<tr><td>撤退ライン / 参入ライン</td><td>シェア 3% 未満で撤退 / 5% 超で参入</td></tr>
+<tr><td>乱数シード</td><td>42</td></tr>
+</tbody></table>
+</section>
+
+<section>
+<h2>3. 手法（GAではない）</h2>
+<p class="disclaimer">⚠️ このページはAI（でんすけ）が作成しています。数値・前提はすべて仮置きの計算値であり、事実確認が必要です。</p>
+<ol>
+<li>有権者を混合ガウスから生成（小選挙区用は区ごとに地域シフトを足す）。</li>
+<li>初期政党を数党、クラスタ重心付近に置く。</li>
+<li><b>逐次ベストレスポンス</b>：1党ずつ「他党固定で自党シェア最大の点」へ移す。候補点はクラスタ重心・現在地・そのジッター。</li>
+<li><b>撤退</b>：シェアが撤退ライン未満の党を消す。</li>
+<li><b>参入</b>：空いたクラスタに新党を置いて利益が出れば定着させる。</li>
+<li>全党が動かなくなり、参入も撤退も起きなくなったら均衡として停止。</li>
+<li>初期政党数を 3/4/5/6 と変えて4回回し、実効政党数の中央値の回を代表とした。</li>
+</ol>
+</section>
+
+
+    <section>
+      <h2>小選挙区（FPTP）の均衡</h2>
+      <p class="disclaimer">⚠️ このページはAI（でんすけ）が作成しています。数値・前提はすべて仮置きの計算値であり、事実確認が必要です。</p>
+      <div class="kpi">
+        <div><span class="num">7</span><span class="lbl">生存政党数</span></div>
+        <div><span class="num">20%</span><span class="lbl">最大党シェア</span></div>
+        <div><span class="num">6.498</span><span class="lbl">実効政党数 1/HHI</span></div>
+        <div><span class="num">84%</span><span class="lbl">投票率</span></div>
+      </div>
+      <p>4通りの初期政党数で回した結果の政党数は [6, 7, 7, 10]、実効政党数は [4.557, 5.806, 6.498, 9.045]（中央値の回を代表として表示）。</p>
+      <table><thead><tr><th>順位</th><th>議席シェア</th><th>最寄りクラスタ（解釈）</th><th>政策ポジション（7軸）</th></tr></thead><tbody><tr><td>1</td><td><b>20.0%</b></td><td>都市リベラル</td><td class='mono'>[-0.30, -0.50, -0.50, -0.40, +0.40, -0.30, +0.20]</td></tr><tr><td>2</td><td><b>18.3%</b></td><td>中道保守マジョリティ</td><td class='mono'>[+0.02, +0.09, +0.19, +0.36, +0.14, +0.22, -0.08]</td></tr><tr><td>3</td><td><b>15.0%</b></td><td>地方保守</td><td class='mono'>[+0.29, +0.63, +0.20, +0.44, -0.22, +0.47, +0.29]</td></tr><tr><td>4</td><td><b>13.3%</b></td><td>中道保守マジョリティ</td><td class='mono'>[+0.14, +0.28, +0.22, +0.23, -0.45, +0.23, +0.07]</td></tr><tr><td>5</td><td><b>13.3%</b></td><td>経済右派・小さな政府</td><td class='mono'>[+0.61, -0.02, -0.05, +0.09, -0.32, -0.15, +0.02]</td></tr><tr><td>6</td><td><b>13.3%</b></td><td>中道保守マジョリティ</td><td class='mono'>[+0.29, +0.59, +0.03, +0.17, +0.18, +0.24, +0.12]</td></tr><tr><td>7</td><td><b>6.7%</b></td><td>福祉左派</td><td class='mono'>[-0.60, -0.20, -0.30, -0.20, +0.70, +0.00, +0.00]</td></tr></tbody></table>
+    </section>
+
+    <section>
+      <h2>比例代表（PR）の均衡</h2>
+      <p class="disclaimer">⚠️ このページはAI（でんすけ）が作成しています。数値・前提はすべて仮置きの計算値であり、事実確認が必要です。</p>
+      <div class="kpi">
+        <div><span class="num">8</span><span class="lbl">生存政党数</span></div>
+        <div><span class="num">22%</span><span class="lbl">最大党シェア</span></div>
+        <div><span class="num">6.824</span><span class="lbl">実効政党数 1/HHI</span></div>
+        <div><span class="num">100%</span><span class="lbl">投票率</span></div>
+      </div>
+      <p>4通りの初期政党数で回した結果の政党数は [8, 8, 8, 8]、実効政党数は [5.996, 6.241, 6.824, 7.2]（中央値の回を代表として表示）。</p>
+      <table><thead><tr><th>順位</th><th>得票シェア</th><th>最寄りクラスタ（解釈）</th><th>政策ポジション（7軸）</th></tr></thead><tbody><tr><td>1</td><td><b>22.2%</b></td><td>中道保守マジョリティ</td><td class='mono'>[+0.20, +0.20, +0.10, +0.20, +0.00, +0.10, +0.00]</td></tr><tr><td>2</td><td><b>16.5%</b></td><td>地方保守</td><td class='mono'>[+0.30, +0.50, +0.30, +0.50, -0.10, +0.30, +0.40]</td></tr><tr><td>3</td><td><b>16.4%</b></td><td>都市リベラル</td><td class='mono'>[-0.30, -0.50, -0.50, -0.40, +0.40, -0.30, +0.20]</td></tr><tr><td>4</td><td><b>12.6%</b></td><td>福祉左派</td><td class='mono'>[-0.60, -0.20, -0.30, -0.20, +0.70, +0.00, +0.00]</td></tr><tr><td>5</td><td><b>11.1%</b></td><td>経済右派・小さな政府</td><td class='mono'>[+0.70, -0.10, +0.20, +0.10, -0.60, -0.20, +0.30]</td></tr><tr><td>6</td><td><b>7.4%</b></td><td>中道保守マジョリティ</td><td class='mono'>[+0.29, +0.09, -0.10, +0.28, +0.01, +0.10, +0.20]</td></tr><tr><td>7</td><td><b>7.2%</b></td><td>環境・地方分権</td><td class='mono'>[-0.20, -0.20, -0.80, -0.10, +0.20, -0.10, +0.70]</td></tr><tr><td>8</td><td><b>6.6%</b></td><td>中道保守マジョリティ</td><td class='mono'>[+0.05, +0.01, -0.08, +0.06, +0.10, +0.00, +0.17]</td></tr></tbody></table>
+    </section>
+
+<section>
+<h2>4.5 参入・撤退の「内生化」は効いているか（正直な所見）</h2>
+<p class="disclaimer">⚠️ このページはAI（でんすけ）が作成しています。数値・前提はすべて仮置きの計算値であり、事実確認が必要です。</p>
+<div class="warn"><b>結論：形式上は実装されているが、政党数の内生化として機能していない。</b>
+撤退・参入のコードは動いていて <code>removed</code>/<code>entered</code> も発火するが、
+肝心の<b>均衡に収束していない</b>。最終的な政党数は「内生的に決まった数」ではなく
+「30ラウンドで打ち切った時点でたまたまその数だった」だけ。</div>
+<figure><img src="figs/fig2.png" alt="図2: 各ラウンドの生存政党数。PRは 7↔8 を延々と往復（リミットサイクル）、FPTPも 6〜8 を行き来して一点に落ち着かない。"><figcaption>図2: 各ラウンドの生存政党数。PRは 7↔8 を延々と往復（リミットサイクル）、FPTPも 6〜8 を行き来して一点に落ち着かない。</figcaption></figure>
+<figure><img src="figs/fig3.png" alt="図3: 各ラウンドの最大移動量（全党の最大シフト）。収束判定 1e-3（緑破線）に一度も届かず、0.5〜2.0 のまま上限30ラウンドで強制終了している。"><figcaption>図3: 各ラウンドの最大移動量（全党の最大シフト）。収束判定 1e-3（緑破線）に一度も届かず、0.5〜2.0 のまま上限30ラウンドで強制終了している。</figcaption></figure>
+<p>原因の見立て：ベストレスポンスの候補点が「クラスタ重心＋ジッター」と<b>離散的</b>なため、
+党が毎ラウンド別クラスタへ飛ぶ（移動量2.0≒クラスタ間距離）。空いた重心を参入が埋め戻し、
+また飛ぶ→撤退→参入…の堂々巡り。<b>「ベストレスポンスの跳躍 × 重心への参入補充」が噛み合って止まらないループ</b>になっている。</p>
+<p>直す方向：<b>A. ベストレスポンスを連続化</b>（離散候補をやめ勾配/局所探索で少しずつ動かす）→ 跳躍が消えて収束しやすくなる。内生化を本気で見せるならこっち。
+／ <b>B. 均衡は諦め軌道の時間平均で党数を出す</b>（軽いが「内生的に決まった」とは言いにくい）。所感は A。</p>
+</section>
+
+<section>
+<h2>5. 考察：なぜ「1強多弱」が出なかったか</h2>
+<p class="disclaimer">⚠️ このページはAI（でんすけ）が作成しています。数値・前提はすべて仮置きの計算値であり、事実確認が必要です。</p>
+<p>当初期待された「巨大与党＋少数野党乱立」は、このモデルでは出ない。両制度とも最大党20%前後の横並びになった。原因は2つ。</p>
+<figure><img src="figs/fig4.png" alt="図4: 均衡時のシェア分布（順位順）。FPTP・PRどちらも最大党が20%前後で、1強が突出しない横並び。"><figcaption>図4: 均衡時のシェア分布（順位順）。FPTP・PRどちらも最大党が20%前後で、1強が突出しない横並び。</figcaption></figure>
+<div class="box">
+<b>① 投票が「正直（sincere）」だから。</b>
+今回は各有権者が常に<b>最寄り党にそのまま投票</b>する。
+だが現実の小選挙区では「どうせ勝てない党に入れても死票」と考え、
+有権者が<b>勝てそうな上位2党のどちらか近い方に乗り換える</b>（戦略投票＝デュヴェルジェの心理効果）。
+この乗り換えが無いので、小選挙区でも弱小党が地域で生き延び、PRとほぼ同じ多党状態になった。
+<b>1強を生む本体はこの戦略投票</b>で、それを入れていないのが直接の理由。
+</div>
+<div class="box">
+<b>② 大ブロックを1党が独占できていないから。</b>
+38%の中道保守ブロックに複数党が相乗りして票を割っている。
+「先に入った1党が大ブロックを丸取りし、後発は割って入っても損」という
+<b>先行者の縄張り効果</b>を入れると、1党が38%を独占＝巨大与党になり、
+残りは周縁の小ブロックに散る（＝少数野党乱立）構図に近づくはず。
+</div>
+<div class="ok"><b>つまり：</b> 局所最適が複数 → 政党が複数（コア仮説）は<b>このモデルで十分</b>。
+だが「1強多弱」を出すには <b>戦略投票（①）</b> をモデルに足す必要がある。
+これが v2 の自然な次の一手。</div>
+</section>
+
+<section>
+<h2>6. 正直な限界</h2>
+<p class="disclaimer">⚠️ このページはAI（でんすけ）が作成しています。数値・前提はすべて仮置きの計算値であり、事実確認が必要です。</p>
+<ul>
+<li>有権者分布・棄権閾値・地域差は<b>全部でっち上げの仮置き</b>。実測の世論データではない。</li>
+<li>政党は「シェア最大化」だけを目的にする単純な合理的主体。イデオロギー的こだわり・資金・組織・知名度は入っていない。</li>
+<li>戦略投票・連立・選挙協力・現職優位といった現実の政治力学は未実装。</li>
+<li>ベストレスポンスの候補点は離散的（クラスタ重心中心）なので、真の連続最適から多少ずれうる。</li>
+<li>これは政策研究ではなく<b>「仮説を絵にして遊ぶ」ツール</b>。数字の絶対値ではなく構造の傾向だけ読むこと。</li>
+</ul>
+</section>
+
+</body></html>

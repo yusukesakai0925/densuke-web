@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>政党競争シミュレータ — 仮定と処理の説明</title>
+<style>
+  :root{
+    --bg:#0f1117; --panel:#171a23; --panel2:#1d212c; --line:#2a2f3d;
+    --ink:#e8eaf0; --sub:#9aa3b2; --accent:#4da3ff; --warn:#ffb454; --good:#5fd08a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+    line-height:1.75;font-size:14.5px}
+  header{padding:20px 22px 12px;border-bottom:1px solid var(--line)}
+  h1{font-size:21px;margin:0 0 6px}
+  h2{font-size:17px;margin:30px 0 6px;padding-top:8px;border-top:1px solid var(--line)}
+  h3{font-size:14.5px;margin:18px 0 4px;color:var(--accent)}
+  .lead{color:var(--sub);font-size:13.5px;max-width:920px}
+  .wrap{padding:8px 22px 60px;max-width:980px;margin:0 auto}
+  .disclaimer{background:#2a210f;border:1px solid #50421c;color:#ffce85;
+    font-size:11.5px;padding:5px 10px;border-radius:6px;display:inline-block;margin:8px 0}
+  a.navlink{display:inline-block;background:var(--accent);color:#06203d;text-decoration:none;
+    font-weight:700;padding:8px 15px;border-radius:7px;margin:6px 8px 6px 0;font-size:13px}
+  a.navlink.ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:10px 0}
+  th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--sub);font-weight:600;background:var(--panel2)}
+  td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+  code{background:var(--panel2);padding:1px 6px;border-radius:4px;font-size:12.5px}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:12px 0}
+  .step{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);
+    border-radius:8px;padding:12px 16px;margin:10px 0}
+  .step .n{display:inline-block;background:var(--accent);color:#06203d;font-weight:800;
+    border-radius:6px;padding:1px 9px;margin-right:8px;font-size:12px}
+  .step .what{color:var(--sub);font-size:12.5px;margin-top:4px}
+  pre{background:#0b0d13;border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+    overflow-x:auto;font-size:12.5px;line-height:1.55;color:#cdd6e6}
+  .warn{border-left-color:var(--warn)}
+  .formula{background:#0b0d13;border:1px solid var(--line);border-radius:6px;
+    padding:8px 12px;margin:8px 0;font-size:13px;color:#cfe3ff;overflow-x:auto}
+  ul{margin:6px 0 6px 0;padding-left:22px}
+  li{margin:3px 0}
+  .sub{color:var(--sub);font-size:12.5px}
+  .swatch{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:middle}
+</style>
+</head>
+<body>
+<nav style="background:#1a2233;padding:10px 16px;margin:-8px -8px 16px;font-size:.9rem"><a href="index.html" style="color:#9cf;margin-right:14px;text-decoration:none">▶ シミュレーター</a><a href="about.html" style="color:#9cf;margin-right:14px;text-decoration:none">📄 仮定と各stepの説明</a><a href="report.html" style="color:#9cf;text-decoration:none">📊 分析レポート</a></nav>
+
+<header>
+  <h1>政党競争シミュレータ — 仮定と処理の説明</h1>
+  <div class="lead">
+    このページは、シミュレータが「どんな前提で動いているか」「1ラウンドの計算で中身は何をしているか」を順番に説明するものです。
+    出てくる数字・定数は、実際のプログラム (<code>index.html</code>) とそろえています。
+    数理用語はそのまま使い、初出箇所と末尾の<a href="#glossary" style="color:var(--accent)">§8 用語解説</a>で定義します。
+  </div>
+  <div class="disclaimer">AIで作成しているため事実確認が必要です。有権者分布・政党行動はすべて仮置きの数理モデルで、実測データではありません。</div>
+  <div>
+    <a class="navlink" href="index.html">▶ シミュレータを開く</a>
+    <a class="navlink ghost" href="report.html">分析レポート(静的)へ</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <h2>0. このモデルで知りたいこと</h2>
+  <div class="box">
+    <b>知りたいこと：</b>有権者がいろんな考えを持って散らばっているとき、政党は最終的に「いくつ」「どんな立場で」できるのか。
+    そして選挙のしくみを変えると、その答えはどう変わるのか。<br>
+    <b>基本の考え方：</b>有権者が考えの近い人どうしで<b>いくつかの集団（かたまり）</b>に分かれると、
+    かたまりごとに「票を取りやすい場所」ができ、その数だけ政党が立てる。
+    逆に有権者がみんな同じような考えで1か所に集まっていると、どの政党も真ん中に寄っていって最後は1党に潰れてしまう。
+  </div>
+
+  <h2>1. 政策の立場を「7つのものさし」で表す</h2>
+  <p class="sub">政治的な立場を、下の7つのものさしで測る。それぞれ <code>-1.0 〜 +1.0</code> の数字で表し、両端が正反対の意見。有権者も政党も、この7つの数字の組で「どんな立場か」が決まる。</p>
+  <table>
+    <tr><th>#</th><th>軸</th><th>-1.0 側</th><th>+1.0 側</th></tr>
+    <tr><td class="num">1</td><td>経済</td><td>左（再分配重視）</td><td>右（市場重視）</td></tr>
+    <tr><td class="num">2</td><td>社会</td><td>リベラル</td><td>保守</td></tr>
+    <tr><td class="num">3</td><td>エネルギー</td><td>脱原発</td><td>推進</td></tr>
+    <tr><td class="num">4</td><td>外交・安保</td><td>ハト派</td><td>タカ派</td></tr>
+    <tr><td class="num">5</td><td>医療・福祉</td><td>自助</td><td>公助</td></tr>
+    <tr><td class="num">6</td><td>教育</td><td>自由</td><td>統制</td></tr>
+    <tr><td class="num">7</td><td>地方分権</td><td>中央集権</td><td>地方分権</td></tr>
+  </table>
+  <h3>2人の立場の「近さ」をどう測るか</h3>
+  <p class="sub">有権者 <code>v</code> と政党 <code>p</code> の立場の近さは、7次元空間での<b>ユークリッド距離</b>で測る。各軸の差を二乗和して平方根をとる。</p>
+  <div class="formula">d(v, p) = ‖v − p‖₂ = √( Σ<sub>k=1..7</sub> (v<sub>k</sub> − p<sub>k</sub>)² )</div>
+  <p class="sub">距離が小さいほど立場が近い。各有権者は最も距離の小さい政党に投票する（<b>近接投票 / proximity voting</b>）。これは「自分の理想点に最も近い候補を選ぶ」という空間投票理論の標準的な定式化。</p>
+
+  <h2>2. 有権者をどこに置いているか</h2>
+  <p class="sub">
+    有権者の分布は <b>7次元の混合ガウス分布（Gaussian mixture）</b> で生成する。各成分（クラスタ）が1つの有権者層に対応し、
+    <b>平均ベクトル μ<sub>k</sub></b>（その層の理想点）、<b>混合重み w<sub>k</sub></b>（人口比）、<b>標準偏差 σ<sub>k</sub></b>（各軸等方の散らばり）を持つ。
+    各有権者は確率 w<sub>k</sub> でクラスタ k に属し、μ<sub>k</sub> を中心に σ<sub>k</sub> で正規にばらつく。
+    単峰（1成分）だと中位投票者定理で全党が中心へ収束し1党に潰れるため、<b>複数成分にして多峰にしている</b>のが要点。
+  </p>
+
+  <h3>パターン①：固定6成分（標準）</h3>
+  <p class="sub">日本をイメージして仮に置いた6つの混合成分。各成分の μ（理想点）・w（人口比）・σ（散らばり）は下表で固定。</p>
+  <table>
+    <tr><th><span class="swatch" style="background:#4da3ff"></span>成分（層）</th><th>重み w</th><th>σ</th><th>平均 μ（経済,社会,エネ,外交,福祉,教育,分権）</th></tr>
+    <tr><td>中道保守マジョリティ</td><td class="num">38%</td><td class="num">0.25</td><td class="num">0.20, 0.20, 0.10, 0.20, 0.00, 0.10, 0.00</td></tr>
+    <tr><td>都市リベラル</td><td class="num">18%</td><td class="num">0.22</td><td class="num">-0.30, -0.50, -0.50, -0.40, 0.40, -0.30, 0.20</td></tr>
+    <tr><td>地方保守</td><td class="num">15%</td><td class="num">0.22</td><td class="num">0.30, 0.50, 0.30, 0.50, -0.10, 0.30, 0.40</td></tr>
+    <tr><td>福祉左派</td><td class="num">12%</td><td class="num">0.20</td><td class="num">-0.60, -0.20, -0.30, -0.20, 0.70, 0.00, 0.00</td></tr>
+    <tr><td>経済右派・小さな政府</td><td class="num">10%</td><td class="num">0.18</td><td class="num">0.70, -0.10, 0.20, 0.10, -0.60, -0.20, 0.30</td></tr>
+    <tr><td>環境・地方分権</td><td class="num">7%</td><td class="num">0.18</td><td class="num">-0.20, -0.20, -0.80, -0.10, 0.20, -0.10, 0.70</td></tr>
+  </table>
+  <div class="disclaimer">この6層の数字は実際の世論調査ではなく、雰囲気を出すために仮に置いたものです。</div>
+
+  <h3>パターン②：ランダム生成（混合パラメータを毎回サンプリング）</h3>
+  <p class="sub">混合ガウスの<b>パラメータ自体をシードから乱数生成する</b>モード。シードは擬似乱数の初期値で、同じシードなら同じ分布が再現される（決定論的）。</p>
+  <ul>
+    <li>成分数 K：<code>3〜6</code> から一様サンプリング</li>
+    <li>各 μ<sub>k</sub>：各軸を <code>[-1, 1]</code> で一様サンプリング</li>
+    <li>各 w<sub>k</sub>：ランダムに振って総和1へ正規化</li>
+    <li>各 σ<sub>k</sub>：<code>0.16〜0.28</code> から一様サンプリング</li>
+  </ul>
+  <div class="box warn" style="border-left:4px solid var(--warn)">
+    <b>シードで分布が大きく変わる＝結果の初期値依存。</b>成分が接近すると混合が実質単峰に融合して<b>1党へ収束</b>、
+    十分に分離していると<b>多党</b>が立つ。この敏感さを観察するのがこのモードの目的。
+    シミュレータの「🎲 ランダム」ボタン、または「ランダム」モードでシードを入力すると再生成できる。
+  </div>
+
+  <h3>選挙区の作り方と「地域のかたより」（小選挙区のとき）</h3>
+  <p class="sub">小選挙区（FPTP）では「区によって有権者が少しずつ違う」状況を作る。区の作り方は<b>2段階</b>。</p>
+  <div class="step"><span class="n">1</span><b>その区の有権者を選ぶ</b>
+    <div class="what">上の分布から、その区の有権者を <code>110</code> 人ぶん選ぶ。この時点では全部の区が同じ顔ぶれ＝区ごとの個性はまだない。</div>
+  </div>
+  <div class="step"><span class="n">2</span><b>区ごとの地域シフトを加える</b>
+    <div class="what">区ごとに7次元のシフトベクトル <code>s ~ N(0, 0.30²·I)</code> を1本サンプリングし、
+    <b>その区の110人全員の理想点に同じ s を加算（平行移動）</b>する。区内のクラスタ相対配置は保ったまま、区全体がランダム方向に並進する。</div>
+  </div>
+  <table>
+    <tr><th>数字</th><th>値</th><th>意味</th></tr>
+    <tr><td>比例での有権者数</td><td class="num">2,200</td><td>比例は全国をまとめて1つで計算</td></tr>
+    <tr><td>選挙区の数</td><td class="num">40</td><td>小選挙区はこの数だけある</td></tr>
+    <tr><td>1区の有権者数</td><td class="num">110</td><td>各区で1位の党が1議席を取る</td></tr>
+    <tr><td>区のかたよりの大きさ</td><td class="num">0.30</td><td>区ごとにランダムに全体をずらす量の目安</td></tr>
+  </table>
+  <div class="box warn" style="border-left:4px solid var(--warn)">
+    <b>注意：これは現実の地域性ではない。</b>シフト s は
+    (a)<b>軸間が独立（対角共分散）</b>なので「経済右派の区は外交もタカ派」といった軸間相関は出ず、
+    (b)<b>区間も独立同分布（i.i.d.）</b>なので「都市/地方」「東/西日本」のような空間的自己相関（地理構造）も無い。
+    やっているのは「区ごとに無相関な並進で異質性を入れる」ことだけで、その偏りに地理・産業・年齢といった<b>外生的な意味づけがない</b>。
+    よって特定政党の地盤は構造的に再現できない。σ=0.30 も現実の区間格差を推定した値ではなく便宜的な仮置き。
+  </div>
+
+  <h3>棄権閾値 R</h3>
+  <p class="sub">最寄り政党までの距離が<b>棄権閾値 R</b> を超える有権者は棄権する（その票はどの党にも入らない）。R を小さくするほど周縁の有権者が脱落し、分布中央寄りの党が相対的に有利になる。R が無いと中央の1党が周縁票まで吸い上げ、参入余地が消える。</p>
+
+  <h2>3. 政党の戦略（ベストレスポンス動学）</h2>
+  <ul>
+    <li><b>近接投票：</b>各有権者は最寄り政党に投票（棄権閾値 R を超えれば棄権）。小選挙区は各区1位のみ議席、比例は全国得票率で議席配分。</li>
+    <li><b>ベストレスポンス：</b>各党は他党の位置を所与（固定）として、自分の議席（小選挙区）／得票（比例）を最大化する位置へ移動する。これは政党を利得最大化プレイヤーとみなした<b>非協力ゲームの最適応答</b>。</li>
+    <li><b>逐次更新：</b>全党同時ではなく1党ずつ順に最適応答を適用する（Gauss–Seidel 型の逐次ベストレスポンス）。全党が動かなくなれば純粋戦略ナッシュ均衡。</li>
+    <li><b>退出・参入：</b>得票が閾値未満の党は退出、空白地帯に正の利得があれば新党が参入する。よって<b>政党数は外から与えず、動学の帰結として内生的に決まる</b>（はずだが、後述の通り収束しないと確定しない）。</li>
+  </ul>
+  <h3>ベストレスポンスの実装：離散候補集合上の探索</h3>
+  <p class="sub">
+    「得票最大化点へ動く」は連続最適化（勾配法）ではなく、<b>約12点の離散候補集合を評価し、利得最大の点を選ぶ近似</b>として実装している。
+    したがって党は連続的に移動せず、<b>候補点のいずれかへ離散的にジャンプ</b>する。
+  </p>
+  <div class="step"><span class="n">①</span><b>候補集合を構成（≈12点）</b>
+    <div class="what">・各混合成分の中心 μ<sub>k</sub>（6点）／・現在位置（1点・"動かない"選択肢）／・現在位置に N(0, 0.15²) のジッターを加えた近傍4点（局所微調整）／・全有権者の<b>加重重心</b>（重み付き平均 Σ w<sub>i</sub> x<sub>i</sub> / Σ w<sub>i</sub>、1点）</div>
+  </div>
+  <div class="step"><span class="n">②</span><b>各候補で利得を評価</b>
+    <div class="what">「当該党のみその候補へ移し、他党は固定」した配置で全有権者の投票を集計。小選挙区なら議席シェア、比例なら得票シェアを利得とする。</div>
+  </div>
+  <div class="step"><span class="n">③</span><b>argmax を採用</b>
+    <div class="what">利得最大の候補を選ぶ（差 &lt; 1e-9 の同点なら現状維持）。これを全党に逐次適用する。</div>
+  </div>
+  <div class="box warn" style="border-left:4px solid var(--warn)">
+    <b>非収束（リミットサイクル）の機構。</b>
+    候補集合の主軸が「成分中心」という離散点なので、党は微小移動ではなく<b>別クラスタへジャンプ</b>する（移動量 ≈ クラスタ間距離）。
+    空いた中心を参入が埋め戻し、また別クラスタへ跳ぶ → 退出 → 参入…と<b>周期軌道（リミットサイクル）</b>に陥りやすく、ナッシュ均衡へ収束しない。
+    <b>近似の限界：</b>argmax は候補集合内の最良点にすぎず、クラスタ間の<b>大域最適点</b>は候補に無ければ取りこぼす。本質的に「主要クラスタのいずれかに陣取る」局所近似。
+  </div>
+
+  <h3>2つの選挙のしくみ（小選挙区 / 比例）</h3>
+  <table>
+    <tr><th>しくみ</th><th>議席の決まり方</th><th>起きやすいこと</th></tr>
+    <tr><td><b>小選挙区</b>（FPTP）</td><td>各区で1位の党だけが議席を取る。2位以下はゼロ。</td><td>票がムダになりやすく、大きい党が有利</td></tr>
+    <tr><td><b>比例</b>（PR）</td><td>全国の得票割合に応じて議席を分ける。</td><td>小さい党も生き残りやすい</td></tr>
+  </table>
+  <p class="sub">
+    大事なのは、しくみの違いが<b>最後の議席の数え方だけでなく、各党の動き方そのものも変える</b>こと。
+    票を数えるとき、小選挙区なら「区で1位を取れるか」、比例なら「得票の割合」を見るので、各党は<b>そのしくみで自分が一番得する場所</b>を探して動く。
+  </p>
+  <div class="box warn" style="border-left:4px solid var(--warn)">
+    <b>注意：議席変換は現実の日本の選挙制度に合わせていない。</b>定性モデル用に単純化しており、議席数を現実に当てる精度はない。
+    <ul style="margin-top:6px">
+      <li><b>比例は単純比例配分</b>（得票シェアをそのまま議席シェアに）。日本が用いる<b>ドント式（D'Hondt）</b>や阻止条項（法定得票率）は未実装。</li>
+      <li><b>小選挙区の区数・区定数は便宜値</b>（40区×110人）。現実の衆院289小選挙区とは無関係。</li>
+      <li>日本の<b>小選挙区比例代表並立制</b>や惜敗率による復活当選も未実装。</li>
+    </ul>
+    用途は「有権者分布が議席へどう効くか」の定性的傾向の観察。現実に寄せるならドント式・実定数・並立制の作り込みが必要。
+  </div>
+
+  <h2>4. 1回（1ラウンド）で何が起きるか</h2>
+  <div class="box">
+    <b>ざっくり言うと：</b>
+    ①自分（例: A党）が、他の党はそのままで一番票が取れる場所へ動く →
+    ②各党が順番に同じことをやる →
+    ③その並びで全有権者が近い党に投票して勝負 →
+    ④票を議席に変える（このルールが小選挙区と比例でちがう）。
+    これを「どの党も動いても得しなくなる」まで繰り返す。
+  </div>
+  <p class="sub">「▶再生」や「⏭1ラウンド」を押すたびに、中では次の①〜⑥が順に動く。①でやっている候補地探しの詳しい話は <b>§3「いちばん票が取れる場所へ動く」とは具体的に何をしているか</b> を参照。</p>
+
+  <div class="step"><span class="n">①</span><b>各党が順番に、票が増える場所へ動く</b>
+    <div class="what">党を1つずつ取り、「他の党はそのまま」として、自分の議席／得票が一番増える候補地へ動かす。
+    候補地は次の中から選ぶ：<br>
+    &nbsp;・各かたまりの中心（その層の真ん中に乗ってみる）<br>
+    &nbsp;・今いる場所（動かない選択肢）<br>
+    &nbsp;・今の場所のすぐ近くにランダムにずらした4か所（微調整）<br>
+    &nbsp;・全有権者の重みつきの真ん中<br>
+    それぞれの候補地で票を計算し、一番多い場所を選ぶ。このラウンドで一番大きく動いた距離を<b>最大移動量</b>として記録する。</div>
+  </div>
+
+  <div class="step"><span class="n">②</span><b>退場のチェック</b>
+    <div class="what">議席／得票の割合が <code>3%</code> に満たない党は退場させる。
+    全部の党が3%未満になってしまう場合は、一番大きい党だけは残す（全滅を防ぐ）。</div>
+  </div>
+
+  <div class="step"><span class="n">③</span><b>新規参入のチェック</b>
+    <div class="what">党の数が上限<code>10</code>に達していなければ、各かたまりの中心を「新党の置き場所候補」として試す。
+    そこに新党を置いたときの取り分が <code>5%</code> を超える（＝割に合う空きがある）なら、一番おいしい1か所に新しい党が現れる。</div>
+  </div>
+
+  <div class="step"><span class="n">④</span><b>取り分を計算し直す</b>
+    <div class="what">退場・参入のあとの顔ぶれで、全有権者の投票をやり直し、各党の取り分（小選挙区＝議席の割合／比例＝得票の割合）を確定する。</div>
+  </div>
+
+  <div class="step"><span class="n">⑤</span><b>数値の更新と動きの記録</b>
+    <div class="what">一番大きい党の取り分・実質の党数・投票率を計算してグラフに1点追加。各党の今の位置を、動いたあとを示す線（尾）に書き足す（直近14ラウンド分を残す）。</div>
+  </div>
+
+  <div class="step warn"><span class="n">⑥</span><b>収束判定</b>
+    <div class="what"><b>最大移動量 &lt; 0.001</b> かつ<b>退出・参入ともゼロ</b>のとき収束（≈純粋戦略ナッシュ均衡）とみなして停止する。
+    ジャンプや出入りが続く限り未収束で、その場合の政党数は<b>内生的に確定した値ではなく、上限ラウンドでの打ち切り値</b>にすぎない。
+    実際このモデルは候補集合が離散的なため、党がクラスタ間を跳び続けてリミットサイクルに入りやすい。</div>
+  </div>
+
+  <h2>5. 出力指標の定義</h2>
+  <table>
+    <tr><th>指標</th><th>定義</th></tr>
+    <tr><td>最大シェア max sₖ</td><td>最大政党の議席／得票シェア。1強度の目安。</td></tr>
+    <tr><td>集中度（HHI）</td><td>ハーフィンダール指数 Σ sₖ²。各党シェアの二乗和で、1党独占に近いほど1へ、均等分散ほど0へ。</td></tr>
+    <tr><td>実効政党数（ENP）</td><td>1 / HHI = 1 / Σ sₖ²（Laakso–Taagepera 指数）。「実質何党で競っているか」。2なら二大政党的、大きいほど多党拮抗。</td></tr>
+    <tr><td>投票率</td><td>棄権閾値 R 内に政党があり投票した有権者の割合（1 − 棄権率）。</td></tr>
+    <tr><td>最大移動量</td><td>そのラウンドの全党中の最大移動距離（L2）。0 へ漸近すれば収束、振動が続けば未収束。</td></tr>
+  </table>
+
+  <h2>6. モデルの限界（未実装の機構）</h2>
+  <ul>
+    <li><b>戦略投票がない。</b>有権者は常に最寄り党へ正直投票する。小選挙区での「死票回避＝当選圏の2党に乗り換える」<b>デュヴェルジェの心理的効果</b>が無いため、<b>「巨大与党＋少数野党乱立」は出ず</b>多党のまま。これが1強を生む本体で、戦略投票の導入が次の拡張。</li>
+    <li><b>先行者優位（縄張り効果）がない。</b>大票田クラスタに複数党が相乗りして票を分割する。先占による参入障壁を入れると独占＝巨大与党に近づく。</li>
+    <li><b>政党アイデンティティ（非空間的効用）を無視。</b>投票は政策距離のみで決まり、政党帰属やバレンス（valence）次元はない。</li>
+    <li><b>全パラメータが仮置き。</b>有権者分布も政党配置も実測ではなく、定性的傾向を見るための数理モデル。</li>
+  </ul>
+  <div class="disclaimer">AIで作成しているため事実確認が必要です。</div>
+
+  <h2>7. よくある質問</h2>
+
+  <div class="box">
+    <h3>Q. 有権者はどこにいる？画面に出てる？</h3>
+    7つのものさしの空間に、6つのかたまり（標準のとき）として置いてある。シミュレータの地図に、<b>薄い点＝有権者・色＝どのかたまりか・✕＝かたまりの中心</b>として出ている（§2の数字どおり）。
+  </div>
+  <div class="box">
+    <h3>Q. 有権者の置き方はランダムにできる？</h3>
+    できる。「🎲 ランダム再配置」ボタン、または「ランダム」モードを選んでシードを入れると、<b>かたまりの数(3〜6)・位置・人口の割合をランダムに作り直す</b>（§2パターン②）。決まった6つのかたまりを指でドラッグして動かす機能はまだ無い（今後追加予定）。
+  </div>
+  <div class="box">
+    <h3>Q. 小選挙区と比例って何？</h3>
+    <b>小選挙区（FPTP）</b>＝各区で1位だけが当選、2位以下は議席ゼロ。日本の衆院小選挙区やイギリス・アメリカ型。票がムダになりやすく大きい党に有利。<br>
+    <b>比例（PR）</b>＝得票の割合に応じて議席を分ける。小さい党も生き残りやすい。
+  </div>
+  <div class="box">
+    <h3>Q. 「一番票が取れる場所へ動く」って具体的に何をしてる？</h3>
+    なめらかに動くのではなく、<b>だいたい12か所の候補地（各かたまりの中心・今いる場所・近くに少しずらした4か所・全体の重みつきの真ん中）を試して、一番票が多い場所へ一気に飛び移る</b>。だから党がかたまりからかたまりへ飛び回り、なかなか落ち着かない（§3に詳しく）。
+  </div>
+  <div class="box">
+    <h3>Q. 勝つと現実通りに議席が変わる？</h3>
+    いいえ。比例は<b>そのままの割合</b>で分けているだけ（本物の配分方式ではない）、小選挙区の区の数・人数も<b>仮の値</b>（本物の289小選挙区とは関係ない）。本物の制度の細かい決まりも入れていない。議席数を現実通りに当てる正確さはなく、傾向を見るためのもの（§3末の注意）。
+  </div>
+  <div class="box">
+    <h3>Q. 各選挙区への有権者の割り振りはランダム？地域の特性は出せる？</h3>
+    完全なランダムではなく、<b>区ごとにランダムな「かたより」を足して、区に少し個性をつけている</b>。ただしそのかたよりはバラバラの方向なので、<b>「都市はリベラル・地方は保守」のような本物の地域の特性は出せない</b>（§2の注意）。
+  </div>
+  <div class="disclaimer">AIで作成しているため事実確認が必要です。</div>
+
+  <h2 id="glossary">8. 用語解説</h2>
+  <p class="sub">本文で用いた数理・政治学用語の定義。理系院生向けに標準表記のまま記す。</p>
+  <table>
+    <tr><th>用語</th><th>定義</th></tr>
+    <tr><td><b>政策空間</b></td><td>政策的立場を座標で表す多次元ベクトル空間。本モデルは7次元、各軸 [−1, 1]。空間投票理論（spatial voting）の枠組み。</td></tr>
+    <tr><td><b>ユークリッド距離 (L2)</b></td><td>2点間の直線距離 ‖x−y‖₂ = √Σ(xₖ−yₖ)²。本モデルでの「立場の近さ」。各軸を等重みとみなす（マハラノビス的な軸重み付けはしていない）。</td></tr>
+    <tr><td><b>近接投票 (proximity voting)</b></td><td>有権者が自分の理想点に最も近い候補に投票するモデル。対概念は方向投票（directional voting）。</td></tr>
+    <tr><td><b>中位投票者定理</b></td><td>1次元・単峰選好・2候補のもとで、均衡が中位有権者の理想点に一致する定理（Black/Downs）。単峰分布だと全党が中央へ収束し1党化する理由。</td></tr>
+    <tr><td><b>混合ガウス分布 (GMM)</b></td><td>p(x)=Σ wₖ·N(x|μₖ, Σₖ)。複数の正規成分の重み付き和。各成分=有権者クラスタ。多峰にすることで複数の局所最適（=複数政党の盆地）を作る。</td></tr>
+    <tr><td><b>μ / w / σ</b></td><td>各成分の平均ベクトル（理想点）／混合重み（人口比、Σwₖ=1）／標準偏差（散らばり）。本モデルは等方共分散 σ²·I を仮定。</td></tr>
+    <tr><td><b>シード (seed)</b></td><td>擬似乱数生成器の初期値。同一シード→同一分布が再現される（決定論的再現性）。</td></tr>
+    <tr><td><b>地域シフト</b></td><td>選挙区ごとに加える並進ベクトル s~N(0, 0.30²·I)。区内の相対配置を保ったまま区全体を平行移動させ、区間異質性を作る。軸間独立・区間i.i.d.のため地理構造は持たない。</td></tr>
+    <tr><td><b>i.i.d.</b></td><td>独立同分布（independent and identically distributed）。各区のシフトが互いに無相関かつ同一分布。空間的自己相関がないことを意味する。</td></tr>
+    <tr><td><b>棄権閾値 R</b></td><td>最寄り党までの距離が R を超えると棄権するカットオフ。alienation（疎外）による棄権のモデル化。</td></tr>
+    <tr><td><b>ベストレスポンス (最適応答)</b></td><td>他プレイヤーの戦略を固定したときに自分の利得を最大化する戦略。本モデルでは「他党位置を所与に得票最大化する位置」。</td></tr>
+    <tr><td><b>逐次ベストレスポンス</b></td><td>全員同時更新（Jacobi型）ではなく1人ずつ順に最適応答を適用する反復（Gauss–Seidel型）。</td></tr>
+    <tr><td><b>ナッシュ均衡</b></td><td>どのプレイヤーも単独逸脱で利得を改善できない戦略の組。本モデルでは全党が移動で得しなくなった配置（純粋戦略均衡）。</td></tr>
+    <tr><td><b>加重重心</b></td><td>重み付き平均 Σwᵢxᵢ / Σwᵢ。全有権者の「人口で重みづけした中心」。単峰分布での最適応答点に対応。</td></tr>
+    <tr><td><b>argmax</b></td><td>関数を最大化する引数。ここでは候補集合のうち利得が最大の候補点を選ぶ操作。</td></tr>
+    <tr><td><b>リミットサイクル</b></td><td>力学系が定常点に収束せず周期軌道に落ち込む状態。離散候補によるジャンプ＋参入補充で生じる非収束。</td></tr>
+    <tr><td><b>内生 / 外生</b></td><td>内生（endogenous）=モデル内の動学で決まる変数、外生（exogenous）=外から与える変数。政党数を内生化＝退出・参入の結果として党数が決まる設計。</td></tr>
+    <tr><td><b>FPTP（小選挙区）</b></td><td>First-Past-The-Post。各区1位のみ当選、勝者総取り。死票が多く大政党に有利。</td></tr>
+    <tr><td><b>PR（比例代表）</b></td><td>Proportional Representation。得票率に比例して議席配分。小党も生存しやすい。</td></tr>
+    <tr><td><b>ドント式 (D'Hondt)</b></td><td>各党得票を1,2,3…で割った商の大きい順に議席を配る最大平均方式。日本の比例で採用。本モデルは未実装（単純比例で代用）。</td></tr>
+    <tr><td><b>並立制</b></td><td>小選挙区比例代表並立制。小選挙区と比例を独立に並べて議席を出す日本の衆院制度。本モデルは両者を別シナリオとして比較するのみで併用しない。</td></tr>
+    <tr><td><b>デュヴェルジェの法則</b></td><td>小選挙区制は二大政党制へ、比例代表制は多党制へ向かうという経験則。死票回避の心理的効果＋大政党優遇の機械的効果が機構。</td></tr>
+    <tr><td><b>戦略投票</b></td><td>最寄り党でなく「当選見込みのある党」に入れる投票行動。本モデル未実装で、これが無いため小選挙区でも1強化しない。</td></tr>
+    <tr><td><b>HHI</b></td><td>ハーフィンダール・ハーシュマン指数 Σsₖ²。集中度の指標。独占で1、均等分散で小さくなる。</td></tr>
+    <tr><td><b>実効政党数 (ENP)</b></td><td>1/Σsₖ²（Laakso–Taagepera）。シェアを考慮した「実質的な政党数」。</td></tr>
+    <tr><td><b>バレンス (valence)</b></td><td>政策位置と独立に全有権者が一様に評価する党の資質（信頼・実績など）。本モデルは未導入。</td></tr>
+  </table>
+  <div class="disclaimer">AIで作成しているため事実確認が必要です。</div>
+
+  <div style="margin-top:24px">
+    <a class="navlink" href="index.html">▶ シミュレータを開く</a>
+  </div>
+</div>
+</body>
+</html>
