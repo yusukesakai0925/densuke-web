@@ -144,7 +144,7 @@
       <canvas id="map" width="900" height="560"></canvas>
       <div class="legend" id="legend"></div>
       <div class="note" style="margin-top:6px">
-        薄い点＝有権者（色はクラスタ）。◯＝政党（大きさ＝シェア、尾＝直近の移動軌跡）。✕＝クラスタ中心。
+        薄い点＝有権者（色はクラスタ）。◯＝政党（中の文字＝政党名A/B/…、大きさ＝シェア、尾＝直近の移動軌跡）。✕＝クラスタ中心。
         <b>3D</b>はキャンバスをドラッグで回転（奥ほど暗く）。<b>主成分PCA</b>は有権者分布の分散が最大の方向を軸にとる。
       </div>
       <div class="note" id="pcaInfo" style="margin-top:6px;display:none"></div>
@@ -247,6 +247,9 @@ let sigScale=1.0, R_ABSTAIN=1.10;
 let VOTERS_PR=[], DISTRICTS=[], VIEW=[]; // VIEW: 描画用サブサンプル {pos,cluster}
 let parties=[]; // {pos:[7], id, trail:[[x,y]...]}
 let round=0, history=[], running=false, timer=null, nextId=0, converged=false;
+// 政党名（出現順に A・B・…・Z・AA…）。id は生成順に固定されるので名前も不変
+function partyLetter(id){let s="";id++;while(id>0){id--;s=String.fromCharCode(65+id%26)+s;id=Math.floor(id/26);}return s;}
+function partyName(id){return partyLetter(id)+"党";}
 
 // ===== 有権者生成 =======================================================
 function multinomial(n,probs){
@@ -534,8 +537,10 @@ function drawAll(shares){
     const r=(8+Math.sqrt(Math.max(shares[j],0))*46)*(dim===3?1/(1+s[2]*0.18):1);
     mx.beginPath();mx.arc(s[0],s[1],r,0,7);mx.fillStyle=col+"cc";mx.fill();
     mx.lineWidth=2;mx.strokeStyle="#0b0d13";mx.stroke();
-    mx.fillStyle="#06203d";mx.font="bold 11px sans-serif";mx.textAlign="center";mx.textBaseline="middle";
-    mx.fillText(Math.round(shares[j]*100)+"%",s[0],s[1]);});
+    mx.fillStyle="#06203d";mx.font="bold 13px sans-serif";mx.textAlign="center";mx.textBaseline="middle";
+    mx.fillText(partyLetter(p.id),s[0],s[1]);
+    mx.fillStyle="#cfd6e4";mx.font="bold 10px sans-serif";mx.textBaseline="top";
+    mx.fillText(partyName(p.id)+" "+Math.round(shares[j]*100)+"%",s[0],s[1]+r+2);});
   updatePcaInfo();
 }
 function updatePcaInfo(){
@@ -587,9 +592,10 @@ function updatePanels(shares,enp,turnout,move,removed,entered){
   $("sConv").style.color=converged?"#5fd08a":"#ffb454";
   // テーブル
   const idx=shares.map((s,j)=>[s,j]).sort((a,b)=>b[0]-a[0]);
-  let html="<tr><th></th><th>シェア</th><th>最寄りクラスタ</th></tr>";
+  let html="<tr><th></th><th>政党</th><th>シェア</th><th>最寄りクラスタ</th></tr>";
   for(const[s,j] of idx){const p=parties[j];if(!p)continue;const k=nearestCluster(p.pos);
     html+=`<tr><td><span class="swatch" style="background:${COLORS[k]}"></span></td>
+      <td><b>${partyName(p.id)}</b></td>
       <td>${(s*100).toFixed(1)}%</td><td>${CLUSTERS[k].name}</td></tr>`;}
   $("ptable").innerHTML=html;
   drawCharts();
