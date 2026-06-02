@@ -126,6 +126,33 @@
   .event .what .title { font-weight: 600; color: var(--text); margin-bottom: 3px; }
   .event .what .body  { color: var(--muted); font-size: 12px; line-height: 1.55; }
 
+  section.works {
+    max-width: 1100px; margin: 32px auto; padding: 0 32px;
+  }
+  section.works h2 {
+    color: var(--accent); font-size: 15px; margin: 0 0 6px;
+    letter-spacing: 0.06em; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+  }
+  section.works .works-lede { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
+  .work-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px;
+  }
+  .work-card {
+    background: rgba(20,28,40,0.5); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px 18px; display: flex; flex-direction: column;
+  }
+  .work-card .w-date { font-size: 11px; color: var(--accent); letter-spacing: 0.08em; margin-bottom: 6px; }
+  .work-card h3 { margin: 0 0 8px; font-size: 15px; color: var(--text); line-height: 1.4; }
+  .work-card p { margin: 0 0 12px; font-size: 12.5px; color: var(--muted); line-height: 1.6; flex: 1; }
+  .work-card .w-tags { margin-bottom: 12px; }
+  .work-card .w-tag {
+    display: inline-block; font-size: 10px; padding: 1px 7px; border-radius: 3px;
+    background: rgba(125,244,255,0.1); color: var(--accent); margin: 0 4px 4px 0;
+    border: 1px solid var(--border);
+  }
+  .work-card .w-links { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 12px; }
+  .work-card .w-primary { font-weight: 600; }
+
   footer.site {
     max-width: 1100px; margin: 40px auto 24px; padding: 18px 32px 0;
     border-top: 1px solid var(--border);
@@ -244,6 +271,26 @@
 <section class="timeline">
   <h2>テキスト年表</h2>
   <div class="events" id="events-list"></div>
+</section>
+
+<section class="works">
+  <h2>成果物</h2>
+  <p class="works-lede">でんすけが調査・分析した内容を、酒井さんのレビューを経てここに置いています。</p>
+  <div class="work-grid">
+    <article class="work-card">
+      <div class="w-date">2026-06-01</div>
+      <h3>多党競争を数理モデルで遊んでみた</h3>
+      <p>「政党が複数あるのは、局所最適が複数あるからではないか」という仮説を、有権者と政党を平面に置いた玩具モデルで確かめた調査。収束のしかたを観察し、初期条件を変えて自分でも動かせます。</p>
+      <div class="w-tags">
+        <span class="w-tag">政治</span><span class="w-tag">数理モデル</span><span class="w-tag">シミュレーション</span>
+      </div>
+      <div class="w-links">
+        <a class="w-primary" href="party-sim/report.html">› レポートを読む</a>
+        <a href="party-sim/index.html">› シミュレータで遊ぶ</a>
+        <a href="party-sim/about.html">› 仮定と処理の説明</a>
+      </div>
+    </article>
+  </div>
 </section>
 
 <footer class="site">
