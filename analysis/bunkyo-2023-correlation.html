@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>2023区議選 候補者属性×得票率 相関分析 v5</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+         background: #f8fafc; color: #1e293b; line-height: 1.7; padding: 24px 16px; }
+  .container { max-width: 980px; margin: 0 auto; }
+  h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 12px; color: #0f172a; }
+  h2 { font-size: 1.25rem; font-weight: 700; margin: 32px 0 10px;
+        border-left: 4px solid #2563eb; padding-left: 12px; color: #1e40af; }
+  p { margin: 8px 0; font-size: 0.93rem; }
+  .disclaimer { background: #fef2f2; border: 2px solid #fca5a5; border-radius: 8px;
+                 padding: 14px 18px; margin-bottom: 24px; font-size: 0.9rem; color: #7f1d1d; }
+  .note-box { background: #f0f9ff; border-left: 4px solid #38bdf8;
+               padding: 12px 16px; font-size: 0.85rem; color: #0c4a6e; margin: 14px 0; }
+  .reg-table, .source-table { border-collapse: collapse; font-size: 0.85rem; margin: 10px 0; }
+  .reg-table th, .reg-table td, .source-table th, .source-table td
+    { border: 1px solid #e2e8f0; padding: 5px 10px; }
+  .reg-table thead th, .source-table th { background: #e2e8f0; font-weight: 600; }
+  .reg-table tbody tr:nth-child(even), .source-table tr:nth-child(even) { background: #f8fafc; }
+  .td-var { font-family: monospace; font-size: 0.83rem; }
+  .td-num { text-align: right; font-variant-numeric: tabular-nums; }
+  .chart-wrap { background: #fff; border-radius: 8px; padding: 16px;
+                 box-shadow: 0 1px 4px rgba(0,0,0,.08); margin: 20px 0; }
+  .chart-wrap canvas { width: 100% !important; height: 320px !important; }
+  .fig-source { font-size: 0.78rem; color: #6b7280; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="disclaimer">
+  <strong>⚠ このページはAIが作成しているため、事実確認が必要です。</strong><br>
+  分析・解釈は参考情報であり、選挙予測・投票誘導を意図するものではありません。
+  数値の正確性についてはデータ出所（下記）および原典を参照してください。
+</div>
+
+<h1>2023統一地方選 区議選（文京・台東・千代田）<br>候補者属性×得票率 相関分析 v5</h1>
+
+<div class="note-box">
+  <strong>データ出所</strong>（取得: 2026-06-08・乱数/推定/補完なし・実データのみ）
+  <table class="source-table">
+    <tr><th>区</th><th>候補者数</th><th>有権者数</th><th>出所</th></tr>
+    <tr><td>文京区</td><td class="td-num">43</td><td class="td-num">178,703</td><td><a href="https://go2senkyo.com/local/senkyo/21447">https://go2senkyo.com/local/senkyo/21447</a></td></tr>
+<tr><td>台東区</td><td class="td-num">50</td><td class="td-num">166,908</td><td><a href="https://go2senkyo.com/local/senkyo/21202">https://go2senkyo.com/local/senkyo/21202</a></td></tr>
+<tr><td>千代田区</td><td class="td-num">41</td><td class="td-num">52,163</td><td><a href="https://senkyo-data.net/schiyoda20230423">https://senkyo-data.net/schiyoda20230423</a></td></tr>
+  </table>
+  目的変数 vote_share = votes ÷ 有権者数 × 1000（有権者1000人あたり得票）。
+  3区プール N=134。age 欠損 1 件は回帰・年齢散布図から除外（回帰 N=133）。
+</div>
+
+<h2>1. OLS 多変量回帰（vote_share ~ age + female + incumbent + 政党ダミー）</h2>
+<p>政党ダミーは自民/公明/共産/立民の4区分（基準カテゴリ=その他）。N=133、R²=0.2094、調整済みR²=0.1651。</p>
+<table class="reg-table">
+  <thead><tr><th>変数</th><th>係数</th><th>標準誤差</th><th>t値</th><th>p値</th></tr></thead>
+  <tbody><tr><td class="td-var">切片</td><td class="td-num">+10.6238</td><td class="td-num">2.2395</td><td class="td-num">+4.744</td><td class="td-num">&lt;0.0001 <b>***</b></td></tr>
+<tr><td class="td-var">age</td><td class="td-num">-0.0649</td><td class="td-num">0.0456</td><td class="td-num">-1.421</td><td class="td-num">0.1578</td></tr>
+<tr><td class="td-var">female</td><td class="td-num">+3.0966</td><td class="td-num">1.0458</td><td class="td-num">+2.961</td><td class="td-num">0.0037 <b>***</b></td></tr>
+<tr><td class="td-var">incumbent</td><td class="td-num">+5.1260</td><td class="td-num">1.1232</td><td class="td-num">+4.564</td><td class="td-num">&lt;0.0001 <b>***</b></td></tr>
+<tr><td class="td-var">party_自民</td><td class="td-num">-0.1323</td><td class="td-num">1.3075</td><td class="td-num">-0.101</td><td class="td-num">0.9196</td></tr>
+<tr><td class="td-var">party_公明</td><td class="td-num">-0.7827</td><td class="td-num">1.8612</td><td class="td-num">-0.421</td><td class="td-num">0.6748</td></tr>
+<tr><td class="td-var">party_共産</td><td class="td-num">-0.7553</td><td class="td-num">1.7725</td><td class="td-num">-0.426</td><td class="td-num">0.6708</td></tr>
+<tr><td class="td-var">party_立民</td><td class="td-num">-1.8126</td><td class="td-num">2.0756</td><td class="td-num">-0.873</td><td class="td-num">0.3842</td></tr></tbody>
+</table>
+<p class="fig-source">*** p&lt;0.01, ** p&lt;0.05, * p&lt;0.1（両側 t 検定, 自由度 125）</p>
+
+<h2>2. 散布図（属性 × 得票率）</h2>
+<div class="chart-wrap"><canvas id="scAge"></canvas>
+  <p class="fig-source">Fig.1 年齢 × 得票率（age 欠損 1 件除外, N=133）</p></div>
+<div class="chart-wrap"><canvas id="scFem"></canvas>
+  <p class="fig-source">Fig.2 性別（0=男性, 1=女性）× 得票率（N=134）</p></div>
+<div class="chart-wrap"><canvas id="scInc"></canvas>
+  <p class="fig-source">Fig.3 現職ダミー（0=新人・元職, 1=現職）× 得票率（N=134）</p></div>
+
+<h2>3. 区別比較（平均得票率）</h2>
+<div class="chart-wrap"><canvas id="barDist"></canvas>
+  <p class="fig-source">Fig.4 区別 平均 vote_share（有権者1000人あたり得票）</p></div>
+
+<script>
+const D = {"age": {"文京区": [{"x": 46, "y": 28.513}, {"x": 33, "y": 23.296}, {"x": 41, "y": 22.809}, {"x": 41, "y": 21.404}, {"x": 53, "y": 18.539}, {"x": 49, "y": 18.017}, {"x": 36, "y": 17.996}, {"x": 68, "y": 17.101}, {"x": 43, "y": 15.747}, {"x": 51, "y": 15.405}, {"x": 57, "y": 15.131}, {"x": 66, "y": 14.275}, {"x": 58, "y": 14.074}, {"x": 43, "y": 13.822}, {"x": 53, "y": 13.775}, {"x": 55, "y": 13.649}, {"x": 49, "y": 13.391}, {"x": 62, "y": 12.938}, {"x": 53, "y": 12.82}, {"x": 62, "y": 12.165}, {"x": 65, "y": 12.121}, {"x": 38, "y": 12.115}, {"x": 42, "y": 12.059}, {"x": 63, "y": 11.567}, {"x": 65, "y": 11.085}, {"x": 71, "y": 10.839}, {"x": 68, "y": 10.168}, {"x": 44, "y": 10.089}, {"x": 49, "y": 9.955}, {"x": 66, "y": 9.955}, {"x": 36, "y": 9.776}, {"x": 64, "y": 8.993}, {"x": 42, "y": 8.69}, {"x": 68, "y": 8.618}, {"x": 49, "y": 6.698}, {"x": 49, "y": 5.551}, {"x": 33, "y": 4.533}, {"x": 62, "y": 3.061}, {"x": 52, "y": 2.065}, {"x": 65, "y": 2.02}, {"x": 28, "y": 1.949}, {"x": 35, "y": 1.6}, {"x": 45, "y": 1.377}], "台東区": [{"x": 37, "y": 30.146}, {"x": 41, "y": 24.498}, {"x": 58, "y": 19.244}, {"x": 53, "y": 17.591}, {"x": 31, "y": 15.805}, {"x": 54, "y": 13.9}, {"x": 70, "y": 12.947}, {"x": 37, "y": 12.869}, {"x": 66, "y": 12.738}, {"x": 45, "y": 12.324}, {"x": 59, "y": 11.519}, {"x": 46, "y": 11.455}, {"x": 64, "y": 11.391}, {"x": 49, "y": 11.246}, {"x": 60, "y": 11.09}, {"x": 54, "y": 10.79}, {"x": 58, "y": 10.095}, {"x": 27, "y": 9.958}, {"x": 55, "y": 9.724}, {"x": 56, "y": 9.424}, {"x": 44, "y": 9.352}, {"x": 65, "y": 9.299}, {"x": 33, "y": 9.173}, {"x": 45, "y": 8.957}, {"x": 69, "y": 8.789}, {"x": 47, "y": 8.322}, {"x": 56, "y": 8.268}, {"x": 50, "y": 7.405}, {"x": 76, "y": 7.327}, {"x": 34, "y": 7.267}, {"x": 73, "y": 7.232}, {"x": 66, "y": 7.152}, {"x": 58, "y": 7.148}, {"x": 37, "y": 6.698}, {"x": 74, "y": 6.137}, {"x": 66, "y": 5.83}, {"x": 34, "y": 5.593}, {"x": 65, "y": 5.452}, {"x": 35, "y": 5.075}, {"x": 54, "y": 4.961}, {"x": 45, "y": 3.858}, {"x": 48, "y": 3.685}, {"x": 42, "y": 2.768}, {"x": 45, "y": 2.594}, {"x": 45, "y": 2.54}, {"x": 29, "y": 2.51}, {"x": 48, "y": 2.145}, {"x": 52, "y": 1.031}, {"x": 51, "y": 0.551}], "千代田区": [{"x": 49, "y": 25.229}, {"x": 43, "y": 21.625}, {"x": 48, "y": 20.666}, {"x": 42, "y": 18.5}, {"x": 50, "y": 17.867}, {"x": 44, "y": 17.311}, {"x": 68, "y": 16.832}, {"x": 62, "y": 16.046}, {"x": 49, "y": 15.202}, {"x": 44, "y": 15.202}, {"x": 52, "y": 14.8}, {"x": 52, "y": 14.455}, {"x": 28, "y": 14.225}, {"x": 69, "y": 13.669}, {"x": 53, "y": 13.669}, {"x": 63, "y": 13.4}, {"x": 56, "y": 13.362}, {"x": 52, "y": 13.324}, {"x": 56, "y": 12.998}, {"x": 59, "y": 12.327}, {"x": 47, "y": 12.193}, {"x": 57, "y": 12.09}, {"x": 56, "y": 11.905}, {"x": 51, "y": 11.464}, {"x": 41, "y": 11.196}, {"x": 71, "y": 9.758}, {"x": 68, "y": 9.7}, {"x": 64, "y": 9.279}, {"x": 59, "y": 9.01}, {"x": 58, "y": 8.263}, {"x": 55, "y": 8.186}, {"x": 59, "y": 7.975}, {"x": 53, "y": 7.917}, {"x": 33, "y": 5.584}, {"x": 36, "y": 5.387}, {"x": 33, "y": 3.93}, {"x": 53, "y": 3.757}, {"x": 47, "y": 3.604}, {"x": 40, "y": 3.086}, {"x": 64, "y": 2.914}, {"x": 42, "y": 0.883}]}, "fem": {"文京区": [{"x": 0, "y": 28.513}, {"x": 1, "y": 23.296}, {"x": 1, "y": 22.809}, {"x": 0, "y": 21.404}, {"x": 1, "y": 18.539}, {"x": 0, "y": 18.017}, {"x": 0, "y": 17.996}, {"x": 1, "y": 17.101}, {"x": 1, "y": 15.747}, {"x": 0, "y": 15.405}, {"x": 0, "y": 15.131}, {"x": 0, "y": 14.275}, {"x": 0, "y": 14.074}, {"x": 0, "y": 13.822}, {"x": 0, "y": 13.775}, {"x": 0, "y": 13.649}, {"x": 0, "y": 13.391}, {"x": 1, "y": 12.938}, {"x": 1, "y": 12.82}, {"x": 1, "y": 12.165}, {"x": 1, "y": 12.121}, {"x": 0, "y": 12.115}, {"x": 0, "y": 12.059}, {"x": 0, "y": 11.567}, {"x": 0, "y": 11.085}, {"x": 1, "y": 10.839}, {"x": 0, "y": 10.168}, {"x": 0, "y": 10.089}, {"x": 0, "y": 9.955}, {"x": 1, "y": 9.955}, {"x": 0, "y": 9.776}, {"x": 0, "y": 8.993}, {"x": 0, "y": 8.69}, {"x": 0, "y": 8.618}, {"x": 0, "y": 6.698}, {"x": 1, "y": 5.551}, {"x": 1, "y": 4.533}, {"x": 0, "y": 3.061}, {"x": 0, "y": 2.065}, {"x": 0, "y": 2.02}, {"x": 0, "y": 1.949}, {"x": 0, "y": 1.6}, {"x": 0, "y": 1.377}], "台東区": [{"x": 1, "y": 30.146}, {"x": 1, "y": 24.498}, {"x": 0, "y": 19.244}, {"x": 1, "y": 17.591}, {"x": 1, "y": 15.805}, {"x": 0, "y": 13.9}, {"x": 1, "y": 12.947}, {"x": 0, "y": 12.869}, {"x": 0, "y": 12.738}, {"x": 0, "y": 12.324}, {"x": 0, "y": 11.519}, {"x": 1, "y": 11.455}, {"x": 0, "y": 11.391}, {"x": 0, "y": 11.246}, {"x": 0, "y": 11.09}, {"x": 0, "y": 10.79}, {"x": 1, "y": 10.527}, {"x": 1, "y": 10.095}, {"x": 0, "y": 9.958}, {"x": 1, "y": 9.724}, {"x": 0, "y": 9.424}, {"x": 0, "y": 9.352}, {"x": 0, "y": 9.299}, {"x": 0, "y": 9.173}, {"x": 1, "y": 8.957}, {"x": 0, "y": 8.789}, {"x": 0, "y": 8.322}, {"x": 0, "y": 8.268}, {"x": 0, "y": 7.405}, {"x": 0, "y": 7.327}, {"x": 1, "y": 7.267}, {"x": 1, "y": 7.232}, {"x": 0, "y": 7.152}, {"x": 0, "y": 7.148}, {"x": 0, "y": 6.698}, {"x": 0, "y": 6.137}, {"x": 0, "y": 5.83}, {"x": 1, "y": 5.593}, {"x": 0, "y": 5.452}, {"x": 0, "y": 5.075}, {"x": 0, "y": 4.961}, {"x": 0, "y": 3.858}, {"x": 0, "y": 3.685}, {"x": 0, "y": 2.768}, {"x": 0, "y": 2.594}, {"x": 0, "y": 2.54}, {"x": 0, "y": 2.51}, {"x": 0, "y": 2.145}, {"x": 0, "y": 1.031}, {"x": 0, "y": 0.551}], "千代田区": [{"x": 0, "y": 25.229}, {"x": 0, "y": 21.625}, {"x": 1, "y": 20.666}, {"x": 0, "y": 18.5}, {"x": 1, "y": 17.867}, {"x": 1, "y": 17.311}, {"x": 0, "y": 16.832}, {"x": 0, "y": 16.046}, {"x": 0, "y": 15.202}, {"x": 1, "y": 15.202}, {"x": 0, "y": 14.8}, {"x": 0, "y": 14.455}, {"x": 1, "y": 14.225}, {"x": 0, "y": 13.669}, {"x": 0, "y": 13.669}, {"x": 0, "y": 13.4}, {"x": 0, "y": 13.362}, {"x": 1, "y": 13.324}, {"x": 1, "y": 12.998}, {"x": 1, "y": 12.327}, {"x": 0, "y": 12.193}, {"x": 0, "y": 12.09}, {"x": 0, "y": 11.905}, {"x": 0, "y": 11.464}, {"x": 0, "y": 11.196}, {"x": 0, "y": 9.758}, {"x": 0, "y": 9.7}, {"x": 0, "y": 9.279}, {"x": 1, "y": 9.01}, {"x": 1, "y": 8.263}, {"x": 0, "y": 8.186}, {"x": 1, "y": 7.975}, {"x": 0, "y": 7.917}, {"x": 1, "y": 5.584}, {"x": 1, "y": 5.387}, {"x": 0, "y": 3.93}, {"x": 1, "y": 3.757}, {"x": 0, "y": 3.604}, {"x": 0, "y": 3.086}, {"x": 0, "y": 2.914}, {"x": 0, "y": 0.883}]}, "inc": {"文京区": [{"x": 1, "y": 28.513}, {"x": 1, "y": 23.296}, {"x": 1, "y": 22.809}, {"x": 0, "y": 21.404}, {"x": 1, "y": 18.539}, {"x": 0, "y": 18.017}, {"x": 1, "y": 17.996}, {"x": 1, "y": 17.101}, {"x": 1, "y": 15.747}, {"x": 1, "y": 15.405}, {"x": 1, "y": 15.131}, {"x": 1, "y": 14.275}, {"x": 1, "y": 14.074}, {"x": 1, "y": 13.822}, {"x": 1, "y": 13.775}, {"x": 1, "y": 13.649}, {"x": 1, "y": 13.391}, {"x": 1, "y": 12.938}, {"x": 1, "y": 12.82}, {"x": 1, "y": 12.165}, {"x": 0, "y": 12.121}, {"x": 1, "y": 12.115}, {"x": 1, "y": 12.059}, {"x": 1, "y": 11.567}, {"x": 1, "y": 11.085}, {"x": 1, "y": 10.839}, {"x": 1, "y": 10.168}, {"x": 1, "y": 10.089}, {"x": 1, "y": 9.955}, {"x": 1, "y": 9.955}, {"x": 0, "y": 9.776}, {"x": 1, "y": 8.993}, {"x": 0, "y": 8.69}, {"x": 1, "y": 8.618}, {"x": 0, "y": 6.698}, {"x": 0, "y": 5.551}, {"x": 0, "y": 4.533}, {"x": 0, "y": 3.061}, {"x": 0, "y": 2.065}, {"x": 0, "y": 2.02}, {"x": 0, "y": 1.949}, {"x": 0, "y": 1.6}, {"x": 0, "y": 1.377}], "台東区": [{"x": 0, "y": 30.146}, {"x": 1, "y": 24.498}, {"x": 0, "y": 19.244}, {"x": 0, "y": 17.591}, {"x": 0, "y": 15.805}, {"x": 1, "y": 13.9}, {"x": 1, "y": 12.947}, {"x": 1, "y": 12.869}, {"x": 1, "y": 12.738}, {"x": 1, "y": 12.324}, {"x": 1, "y": 11.519}, {"x": 0, "y": 11.455}, {"x": 1, "y": 11.391}, {"x": 1, "y": 11.246}, {"x": 1, "y": 11.09}, {"x": 1, "y": 10.79}, {"x": 0, "y": 10.527}, {"x": 1, "y": 10.095}, {"x": 0, "y": 9.958}, {"x": 1, "y": 9.724}, {"x": 1, "y": 9.424}, {"x": 1, "y": 9.352}, {"x": 1, "y": 9.299}, {"x": 0, "y": 9.173}, {"x": 1, "y": 8.957}, {"x": 1, "y": 8.789}, {"x": 1, "y": 8.322}, {"x": 1, "y": 8.268}, {"x": 1, "y": 7.405}, {"x": 1, "y": 7.327}, {"x": 0, "y": 7.267}, {"x": 1, "y": 7.232}, {"x": 1, "y": 7.152}, {"x": 1, "y": 7.148}, {"x": 0, "y": 6.698}, {"x": 0, "y": 6.137}, {"x": 0, "y": 5.83}, {"x": 0, "y": 5.593}, {"x": 0, "y": 5.452}, {"x": 1, "y": 5.075}, {"x": 1, "y": 4.961}, {"x": 0, "y": 3.858}, {"x": 0, "y": 3.685}, {"x": 1, "y": 2.768}, {"x": 0, "y": 2.594}, {"x": 0, "y": 2.54}, {"x": 0, "y": 2.51}, {"x": 0, "y": 2.145}, {"x": 0, "y": 1.031}, {"x": 0, "y": 0.551}], "千代田区": [{"x": 1, "y": 25.229}, {"x": 1, "y": 21.625}, {"x": 0, "y": 20.666}, {"x": 0, "y": 18.5}, {"x": 1, "y": 17.867}, {"x": 1, "y": 17.311}, {"x": 1, "y": 16.832}, {"x": 0, "y": 16.046}, {"x": 0, "y": 15.202}, {"x": 0, "y": 15.202}, {"x": 1, "y": 14.8}, {"x": 1, "y": 14.455}, {"x": 0, "y": 14.225}, {"x": 1, "y": 13.669}, {"x": 1, "y": 13.669}, {"x": 1, "y": 13.4}, {"x": 0, "y": 13.362}, {"x": 1, "y": 13.324}, {"x": 0, "y": 12.998}, {"x": 1, "y": 12.327}, {"x": 1, "y": 12.193}, {"x": 0, "y": 12.09}, {"x": 1, "y": 11.905}, {"x": 1, "y": 11.464}, {"x": 0, "y": 11.196}, {"x": 1, "y": 9.758}, {"x": 1, "y": 9.7}, {"x": 0, "y": 9.279}, {"x": 0, "y": 9.01}, {"x": 0, "y": 8.263}, {"x": 0, "y": 8.186}, {"x": 1, "y": 7.975}, {"x": 0, "y": 7.917}, {"x": 0, "y": 5.584}, {"x": 0, "y": 5.387}, {"x": 0, "y": 3.93}, {"x": 0, "y": 3.757}, {"x": 0, "y": 3.604}, {"x": 0, "y": 3.086}, {"x": 0, "y": 2.914}, {"x": 0, "y": 0.883}]}, "bar": {"文京区": 11.855, "台東区": 9.128, "千代田区": 11.678}, "colors": {"文京区": "#2563eb", "台東区": "#16a34a", "千代田区": "#d97706"}};
+const Y_TITLE = '得票率（有権者1000人あたり得票）';
+function mkScatter(id, xTitle, ticks) {
+  new Chart(document.getElementById(id), {
+    type: 'scatter',
+    data: { datasets: Object.keys(D.colors).map(d => ({
+      label: d, data: D[id === 'scAge' ? 'age' : id === 'scFem' ? 'fem' : 'inc'][d],
+      backgroundColor: D.colors[d] + 'aa', pointRadius: 4 })) },
+    options: { responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { title: { display: true, text: xTitle },
+             ticks: ticks ? { stepSize: 1, callback: v => ticks[v] ?? '' } : {},
+             min: ticks ? -0.5 : undefined, max: ticks ? 1.5 : undefined },
+        y: { title: { display: true, text: Y_TITLE }, beginAtZero: true } } }
+  });
+}
+mkScatter('scAge', '年齢（歳）', null);
+mkScatter('scFem', '性別ダミー', {0: '男性 (0)', 1: '女性 (1)'});
+mkScatter('scInc', '現職ダミー', {0: '新人・元職 (0)', 1: '現職 (1)'});
+new Chart(document.getElementById('barDist'), {
+  type: 'bar',
+  data: { labels: Object.keys(D.bar),
+    datasets: [{ label: '平均 vote_share', data: Object.values(D.bar),
+      backgroundColor: Object.keys(D.bar).map(d => D.colors[d] + 'cc') }] },
+  options: { responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { y: { title: { display: true, text: Y_TITLE }, beginAtZero: true } } }
+});
+</script>
+</div>
+</body>
+</html>
