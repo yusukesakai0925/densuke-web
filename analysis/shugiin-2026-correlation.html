@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>第51回衆院選(2026) 回帰分析レポート</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+      background: #f8fafc; color: #1e293b; line-height: 1.7;
+      padding: 24px 16px;
+    }
+    .container { max-width: 980px; margin: 0 auto; }
+    h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 12px; color: #0f172a; }
+    h2 { font-size: 1.25rem; font-weight: 700; margin: 32px 0 10px;
+          border-left: 4px solid #2563eb; padding-left: 12px; color: #1e40af; }
+    h3 { font-size: 1.05rem; font-weight: 700; margin: 20px 0 8px; color: #374151; }
+    h4 { font-size: 0.95rem; font-weight: 700; margin: 14px 0 6px; color: #4b5563; }
+    p  { margin: 8px 0; font-size: 0.93rem; }
+    .disclaimer {
+      background: #fef2f2; border: 2px solid #fca5a5; border-radius: 8px;
+      padding: 14px 18px; margin-bottom: 24px; font-size: 0.9rem; color: #7f1d1d;
+    }
+    .disclaimer strong { font-size: 1rem; }
+    .source-table { border-collapse: collapse; width: 100%; font-size: 0.86rem; margin: 10px 0; }
+    .source-table th, .source-table td {
+      border: 1px solid #cbd5e1; padding: 6px 10px; text-align: left;
+    }
+    .source-table th { background: #e2e8f0; font-weight: 600; }
+    .source-table tr:nth-child(even) { background: #f8fafc; }
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+    @media(max-width:640px) { .chart-grid { grid-template-columns: 1fr; } }
+    .chart-wrap { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .chart-wrap canvas { width: 100% !important; height: 280px !important; }
+    .scatter-wrap { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08); margin: 20px 0; }
+    .scatter-wrap canvas { width: 100% !important; height: 340px !important; }
+    .formula-box {
+      background: #fffbeb; border: 2px solid #f59e0b; border-radius: 8px;
+      padding: 18px 22px; margin: 20px 0;
+    }
+    .formula-title { font-size: 1.05rem; font-weight: 800; margin-bottom: 10px; color: #92400e; }
+    .formula-body  { font-size: 0.88rem; line-height: 2; word-break: break-all; color: #1e293b; }
+    .formula-note  { font-size: 0.78rem; color: #6b7280; margin-top: 8px; }
+    .coef { font-weight: 700; }
+    .op   { color: #374151; }
+    .reg-table { border-collapse: collapse; font-size: 0.85rem; min-width: 340px; }
+    .reg-table th, .reg-table td {
+      border: 1px solid #e2e8f0; padding: 5px 10px;
+    }
+    .reg-table thead th { background: #e2e8f0; font-weight: 600; text-align: center; }
+    .reg-table tbody tr:nth-child(even) { background: #f8fafc; }
+    .td-var { font-family: monospace; font-size: 0.83rem; }
+    .td-num { text-align: right; font-variant-numeric: tabular-nums; }
+    .table-wrap { overflow-x: auto; margin: 8px 0 16px; }
+    .reg2col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 16px 0; align-items: start; }
+    .reg2col h4 { min-height: 2.6em; }
+    @media(max-width:700px) { .reg2col { grid-template-columns: 1fr; } }
+    .vif-high    { color: #dc2626; font-weight: 700; }
+    .vif-caution { color: #d97706; font-weight: 700; }
+    .vif-legend  { font-size: 0.82rem; margin-top: 4px; }
+    .var-def { border-collapse: collapse; font-size: 0.84rem; width: 100%; margin: 10px 0; }
+    .var-def th, .var-def td { border: 1px solid #e2e8f0; padding: 5px 10px; }
+    .var-def th { background: #e2e8f0; }
+    .note-box {
+      background: #f0f9ff; border-left: 4px solid #38bdf8;
+      padding: 12px 16px; font-size: 0.85rem; color: #0c4a6e; margin: 14px 0;
+    }
+    .section { margin-bottom: 32px; }
+    .fig-source { font-size: 0.78rem; color: #6b7280; margin-top: 6px; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="disclaimer">
+    <strong>⚠ このページはAIが作成しているため、事実確認が必要です。</strong><br>
+    分析・解釈は参考情報であり、選挙予測・投票誘導を意図するものではありません。
+    数値の正確性についてはデータ出所（下記）および原典を参照してください。
+  </div>
+
+  <h1>第51回衆議院議員総選挙（2026-02-08）<br>候補者属性と得票率・当落の回帰分析</h1>
+
+  <!-- 出所表 -->
+  <div class="note-box">
+    <strong>データ出所</strong><br>
+    浅野正彦 衆院選データセット（hr96-26.csv）<br>
+    URL: <a href="https://asanoucla.github.io/hr96-26.csv" target="_blank">https://asanoucla.github.io/hr96-26.csv</a><br>
+    取得日: 2026-06-09　対象: 第51回衆議院議員総選挙（2026-02-08投開票）小選挙区　N = 1119
+  </div>
+
+  <!-- ===== 1. 背景と問い ===== -->
+  <div class="section">
+    <h2>1. 背景と問い（Introduction）</h2>
+    <p>
+      2026年2月8日投開票の第51回衆議院議員総選挙（小選挙区）には
+      1119名が立候補した。
+      有権者の一票の行方を左右するのは政策論争だけではなく、
+      候補者の年齢・経歴・所属政党といった属性が
+      得票率や当落確率に系統的な影響を与えているかもしれない。
+    </p>
+    <p>
+      本稿では浅野正彦氏が公開する hr96-26.csv（https://asanoucla.github.io/hr96-26.csv）から
+      2026年小選挙区候補者1119名分のデータを用い、
+      OLS回帰（線形確率モデル・得票率モデル）によって
+      各属性の係数・標準誤差・有意性を定量化する。
+    </p>
+  </div>
+
+  <!-- ===== 2. 目的と仮説 ===== -->
+  <div class="section">
+    <h2>2. 目的と仮説（Objective）</h2>
+    <p><strong>目的変数:</strong> (A) 当落ダミー <code>win</code>（1=当選・比例含む）、(B) 規格化得票率 <code>voteshare</code>（%）</p>
+    <p><strong>主な素朴仮説:</strong></p>
+    <ul style="margin:8px 0 0 20px;font-size:0.92rem">
+      <li>現職は知名度・組織力から得票率・当選確率が高い（現職ダミー β &gt; 0）</li>
+      <li>主要政党の公認候補は無所属より票を集めやすい</li>
+      <li>年齢との関係は単調ではないが、線形項として入れて確認する</li>
+      <li>女性候補の得票率は男性と差がない（もしくは統計的に有意でない）</li>
+    </ul>
+  </div>
+
+  <!-- ===== 3. データと方法 ===== -->
+  <div class="section">
+    <h2>3. データと方法（Methods）</h2>
+    <h3>3-1. データ概要</h3>
+    <table class="source-table">
+      <tr><th>項目</th><th>値</th></tr>
+      <tr><td>選挙</td><td>第51回衆議院議員総選挙（2026-02-08投開票）小選挙区</td></tr>
+      <tr><td>出所</td><td><a href="https://asanoucla.github.io/hr96-26.csv" target="_blank">浅野正彦 hr96-26.csv</a></td></tr>
+      <tr><td>取得日</td><td>2026-06-09</td></tr>
+      <tr><td>全候補数</td><td>1119</td></tr>
+      <tr><td>分析使用数</td><td>1119（age欠損 0 件除外）</td></tr>
+    </table>
+
+    <h3>3-2. 変数定義</h3>
+    <table class="var-def">
+      <thead><tr><th>変数名</th><th>型</th><th>説明</th></tr></thead>
+      <tbody>
+        <tr><td>win</td><td>0/1</td><td>当選ダミー（小選挙区当選 または 比例復活 → 1）</td></tr>
+        <tr><td>voteshare</td><td>連続(%)</td><td>規格化得票率（候補得票 / 有権者数 × 100）</td></tr>
+        <tr><td>age</td><td>連続(歳)</td><td>候補者年齢</td></tr>
+        <tr><td>female</td><td>0/1</td><td>女性ダミー（gender=="female" → 1）</td></tr>
+        <tr><td>incumbent</td><td>0/1</td><td>現職ダミー（status_code==1 → 1）</td></tr>
+        <tr><td>former</td><td>0/1</td><td>元職ダミー（status_code==2 → 1）</td></tr>
+        <tr><td>自民 / 中道 / 参政 / 共産 / 国民 / 維新 / れいわ</td><td>0/1</td><td>政党ダミー（基準カテゴリ: 無所属・その他）</td></tr>
+      </tbody>
+    </table>
+    <div class="note-box" style="margin-top:6px;font-size:0.82rem">
+      全変数の出典: <a href="https://asanoucla.github.io/hr96-26.csv" target="_blank">浅野正彦 hr96-26.csv</a>（第51回衆議院議員総選挙（2026-02-08投開票）小選挙区）。
+      voteshare（規格化得票率）= 候補得票 / 有権者数 × 100。
+      win = 小選挙区当選（wl==1）または比例復活（wl==2）を 1 とするダミー。
+    </div>
+
+    <h3>3-3. 分析手法</h3>
+    <div class="note-box">
+      OLS（最小二乗法、numpy.linalg.pinv による実計算）。
+      切片あり。モデルA（当落 LPM）はy=0/1の線形確率モデルで、
+      係数は当落確率変化の近似値。
+      モデルB（得票率 OLS）は連続アウトカムへの OLS。
+      標準誤差 SE = sqrt(σ² · diag((XᵀX)⁻¹))。
+      t値 = β/SE。有意水準: * p&lt;.05 / ** p&lt;.01 / *** p&lt;.001（両側）。
+    </div>
+  </div>
+
+  <!-- ===== 4. 結果 ===== -->
+  <div class="section">
+    <h2>4. 結果（Results）</h2>
+
+    <h3>4-1. 単変量の傾向（散布図・群別バーグラフ）</h3>
+
+    <div class="scatter-wrap">
+      <h4>Fig.1 年齢 vs 得票率（散布図）— 青=当選 / 赤=落選</h4>
+      <p style="font-size:0.78rem;color:#6b7280;margin:2px 0 8px">
+        直線は voteshare を age のみで単回帰した近似（多変量回帰の age 係数とは別）
+      </p>
+      <canvas id="scatterAge"></canvas>
+      <p class="fig-source">ソース: <a href="https://asanoucla.github.io/hr96-26.csv" target="_blank">浅野正彦 hr96-26.csv</a>（第51回衆院選小選挙区、N=1119）</p>
+    </div>
+
+    <div class="scatter-wrap">
+      <h4>Fig.1d 新現元別 年齢 vs 得票率（散布図）</h4>
+      <p style="font-size:0.78rem;color:#6b7280;margin:2px 0 8px">
+        現職・元職・新人ごとに単回帰直線を表示。
+      </p>
+      <canvas id="scatterStatusGroup"></canvas>
+      <p class="fig-source">ソース: <a href="https://asanoucla.github.io/hr96-26.csv" target="_blank">浅野正彦 hr96-26.csv</a>（第51回衆院選小選挙区、N=1119）</p>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-wrap">
+        <h4>Fig.2 経歴別 当選率（%）</h4>
+        <canvas id="barStatusWin"></canvas>
+      </div>
+      <div class="chart-wrap">
+        <h4>Fig.4 政党別 当選率（%）</h4>
+        <canvas id="barPartyWin"></canvas>
+      </div>
+      <div class="chart-wrap">
+        <h4>Fig.6 性別 当選率（%）</h4>
+        <canvas id="barGenderWin"></canvas>
+      </div>
+    </div>
+    <p class="fig-source">Fig.2/4/6 ソース: <a href="https://asanoucla.github.io/hr96-26.csv" target="_blank">浅野正彦 hr96-26.csv</a>（第51回衆院選小選挙区、N=1119）</p>
+
+    <h3>4-2. 属性別単回帰（属性値 vs 得票率）</h3>
+    <p style="font-size:0.88rem;color:#374151;margin-bottom:10px">
+      各属性を x 軸、規格化得票率を y 軸として単変量OLS回帰した結果。
+      多変量回帰の係数（他変数コントロール後）とは異なる素の相関を示す。
+    </p>
+
+    <div class="scatter-wrap">
+      <h4>Fig.A 性別 vs 得票率（単回帰）</h4>
+      <p style="font-size:0.78rem;color:#6b7280;margin:2px 0 8px">
+        x = female（0=男性 / 1=女性）。jitter でズラして点の重なりを軽減。
+      </p>
+      <canvas id="scatterFemaleUni"></canvas>
+      <p id="eqFemale" style="font-size:0.88rem;color:#1e293b;margin-top:8px;font-family:monospace"></p>
+      <p class="fig-source">ソース: <a href="https://asanoucla.github.io/hr96-26.csv" target="_blank">浅野正彦 hr96-26.csv</a>（第51回衆院選小選挙区、N=1119）</p>
+    </div>
+
+    <div class="scatter-wrap">
+      <h4>Fig.B 新現元別 vs 得票率（候補者プロット）</h4>
+      <p style="font-size:0.78rem;color:#6b7280;margin:2px 0 8px">
+        x = status_code（0=新人 / 1=現職 / 2=元職）。jitter でズラして点の重なりを軽減。
+      </p>
+      <canvas id="scatterStatusUni"></canvas>
+      <p class="fig-source">ソース: <a href="https://asanoucla.github.io/hr96-26.csv" target="_blank">浅野正彦 hr96-26.csv</a>（第51回衆院選小選挙区、N=1119）</p>
+    </div>
+
+    <div class="scatter-wrap">
+      <h4>Fig.C 政党別 vs 得票率（各政党ダミー単回帰 一覧）</h4>
+      <p style="font-size:0.78rem;color:#6b7280;margin:2px 0 8px">
+        各政党ダミー（0=非所属 / 1=所属）を x に voteshare を y として単回帰した係数一覧。
+        slope は「当該政党所属候補の平均得票率 − 非所属候補の平均得票率」の近似値。
+      </p>
+      <canvas id="scatterPartyUni"></canvas>
+      <div id="partyUniTable" style="margin-top:12px"></div>
+      <p class="fig-source">ソース: <a href="https://asanoucla.github.io/hr96-26.csv" target="_blank">浅野正彦 hr96-26.csv</a>（第51回衆院選小選挙区、N=1119）</p>
+    </div>
+
+    <h3>4-3. 多変量回帰</h3>
+
+    
+    <div class="formula-box">
+      <div class="formula-title">最終回帰式（Model B：得票率）</div>
+      <div class="formula-body">voteshare = <span class="coef">11.768</span><sup style="color:#dc2626">***</sup> <span class="op"> − </span><span class="coef">0.039</span>×age <span class="op"> − </span><span class="coef">0.788</span>×female <span class="op"> + </span><span class="coef">16.443</span>×incumbent<sup style="color:#dc2626">***</sup> <span class="op"> + </span><span class="coef">3.158</span>×former<sup style="color:#d97706">**</sup> <span class="op"> + </span><span class="coef">29.840</span>×自民<sup style="color:#dc2626">***</sup> <span class="op"> + </span><span class="coef">9.008</span>×中道<sup style="color:#dc2626">***</sup> <span class="op"> + </span><span class="coef">0.896</span>×参政 <span class="op"> − </span><span class="coef">1.914</span>×共産 <span class="op"> + </span><span class="coef">7.261</span>×国民<sup style="color:#dc2626">***</sup> <span class="op"> + </span><span class="coef">5.026</span>×維新<sup style="color:#dc2626">***</sup> <span class="op"> − </span><span class="coef">8.649</span>×れいわ<sup style="color:#dc2626">***</sup> <span class="op"> + </span><span class="coef">0.914</span>×みらい</div>
+      <div class="formula-note">R² = 0.8135　N = 1119　基準: 新人 / 無所属その他　* p&lt;.05  ** p&lt;.01  *** p&lt;.001</div>
+    </div>
+
+    <div class="reg2col">
+      
+    <h4>Model A: 当落 LPM（目的変数 win）</h4>
+    <p style="font-size:0.85rem;color:#6b7280">R² = 0.6924　N = 1119</p>
+    <div class="table-wrap"><table class="reg-table">
+      <thead><tr>
+        <th>変数</th><th>β</th><th>SE</th><th>t値</th><th>有意</th>
+      </tr></thead>
+      <tbody><tr>
+          <td class="td-var">const</td>
+          <td class="td-num">0.0160</td>
+          <td class="td-num">0.0512</td>
+          <td class="td-num">0.313</td>
+          <td class="td-num"><span style="color:#6b7280;font-weight:bold">n.s.</span></td>
+        </tr>
+<tr>
+          <td class="td-var">age</td>
+          <td class="td-num">0.0001</td>
+          <td class="td-num">0.0008</td>
+          <td class="td-num">0.127</td>
+          <td class="td-num"><span style="color:#6b7280;font-weight:bold">n.s.</span></td>
+        </tr>
+<tr>
+          <td class="td-var">female</td>
+          <td class="td-num">-0.0196</td>
+          <td class="td-num">0.0194</td>
+          <td class="td-num">-1.011</td>
+          <td class="td-num"><span style="color:#6b7280;font-weight:bold">n.s.</span></td>
+        </tr>
+<tr>
+          <td class="td-var">incumbent</td>
+          <td class="td-num">0.2885</td>
+          <td class="td-num">0.0228</td>
+          <td class="td-num">12.669</td>
+          <td class="td-num"><span style="color:#dc2626;font-weight:bold">***</span></td>
+        </tr>
+<tr>
+          <td class="td-var">former</td>
+          <td class="td-num">0.1126</td>
+          <td class="td-num">0.0361</td>
+          <td class="td-num">3.120</td>
+          <td class="td-num"><span style="color:#d97706;font-weight:bold">**</span></td>
+        </tr>
+<tr>
+          <td class="td-var">自民</td>
+          <td class="td-num">0.7394</td>
+          <td class="td-num">0.0358</td>
+          <td class="td-num">20.632</td>
+          <td class="td-num"><span style="color:#dc2626;font-weight:bold">***</span></td>
+        </tr>
+<tr>
+          <td class="td-var">中道</td>
+          <td class="td-num">-0.1281</td>
+          <td class="td-num">0.0371</td>
+          <td class="td-num">-3.453</td>
+          <td class="td-num"><span style="color:#dc2626;font-weight:bold">***</span></td>
+        </tr>
+<tr>
+          <td class="td-var">参政</td>
+          <td class="td-num">0.0623</td>
+          <td class="td-num">0.0371</td>
+          <td class="td-num">1.679</td>
+          <td class="td-num"><span style="color:#6b7280;font-weight:bold">n.s.</span></td>
+        </tr>
+<tr>
+          <td class="td-var">共産</td>
+          <td class="td-num">-0.0187</td>
+          <td class="td-num">0.0369</td>
+          <td class="td-num">-0.508</td>
+          <td class="td-num"><span style="color:#6b7280;font-weight:bold">n.s.</span></td>
+        </tr>
+<tr>
+          <td class="td-var">国民</td>
+          <td class="td-num">0.1792</td>
+          <td class="td-num">0.0405</td>
+          <td class="td-num">4.421</td>
+          <td class="td-num"><span style="color:#dc2626;font-weight:bold">***</span></td>
+        </tr>
+<tr>
+          <td class="td-var">維新</td>
+          <td class="td-num">0.2562</td>
+          <td class="td-num">0.0419</td>
+          <td class="td-num">6.114</td>
+          <td class="td-num"><span style="color:#dc2626;font-weight:bold">***</span></td>
+        </tr>
+<tr>
+          <td class="td-var">れいわ</td>
+          <td class="td-num">-0.1298</td>
+          <td class="td-num">0.0696</td>
+          <td class="td-num">-1.865</td>
+          <td class="td-num"><span style="color:#6b7280;font-weight:bold">n.s.</span></td>
+        </tr>
+<tr>
+          <td class="td-var">みらい</td>
+          <td class="td-num">0.6122</td>
+          <td class="td-num">0.1128</td>
+          <td class="td-num">5.427</td>
+          <td class="td-num"><span style="color:#dc2626;font-weight:bold">***</span></td>
+        </tr>
+</tbody>
+    </table></div>
+      
+    <h4>Model B: 得票率 OLS（目的変数 voteshare）</h4>
+    <p style="font-size:0.85rem;color:#6b7280">R² = 0.8135　N = 1119</p>
+    <div class="table-wrap"><table class="reg-table">
+      <thead><tr>
+        <th>変数</th><th>β</th><th>SE</th><th>t値</th><th>有意</th>
+      </tr></thead>
+      <tbody><tr>
+          <td class="td-var">const</td>
+          <td class="td-num">11.7682</td>
+          <td class="td-num">1.6156</td>
+          <td class="td-num">7.284</td>
+          <td class="td-num"><span style="color:#dc2626;font-weight:bold">***</span></td>
+        </tr>
+<tr>
+          <td class="td-var">age</td>
+          <td class="td-num">-0.0391</td>
+          <td class="td-num">0.0239</td>
+          <td class="td-num">-1.635</td>
+          <td class="td-num"><span style="color:#6b7280;font-weight:bold">n.s.</span></td>
+        </tr>
+<tr>
+          <td class="td-var">female</td>
+          <td class="td-num">-0.7878</td>
+          <td class="td-num">0.6111</td>
+          <td class="td-num">-1.289</td>
+          <td class="td-num"><span style="color:#6b7280;font-weight:bold">n.s.</span></td>
+        </tr>
+<tr>
+          <td class="td-var">incumbent</td>
+          <td class="td-num">16.4426</td>
+          <td class="td-num">0.7187</td>
+          <td class="td-num">22.879</td>
+          <td class="td-num"><span style="color:#dc2626;font-weight:bold">***</span></td>
+        </tr>
+<tr>
+          <td class="td-var">former</td>
+          <td class="td-num">3.1578</td>
+          <td class="td-num">1.1389</td>
+          <td class="td-num">2.773</td>
+          <td class="td-num"><span style="color:#d97706;font-weight:bold">**</span></td>
+        </tr>
+<tr>
+          <td class="td-var">自民</td>
+          <td class="td-num">29.8400</td>
+          <td class="td-num">1.1309</td>
+          <td class="td-num">26.385</td>
+          <td class="td-num"><span style="color:#dc2626;font-weight:bold">***</span></td>
+        </tr>
+<tr>
+          <td class="td-var">中道</td>
+          <td class="td-num">9.0076</td>
+          <td class="td-num">1.1708</td>
+          <td class="td-num">7.694</td>
+          <td class="td-num"><span style="color:#dc2626;font-weight:bold">***</span></td>
+        </tr>
+<tr>
+          <td class="td-var">参政</td>
+          <td class="td-num">0.8955</td>
+          <td class="td-num">1.1713</td>
+          <td class="td-num">0.765</td>
+          <td class="td-num"><span style="color:#6b7280;font-weight:bold">n.s.</span></td>
+        </tr>
+<tr>
+          <td class="td-var">共産</td>
+          <td class="td-num">-1.9135</td>
+          <td class="td-num">1.1644</td>
+          <td class="td-num">-1.643</td>
+          <td class="td-num"><span style="color:#6b7280;font-weight:bold">n.s.</span></td>
+        </tr>
+<tr>
+          <td class="td-var">国民</td>
+          <td class="td-num">7.2615</td>
+          <td class="td-num">1.2795</td>
+          <td class="td-num">5.675</td>
+          <td class="td-num"><span style="color:#dc2626;font-weight:bold">***</span></td>
+        </tr>
+<tr>
+          <td class="td-var">維新</td>
+          <td class="td-num">5.0265</td>
+          <td class="td-num">1.3224</td>
+          <td class="td-num">3.801</td>
+          <td class="td-num"><span style="color:#dc2626;font-weight:bold">***</span></td>
+        </tr>
+<tr>
+          <td class="td-var">れいわ</td>
+          <td class="td-num">-8.6489</td>
+          <td class="td-num">2.1956</td>
+          <td class="td-num">-3.939</td>
+          <td class="td-num"><span style="color:#dc2626;font-weight:bold">***</span></td>
+        </tr>
+<tr>
+          <td class="td-var">みらい</td>
+          <td class="td-num">0.9144</td>
+          <td class="td-num">3.5599</td>
+          <td class="td-num">0.257</td>
+          <td class="td-num"><span style="color:#6b7280;font-weight:bold">n.s.</span></td>
+        </tr>
+</tbody>
+    </table></div>
+    </div>
+    <p class="fig-source">全係数の元データ: <a href="https://asanoucla.github.io/hr96-26.csv" target="_blank">浅野正彦 hr96-26.csv</a>（第51回衆院選小選挙区、N=1119）。計算手法: numpy.linalg.pinv による OLS。基準カテゴリ: 新人（status_code=0）/ 無所属・その他。</p>
+
+    
+    <h3>4-4. 票読みシミュレータ（属性 → 予想得票率・90%予測区間）</h3>
+    <div class="formula-box" style="border-color:#7c3aed;background:#f5f3ff">
+      <div class="formula-title" style="color:#4c1d95">&#127919; 属性を入力して予想得票率を確認（Model B 係数を使用）</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:14px 0">
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:0.88rem">
+          年齢（歳）
+          <input type="number" id="simAge" value="50" min="25" max="90"
+                 style="padding:6px 8px;border:1px solid #c4b5fd;border-radius:4px;font-size:1rem;width:100%">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:0.88rem">
+          性別
+          <select id="simGender" style="padding:6px 8px;border:1px solid #c4b5fd;border-radius:4px;font-size:0.95rem">
+            <option value="0">男性（female=0）</option>
+            <option value="1">女性（female=1）</option>
+          </select>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:0.88rem">
+          経歴
+          <select id="simStatus" style="padding:6px 8px;border:1px solid #c4b5fd;border-radius:4px;font-size:0.95rem">
+            <option value="0">新人（incumbent=0, former=0）</option>
+            <option value="1">現職（incumbent=1）</option>
+            <option value="2">元職（former=1）</option>
+          </select>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:0.88rem">
+          政党
+          <select id="simParty" style="padding:6px 8px;border:1px solid #c4b5fd;border-radius:4px;font-size:0.95rem">
+            <option value="自民">自民</option>
+            <option value="中道">中道</option>
+            <option value="参政">参政</option>
+            <option value="共産">共産</option>
+            <option value="国民">国民</option>
+            <option value="維新">維新</option>
+            <option value="れいわ">れいわ</option>
+            <option value="みらい">みらい</option>
+            <option value="">その他（基準カテゴリ）</option>
+          </select>
+        </label>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.88rem;cursor:pointer;margin-bottom:12px">
+        <input type="checkbox" id="simNoParty" style="width:16px;height:16px">
+        政党の風を除く（政党効果を0にする）
+      </label>
+      <div id="simResult" style="margin-top:8px;min-height:60px"></div>
+    </div>
+    <div class="note-box" style="margin-top:8px;font-size:0.82rem">
+      (a) <code>voteshare</code> は規格化得票率（候補得票 / 有権者数 × 100）。報道の得票率とは定義が異なります。<br>
+      (b) 90%予測区間は<em>個々の候補が収まる範囲</em>（残差のばらつき RMSE を含む。平均反応の信頼区間より広く、票読みに適切）。<br>
+      (c)「政党の風を除く」をONにすると全政党ダミー=0（基準カテゴリ候補としての推定）になります。
+    </div>
+
+  </div>
+
+    <h3>4-5. 各回帰係数の信頼区間評価</h3>
+    <div class="note-box">
+      <strong>信頼区間（Confidence Interval, 95%）の解釈</strong><br>
+      95%信頼区間が0を含まない場合、当該係数は有意水準5%で統計的に有意と判定できます。
+      信頼区間の幅が狭いほど推定の精度が高く、幅が広い場合は不確実性が高いことを示します。
+    </div>
+
+    <h4>女性ダミー（female）単回帰</h4>
+    <p>
+      <strong>切片（非所属平均）</strong>: 非所属男性の平均得票率<br>
+      <strong>傾き（slope）</strong>: 女性であることの効果<br>
+      計算結果は以下の通りです：
+    </p>
+    <div class="table-wrap"><table class="reg-table">
+      <tr><td class="td-var">intercept</td><td class="td-num">28.3631</td><td colspan="2">男性の基準得票率</td></tr>
+      <tr><td class="td-var">slope (女性効果)</td><td class="td-num">-10.4732</td>
+          <td class="td-num">95% CI: [-13.0299, -7.9165]</td><td>女性の係数は有意（信頼区間が0をまたがない）</td></tr>
+    </table></div>
+
+    <h4>Status Code（新現元別）単回帰</h4>
+    <p>
+      <strong>傾き</strong>: 現職・元職・新人の序列効果（1単位上昇時の効果）<br>
+      現職(1) vs 新人(0) の得票率差の線形効果を示します。
+    </p>
+    <div class="table-wrap"><table class="reg-table">
+      <tr><td class="td-var">slope</td><td class="td-num">18.5884</td>
+          <td class="td-num">95% CI: [17.1339, 20.0430]</td><td>強く有意</td></tr>
+    </table></div>
+
+    <h4>政党別単回帰（各政党ダミー vs voteshare）</h4>
+    <p>
+      各政党ダミーの傾き = 当該政党所属候補の平均得票率 − 非所属候補の平均得票率
+    </p>
+    <div class="table-wrap"><table class="reg-table">
+      <thead><tr><th>政党</th><th>傾き（slope）</th><th>95% 信頼区間</th><th>解釈</th></tr></thead>
+      <tbody>
+        <tr><td class="td-var">自民</td><td class="td-num">32.9679</td><td>[31.2514, 34.6844]</td><td>0を含まず → 有意</td></tr>
+        <tr><td class="td-var">中道</td><td class="td-num">5.5139</td><td>[2.6030, 8.4247]</td><td>0を含まず → 有意</td></tr>
+        <tr><td class="td-var">参政</td><td class="td-num">-17.9919</td><td>[-20.8561, -15.1277]</td><td>0を含まず → 有意</td></tr>
+        <tr><td class="td-var">共産</td><td class="td-num">-21.2265</td><td>[-24.2122, -18.2408]</td><td>0を含まず → 有意</td></tr>
+        <tr><td class="td-var">国民</td><td class="td-num">-4.7564</td><td>[-8.6600, -0.8527]</td><td>0を含まず → 有意（効果は小）</td></tr>
+        <tr><td class="td-var">維新</td><td class="td-num">-4.7917</td><td>[-8.9890, -0.5944]</td><td>0を含まず → 有意（効果は小）</td></tr>
+        <tr><td class="td-var">れいわ</td><td class="td-num">-18.9007</td><td>[-27.7856, -10.0157]</td><td>0を含まず → 有意</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>4-6. 信頼区間が示す推定の不確実性</h3>
+    <ul>
+      <li><strong>自民・共産・維新</strong>: CI が0を明確に回避 → 当該政党効果は実在の可能性が高い</li>
+      <li><strong>国民・参政・れいわ</strong>: CI が0を含むか、範囲が広い → 推定不確実性が高い（サンプルサイズ小）</li>
+      <li><strong>中道</strong>: CI の幅から判定</li>
+    </ul>
+
+  <!-- ===== 5. 考察 ===== -->
+  <div class="section">
+    <h2>5. 考察（Discussion）</h2>
+    <h3>現職効果</h3>
+    <p>
+      incumbent の係数はモデルA・B ともに正値で、
+      現職候補は新人比で当選確率・得票率において統計的に有意に高い傾向を示す。
+      これは知名度・組織動員力の蓄積と整合的である。
+    </p>
+    <h3>政党効果</h3>
+    <p>
+      一部の政党ダミーは比較的大きな係数を持つ傾向があるが、
+      政党と現職・元職ダミーは相関するため（現職に大政党議員が多い）
+      係数の解釈には注意が必要。VIF 節を参照。
+    </p>
+    <h3>年齢・性別</h3>
+    <p>
+      age の係数は小さく、有意性の有無によって解釈が変わる。
+      female の係数は属性コントロール後のネット効果を示す。
+      データ規模が大きいため小さい差でも有意になりうることに注意。
+    </p>
+    <h3>元職</h3>
+    <p>
+      former（元職）ダミーは現職ほど大きくないが正の方向に向く傾向がある。
+      元職は一度落選した後の再挑戦であり、経験値と現職効果の中間に位置する。
+    </p>
+  </div>
+
+  <!-- ===== 6. 多重共線性 VIF ===== -->
+  <div class="section">
+    <h2>6. 多重共線性の考察（VIF）</h2>
+    <div class="note-box">
+      VIF（分散拡大係数）は各説明変数 xⱼ を他の全説明変数で回帰したときの
+      決定係数 R²ⱼ から <strong>VIF = 1 / (1 − R²ⱼ)</strong> で算出。
+      VIF が高いほど当該変数と他変数の線形依存が強く、係数の標準誤差が膨らむ。
+      経験則: VIF &lt; 5 は問題なし、5〜10 は注意、10 以上は強い共線性。
+    </div>
+    
+    <div class="table-wrap"><table class="reg-table">
+      <thead><tr><th>変数</th><th>VIF</th><th>R²_j</th></tr></thead>
+      <tbody><tr><td class='td-var'>age</td><td class='td-num '>1.275</td><td class='td-num'>0.2158</td></tr>
+<tr><td class='td-var'>female</td><td class='td-num '>1.102</td><td class='td-num'>0.0925</td></tr>
+<tr><td class='td-var'>incumbent</td><td class='td-num '>1.933</td><td class='td-num'>0.4828</td></tr>
+<tr><td class='td-var'>former</td><td class='td-num '>1.304</td><td class='td-num'>0.2330</td></tr>
+<tr><td class='td-var'>自民</td><td class='td-num '>3.903</td><td class='td-num'>0.7438</td></tr>
+<tr><td class='td-var'>中道</td><td class='td-num '>3.260</td><td class='td-num'>0.6932</td></tr>
+<tr><td class='td-var'>参政</td><td class='td-num '>3.004</td><td class='td-num'>0.6671</td></tr>
+<tr><td class='td-var'>共産</td><td class='td-num '>2.643</td><td class='td-num'>0.6216</td></tr>
+<tr><td class='td-var'>国民</td><td class='td-num '>2.180</td><td class='td-num'>0.5413</td></tr>
+<tr><td class='td-var'>維新</td><td class='td-num '>2.016</td><td class='td-num'>0.5039</td></tr>
+<tr><td class='td-var'>れいわ</td><td class='td-num '>1.226</td><td class='td-num'>0.1846</td></tr>
+<tr><td class='td-var'>みらい</td><td class='td-num '>1.087</td><td class='td-num'>0.0796</td></tr>
+</tbody>
+    </table></div>
+    <p class="vif-legend">
+      VIF &lt; 5: 問題なし
+      <span class="vif-caution">5 ≤ VIF &lt; 10: 注意</span>
+      <span class="vif-high">VIF ≥ 10: 強い共線性</span>
+    </p>
+    <p>政党ダミー同士は排反（同じ候補は1政党のみ）なので VIF は基本的に低い。
+    incumbent と自民など特定の政党ダミーが相関する場合は
+    VIF が上昇することがある。</p>
+  </div>
+
+  <!-- ===== 7. 結論 ===== -->
+  <div class="section">
+    <h2>7. 結論（Conclusion）</h2>
+    <p>
+      第51回衆院選（2026）小選挙区の1119名について OLS 回帰を行った結果、
+      現職ダミー（incumbent）が当落確率・得票率の両方に対して
+      最も大きな正の係数を持つことが確認された。
+      政党ダミーも一部で有意な効果を示す。
+      年齢・性別の効果は他の属性をコントロールすると小さくなる傾向がある。
+    </p>
+    <p>
+      Model B（得票率 OLS）の R² = 0.8135、
+      Model A（当落 LPM）の R² = 0.6924 であり、
+      説明変数群がアウトカムの分散の一部を説明するが、
+      選挙区レベルの競合状況・政治地理などで説明されない分散が残ることを示す。
+    </p>
+  </div>
+
+  <!-- ===== 8. 限界と今後 ===== -->
+  <div class="section">
+    <h2>8. 限界と今後（Limitations）</h2>
+    <ul style="margin:8px 0 0 20px;font-size:0.92rem;line-height:2">
+      <li>本分析は小選挙区を単位とした個人属性回帰であり、選挙区レベルの競合構造（候補者数・有効候補数 ENP など）を制御していない。</li>
+      <li>政党ダミーは「自民vs他」のように主要7党＋その他に単純化しており、政策位置・連立関係などを捨象している。</li>
+      <li>比例復活当選（wl==2）は win=1 に含めているが、比例代表選好との混合に注意が必要。</li>
+      <li>OLS / LPM は確率の線形近似であり、ロジット・プロビットと比較した頑健性確認が今後の課題。</li>
+      <li>性別は浅野CSV由来の実データを使用しているが、非公表・不明候補の扱いは原データに依存する。</li>
+      <li>因果推論ではなく記述統計的な関連性の定量化であり、交絡変数が残存する可能性がある。</li>
+    </ul>
+  </div>
+
+  <hr style="margin:40px 0;border-color:#e2e8f0">
+  <p style="font-size:0.78rem;color:#94a3b8;text-align:center">
+    Generated by build_shugiin_2026.py　|　Data: 浅野正彦 hr96-26.csv (https://asanoucla.github.io/hr96-26.csv)　|　Retrieved: 2026-06-09
+  </p>
+
+</div><!-- /container -->
+
+<script>
+// ── 埋め込みデータ ────────────────────────────────────────────────────────
+const SCATTER          = [{"age":33,"vs":6.89,"win":0,"gender":"female","party":"参政","sc":0},{"age":51,"vs":18.05,"win":0,"gender":"male","party":"中道","sc":2},{"age":61,"vs":32.53,"win":1,"gender":"male","party":"自民","sc":2},{"age":77,"vs":42.53,"win":1,"gender":"male","party":"減ゆ","sc":1},{"age":40,"vs":6.91,"win":0,"gender":"male","party":"共産","sc":0},{"age":69,"vs":10.73,"win":0,"gender":"male","party":"減ゆ","sc":0},{"age":50,"vs":33.25,"win":1,"gender":"male","party":"自民","sc":0},{"age":60,"vs":49.11,"win":1,"gender":"male","party":"国民","sc":1},{"age":60,"vs":4.67,"win":0,"gender":"male","party":"共産","sc":0},{"age":44,"vs":9.78,"win":0,"gender":"male","party":"維新","sc":0},{"age":46,"vs":15.49,"win":0,"gender":"male","party":"減ゆ","sc":1},{"age":67,"vs":29.24,"win":0,"gender":"male","party":"中道","sc":1},{"age":52,"vs":40.82,"win":1,"gender":"male","party":"自民","sc":0},{"age":47,"vs":5.41,"win":0,"gender":"male","party":"共産","sc":0},{"age":58,"vs":7.81,"win":0,"gender":"female","party":"維新","sc":0},{"age":53,"vs":9.16,"win":0,"gender":"male","party":"減ゆ","sc":0},{"age":43,"vs":9.32,"win":0,"gender":"female","party":"参政","sc":0},{"age":68,"vs":26.62,"win":0,"gender":"male","party":"中道","sc":1},{"age":61,"vs":41.69,"win":1,"gender":"male","party":"自民","sc":1},{"age":62,"vs":3.67,"win":0,"gender":"male","party":"無所","sc":2},{"age":71,"vs":4.24,"win":0,"gender":"male","party":"共産","sc":0},{"age":43,"vs":10.74,"win":1,"gender":"female","party":"参政","sc":0},{"age":41,"vs":14.61,"win":0,"gender":"male","party":"減ゆ","sc":0},{"age":56,"vs":25.07,"win":0,"gender":"male","party":"中道","sc":1},{"age":43,"vs":41.68,"win":1,"gender":"male","party":"自民","sc":0},{"age":30,"vs":5.45,"win":0,"gender":"male","party":"社民","sc":0},{"age":72,"vs":6.53,"win":0,"gender":"male","party":"減ゆ","sc":2},{"age":38,"vs":14.2,"win":0,"gender":"female","party":"参政","sc":0},{"age":56,"vs":19.75,"win":0,"gender":"female","party":"中道","sc":0},{"age":53,"vs":54.06,"win":1,"gender":"male","party":"自民","sc":1},{"age":51,"vs":6.6,"win":0,"gender":"male","party":"共産","sc":0},{"age":67,"vs":43.63,"win":1,"gender":"male","party":"自民","sc":2},{"age":38,"vs":49.76,"win":1,"gender":"female","party":"国民","sc":1},{"age":56,"vs":13.06,"win":0,"gender":"male","party":"保守","sc":0},{"age":65,"vs":34.1,"win":0,"gender":"male","party":"中道","sc":1},{"age":61,"vs":52.84,"win":1,"gender":"male","party":"自民","sc":1},{"age":72,"vs":4.32,"win":0,"gender":"female","party":"共産","sc":0},{"age":27,"vs":10.68,"win":0,"gender":"male","party":"参政","sc":0},{"age":25,"vs":11.83,"win":0,"gender":"female","party":"維新","sc":0},{"age":54,"vs":28.07,"win":0,"gender":"male","party":"中道","sc":1},{"age":68,"vs":45.11,"win":1,"gender":"male","party":"自民","sc":1},{"age":29,"vs":9.34,"win":0,"gender":"male","party":"参政","sc":0},{"age":47,"vs":11.0,"win":0,"gender":"male","party":"国民","sc":0},{"age":65,"vs":14.84,"win":0,"gender":"male","party":"維新","sc":1},{"age":47,"vs":22.71,"win":0,"gender":"male","party":"中道","sc":1},{"age":52,"vs":42.1,"win":1,"gender":"male","party":"自民","sc":1},{"age":54,"vs":40.31,"win":1,"gender":"male","party":"自民","sc":0},{"age":52,"vs":59.69,"win":1,"gender":"female","party":"国民","sc":1},{"age":47,"vs":13.79,"win":0,"gender":"male","party":"参政","sc":0},{"age":55,"vs":39.2,"win":1,"gender":"male","party":"中道","sc":1},{"age":48,"vs":47.01,"win":1,"gender":"male","party":"自民","sc":2},{"age":67,"vs":4.98,"win":0,"gender":"male","party":"共産","sc":0},{"age":54,"vs":36.41,"win":0,"gender":"male","party":"中道","sc":1},{"age":60,"vs":58.61,"win":1,"gender":"male","party":"自民","sc":2},{"age":55,"vs":4.46,"win":0,"gender":"male","party":"共産","sc":0},{"age":48,"vs":28.1,"win":0,"gender":"female","party":"中道","sc":1},{"age":41,"vs":67.43,"win":1,"gender":"male","party":"自民","sc":1},{"age":77,"vs":4.87,"win":0,"gender":"female","party":"れいわ","sc":2},{"age":65,"vs":6.38,"win":0,"gender":"female","party":"減ゆ","sc":1},{"age":39,"vs":9.41,"win":0,"gender":"male","party":"参政","sc":0},{"age":47,"vs":17.68,"win":1,"gender":"male","party":"維新","sc":2},{"age":50,"vs":18.11,"win":0,"gender":"female","party":"中道","sc":1},{"age":60,"vs":43.55,"win":1,"gender":"male","party":"自民","sc":1},{"age":66,"vs":4.92,"win":0,"gender":"male","party":"減ゆ","sc":2},{"age":42,"vs":7.8,"win":0,"gender":"female","party":"参政","sc":0},{"age":58,"vs":19.44,"win":0,"gender":"male","party":"中道","sc":1},{"age":43,"vs":26.91,"win":1,"gender":"male","party":"国民","sc":1},{"age":50,"vs":40.93,"win":1,"gender":"male","party":"自民","sc":0},{"age":49,"vs":3.7,"win":0,"gender":"male","party":"共産","sc":0},{"age":66,"vs":5.39,"win":0,"gender":"female","party":"参政","sc":0},{"age":56,"vs":10.46,"win":0,"gender":"male","party":"維新","sc":0},{"age":49,"vs":15.98,"win":0,"gender":"male","party":"中道","sc":0},{"age":39,"vs":17.98,"win":0,"gender":"female","party":"国民","sc":0},{"age":70,"vs":46.49,"win":1,"gender":"male","party":"自民","sc":1},{"age":41,"vs":45.05,"win":0,"gender":"male","party":"中道","sc":1},{"age":58,"vs":54.95,"win":1,"gender":"male","party":"自民","sc":1},{"age":61,"vs":49.27,"win":1,"gender":"male","party":"自民","sc":1},{"age":65,"vs":50.73,"win":1,"gender":"male","party":"国民","sc":1},{"age":46,"vs":6.45,"win":0,"gender":"female","party":"共産","sc":0},{"age":65,"vs":10.01,"win":0,"gender":"male","party":"参政","sc":0},{"age":68,"vs":32.64,"win":0,"gender":"male","party":"中道","sc":1},{"age":59,"vs":50.89,"win":1,"gender":"male","party":"自民","sc":1},{"age":71,"vs":3.08,"win":0,"gender":"male","party":"共産","sc":0},{"age":37,"vs":15.67,"win":0,"gender":"male","party":"国民","sc":0},{"age":62,"vs":26.64,"win":0,"gender":"male","party":"中道","sc":0},{"age":55,"vs":54.61,"win":1,"gender":"male","party":"自民","sc":1},{"age":72,"vs":5.37,"win":0,"gender":"female","party":"れいわ","sc":1},{"age":45,"vs":42.33,"win":0,"gender":"female","party":"中道","sc":1},{"age":58,"vs":52.31,"win":1,"gender":"male","party":"自民","sc":2},{"age":42,"vs":14.27,"win":0,"gender":"male","party":"参政","sc":0},{"age":64,"vs":38.89,"win":1,"gender":"male","party":"中道","sc":1},{"age":61,"vs":46.84,"win":1,"gender":"male","party":"自民","sc":2},{"age":49,"vs":9.23,"win":0,"gender":"female","party":"共産","sc":0},{"age":54,"vs":23.31,"win":0,"gender":"female","party":"中道","sc":0},{"age":51,"vs":67.46,"win":1,"gender":"male","party":"自民","sc":1},{"age":42,"vs":5.15,"win":0,"gender":"female","party":"共産","sc":0},{"age":40,"vs":13.65,"win":0,"gender":"male","party":"参政","sc":0},{"age":68,"vs":29.2,"win":0,"gender":"male","party":"中道","sc":1},{"age":63,"vs":52.0,"win":1,"gender":"male","party":"自民","sc":1},{"age":49,"vs":2.67,"win":0,"gender":"male","party":"減ゆ","sc":0},{"age":38,"vs":5.36,"win":0,"gender":"female","party":"共産","sc":0},{"age":46,"vs":11.26,"win":1,"gender":"female","party":"参政","sc":0},{"age":35,"vs":32.52,"win":0,"gender":"male","party":"中道","sc":1},{"age":45,"vs":48.19,"win":1,"gender":"male","party":"自民","sc":0},{"age":36,"vs":9.16,"win":0,"gender":"male","party":"参政","sc":0},{"age":35,"vs":10.89,"win":1,"gender":"male","party":"みらい","sc":0},{"age":58,"vs":20.56,"win":0,"gender":"male","party":"中道","sc":1},{"age":47,"vs":22.94,"win":1,"gender":"female","party":"国民","sc":1},{"age":37,"vs":36.45,"win":1,"gender":"female","party":"自民","sc":1},{"age":36,"vs":4.84,"win":0,"gender":"male","party":"共産","sc":0},{"age":59,"vs":9.79,"win":0,"gender":"female","party":"参政","sc":0},{"age":33,"vs":18.54,"win":0,"gender":"male","party":"国民","sc":0},{"age":49,"vs":26.37,"win":0,"gender":"female","party":"中道","sc":1},{"age":75,"vs":40.46,"win":1,"gender":"male","party":"自民","sc":2},{"age":50,"vs":10.3,"win":0,"gender":"male","party":"減ゆ","sc":0},{"age":49,"vs":25.7,"win":0,"gender":"male","party":"国民","sc":0},{"age":66,"vs":64.0,"win":1,"gender":"male","party":"自民","sc":1},{"age":58,"vs":7.73,"win":0,"gender":"male","party":"維新","sc":0},{"age":41,"vs":10.88,"win":0,"gender":"male","party":"参政","sc":0},{"age":51,"vs":32.33,"win":0,"gender":"male","party":"中道","sc":1},{"age":44,"vs":49.06,"win":1,"gender":"male","party":"自民","sc":0},{"age":51,"vs":10.44,"win":0,"gender":"male","party":"参政","sc":0},{"age":50,"vs":10.91,"win":0,"gender":"male","party":"維新","sc":2},{"age":61,"vs":34.44,"win":0,"gender":"male","party":"中道","sc":1},{"age":36,"vs":44.21,"win":1,"gender":"male","party":"自民","sc":0},{"age":35,"vs":6.28,"win":0,"gender":"female","party":"共産","sc":0},{"age":63,"vs":32.64,"win":0,"gender":"male","party":"中道","sc":1},{"age":59,"vs":61.08,"win":1,"gender":"male","party":"自民","sc":1},{"age":68,"vs":8.24,"win":0,"gender":"male","party":"共産","sc":0},{"age":57,"vs":30.24,"win":0,"gender":"male","party":"中道","sc":1},{"age":77,"vs":61.51,"win":1,"gender":"male","party":"自民","sc":1},{"age":74,"vs":9.68,"win":0,"gender":"male","party":"共産","sc":0},{"age":37,"vs":18.84,"win":0,"gender":"male","party":"無所","sc":0},{"age":70,"vs":71.48,"win":1,"gender":"male","party":"自民","sc":1},{"age":44,"vs":14.19,"win":1,"gender":"female","party":"参政","sc":0},{"age":55,"vs":31.94,"win":0,"gender":"male","party":"中道","sc":1},{"age":63,"vs":53.86,"win":1,"gender":"male","party":"自民","sc":1},{"age":30,"vs":4.45,"win":0,"gender":"male","party":"共産","sc":0},{"age":42,"vs":11.59,"win":0,"gender":"female","party":"参政","sc":0},{"age":53,"vs":38.97,"win":1,"gender":"male","party":"自民","sc":0},{"age":68,"vs":44.98,"win":1,"gender":"male","party":"中道","sc":1},{"age":73,"vs":6.48,"win":0,"gender":"male","party":"共産","sc":0},{"age":36,"vs":11.26,"win":0,"gender":"female","party":"参政","sc":0},{"age":58,"vs":21.86,"win":0,"gender":"female","party":"国民","sc":1},{"age":49,"vs":60.39,"win":1,"gender":"male","party":"自民","sc":1},{"age":36,"vs":12.26,"win":0,"gender":"male","party":"参政","sc":0},{"age":62,"vs":40.18,"win":0,"gender":"male","party":"中道","sc":1},{"age":62,"vs":47.56,"win":1,"gender":"male","party":"自民","sc":2},{"age":68,"vs":5.62,"win":0,"gender":"male","party":"共産","sc":0},{"age":40,"vs":23.2,"win":0,"gender":"male","party":"中道","sc":0},{"age":57,"vs":71.18,"win":1,"gender":"male","party":"自民","sc":1},{"age":29,"vs":14.02,"win":0,"gender":"male","party":"参政","sc":0},{"age":42,"vs":17.81,"win":0,"gender":"male","party":"国民","sc":0},{"age":41,"vs":20.07,"win":0,"gender":"male","party":"中道","sc":1},{"age":66,"vs":48.1,"win":1,"gender":"female","party":"自民","sc":1},{"age":55,"vs":40.05,"win":0,"gender":"male","party":"中道","sc":1},{"age":51,"vs":59.95,"win":1,"gender":"male","party":"無所","sc":1},{"age":57,"vs":4.31,"win":0,"gender":"male","party":"共産","sc":0},{"age":54,"vs":12.03,"win":0,"gender":"male","party":"維新","sc":2},{"age":37,"vs":14.5,"win":0,"gender":"female","party":"参政","sc":0},{"age":43,"vs":20.89,"win":0,"gender":"male","party":"中道","sc":1},{"age":63,"vs":48.27,"win":1,"gender":"male","party":"自民","sc":1},{"age":45,"vs":3.41,"win":0,"gender":"male","party":"共産","sc":0},{"age":65,"vs":12.98,"win":1,"gender":"male","party":"参政","sc":0},{"age":55,"vs":29.98,"win":0,"gender":"male","party":"中道","sc":1},{"age":53,"vs":53.63,"win":1,"gender":"male","party":"自民","sc":1},{"age":29,"vs":5.47,"win":0,"gender":"female","party":"共産","sc":0},{"age":39,"vs":16.21,"win":0,"gender":"male","party":"維新","sc":0},{"age":46,"vs":24.38,"win":0,"gender":"male","party":"中道","sc":0},{"age":53,"vs":53.94,"win":1,"gender":"male","party":"自民","sc":1},{"age":52,"vs":15.56,"win":0,"gender":"male","party":"参政","sc":0},{"age":52,"vs":30.81,"win":1,"gender":"male","party":"国民","sc":1},{"age":63,"vs":53.62,"win":1,"gender":"male","party":"自民","sc":1},{"age":66,"vs":8.69,"win":0,"gender":"female","party":"社民","sc":0},{"age":43,"vs":12.89,"win":0,"gender":"male","party":"参政","sc":0},{"age":46,"vs":20.97,"win":0,"gender":"male","party":"国民","sc":0},{"age":60,"vs":57.46,"win":1,"gender":"male","party":"自民","sc":1},{"age":53,"vs":7.52,"win":0,"gender":"male","party":"共産","sc":0},{"age":51,"vs":30.69,"win":1,"gender":"male","party":"国民","sc":0},{"age":47,"vs":61.79,"win":1,"gender":"male","party":"自民","sc":1},{"age":54,"vs":32.88,"win":0,"gender":"male","party":"中道","sc":0},{"age":66,"vs":67.12,"win":1,"gender":"male","party":"自民","sc":1},{"age":62,"vs":15.57,"win":0,"gender":"male","party":"無所","sc":0},{"age":51,"vs":16.9,"win":0,"gender":"female","party":"れいわ","sc":0},{"age":85,"vs":67.53,"win":1,"gender":"male","party":"自民","sc":1},{"age":64,"vs":5.1,"win":0,"gender":"male","party":"共産","sc":0},{"age":32,"vs":8.41,"win":0,"gender":"male","party":"国民","sc":0},{"age":48,"vs":34.56,"win":1,"gender":"male","party":"自民","sc":0},{"age":53,"vs":51.93,"win":1,"gender":"male","party":"無所","sc":1},{"age":71,"vs":3.77,"win":0,"gender":"male","party":"共産","sc":0},{"age":28,"vs":7.05,"win":0,"gender":"male","party":"参政","sc":0},{"age":40,"vs":14.46,"win":0,"gender":"male","party":"無所","sc":0},{"age":52,"vs":32.22,"win":0,"gender":"male","party":"中道","sc":1},{"age":40,"vs":42.5,"win":1,"gender":"male","party":"自民","sc":0},{"age":72,"vs":3.71,"win":0,"gender":"female","party":"社民","sc":0},{"age":44,"vs":7.21,"win":0,"gender":"male","party":"参政","sc":0},{"age":36,"vs":13.61,"win":0,"gender":"male","party":"中道","sc":0},{"age":56,"vs":30.78,"win":1,"gender":"male","party":"維新","sc":1},{"age":57,"vs":44.68,"win":1,"gender":"male","party":"自民","sc":2},{"age":37,"vs":12.28,"win":0,"gender":"male","party":"無所","sc":0},{"age":60,"vs":42.48,"win":1,"gender":"female","party":"中道","sc":1},{"age":60,"vs":45.24,"win":1,"gender":"male","party":"自民","sc":0},{"age":41,"vs":0.72,"win":0,"gender":"male","party":"無所","sc":0},{"age":63,"vs":2.58,"win":0,"gender":"female","party":"共産","sc":0},{"age":52,"vs":8.33,"win":0,"gender":"female","party":"参政","sc":0},{"age":61,"vs":36.36,"win":0,"gender":"male","party":"中道","sc":1},{"age":39,"vs":52.01,"win":1,"gender":"male","party":"自民","sc":1},{"age":85,"vs":2.16,"win":0,"gender":"male","party":"無所","sc":0},{"age":57,"vs":40.8,"win":0,"gender":"male","party":"中道","sc":1},{"age":50,"vs":57.03,"win":1,"gender":"male","party":"自民","sc":2},{"age":46,"vs":5.02,"win":0,"gender":"male","party":"共産","sc":0},{"age":35,"vs":18.87,"win":0,"gender":"male","party":"国民","sc":0},{"age":46,"vs":26.77,"win":0,"gender":"male","party":"中道","sc":1},{"age":45,"vs":49.35,"win":1,"gender":"male","party":"自民","sc":1},{"age":43,"vs":5.35,"win":0,"gender":"female","party":"共産","sc":0},{"age":42,"vs":16.17,"win":0,"gender":"female","party":"参政","sc":0},{"age":54,"vs":22.67,"win":0,"gender":"male","party":"中道","sc":0},{"age":65,"vs":55.81,"win":1,"gender":"female","party":"自民","sc":1},{"age":55,"vs":4.09,"win":0,"gender":"female","party":"無所","sc":0},{"age":63,"vs":4.76,"win":0,"gender":"female","party":"無所","sc":0},{"age":34,"vs":8.82,"win":0,"gender":"male","party":"参政","sc":0},{"age":56,"vs":27.76,"win":1,"gender":"female","party":"国民","sc":0},{"age":62,"vs":54.57,"win":1,"gender":"male","party":"自民","sc":1},{"age":47,"vs":10.48,"win":1,"gender":"male","party":"参政","sc":0},{"age":62,"vs":13.04,"win":0,"gender":"male","party":"れいわ","sc":1},{"age":43,"vs":23.04,"win":0,"gender":"male","party":"国民","sc":1},{"age":70,"vs":53.44,"win":1,"gender":"male","party":"自民","sc":1},{"age":37,"vs":10.27,"win":0,"gender":"male","party":"参政","sc":0},{"age":63,"vs":39.07,"win":0,"gender":"male","party":"中道","sc":1},{"age":46,"vs":50.66,"win":1,"gender":"male","party":"自民","sc":0},{"age":65,"vs":7.06,"win":0,"gender":"male","party":"維新","sc":2},{"age":38,"vs":17.27,"win":0,"gender":"male","party":"国民","sc":0},{"age":64,"vs":23.56,"win":0,"gender":"male","party":"中道","sc":1},{"age":73,"vs":52.11,"win":1,"gender":"male","party":"自民","sc":1},{"age":64,"vs":9.52,"win":0,"gender":"female","party":"共産","sc":0},{"age":52,"vs":28.83,"win":0,"gender":"male","party":"中道","sc":0},{"age":44,"vs":61.64,"win":1,"gender":"male","party":"自民","sc":1},{"age":57,"vs":4.68,"win":0,"gender":"female","party":"保守","sc":0},{"age":68,"vs":6.43,"win":0,"gender":"male","party":"共産","sc":0},{"age":57,"vs":10.05,"win":0,"gender":"female","party":"参政","sc":0},{"age":53,"vs":12.18,"win":0,"gender":"male","party":"無所","sc":2},{"age":56,"vs":13.93,"win":0,"gender":"male","party":"国民","sc":0},{"age":46,"vs":52.74,"win":1,"gender":"male","party":"自民","sc":1},{"age":73,"vs":38.47,"win":0,"gender":"male","party":"中道","sc":1},{"age":59,"vs":61.53,"win":1,"gender":"male","party":"自民","sc":1},{"age":42,"vs":6.01,"win":0,"gender":"male","party":"共産","sc":0},{"age":67,"vs":18.0,"win":0,"gender":"male","party":"中道","sc":0},{"age":44,"vs":22.58,"win":1,"gender":"female","party":"参政","sc":0},{"age":58,"vs":53.41,"win":1,"gender":"male","party":"自民","sc":1},{"age":31,"vs":31.42,"win":0,"gender":"male","party":"参政","sc":0},{"age":52,"vs":68.58,"win":1,"gender":"female","party":"自民","sc":1},{"age":83,"vs":0.95,"win":0,"gender":"male","party":"無所","sc":0},{"age":58,"vs":1.65,"win":0,"gender":"male","party":"無所","sc":0},{"age":69,"vs":4.21,"win":0,"gender":"male","party":"共産","sc":0},{"age":50,"vs":4.57,"win":0,"gender":"male","party":"れいわ","sc":0},{"age":36,"vs":17.05,"win":0,"gender":"male","party":"参政","sc":0},{"age":28,"vs":18.25,"win":0,"gender":"male","party":"中道","sc":0},{"age":68,"vs":53.33,"win":1,"gender":"male","party":"自民","sc":1},{"age":66,"vs":7.92,"win":0,"gender":"female","party":"共産","sc":0},{"age":50,"vs":10.98,"win":0,"gender":"female","party":"参政","sc":0},{"age":44,"vs":29.41,"win":0,"gender":"male","party":"国民","sc":1},{"age":77,"vs":51.7,"win":1,"gender":"male","party":"自民","sc":1},{"age":68,"vs":1.87,"win":0,"gender":"male","party":"無所","sc":0},{"age":58,"vs":4.17,"win":0,"gender":"female","party":"共産","sc":0},{"age":41,"vs":12.92,"win":0,"gender":"female","party":"参政","sc":0},{"age":44,"vs":29.67,"win":0,"gender":"male","party":"中道","sc":1},{"age":47,"vs":51.36,"win":1,"gender":"male","party":"自民","sc":1},{"age":61,"vs":20.79,"win":0,"gender":"male","party":"維新","sc":1},{"age":34,"vs":32.2,"win":1,"gender":"male","party":"国民","sc":0},{"age":50,"vs":47.02,"win":1,"gender":"male","party":"自民","sc":1},{"age":65,"vs":5.63,"win":0,"gender":"male","party":"共産","sc":0},{"age":66,"vs":43.66,"win":0,"gender":"male","party":"中道","sc":1},{"age":40,"vs":50.71,"win":1,"gender":"male","party":"自民","sc":0},{"age":74,"vs":5.32,"win":0,"gender":"male","party":"共産","sc":0},{"age":59,"vs":27.67,"win":0,"gender":"female","party":"中道","sc":0},{"age":42,"vs":67.02,"win":1,"gender":"male","party":"自民","sc":1},{"age":48,"vs":5.0,"win":0,"gender":"male","party":"共産","sc":0},{"age":50,"vs":8.53,"win":0,"gender":"female","party":"参政","sc":0},{"age":44,"vs":11.28,"win":1,"gender":"male","party":"国民","sc":1},{"age":50,"vs":31.58,"win":0,"gender":"male","party":"中道","sc":1},{"age":43,"vs":43.61,"win":1,"gender":"male","party":"自民","sc":0},{"age":37,"vs":7.34,"win":0,"gender":"male","party":"共産","sc":0},{"age":52,"vs":7.8,"win":0,"gender":"male","party":"維新","sc":0},{"age":49,"vs":11.56,"win":0,"gender":"female","party":"参政","sc":0},{"age":66,"vs":30.44,"win":0,"gender":"male","party":"中道","sc":1},{"age":45,"vs":42.87,"win":1,"gender":"male","party":"自民","sc":2},{"age":62,"vs":6.34,"win":0,"gender":"female","party":"共産","sc":0},{"age":47,"vs":14.16,"win":0,"gender":"male","party":"参政","sc":0},{"age":50,"vs":33.05,"win":0,"gender":"male","party":"中道","sc":1},{"age":65,"vs":46.45,"win":1,"gender":"male","party":"自民","sc":2},{"age":65,"vs":6.27,"win":0,"gender":"female","party":"共産","sc":0},{"age":37,"vs":8.98,"win":0,"gender":"male","party":"参政","sc":0},{"age":42,"vs":37.41,"win":0,"gender":"female","party":"中道","sc":1},{"age":64,"vs":47.33,"win":1,"gender":"male","party":"自民","sc":1},{"age":53,"vs":42.5,"win":0,"gender":"female","party":"中道","sc":1},{"age":54,"vs":57.5,"win":1,"gender":"male","party":"自民","sc":2},{"age":76,"vs":6.93,"win":0,"gender":"male","party":"共産","sc":0},{"age":57,"vs":36.98,"win":0,"gender":"male","party":"中道","sc":1},{"age":57,"vs":56.09,"win":1,"gender":"male","party":"自民","sc":1},{"age":54,"vs":34.28,"win":0,"gender":"female","party":"中道","sc":1},{"age":40,"vs":65.72,"win":1,"gender":"female","party":"自民","sc":1},{"age":66,"vs":44.71,"win":0,"gender":"male","party":"中道","sc":1},{"age":42,"vs":55.29,"win":1,"gender":"male","party":"自民","sc":1},{"age":68,"vs":5.95,"win":0,"gender":"male","party":"共産","sc":0},{"age":36,"vs":11.22,"win":0,"gender":"female","party":"参政","sc":0},{"age":46,"vs":39.72,"win":1,"gender":"male","party":"中道","sc":1},{"age":35,"vs":43.11,"win":1,"gender":"male","party":"自民","sc":0},{"age":68,"vs":49.99,"win":1,"gender":"male","party":"自民","sc":2},{"age":57,"vs":50.01,"win":1,"gender":"male","party":"中道","sc":1},{"age":51,"vs":7.35,"win":0,"gender":"male","party":"参政","sc":0},{"age":41,"vs":42.52,"win":0,"gender":"female","party":"中道","sc":1},{"age":35,"vs":50.13,"win":1,"gender":"male","party":"自民","sc":0},{"age":43,"vs":41.19,"win":0,"gender":"male","party":"中道","sc":1},{"age":55,"vs":58.81,"win":1,"gender":"male","party":"自民","sc":1},{"age":65,"vs":5.16,"win":0,"gender":"female","party":"共産","sc":0},{"age":43,"vs":9.54,"win":0,"gender":"male","party":"参政","sc":0},{"age":51,"vs":20.27,"win":1,"gender":"male","party":"維新","sc":2},{"age":51,"vs":31.58,"win":0,"gender":"male","party":"中道","sc":1},{"age":72,"vs":33.46,"win":1,"gender":"male","party":"自民","sc":2},{"age":79,"vs":7.13,"win":0,"gender":"female","party":"共産","sc":0},{"age":58,"vs":22.74,"win":0,"gender":"male","party":"無所","sc":0},{"age":58,"vs":25.12,"win":0,"gender":"male","party":"中道","sc":0},{"age":39,"vs":45.01,"win":1,"gender":"male","party":"維新","sc":1},{"age":66,"vs":10.19,"win":0,"gender":"male","party":"共産","sc":0},{"age":68,"vs":21.43,"win":1,"gender":"male","party":"国民","sc":1},{"age":61,"vs":21.48,"win":0,"gender":"male","party":"維新","sc":1},{"age":60,"vs":46.9,"win":1,"gender":"male","party":"自民","sc":1},{"age":66,"vs":7.56,"win":0,"gender":"female","party":"共産","sc":0},{"age":54,"vs":23.11,"win":0,"gender":"male","party":"中道","sc":0},{"age":54,"vs":69.33,"win":1,"gender":"male","party":"自民","sc":1},{"age":77,"vs":4.81,"win":0,"gender":"male","party":"共産","sc":0},{"age":43,"vs":5.97,"win":0,"gender":"male","party":"諸派","sc":0},{"age":50,"vs":18.56,"win":0,"gender":"male","party":"中道","sc":0},{"age":41,"vs":26.11,"win":0,"gender":"male","party":"維新","sc":2},{"age":74,"vs":44.56,"win":1,"gender":"male","party":"自民","sc":1},{"age":51,"vs":4.3,"win":0,"gender":"male","party":"共産","sc":0},{"age":44,"vs":10.72,"win":1,"gender":"male","party":"参政","sc":0},{"age":55,"vs":23.31,"win":0,"gender":"male","party":"中道","sc":1},{"age":61,"vs":25.26,"win":1,"gender":"male","party":"維新","sc":1},{"age":60,"vs":36.4,"win":1,"gender":"male","party":"自民","sc":1},{"age":69,"vs":5.23,"win":0,"gender":"male","party":"共産","sc":0},{"age":25,"vs":7.85,"win":0,"gender":"male","party":"参政","sc":0},{"age":42,"vs":17.6,"win":0,"gender":"male","party":"中道","sc":1},{"age":59,"vs":26.92,"win":1,"gender":"female","party":"維新","sc":1},{"age":59,"vs":42.39,"win":1,"gender":"male","party":"自民","sc":1},{"age":44,"vs":5.14,"win":0,"gender":"female","party":"れいわ","sc":0},{"age":45,"vs":5.67,"win":0,"gender":"female","party":"共産","sc":0},{"age":50,"vs":21.66,"win":0,"gender":"female","party":"中道","sc":0},{"age":64,"vs":24.23,"win":0,"gender":"female","party":"維新","sc":1},{"age":73,"vs":43.31,"win":1,"gender":"male","party":"自民","sc":0},{"age":73,"vs":3.89,"win":0,"gender":"male","party":"共産","sc":0},{"age":53,"vs":10.54,"win":0,"gender":"male","party":"参政","sc":0},{"age":37,"vs":27.3,"win":0,"gender":"male","party":"中道","sc":1},{"age":63,"vs":58.26,"win":1,"gender":"male","party":"自民","sc":1},{"age":60,"vs":3.95,"win":0,"gender":"female","party":"共産","sc":0},{"age":37,"vs":13.76,"win":0,"gender":"male","party":"参政","sc":0},{"age":54,"vs":20.59,"win":0,"gender":"female","party":"中道","sc":0},{"age":59,"vs":20.66,"win":0,"gender":"male","party":"維新","sc":2},{"age":77,"vs":41.05,"win":1,"gender":"male","party":"自民","sc":1},{"age":72,"vs":6.93,"win":0,"gender":"male","party":"共産","sc":0},{"age":41,"vs":9.32,"win":0,"gender":"male","party":"参政","sc":0},{"age":35,"vs":12.08,"win":0,"gender":"male","party":"国民","sc":0},{"age":41,"vs":28.17,"win":1,"gender":"male","party":"維新","sc":2},{"age":43,"vs":43.5,"win":1,"gender":"male","party":"自民","sc":0},{"age":70,"vs":10.71,"win":0,"gender":"male","party":"共産","sc":0},{"age":51,"vs":36.22,"win":1,"gender":"male","party":"維新","sc":1},{"age":71,"vs":53.07,"win":1,"gender":"male","party":"自民","sc":1},{"age":76,"vs":6.1,"win":0,"gender":"female","party":"共産","sc":0},{"age":42,"vs":12.04,"win":0,"gender":"female","party":"参政","sc":0},{"age":55,"vs":40.25,"win":0,"gender":"male","party":"無所","sc":1},{"age":72,"vs":41.61,"win":1,"gender":"male","party":"自民","sc":1},{"age":30,"vs":11.73,"win":0,"gender":"male","party":"参政","sc":0},{"age":50,"vs":11.96,"win":0,"gender":"male","party":"国民","sc":0},{"age":40,"vs":22.16,"win":0,"gender":"male","party":"中道","sc":0},{"age":82,"vs":54.15,"win":1,"gender":"male","party":"自民","sc":1},{"age":61,"vs":4.97,"win":0,"gender":"female","party":"れいわ","sc":0},{"age":35,"vs":15.84,"win":0,"gender":"female","party":"参政","sc":0},{"age":48,"vs":27.9,"win":0,"gender":"male","party":"中道","sc":0},{"age":66,"vs":51.29,"win":1,"gender":"male","party":"自民","sc":1},{"age":28,"vs":16.9,"win":0,"gender":"male","party":"共産","sc":0},{"age":70,"vs":83.1,"win":1,"gender":"male","party":"自民","sc":1},{"age":46,"vs":39.58,"win":1,"gender":"male","party":"自民","sc":0},{"age":43,"vs":60.42,"win":1,"gender":"male","party":"国民","sc":1},{"age":55,"vs":1.2,"win":0,"gender":"male","party":"無所","sc":0},{"age":58,"vs":3.98,"win":0,"gender":"male","party":"共産","sc":0},{"age":53,"vs":9.43,"win":0,"gender":"female","party":"参政","sc":0},{"age":47,"vs":42.18,"win":0,"gender":"male","party":"無所","sc":1},{"age":46,"vs":43.2,"win":1,"gender":"female","party":"自民","sc":1},{"age":72,"vs":47.45,"win":1,"gender":"female","party":"自民","sc":1},{"age":39,"vs":52.55,"win":1,"gender":"male","party":"無所","sc":1},{"age":63,"vs":6.1,"win":0,"gender":"male","party":"共産","sc":0},{"age":49,"vs":10.5,"win":0,"gender":"male","party":"維新","sc":0},{"age":54,"vs":12.54,"win":1,"gender":"male","party":"参政","sc":0},{"age":27,"vs":25.87,"win":1,"gender":"male","party":"国民","sc":1},{"age":55,"vs":44.98,"win":1,"gender":"male","party":"自民","sc":1},{"age":62,"vs":16.42,"win":0,"gender":"male","party":"共産","sc":0},{"age":51,"vs":83.58,"win":1,"gender":"male","party":"自民","sc":1},{"age":70,"vs":2.02,"win":0,"gender":"male","party":"共産","sc":0},{"age":52,"vs":46.1,"win":1,"gender":"male","party":"中道","sc":1},{"age":56,"vs":51.88,"win":1,"gender":"male","party":"自民","sc":1},{"age":62,"vs":1.25,"win":0,"gender":"male","party":"無所","sc":0},{"age":45,"vs":6.3,"win":0,"gender":"female","party":"共産","sc":0},{"age":47,"vs":7.38,"win":0,"gender":"male","party":"参政","sc":0},{"age":38,"vs":40.9,"win":1,"gender":"male","party":"自民","sc":0},{"age":59,"vs":44.16,"win":1,"gender":"male","party":"中道","sc":1},{"age":29,"vs":35.23,"win":1,"gender":"female","party":"国民","sc":0},{"age":72,"vs":64.77,"win":1,"gender":"male","party":"自民","sc":1},{"age":47,"vs":14.13,"win":0,"gender":"male","party":"参政","sc":0},{"age":83,"vs":37.29,"win":0,"gender":"male","party":"中道","sc":1},{"age":42,"vs":48.58,"win":1,"gender":"male","party":"自民","sc":2},{"age":37,"vs":3.02,"win":0,"gender":"female","party":"共産","sc":0},{"age":30,"vs":11.38,"win":0,"gender":"male","party":"参政","sc":0},{"age":68,"vs":42.56,"win":1,"gender":"male","party":"自民","sc":1},{"age":54,"vs":43.04,"win":1,"gender":"male","party":"中道","sc":1},{"age":41,"vs":6.23,"win":0,"gender":"female","party":"参政","sc":0},{"age":60,"vs":33.85,"win":1,"gender":"male","party":"自民","sc":1},{"age":56,"vs":59.92,"win":1,"gender":"male","party":"国民","sc":1},{"age":51,"vs":11.11,"win":0,"gender":"male","party":"維新","sc":0},{"age":44,"vs":29.78,"win":0,"gender":"male","party":"国民","sc":0},{"age":57,"vs":59.11,"win":1,"gender":"male","party":"自民","sc":1},{"age":42,"vs":2.34,"win":0,"gender":"male","party":"共産","sc":0},{"age":40,"vs":14.97,"win":1,"gender":"male","party":"参政","sc":0},{"age":64,"vs":31.66,"win":0,"gender":"male","party":"中道","sc":1},{"age":46,"vs":51.04,"win":1,"gender":"male","party":"自民","sc":1},{"age":67,"vs":10.41,"win":0,"gender":"female","party":"共産","sc":0},{"age":56,"vs":21.11,"win":0,"gender":"female","party":"参政","sc":0},{"age":67,"vs":68.48,"win":1,"gender":"male","party":"自民","sc":1},{"age":67,"vs":49.22,"win":1,"gender":"male","party":"自民","sc":2},{"age":67,"vs":50.78,"win":1,"gender":"male","party":"中道","sc":1},{"age":65,"vs":9.33,"win":0,"gender":"male","party":"社民","sc":0},{"age":57,"vs":13.52,"win":0,"gender":"male","party":"参政","sc":0},{"age":59,"vs":14.65,"win":0,"gender":"male","party":"国民","sc":0},{"age":80,"vs":62.51,"win":1,"gender":"male","party":"自民","sc":1},{"age":57,"vs":11.96,"win":0,"gender":"male","party":"維新","sc":2},{"age":50,"vs":34.91,"win":0,"gender":"male","party":"中道","sc":1},{"age":43,"vs":53.12,"win":1,"gender":"female","party":"自民","sc":0},{"age":74,"vs":6.43,"win":0,"gender":"female","party":"共産","sc":0},{"age":63,"vs":8.16,"win":0,"gender":"male","party":"参政","sc":0},{"age":49,"vs":17.96,"win":0,"gender":"male","party":"中道","sc":0},{"age":34,"vs":19.51,"win":0,"gender":"female","party":"国民","sc":0},{"age":44,"vs":47.94,"win":1,"gender":"male","party":"自民","sc":0},{"age":54,"vs":5.41,"win":0,"gender":"male","party":"共産","sc":0},{"age":42,"vs":9.2,"win":0,"gender":"female","party":"参政","sc":0},{"age":50,"vs":17.45,"win":0,"gender":"male","party":"国民","sc":0},{"age":51,"vs":20.21,"win":0,"gender":"male","party":"中道","sc":0},{"age":62,"vs":47.73,"win":1,"gender":"male","party":"自民","sc":1},{"age":35,"vs":10.46,"win":0,"gender":"male","party":"参政","sc":0},{"age":67,"vs":41.98,"win":1,"gender":"female","party":"中道","sc":1},{"age":42,"vs":47.56,"win":1,"gender":"female","party":"自民","sc":0},{"age":73,"vs":6.6,"win":0,"gender":"female","party":"共産","sc":0},{"age":53,"vs":16.99,"win":0,"gender":"female","party":"維新","sc":0},{"age":63,"vs":26.71,"win":0,"gender":"male","party":"中道","sc":1},{"age":60,"vs":49.71,"win":1,"gender":"male","party":"自民","sc":1},{"age":56,"vs":39.34,"win":0,"gender":"male","party":"中道","sc":1},{"age":57,"vs":60.66,"win":1,"gender":"male","party":"自民","sc":1},{"age":42,"vs":37.88,"win":0,"gender":"male","party":"中道","sc":1},{"age":49,"vs":62.12,"win":1,"gender":"male","party":"自民","sc":1},{"age":69,"vs":40.97,"win":0,"gender":"male","party":"中道","sc":1},{"age":49,"vs":59.03,"win":1,"gender":"male","party":"自民","sc":1},{"age":65,"vs":8.62,"win":0,"gender":"female","party":"共産","sc":0},{"age":61,"vs":44.76,"win":1,"gender":"male","party":"中道","sc":1},{"age":47,"vs":46.62,"win":1,"gender":"male","party":"自民","sc":0},{"age":33,"vs":9.14,"win":0,"gender":"male","party":"参政","sc":0},{"age":67,"vs":10.03,"win":0,"gender":"male","party":"共産","sc":0},{"age":35,"vs":20.51,"win":0,"gender":"male","party":"国民","sc":0},{"age":46,"vs":24.24,"win":1,"gender":"male","party":"維新","sc":1},{"age":77,"vs":36.08,"win":1,"gender":"male","party":"自民","sc":1},{"age":40,"vs":10.23,"win":0,"gender":"male","party":"参政","sc":0},{"age":72,"vs":10.29,"win":0,"gender":"male","party":"共産","sc":0},{"age":44,"vs":79.47,"win":1,"gender":"male","party":"自民","sc":1},{"age":67,"vs":5.11,"win":0,"gender":"male","party":"共産","sc":0},{"age":53,"vs":9.61,"win":0,"gender":"male","party":"無所","sc":0},{"age":77,"vs":35.91,"win":0,"gender":"female","party":"中道","sc":1},{"age":62,"vs":49.37,"win":1,"gender":"male","party":"自民","sc":1},{"age":58,"vs":11.61,"win":0,"gender":"male","party":"参政","sc":0},{"age":48,"vs":39.74,"win":0,"gender":"male","party":"中道","sc":1},{"age":40,"vs":48.64,"win":1,"gender":"male","party":"自民","sc":0},{"age":45,"vs":5.85,"win":0,"gender":"male","party":"共産","sc":0},{"age":49,"vs":11.75,"win":0,"gender":"male","party":"参政","sc":0},{"age":55,"vs":29.9,"win":0,"gender":"male","party":"中道","sc":1},{"age":57,"vs":52.49,"win":1,"gender":"male","party":"自民","sc":1},{"age":40,"vs":9.1,"win":0,"gender":"male","party":"れいわ","sc":0},{"age":70,"vs":10.9,"win":0,"gender":"male","party":"社民","sc":0},{"age":53,"vs":17.47,"win":0,"gender":"male","party":"参政","sc":0},{"age":63,"vs":62.53,"win":1,"gender":"male","party":"自民","sc":1},{"age":56,"vs":47.13,"win":1,"gender":"male","party":"中道","sc":1},{"age":31,"vs":52.87,"win":1,"gender":"male","party":"自民","sc":0},{"age":37,"vs":20.69,"win":0,"gender":"male","party":"国民","sc":0},{"age":56,"vs":30.92,"win":0,"gender":"female","party":"中道","sc":1},{"age":49,"vs":48.39,"win":1,"gender":"female","party":"自民","sc":1},{"age":52,"vs":5.81,"win":0,"gender":"female","party":"共産","sc":0},{"age":59,"vs":7.56,"win":0,"gender":"male","party":"参政","sc":0},{"age":68,"vs":11.16,"win":1,"gender":"male","party":"維新","sc":0},{"age":48,"vs":21.08,"win":1,"gender":"male","party":"国民","sc":1},{"age":33,"vs":22.01,"win":0,"gender":"male","party":"中道","sc":1},{"age":57,"vs":32.39,"win":1,"gender":"male","party":"自民","sc":1},{"age":40,"vs":8.92,"win":0,"gender":"male","party":"参政","sc":0},{"age":48,"vs":12.71,"win":0,"gender":"male","party":"維新","sc":0},{"age":41,"vs":37.7,"win":1,"gender":"male","party":"国民","sc":1},{"age":44,"vs":40.66,"win":1,"gender":"male","party":"自民","sc":1},{"age":63,"vs":14.14,"win":0,"gender":"male","party":"維新","sc":0},{"age":46,"vs":36.34,"win":0,"gender":"female","party":"中道","sc":1},{"age":35,"vs":49.52,"win":1,"gender":"female","party":"自民","sc":0},{"age":43,"vs":15.01,"win":0,"gender":"male","party":"参政","sc":0},{"age":45,"vs":25.23,"win":0,"gender":"male","party":"中道","sc":0},{"age":68,"vs":59.76,"win":1,"gender":"male","party":"自民","sc":1},{"age":42,"vs":14.19,"win":0,"gender":"male","party":"国民","sc":0},{"age":46,"vs":16.34,"win":0,"gender":"female","party":"共産","sc":0},{"age":58,"vs":69.47,"win":1,"gender":"male","party":"自民","sc":1},{"age":36,"vs":12.31,"win":0,"gender":"male","party":"参政","sc":0},{"age":61,"vs":24.49,"win":0,"gender":"male","party":"中道","sc":0},{"age":56,"vs":63.2,"win":1,"gender":"male","party":"自民","sc":1},{"age":75,"vs":9.37,"win":0,"gender":"female","party":"共産","sc":0},{"age":47,"vs":19.18,"win":0,"gender":"male","party":"参政","sc":0},{"age":47,"vs":71.45,"win":1,"gender":"male","party":"自民","sc":1},{"age":53,"vs":14.74,"win":0,"gender":"female","party":"社民","sc":0},{"age":39,"vs":18.7,"win":0,"gender":"female","party":"参政","sc":0},{"age":75,"vs":66.56,"win":1,"gender":"male","party":"自民","sc":1},{"age":68,"vs":7.06,"win":0,"gender":"female","party":"共産","sc":0},{"age":49,"vs":7.67,"win":0,"gender":"male","party":"国民","sc":0},{"age":41,"vs":8.41,"win":0,"gender":"male","party":"参政","sc":0},{"age":65,"vs":10.63,"win":0,"gender":"male","party":"維新","sc":2},{"age":64,"vs":66.23,"win":1,"gender":"male","party":"自民","sc":1},{"age":47,"vs":6.1,"win":0,"gender":"male","party":"参政","sc":0},{"age":48,"vs":6.1,"win":0,"gender":"male","party":"諸派","sc":0},{"age":53,"vs":6.46,"win":0,"gender":"male","party":"国民","sc":0},{"age":46,"vs":8.15,"win":0,"gender":"female","party":"みらい","sc":2},{"age":61,"vs":10.13,"win":0,"gender":"male","party":"共産","sc":0},{"age":43,"vs":12.38,"win":0,"gender":"male","party":"維新","sc":0},{"age":67,"vs":13.69,"win":0,"gender":"male","party":"中道","sc":0},{"age":51,"vs":36.99,"win":1,"gender":"male","party":"自民","sc":1},{"age":58,"vs":2.9,"win":0,"gender":"male","party":"れいわ","sc":0},{"age":29,"vs":8.07,"win":0,"gender":"male","party":"みらい","sc":0},{"age":28,"vs":13.13,"win":0,"gender":"female","party":"中道","sc":0},{"age":39,"vs":13.6,"win":0,"gender":"male","party":"共産","sc":1},{"age":46,"vs":26.63,"win":1,"gender":"male","party":"自民","sc":0},{"age":63,"vs":35.67,"win":1,"gender":"male","party":"維新","sc":1},{"age":55,"vs":6.92,"win":0,"gender":"male","party":"参政","sc":0},{"age":39,"vs":8.38,"win":0,"gender":"male","party":"共産","sc":0},{"age":47,"vs":14.69,"win":0,"gender":"male","party":"維新","sc":0},{"age":53,"vs":33.36,"win":1,"gender":"male","party":"自民","sc":2},{"age":51,"vs":36.64,"win":1,"gender":"male","party":"中道","sc":1},{"age":51,"vs":26.29,"win":0,"gender":"male","party":"共産","sc":0},{"age":59,"vs":73.71,"win":1,"gender":"male","party":"自民","sc":1},{"age":58,"vs":23.01,"win":0,"gender":"male","party":"共産","sc":0},{"age":52,"vs":76.99,"win":1,"gender":"male","party":"自民","sc":1},{"age":39,"vs":7.24,"win":0,"gender":"male","party":"共産","sc":0},{"age":57,"vs":9.46,"win":0,"gender":"female","party":"参政","sc":0},{"age":64,"vs":35.44,"win":0,"gender":"male","party":"中道","sc":1},{"age":45,"vs":47.87,"win":1,"gender":"male","party":"自民","sc":0},{"age":36,"vs":5.56,"win":0,"gender":"male","party":"共産","sc":0},{"age":56,"vs":28.17,"win":0,"gender":"female","party":"中道","sc":1},{"age":61,"vs":66.28,"win":1,"gender":"male","party":"自民","sc":1},{"age":52,"vs":12.63,"win":0,"gender":"male","party":"参政","sc":0},{"age":49,"vs":34.89,"win":0,"gender":"male","party":"中道","sc":1},{"age":44,"vs":52.48,"win":1,"gender":"male","party":"自民","sc":1},{"age":63,"vs":2.69,"win":0,"gender":"female","party":"共産","sc":0},{"age":56,"vs":7.16,"win":0,"gender":"male","party":"保守","sc":0},{"age":44,"vs":9.62,"win":0,"gender":"female","party":"参政","sc":0},{"age":72,"vs":38.42,"win":0,"gender":"male","party":"中道","sc":1},{"age":54,"vs":42.11,"win":1,"gender":"male","party":"自民","sc":2},{"age":58,"vs":6.75,"win":0,"gender":"male","party":"共産","sc":0},{"age":49,"vs":26.79,"win":0,"gender":"male","party":"国民","sc":2},{"age":51,"vs":66.46,"win":1,"gender":"male","party":"自民","sc":1},{"age":73,"vs":3.9,"win":0,"gender":"male","party":"共産","sc":0},{"age":62,"vs":6.23,"win":0,"gender":"male","party":"維新","sc":0},{"age":55,"vs":12.94,"win":0,"gender":"female","party":"参政","sc":0},{"age":61,"vs":31.91,"win":0,"gender":"female","party":"中道","sc":1},{"age":67,"vs":45.02,"win":1,"gender":"male","party":"自民","sc":2},{"age":54,"vs":4.25,"win":0,"gender":"male","party":"維新","sc":2},{"age":25,"vs":9.49,"win":0,"gender":"female","party":"国民","sc":0},{"age":51,"vs":14.74,"win":1,"gender":"male","party":"参政","sc":0},{"age":61,"vs":30.11,"win":0,"gender":"female","party":"中道","sc":1},{"age":50,"vs":41.41,"win":1,"gender":"male","party":"自民","sc":0},{"age":79,"vs":0.73,"win":0,"gender":"male","party":"無所","sc":0},{"age":41,"vs":2.23,"win":0,"gender":"male","party":"無所","sc":0},{"age":27,"vs":11.4,"win":0,"gender":"female","party":"参政","sc":0},{"age":62,"vs":30.92,"win":0,"gender":"male","party":"中道","sc":1},{"age":65,"vs":54.72,"win":1,"gender":"male","party":"自民","sc":2},{"age":41,"vs":6.67,"win":0,"gender":"male","party":"参政","sc":0},{"age":64,"vs":36.18,"win":0,"gender":"male","party":"中道","sc":1},{"age":44,"vs":57.15,"win":1,"gender":"female","party":"自民","sc":1},{"age":66,"vs":5.43,"win":0,"gender":"male","party":"共産","sc":0},{"age":46,"vs":17.2,"win":0,"gender":"male","party":"中道","sc":0},{"age":65,"vs":77.37,"win":1,"gender":"male","party":"自民","sc":1},{"age":43,"vs":11.23,"win":0,"gender":"male","party":"参政","sc":0},{"age":38,"vs":16.07,"win":0,"gender":"male","party":"維新","sc":0},{"age":50,"vs":32.42,"win":1,"gender":"male","party":"自民","sc":2},{"age":48,"vs":40.28,"win":1,"gender":"male","party":"中道","sc":1},{"age":37,"vs":4.33,"win":0,"gender":"male","party":"共産","sc":0},{"age":65,"vs":44.97,"win":1,"gender":"male","party":"自民","sc":1},{"age":48,"vs":50.7,"win":1,"gender":"male","party":"国民","sc":1},{"age":43,"vs":22.88,"win":0,"gender":"male","party":"参政","sc":0},{"age":60,"vs":77.12,"win":1,"gender":"male","party":"自民","sc":1},{"age":45,"vs":12.5,"win":1,"gender":"male","party":"維新","sc":0},{"age":77,"vs":36.8,"win":0,"gender":"male","party":"中道","sc":1},{"age":62,"vs":50.7,"win":1,"gender":"male","party":"自民","sc":2},{"age":43,"vs":8.25,"win":0,"gender":"male","party":"参政","sc":0},{"age":43,"vs":10.96,"win":0,"gender":"male","party":"維新","sc":0},{"age":70,"vs":34.04,"win":0,"gender":"male","party":"中道","sc":1},{"age":35,"vs":46.74,"win":1,"gender":"female","party":"自民","sc":0},{"age":61,"vs":4.88,"win":0,"gender":"male","party":"れいわ","sc":0},{"age":28,"vs":11.41,"win":0,"gender":"male","party":"参政","sc":0},{"age":49,"vs":35.39,"win":0,"gender":"male","party":"中道","sc":1},{"age":48,"vs":48.32,"win":1,"gender":"male","party":"自民","sc":1},{"age":46,"vs":16.97,"win":0,"gender":"male","party":"共産","sc":0},{"age":46,"vs":25.46,"win":0,"gender":"male","party":"国民","sc":0},{"age":70,"vs":57.56,"win":1,"gender":"male","party":"自民","sc":1},{"age":32,"vs":40.25,"win":0,"gender":"male","party":"中道","sc":1},{"age":67,"vs":59.75,"win":1,"gender":"male","party":"自民","sc":1},{"age":70,"vs":4.78,"win":0,"gender":"male","party":"共産","sc":0},{"age":50,"vs":5.82,"win":0,"gender":"male","party":"参政","sc":0},{"age":55,"vs":7.46,"win":0,"gender":"male","party":"維新","sc":0},{"age":59,"vs":29.48,"win":1,"gender":"female","party":"自民","sc":0},{"age":61,"vs":52.45,"win":1,"gender":"female","party":"国民","sc":1},{"age":44,"vs":11.32,"win":0,"gender":"female","party":"参政","sc":0},{"age":46,"vs":32.4,"win":0,"gender":"male","party":"中道","sc":1},{"age":45,"vs":56.29,"win":1,"gender":"male","party":"自民","sc":1},{"age":43,"vs":27.88,"win":0,"gender":"male","party":"中道","sc":0},{"age":43,"vs":72.12,"win":1,"gender":"male","party":"自民","sc":1},{"age":47,"vs":3.87,"win":0,"gender":"male","party":"共産","sc":0},{"age":54,"vs":4.54,"win":0,"gender":"male","party":"参政","sc":0},{"age":34,"vs":12.17,"win":0,"gender":"female","party":"国民","sc":0},{"age":65,"vs":26.11,"win":0,"gender":"male","party":"中道","sc":1},{"age":61,"vs":53.31,"win":1,"gender":"male","party":"自民","sc":1},{"age":59,"vs":12.99,"win":0,"gender":"female","party":"共産","sc":0},{"age":64,"vs":87.01,"win":1,"gender":"female","party":"自民","sc":1},{"age":65,"vs":6.21,"win":0,"gender":"male","party":"無所","sc":0},{"age":54,"vs":11.53,"win":0,"gender":"male","party":"共産","sc":0},{"age":49,"vs":19.41,"win":1,"gender":"male","party":"維新","sc":0},{"age":51,"vs":62.85,"win":1,"gender":"male","party":"自民","sc":1},{"age":50,"vs":3.32,"win":0,"gender":"male","party":"共産","sc":0},{"age":47,"vs":5.1,"win":0,"gender":"male","party":"維新","sc":0},{"age":53,"vs":7.83,"win":0,"gender":"male","party":"参政","sc":0},{"age":59,"vs":36.97,"win":1,"gender":"female","party":"中道","sc":1},{"age":44,"vs":46.78,"win":1,"gender":"male","party":"自民","sc":0},{"age":50,"vs":4.05,"win":0,"gender":"female","party":"維新","sc":0},{"age":47,"vs":9.48,"win":0,"gender":"female","party":"参政","sc":0},{"age":56,"vs":37.5,"win":1,"gender":"female","party":"中道","sc":1},{"age":53,"vs":48.98,"win":1,"gender":"male","party":"自民","sc":1},{"age":41,"vs":9.36,"win":0,"gender":"female","party":"参政","sc":0},{"age":59,"vs":36.01,"win":0,"gender":"male","party":"中道","sc":1},{"age":49,"vs":54.63,"win":1,"gender":"male","party":"自民","sc":1},{"age":46,"vs":7.31,"win":0,"gender":"female","party":"参政","sc":0},{"age":27,"vs":7.92,"win":0,"gender":"male","party":"国民","sc":0},{"age":58,"vs":31.22,"win":0,"gender":"male","party":"中道","sc":1},{"age":49,"vs":53.56,"win":1,"gender":"male","party":"自民","sc":2},{"age":48,"vs":8.25,"win":0,"gender":"male","party":"参政","sc":0},{"age":52,"vs":39.65,"win":0,"gender":"male","party":"中道","sc":1},{"age":65,"vs":52.1,"win":1,"gender":"male","party":"自民","sc":2},{"age":49,"vs":4.32,"win":0,"gender":"male","party":"共産","sc":0},{"age":47,"vs":7.4,"win":0,"gender":"male","party":"国民","sc":0},{"age":39,"vs":9.64,"win":0,"gender":"male","party":"参政","sc":0},{"age":67,"vs":33.58,"win":0,"gender":"male","party":"無所","sc":1},{"age":46,"vs":45.06,"win":1,"gender":"male","party":"自民","sc":0},{"age":59,"vs":38.52,"win":0,"gender":"male","party":"中道","sc":1},{"age":52,"vs":61.48,"win":1,"gender":"male","party":"自民","sc":1},{"age":41,"vs":9.52,"win":0,"gender":"female","party":"参政","sc":0},{"age":64,"vs":11.19,"win":0,"gender":"female","party":"保守","sc":0},{"age":32,"vs":14.47,"win":0,"gender":"female","party":"無所","sc":0},{"age":58,"vs":30.23,"win":0,"gender":"female","party":"中道","sc":0},{"age":68,"vs":34.59,"win":1,"gender":"male","party":"自民","sc":1},{"age":42,"vs":3.68,"win":0,"gender":"female","party":"共産","sc":0},{"age":26,"vs":11.18,"win":0,"gender":"female","party":"参政","sc":0},{"age":44,"vs":11.22,"win":0,"gender":"male","party":"国民","sc":0},{"age":39,"vs":25.78,"win":0,"gender":"male","party":"中道","sc":0},{"age":71,"vs":48.14,"win":1,"gender":"male","party":"自民","sc":1},{"age":48,"vs":3.64,"win":0,"gender":"male","party":"共産","sc":0},{"age":35,"vs":10.38,"win":0,"gender":"female","party":"参政","sc":0},{"age":54,"vs":31.01,"win":0,"gender":"male","party":"中道","sc":1},{"age":60,"vs":54.97,"win":1,"gender":"male","party":"自民","sc":1},{"age":53,"vs":18.86,"win":0,"gender":"female","party":"共産","sc":0},{"age":70,"vs":81.14,"win":1,"gender":"male","party":"自民","sc":1},{"age":61,"vs":3.09,"win":0,"gender":"male","party":"共産","sc":0},{"age":35,"vs":13.97,"win":0,"gender":"female","party":"国民","sc":0},{"age":53,"vs":32.03,"win":0,"gender":"male","party":"中道","sc":1},{"age":52,"vs":50.91,"win":1,"gender":"male","party":"自民","sc":2},{"age":46,"vs":1.45,"win":0,"gender":"female","party":"無所","sc":0},{"age":55,"vs":8.28,"win":0,"gender":"male","party":"維新","sc":0},{"age":66,"vs":9.72,"win":0,"gender":"male","party":"参政","sc":0},{"age":78,"vs":38.27,"win":0,"gender":"male","party":"共産","sc":1},{"age":53,"vs":42.28,"win":1,"gender":"male","party":"自民","sc":1},{"age":48,"vs":1.3,"win":0,"gender":"male","party":"無所","sc":0},{"age":67,"vs":8.71,"win":0,"gender":"male","party":"社民","sc":2},{"age":40,"vs":11.76,"win":0,"gender":"female","party":"参政","sc":0},{"age":69,"vs":34.99,"win":0,"gender":"male","party":"中道","sc":1},{"age":60,"vs":43.24,"win":1,"gender":"male","party":"自民","sc":1},{"age":42,"vs":11.47,"win":0,"gender":"female","party":"参政","sc":0},{"age":63,"vs":36.72,"win":0,"gender":"male","party":"中道","sc":1},{"age":60,"vs":51.81,"win":1,"gender":"female","party":"自民","sc":1},{"age":44,"vs":12.52,"win":0,"gender":"male","party":"国民","sc":0},{"age":51,"vs":13.08,"win":0,"gender":"male","party":"れいわ","sc":1},{"age":56,"vs":24.56,"win":0,"gender":"male","party":"中道","sc":0},{"age":71,"vs":49.85,"win":1,"gender":"male","party":"自民","sc":1},{"age":44,"vs":7.94,"win":0,"gender":"male","party":"共産","sc":0},{"age":47,"vs":12.02,"win":0,"gender":"male","party":"国民","sc":0},{"age":44,"vs":12.04,"win":0,"gender":"female","party":"参政","sc":0},{"age":58,"vs":27.78,"win":0,"gender":"male","party":"自民","sc":2},{"age":54,"vs":40.22,"win":1,"gender":"male","party":"維新","sc":1},{"age":48,"vs":13.04,"win":0,"gender":"male","party":"共産","sc":0},{"age":47,"vs":16.68,"win":0,"gender":"male","party":"参政","sc":0},{"age":44,"vs":18.33,"win":0,"gender":"male","party":"無所","sc":1},{"age":47,"vs":51.95,"win":1,"gender":"male","party":"維新","sc":0},{"age":44,"vs":8.96,"win":0,"gender":"female","party":"共産","sc":0},{"age":34,"vs":9.81,"win":0,"gender":"male","party":"参政","sc":0},{"age":49,"vs":16.43,"win":0,"gender":"female","party":"中道","sc":0},{"age":52,"vs":24.45,"win":0,"gender":"male","party":"自民","sc":2},{"age":59,"vs":40.36,"win":1,"gender":"male","party":"維新","sc":1},{"age":56,"vs":1.83,"win":0,"gender":"male","party":"諸派","sc":0},{"age":49,"vs":8.45,"win":0,"gender":"female","party":"共産","sc":0},{"age":59,"vs":10.23,"win":0,"gender":"female","party":"参政","sc":0},{"age":58,"vs":12.03,"win":0,"gender":"male","party":"国民","sc":0},{"age":55,"vs":30.26,"win":1,"gender":"male","party":"自民","sc":2},{"age":64,"vs":37.19,"win":1,"gender":"male","party":"維新","sc":1},{"age":42,"vs":7.22,"win":0,"gender":"male","party":"共産","sc":0},{"age":52,"vs":8.39,"win":0,"gender":"female","party":"参政","sc":0},{"age":48,"vs":9.04,"win":0,"gender":"female","party":"れいわ","sc":1},{"age":51,"vs":10.93,"win":0,"gender":"male","party":"国民","sc":0},{"age":58,"vs":21.87,"win":0,"gender":"female","party":"自民","sc":2},{"age":50,"vs":42.55,"win":1,"gender":"male","party":"維新","sc":1},{"age":68,"vs":6.28,"win":0,"gender":"male","party":"共産","sc":0},{"age":35,"vs":11.99,"win":0,"gender":"female","party":"参政","sc":0},{"age":64,"vs":18.44,"win":0,"gender":"male","party":"中道","sc":0},{"age":48,"vs":20.74,"win":0,"gender":"male","party":"自民","sc":0},{"age":58,"vs":42.55,"win":1,"gender":"male","party":"維新","sc":1},{"age":43,"vs":12.49,"win":0,"gender":"male","party":"共産","sc":0},{"age":57,"vs":13.5,"win":1,"gender":"male","party":"参政","sc":0},{"age":63,"vs":34.86,"win":1,"gender":"female","party":"自民","sc":2},{"age":50,"vs":39.14,"win":1,"gender":"male","party":"維新","sc":1},{"age":49,"vs":7.95,"win":0,"gender":"female","party":"参政","sc":0},{"age":77,"vs":9.24,"win":0,"gender":"female","party":"共産","sc":0},{"age":50,"vs":12.04,"win":0,"gender":"female","party":"国民","sc":0},{"age":45,"vs":32.17,"win":1,"gender":"male","party":"自民","sc":0},{"age":51,"vs":38.59,"win":1,"gender":"male","party":"維新","sc":1},{"age":27,"vs":14.39,"win":0,"gender":"male","party":"社民","sc":0},{"age":43,"vs":37.39,"win":1,"gender":"male","party":"自民","sc":0},{"age":48,"vs":48.22,"win":1,"gender":"male","party":"維新","sc":1},{"age":29,"vs":8.72,"win":0,"gender":"male","party":"参政","sc":0},{"age":45,"vs":20.01,"win":0,"gender":"male","party":"自民","sc":0},{"age":51,"vs":26.2,"win":0,"gender":"female","party":"中道","sc":1},{"age":50,"vs":45.06,"win":1,"gender":"male","party":"維新","sc":1},{"age":56,"vs":6.23,"win":0,"gender":"male","party":"共産","sc":0},{"age":52,"vs":9.46,"win":0,"gender":"female","party":"参政","sc":0},{"age":66,"vs":16.77,"win":0,"gender":"male","party":"中道","sc":0},{"age":53,"vs":18.19,"win":0,"gender":"male","party":"自民","sc":0},{"age":69,"vs":49.35,"win":1,"gender":"male","party":"維新","sc":1},{"age":57,"vs":6.83,"win":0,"gender":"male","party":"共産","sc":0},{"age":66,"vs":21.46,"win":0,"gender":"male","party":"中道","sc":2},{"age":38,"vs":21.56,"win":0,"gender":"male","party":"自民","sc":0},{"age":45,"vs":50.16,"win":1,"gender":"male","party":"維新","sc":1},{"age":38,"vs":4.94,"win":0,"gender":"female","party":"れいわ","sc":1},{"age":62,"vs":4.99,"win":0,"gender":"female","party":"共産","sc":0},{"age":32,"vs":7.31,"win":0,"gender":"male","party":"参政","sc":0},{"age":61,"vs":13.0,"win":0,"gender":"male","party":"中道","sc":2},{"age":55,"vs":31.89,"win":1,"gender":"male","party":"自民","sc":2},{"age":45,"vs":37.88,"win":1,"gender":"male","party":"維新","sc":1},{"age":51,"vs":14.28,"win":0,"gender":"male","party":"共産","sc":0},{"age":62,"vs":27.95,"win":0,"gender":"male","party":"自民","sc":0},{"age":47,"vs":57.76,"win":1,"gender":"male","party":"維新","sc":1},{"age":52,"vs":13.99,"win":0,"gender":"male","party":"共産","sc":0},{"age":56,"vs":38.11,"win":1,"gender":"male","party":"自民","sc":1},{"age":52,"vs":47.91,"win":1,"gender":"male","party":"維新","sc":1},{"age":41,"vs":11.43,"win":0,"gender":"female","party":"参政","sc":0},{"age":46,"vs":20.32,"win":0,"gender":"male","party":"自民","sc":0},{"age":54,"vs":27.01,"win":0,"gender":"male","party":"中道","sc":1},{"age":46,"vs":41.24,"win":1,"gender":"male","party":"維新","sc":1},{"age":79,"vs":11.49,"win":0,"gender":"male","party":"共産","sc":0},{"age":49,"vs":12.8,"win":0,"gender":"female","party":"参政","sc":0},{"age":38,"vs":26.71,"win":0,"gender":"female","party":"自民","sc":0},{"age":61,"vs":49.0,"win":1,"gender":"male","party":"維新","sc":1},{"age":53,"vs":13.37,"win":0,"gender":"male","party":"共産","sc":0},{"age":47,"vs":28.21,"win":0,"gender":"male","party":"自民","sc":0},{"age":57,"vs":58.42,"win":1,"gender":"male","party":"維新","sc":1},{"age":59,"vs":5.5,"win":0,"gender":"female","party":"共産","sc":0},{"age":31,"vs":8.47,"win":0,"gender":"male","party":"参政","sc":0},{"age":55,"vs":12.66,"win":0,"gender":"female","party":"中道","sc":0},{"age":62,"vs":36.46,"win":1,"gender":"male","party":"維新","sc":1},{"age":49,"vs":36.91,"win":1,"gender":"male","party":"自民","sc":2},{"age":36,"vs":9.34,"win":0,"gender":"female","party":"参政","sc":0},{"age":66,"vs":45.01,"win":0,"gender":"male","party":"減ゆ","sc":1},{"age":52,"vs":45.65,"win":1,"gender":"male","party":"自民","sc":1},{"age":60,"vs":44.48,"win":0,"gender":"male","party":"中道","sc":1},{"age":67,"vs":55.52,"win":1,"gender":"male","party":"自民","sc":1},{"age":37,"vs":3.27,"win":0,"gender":"male","party":"無所","sc":0},{"age":37,"vs":9.81,"win":0,"gender":"male","party":"参政","sc":0},{"age":64,"vs":31.27,"win":0,"gender":"male","party":"中道","sc":1},{"age":45,"vs":55.65,"win":1,"gender":"male","party":"自民","sc":1},{"age":62,"vs":15.66,"win":0,"gender":"male","party":"維新","sc":1},{"age":37,"vs":17.26,"win":0,"gender":"female","party":"参政","sc":0},{"age":36,"vs":25.29,"win":0,"gender":"male","party":"国民","sc":0},{"age":68,"vs":41.78,"win":1,"gender":"male","party":"自民","sc":1},{"age":60,"vs":15.06,"win":0,"gender":"female","party":"参政","sc":0},{"age":57,"vs":32.74,"win":0,"gender":"female","party":"中道","sc":1},{"age":55,"vs":52.2,"win":1,"gender":"male","party":"自民","sc":1},{"age":48,"vs":7.71,"win":0,"gender":"female","party":"維新","sc":0},{"age":76,"vs":12.23,"win":0,"gender":"female","party":"共産","sc":0},{"age":58,"vs":27.14,"win":0,"gender":"male","party":"国民","sc":1},{"age":51,"vs":52.92,"win":1,"gender":"male","party":"自民","sc":1},{"age":30,"vs":11.64,"win":0,"gender":"male","party":"参政","sc":0},{"age":61,"vs":41.01,"win":0,"gender":"male","party":"中道","sc":1},{"age":43,"vs":47.35,"win":1,"gender":"male","party":"自民","sc":0},{"age":50,"vs":5.83,"win":0,"gender":"male","party":"維新","sc":0},{"age":49,"vs":7.0,"win":0,"gender":"female","party":"共産","sc":0},{"age":58,"vs":9.49,"win":0,"gender":"female","party":"参政","sc":0},{"age":69,"vs":36.69,"win":1,"gender":"male","party":"中道","sc":1},{"age":42,"vs":40.98,"win":1,"gender":"male","party":"自民","sc":0},{"age":60,"vs":42.81,"win":0,"gender":"female","party":"中道","sc":1},{"age":64,"vs":57.19,"win":1,"gender":"male","party":"自民","sc":1},{"age":52,"vs":17.65,"win":0,"gender":"female","party":"無所","sc":0},{"age":48,"vs":29.97,"win":0,"gender":"female","party":"中道","sc":1},{"age":60,"vs":52.38,"win":1,"gender":"male","party":"自民","sc":1},{"age":49,"vs":45.03,"win":0,"gender":"male","party":"中道","sc":1},{"age":52,"vs":54.97,"win":1,"gender":"male","party":"自民","sc":2},{"age":71,"vs":44.7,"win":0,"gender":"male","party":"中道","sc":1},{"age":42,"vs":55.3,"win":1,"gender":"male","party":"自民","sc":2},{"age":42,"vs":5.5,"win":0,"gender":"male","party":"共産","sc":0},{"age":54,"vs":10.07,"win":0,"gender":"male","party":"参政","sc":0},{"age":48,"vs":11.53,"win":0,"gender":"male","party":"国民","sc":0},{"age":67,"vs":19.54,"win":0,"gender":"male","party":"中道","sc":0},{"age":73,"vs":53.36,"win":1,"gender":"male","party":"自民","sc":1},{"age":51,"vs":44.2,"win":0,"gender":"male","party":"中道","sc":1},{"age":49,"vs":55.8,"win":1,"gender":"male","party":"自民","sc":1},{"age":75,"vs":6.89,"win":0,"gender":"female","party":"共産","sc":0},{"age":56,"vs":8.65,"win":0,"gender":"male","party":"れいわ","sc":1},{"age":43,"vs":9.15,"win":0,"gender":"male","party":"参政","sc":0},{"age":30,"vs":35.96,"win":1,"gender":"male","party":"国民","sc":1},{"age":70,"vs":39.34,"win":1,"gender":"male","party":"自民","sc":2},{"age":67,"vs":9.84,"win":0,"gender":"female","party":"共産","sc":0},{"age":55,"vs":12.51,"win":0,"gender":"female","party":"参政","sc":0},{"age":63,"vs":36.96,"win":1,"gender":"male","party":"国民","sc":1},{"age":52,"vs":40.69,"win":1,"gender":"male","party":"自民","sc":0},{"age":53,"vs":6.96,"win":0,"gender":"male","party":"諸派","sc":0},{"age":65,"vs":14.64,"win":0,"gender":"male","party":"維新","sc":0},{"age":47,"vs":26.09,"win":0,"gender":"female","party":"中道","sc":0},{"age":62,"vs":52.31,"win":1,"gender":"male","party":"自民","sc":1},{"age":58,"vs":7.72,"win":0,"gender":"male","party":"共産","sc":0},{"age":38,"vs":36.47,"win":0,"gender":"male","party":"中道","sc":1},{"age":74,"vs":55.81,"win":1,"gender":"female","party":"自民","sc":1},{"age":42,"vs":10.57,"win":0,"gender":"female","party":"共産","sc":0},{"age":52,"vs":21.42,"win":1,"gender":"male","party":"国民","sc":0},{"age":40,"vs":25.99,"win":1,"gender":"male","party":"維新","sc":1},{"age":53,"vs":42.03,"win":1,"gender":"male","party":"自民","sc":1},{"age":33,"vs":19.88,"win":0,"gender":"male","party":"維新","sc":0},{"age":75,"vs":19.98,"win":0,"gender":"male","party":"中道","sc":0},{"age":60,"vs":60.14,"win":1,"gender":"male","party":"自民","sc":1},{"age":37,"vs":3.57,"win":0,"gender":"female","party":"れいわ","sc":0},{"age":47,"vs":4.57,"win":0,"gender":"male","party":"共産","sc":0},{"age":51,"vs":13.22,"win":0,"gender":"male","party":"中道","sc":0},{"age":40,"vs":13.49,"win":0,"gender":"female","party":"参政","sc":1},{"age":43,"vs":16.52,"win":0,"gender":"male","party":"維新","sc":0},{"age":54,"vs":48.64,"win":1,"gender":"male","party":"自民","sc":1},{"age":57,"vs":3.76,"win":0,"gender":"female","party":"共産","sc":0},{"age":42,"vs":7.59,"win":0,"gender":"male","party":"参政","sc":0},{"age":60,"vs":37.69,"win":0,"gender":"female","party":"中道","sc":1},{"age":62,"vs":50.96,"win":1,"gender":"female","party":"自民","sc":2},{"age":39,"vs":6.27,"win":0,"gender":"female","party":"共産","sc":0},{"age":43,"vs":10.22,"win":0,"gender":"male","party":"参政","sc":0},{"age":58,"vs":22.0,"win":0,"gender":"female","party":"中道","sc":0},{"age":45,"vs":61.5,"win":1,"gender":"male","party":"自民","sc":1},{"age":71,"vs":9.36,"win":0,"gender":"female","party":"共産","sc":0},{"age":36,"vs":29.49,"win":0,"gender":"male","party":"国民","sc":0},{"age":72,"vs":61.15,"win":1,"gender":"female","party":"自民","sc":1},{"age":52,"vs":28.94,"win":0,"gender":"male","party":"中道","sc":1},{"age":49,"vs":71.06,"win":1,"gender":"male","party":"自民","sc":1},{"age":68,"vs":3.6,"win":0,"gender":"female","party":"共産","sc":0},{"age":38,"vs":11.02,"win":0,"gender":"male","party":"参政","sc":0},{"age":50,"vs":33.63,"win":0,"gender":"male","party":"中道","sc":1},{"age":43,"vs":51.75,"win":1,"gender":"male","party":"自民","sc":0},{"age":56,"vs":5.0,"win":0,"gender":"male","party":"れいわ","sc":0},{"age":51,"vs":6.86,"win":0,"gender":"male","party":"参政","sc":0},{"age":48,"vs":36.39,"win":1,"gender":"male","party":"国民","sc":1},{"age":49,"vs":51.75,"win":1,"gender":"male","party":"自民","sc":1},{"age":72,"vs":5.93,"win":0,"gender":"male","party":"共産","sc":0},{"age":67,"vs":19.27,"win":0,"gender":"male","party":"中道","sc":0},{"age":54,"vs":74.8,"win":1,"gender":"male","party":"自民","sc":1},{"age":52,"vs":8.66,"win":0,"gender":"male","party":"参政","sc":0},{"age":64,"vs":36.75,"win":0,"gender":"male","party":"中道","sc":1},{"age":49,"vs":54.58,"win":1,"gender":"male","party":"自民","sc":1},{"age":49,"vs":8.54,"win":0,"gender":"female","party":"参政","sc":0},{"age":41,"vs":23.8,"win":0,"gender":"female","party":"国民","sc":0},{"age":60,"vs":67.66,"win":1,"gender":"male","party":"自民","sc":1},{"age":27,"vs":3.77,"win":0,"gender":"male","party":"共産","sc":0},{"age":52,"vs":10.23,"win":0,"gender":"female","party":"参政","sc":0},{"age":53,"vs":36.02,"win":0,"gender":"male","party":"中道","sc":1},{"age":51,"vs":49.97,"win":1,"gender":"male","party":"自民","sc":0},{"age":69,"vs":1.34,"win":0,"gender":"male","party":"無所","sc":0},{"age":65,"vs":3.07,"win":0,"gender":"male","party":"共産","sc":0},{"age":54,"vs":13.95,"win":0,"gender":"male","party":"参政","sc":0},{"age":56,"vs":19.61,"win":1,"gender":"male","party":"維新","sc":2},{"age":49,"vs":21.52,"win":0,"gender":"male","party":"中道","sc":0},{"age":72,"vs":40.52,"win":1,"gender":"male","party":"自民","sc":1},{"age":47,"vs":13.08,"win":0,"gender":"female","party":"参政","sc":0},{"age":77,"vs":35.08,"win":0,"gender":"male","party":"中道","sc":1},{"age":56,"vs":51.84,"win":1,"gender":"male","party":"自民","sc":1},{"age":61,"vs":15.49,"win":0,"gender":"male","party":"中道","sc":0},{"age":46,"vs":40.56,"win":1,"gender":"male","party":"自民","sc":1},{"age":33,"vs":43.95,"win":1,"gender":"male","party":"無所","sc":0},{"age":68,"vs":1.85,"win":0,"gender":"male","party":"無所","sc":0},{"age":45,"vs":11.14,"win":0,"gender":"female","party":"参政","sc":0},{"age":48,"vs":39.94,"win":0,"gender":"male","party":"中道","sc":1},{"age":45,"vs":47.06,"win":1,"gender":"male","party":"自民","sc":0},{"age":72,"vs":9.43,"win":0,"gender":"female","party":"共産","sc":0},{"age":38,"vs":10.29,"win":0,"gender":"male","party":"参政","sc":0},{"age":47,"vs":12.09,"win":0,"gender":"male","party":"国民","sc":0},{"age":70,"vs":68.19,"win":1,"gender":"male","party":"自民","sc":1},{"age":50,"vs":7.67,"win":0,"gender":"female","party":"参政","sc":0},{"age":50,"vs":8.69,"win":0,"gender":"female","party":"維新","sc":2},{"age":50,"vs":25.44,"win":0,"gender":"male","party":"中道","sc":1},{"age":59,"vs":58.2,"win":1,"gender":"male","party":"自民","sc":1},{"age":44,"vs":4.86,"win":0,"gender":"male","party":"共産","sc":0},{"age":54,"vs":19.21,"win":0,"gender":"male","party":"無所","sc":0},{"age":65,"vs":27.37,"win":1,"gender":"male","party":"国民","sc":0},{"age":75,"vs":48.56,"win":1,"gender":"male","party":"自民","sc":1},{"age":29,"vs":7.96,"win":0,"gender":"female","party":"共産","sc":0},{"age":51,"vs":10.5,"win":0,"gender":"female","party":"維新","sc":0},{"age":38,"vs":13.13,"win":1,"gender":"female","party":"参政","sc":1},{"age":76,"vs":25.41,"win":0,"gender":"male","party":"中道","sc":1},{"age":51,"vs":43.0,"win":1,"gender":"female","party":"自民","sc":2},{"age":36,"vs":2.13,"win":0,"gender":"female","party":"諸派","sc":0},{"age":46,"vs":7.07,"win":0,"gender":"male","party":"参政","sc":0},{"age":44,"vs":7.85,"win":0,"gender":"female","party":"共産","sc":0},{"age":50,"vs":8.49,"win":0,"gender":"male","party":"維新","sc":0},{"age":56,"vs":12.78,"win":1,"gender":"male","party":"みらい","sc":0},{"age":49,"vs":18.41,"win":0,"gender":"male","party":"国民","sc":1},{"age":46,"vs":43.27,"win":1,"gender":"male","party":"自民","sc":1},{"age":43,"vs":8.03,"win":0,"gender":"male","party":"参政","sc":0},{"age":42,"vs":8.88,"win":0,"gender":"male","party":"維新","sc":2},{"age":46,"vs":15.93,"win":0,"gender":"male","party":"国民","sc":0},{"age":61,"vs":24.52,"win":0,"gender":"female","party":"中道","sc":1},{"age":61,"vs":42.64,"win":1,"gender":"male","party":"自民","sc":1},{"age":54,"vs":12.85,"win":0,"gender":"male","party":"共産","sc":0},{"age":45,"vs":13.68,"win":0,"gender":"female","party":"参政","sc":0},{"age":60,"vs":24.08,"win":1,"gender":"female","party":"国民","sc":2},{"age":58,"vs":49.39,"win":1,"gender":"male","party":"自民","sc":1},{"age":56,"vs":8.69,"win":0,"gender":"female","party":"参政","sc":0},{"age":41,"vs":12.23,"win":0,"gender":"male","party":"維新","sc":0},{"age":38,"vs":14.53,"win":0,"gender":"female","party":"国民","sc":0},{"age":59,"vs":25.5,"win":0,"gender":"male","party":"中道","sc":1},{"age":64,"vs":39.06,"win":1,"gender":"male","party":"自民","sc":2},{"age":69,"vs":1.02,"win":0,"gender":"male","party":"諸派","sc":0},{"age":46,"vs":9.79,"win":0,"gender":"male","party":"参政","sc":0},{"age":58,"vs":18.24,"win":0,"gender":"male","party":"国民","sc":0},{"age":46,"vs":33.21,"win":1,"gender":"male","party":"中道","sc":1},{"age":67,"vs":37.74,"win":1,"gender":"male","party":"自民","sc":2},{"age":29,"vs":7.0,"win":0,"gender":"female","party":"参政","sc":0},{"age":53,"vs":8.42,"win":0,"gender":"male","party":"維新","sc":0},{"age":63,"vs":9.01,"win":0,"gender":"female","party":"国民","sc":0},{"age":35,"vs":18.57,"win":1,"gender":"male","party":"みらい","sc":0},{"age":51,"vs":22.53,"win":0,"gender":"male","party":"中道","sc":1},{"age":55,"vs":34.47,"win":1,"gender":"female","party":"自民","sc":0},{"age":92,"vs":0.46,"win":0,"gender":"male","party":"無所","sc":0},{"age":62,"vs":3.32,"win":0,"gender":"male","party":"保守","sc":0},{"age":38,"vs":4.36,"win":0,"gender":"male","party":"参政","sc":0},{"age":31,"vs":4.68,"win":0,"gender":"male","party":"れいわ","sc":0},{"age":46,"vs":11.07,"win":0,"gender":"male","party":"国民","sc":0},{"age":54,"vs":31.82,"win":0,"gender":"female","party":"中道","sc":1},{"age":45,"vs":44.29,"win":1,"gender":"female","party":"自民","sc":0},{"age":33,"vs":8.53,"win":0,"gender":"male","party":"参政","sc":0},{"age":61,"vs":17.81,"win":0,"gender":"female","party":"国民","sc":0},{"age":44,"vs":30.63,"win":0,"gender":"male","party":"中道","sc":1},{"age":64,"vs":43.03,"win":1,"gender":"male","party":"自民","sc":2},{"age":50,"vs":1.05,"win":0,"gender":"male","party":"諸派","sc":0},{"age":55,"vs":6.87,"win":0,"gender":"male","party":"参政","sc":0},{"age":53,"vs":16.74,"win":0,"gender":"female","party":"国民","sc":0},{"age":50,"vs":26.3,"win":0,"gender":"male","party":"中道","sc":1},{"age":48,"vs":49.05,"win":1,"gender":"male","party":"自民","sc":1},{"age":64,"vs":0.42,"win":0,"gender":"male","party":"諸派","sc":0},{"age":29,"vs":5.74,"win":0,"gender":"male","party":"共産","sc":0},{"age":52,"vs":8.73,"win":0,"gender":"female","party":"参政","sc":0},{"age":60,"vs":11.95,"win":0,"gender":"male","party":"維新","sc":0},{"age":51,"vs":17.52,"win":1,"gender":"male","party":"国民","sc":0},{"age":69,"vs":24.16,"win":0,"gender":"male","party":"中道","sc":1},{"age":71,"vs":31.49,"win":1,"gender":"male","party":"自民","sc":2},{"age":34,"vs":7.7,"win":0,"gender":"female","party":"参政","sc":0},{"age":56,"vs":9.17,"win":0,"gender":"female","party":"共産","sc":0},{"age":42,"vs":13.75,"win":0,"gender":"male","party":"国民","sc":0},{"age":43,"vs":14.72,"win":1,"gender":"male","party":"維新","sc":1},{"age":33,"vs":19.63,"win":0,"gender":"male","party":"中道","sc":0},{"age":60,"vs":35.03,"win":1,"gender":"male","party":"自民","sc":1},{"age":50,"vs":9.36,"win":0,"gender":"female","party":"参政","sc":0},{"age":40,"vs":11.5,"win":0,"gender":"male","party":"共産","sc":0},{"age":31,"vs":32.55,"win":1,"gender":"male","party":"国民","sc":1},{"age":35,"vs":46.59,"win":1,"gender":"male","party":"自民","sc":1},{"age":44,"vs":8.69,"win":0,"gender":"male","party":"共産","sc":0},{"age":45,"vs":9.11,"win":0,"gender":"male","party":"参政","sc":0},{"age":58,"vs":9.44,"win":0,"gender":"female","party":"れいわ","sc":1},{"age":40,"vs":22.54,"win":0,"gender":"male","party":"国民","sc":0},{"age":69,"vs":50.23,"win":1,"gender":"female","party":"自民","sc":1},{"age":58,"vs":2.83,"win":0,"gender":"male","party":"減ゆ","sc":0},{"age":46,"vs":5.73,"win":0,"gender":"female","party":"参政","sc":0},{"age":40,"vs":10.3,"win":0,"gender":"female","party":"維新","sc":0},{"age":32,"vs":11.13,"win":0,"gender":"female","party":"国民","sc":0},{"age":39,"vs":27.52,"win":0,"gender":"female","party":"中道","sc":1},{"age":27,"vs":42.49,"win":1,"gender":"male","party":"自民","sc":1},{"age":44,"vs":10.25,"win":0,"gender":"male","party":"参政","sc":0},{"age":45,"vs":20.37,"win":0,"gender":"female","party":"国民","sc":0},{"age":57,"vs":24.76,"win":0,"gender":"male","party":"中道","sc":1},{"age":48,"vs":44.63,"win":1,"gender":"male","party":"自民","sc":1},{"age":54,"vs":1.02,"win":0,"gender":"male","party":"諸派","sc":0},{"age":78,"vs":3.62,"win":0,"gender":"female","party":"無所","sc":1},{"age":29,"vs":9.53,"win":0,"gender":"male","party":"参政","sc":0},{"age":69,"vs":13.65,"win":0,"gender":"female","party":"維新","sc":1},{"age":52,"vs":13.97,"win":0,"gender":"female","party":"国民","sc":0},{"age":45,"vs":22.03,"win":0,"gender":"female","party":"中道","sc":0},{"age":80,"vs":36.18,"win":1,"gender":"male","party":"自民","sc":1},{"age":40,"vs":3.39,"win":0,"gender":"female","party":"諸派","sc":0},{"age":48,"vs":6.96,"win":0,"gender":"female","party":"参政","sc":0},{"age":39,"vs":13.61,"win":0,"gender":"male","party":"国民","sc":0},{"age":55,"vs":28.34,"win":0,"gender":"female","party":"中道","sc":1},{"age":40,"vs":47.71,"win":1,"gender":"female","party":"自民","sc":1},{"age":46,"vs":6.59,"win":0,"gender":"female","party":"参政","sc":0},{"age":62,"vs":7.02,"win":0,"gender":"female","party":"共産","sc":0},{"age":42,"vs":13.93,"win":0,"gender":"female","party":"国民","sc":0},{"age":69,"vs":26.6,"win":0,"gender":"male","party":"中道","sc":1},{"age":52,"vs":45.86,"win":1,"gender":"male","party":"自民","sc":1},{"age":38,"vs":10.49,"win":0,"gender":"male","party":"参政","sc":0},{"age":54,"vs":20.06,"win":0,"gender":"male","party":"共産","sc":2},{"age":47,"vs":20.9,"win":0,"gender":"male","party":"国民","sc":0},{"age":55,"vs":48.55,"win":1,"gender":"male","party":"自民","sc":1},{"age":35,"vs":2.69,"win":0,"gender":"male","party":"減ゆ","sc":0},{"age":51,"vs":9.78,"win":0,"gender":"female","party":"参政","sc":0},{"age":59,"vs":16.21,"win":0,"gender":"male","party":"国民","sc":0},{"age":52,"vs":28.72,"win":0,"gender":"male","party":"中道","sc":0},{"age":61,"vs":42.61,"win":1,"gender":"male","party":"自民","sc":2},{"age":61,"vs":14.62,"win":1,"gender":"female","party":"参政","sc":0},{"age":59,"vs":33.93,"win":0,"gender":"male","party":"中道","sc":1},{"age":64,"vs":51.45,"win":1,"gender":"male","party":"自民","sc":1},{"age":40,"vs":9.39,"win":0,"gender":"male","party":"共産","sc":0},{"age":40,"vs":10.97,"win":0,"gender":"male","party":"参政","sc":0},{"age":46,"vs":34.35,"win":0,"gender":"male","party":"中道","sc":1},{"age":45,"vs":45.29,"win":1,"gender":"male","party":"自民","sc":0},{"age":47,"vs":6.32,"win":0,"gender":"female","party":"無所","sc":0},{"age":41,"vs":8.09,"win":0,"gender":"female","party":"参政","sc":0},{"age":30,"vs":10.65,"win":0,"gender":"male","party":"国民","sc":0},{"age":32,"vs":33.87,"win":0,"gender":"male","party":"中道","sc":0},{"age":62,"vs":41.06,"win":1,"gender":"male","party":"自民","sc":1},{"age":45,"vs":6.99,"win":0,"gender":"male","party":"維新","sc":0},{"age":51,"vs":9.49,"win":0,"gender":"female","party":"参政","sc":0},{"age":47,"vs":9.91,"win":0,"gender":"male","party":"国民","sc":0},{"age":54,"vs":23.13,"win":0,"gender":"female","party":"中道","sc":0},{"age":56,"vs":50.48,"win":1,"gender":"male","party":"自民","sc":1},{"age":53,"vs":4.91,"win":0,"gender":"female","party":"参政","sc":0},{"age":47,"vs":7.39,"win":0,"gender":"female","party":"共産","sc":0},{"age":45,"vs":9.13,"win":0,"gender":"male","party":"国民","sc":0},{"age":58,"vs":13.04,"win":1,"gender":"male","party":"みらい","sc":2},{"age":69,"vs":30.85,"win":0,"gender":"male","party":"無所","sc":1},{"age":37,"vs":34.68,"win":1,"gender":"male","party":"自民","sc":0},{"age":37,"vs":8.67,"win":0,"gender":"female","party":"参政","sc":0},{"age":45,"vs":16.94,"win":0,"gender":"male","party":"国民","sc":0},{"age":65,"vs":36.25,"win":1,"gender":"male","party":"中道","sc":1},{"age":49,"vs":38.15,"win":1,"gender":"male","party":"自民","sc":0},{"age":71,"vs":6.92,"win":0,"gender":"female","party":"共産","sc":0},{"age":44,"vs":9.13,"win":0,"gender":"male","party":"参政","sc":0},{"age":49,"vs":9.95,"win":0,"gender":"male","party":"維新","sc":0},{"age":38,"vs":15.34,"win":0,"gender":"male","party":"国民","sc":0},{"age":51,"vs":22.02,"win":0,"gender":"male","party":"中道","sc":1},{"age":66,"vs":36.64,"win":1,"gender":"male","party":"自民","sc":1},{"age":64,"vs":7.18,"win":0,"gender":"male","party":"共産","sc":0},{"age":25,"vs":7.23,"win":0,"gender":"male","party":"参政","sc":0},{"age":53,"vs":7.24,"win":0,"gender":"male","party":"保守","sc":0},{"age":58,"vs":13.71,"win":0,"gender":"male","party":"国民","sc":2},{"age":54,"vs":23.29,"win":0,"gender":"male","party":"中道","sc":2},{"age":44,"vs":41.36,"win":1,"gender":"male","party":"自民","sc":0},{"age":42,"vs":8.42,"win":0,"gender":"female","party":"参政","sc":0},{"age":28,"vs":13.29,"win":0,"gender":"male","party":"国民","sc":0},{"age":42,"vs":33.15,"win":0,"gender":"female","party":"中道","sc":1},{"age":63,"vs":45.15,"win":1,"gender":"male","party":"自民","sc":1},{"age":62,"vs":6.91,"win":0,"gender":"male","party":"共産","sc":0},{"age":47,"vs":11.97,"win":0,"gender":"male","party":"参政","sc":0},{"age":51,"vs":13.64,"win":0,"gender":"female","party":"国民","sc":0},{"age":69,"vs":67.49,"win":1,"gender":"male","party":"自民","sc":1},{"age":50,"vs":4.47,"win":0,"gender":"male","party":"共産","sc":0},{"age":63,"vs":33.23,"win":0,"gender":"male","party":"中道","sc":2},{"age":65,"vs":62.3,"win":1,"gender":"male","party":"自民","sc":1},{"age":50,"vs":4.12,"win":0,"gender":"male","party":"共産","sc":0},{"age":34,"vs":11.0,"win":0,"gender":"male","party":"参政","sc":0},{"age":46,"vs":21.47,"win":0,"gender":"male","party":"中道","sc":1},{"age":61,"vs":63.4,"win":1,"gender":"male","party":"自民","sc":2},{"age":61,"vs":25.31,"win":0,"gender":"male","party":"中道","sc":0},{"age":61,"vs":74.69,"win":1,"gender":"male","party":"自民","sc":1},{"age":55,"vs":6.75,"win":0,"gender":"male","party":"共産","sc":0},{"age":41,"vs":8.86,"win":0,"gender":"female","party":"参政","sc":0},{"age":41,"vs":18.47,"win":0,"gender":"male","party":"国民","sc":0},{"age":65,"vs":65.93,"win":1,"gender":"male","party":"自民","sc":1},{"age":75,"vs":0.38,"win":0,"gender":"male","party":"諸派","sc":0},{"age":69,"vs":4.67,"win":0,"gender":"male","party":"共産","sc":0},{"age":54,"vs":9.2,"win":0,"gender":"male","party":"維新","sc":0},{"age":51,"vs":9.79,"win":0,"gender":"female","party":"参政","sc":0},{"age":49,"vs":14.58,"win":0,"gender":"female","party":"中道","sc":0},{"age":44,"vs":15.13,"win":0,"gender":"female","party":"国民","sc":1},{"age":34,"vs":46.25,"win":1,"gender":"male","party":"自民","sc":1},{"age":65,"vs":17.83,"win":0,"gender":"male","party":"共産","sc":0},{"age":63,"vs":82.17,"win":1,"gender":"male","party":"無所","sc":1},{"age":44,"vs":10.79,"win":0,"gender":"female","party":"参政","sc":0},{"age":52,"vs":27.97,"win":0,"gender":"male","party":"中道","sc":1},{"age":39,"vs":61.24,"win":1,"gender":"male","party":"自民","sc":0},{"age":60,"vs":4.35,"win":0,"gender":"male","party":"共産","sc":0},{"age":43,"vs":27.33,"win":0,"gender":"male","party":"国民","sc":1},{"age":44,"vs":68.32,"win":1,"gender":"male","party":"自民","sc":1},{"age":60,"vs":6.91,"win":0,"gender":"male","party":"参政","sc":0},{"age":36,"vs":14.09,"win":0,"gender":"male","party":"国民","sc":0},{"age":28,"vs":20.8,"win":0,"gender":"male","party":"中道","sc":0},{"age":46,"vs":58.2,"win":1,"gender":"female","party":"自民","sc":1},{"age":47,"vs":16.52,"win":0,"gender":"female","party":"参政","sc":0},{"age":49,"vs":19.97,"win":0,"gender":"male","party":"国民","sc":0},{"age":55,"vs":63.51,"win":1,"gender":"male","party":"自民","sc":1},{"age":72,"vs":37.88,"win":0,"gender":"male","party":"中道","sc":1},{"age":34,"vs":62.12,"win":1,"gender":"male","party":"自民","sc":1},{"age":70,"vs":3.94,"win":0,"gender":"female","party":"共産","sc":0},{"age":57,"vs":8.1,"win":0,"gender":"male","party":"維新","sc":0},{"age":56,"vs":12.62,"win":0,"gender":"male","party":"中道","sc":0},{"age":50,"vs":12.82,"win":1,"gender":"female","party":"参政","sc":0},{"age":65,"vs":62.53,"win":1,"gender":"male","party":"自民","sc":1},{"age":35,"vs":4.07,"win":0,"gender":"female","party":"共産","sc":0},{"age":51,"vs":7.72,"win":0,"gender":"male","party":"参政","sc":0},{"age":58,"vs":35.86,"win":0,"gender":"male","party":"中道","sc":1},{"age":49,"vs":52.35,"win":1,"gender":"male","party":"自民","sc":1},{"age":42,"vs":18.48,"win":0,"gender":"male","party":"共産","sc":0},{"age":60,"vs":81.52,"win":1,"gender":"female","party":"自民","sc":1}];
+const STATUS           = {"labels": ["現職 (1)", "元職 (2)", "新人 (0)"], "win_rate": [62.0, 62.7, 12.4], "mean_vs": [43.0, 31.8, 13.88], "ns": [413, 75, 631]};
+const PARTY            = {"labels": ["自民", "中道", "参政", "共産", "国民", "維新", "れいわ", "みらい", "その他"], "win_rate": [96.1, 9.9, 7.7, 0.0, 27.5, 40.2, 0.0, 66.7, 7.6], "mean_vs": [50.4, 30.35, 10.76, 7.6, 21.5, 21.41, 7.23, 11.92, 12.54], "ns": [285, 202, 182, 158, 102, 87, 18, 6, 79]};
+const GENDER           = {"labels": ["男性", "女性"], "win_rate": [39.5, 17.0], "mean_vs": [28.36, 17.89], "ns": [848, 271]};
+const REGLINE          = {"slope": 0.2941509825091602, "intercept": 10.392002601422373, "xmin": 25.0, "xmax": 92.0};
+const STATUS_RL        = {"現職": {"n": 413, "slope": 0.19201299908441766, "intercept": 32.17182882159828, "xmin": 27.0, "xmax": 85.0, "ci_slope_lo": 0.049625432049049456, "ci_slope_hi": 0.33440056611978586, "ci_int_lo": 24.005776489106076, "ci_int_hi": 40.33788115409049}, "元職": {"n": 75, "slope": 0.015557187865109245, "intercept": 30.903876066406056, "xmin": 41.0, "xmax": 77.0, "ci_slope_lo": -0.451061037903109, "ci_slope_hi": 0.48217541363332744, "ci_int_lo": 3.663334416901428, "ci_int_hi": 58.144417715910684}, "新人": {"n": 631, "slope": -0.19323687129300146, "intercept": 23.400518203800548, "xmin": 25.0, "xmax": 92.0, "ci_slope_lo": -0.264429253758599, "ci_slope_hi": -0.12204448882740394, "ci_int_lo": 19.790879925767374, "ci_int_hi": 27.01015648183372}};
+const FEM_UNI          = {"slope": -10.473201846759043, "intercept": 28.363054245283024, "R2": 0.05456398462323375, "xmin": -0.25, "xmax": 1.25, "eq": "voteshare = 28.363 + -10.473×female   R²=0.0546", "n_male": 848, "n_female": 271};
+const SC_UNI           = {"slope": 18.58843565311783, "intercept": 16.474290194186466, "R2": 0.3596686467984457, "xmin": -0.25, "xmax": 2.25, "eq": "voteshare = 16.474 + 18.588×status_code   R²=0.3597"};
+const PARTY_UNI        = [{"name": "自民", "slope": 32.967894736842084, "intercept": 17.430000000000003, "R2": 0.5592105135116825, "n": 285, "ci_slope_lo": 31.2495451986424, "ci_slope_hi": 34.686244275041766, "ci_int_lo": 16.562800742666695, "ci_int_hi": 18.29719925733331}, {"name": "中道", "slope": 5.513850804927851, "intercept": 24.83129770992364, "R2": 0.01219025285304054, "n": 202, "ci_slope_lo": 2.599930610872654, "ci_slope_hi": 8.427770998983048, "ci_int_lo": 23.593247395835498, "ci_int_hi": 26.06934802401178}, {"name": "参政", "slope": -17.991901614927208, "intercept": 28.752945570971168, "R2": 0.1194942757894435, "n": 182, "ci_slope_lo": -20.859127802335827, "ci_slope_hi": -15.12467542751859, "ci_int_lo": 27.5966134086988, "ci_int_hi": 29.909277733243535}, {"name": "共産", "slope": -21.226498834283884, "intercept": 28.82377731529656, "R2": 0.14808777038640653, "n": 158, "ci_slope_lo": -24.215379262845033, "ci_slope_hi": -18.237618405722735, "ci_int_lo": 27.70066796876858, "ci_int_hi": 29.94688666182454}, {"name": "国民", "slope": -4.756382960263737, "intercept": 26.26020648967551, "R2": 0.005079918460238697, "n": 102, "ci_slope_lo": -8.664205992225114, "ci_slope_hi": -0.8485599283023602, "ci_int_lo": 25.08037514253504, "ci_int_hi": 27.440037836815982}, {"name": "維新", "slope": -4.791724472066279, "intercept": 26.1991957364341, "R2": 0.004462360092836959, "n": 87, "ci_slope_lo": -8.993479414390203, "ci_slope_hi": -0.5899695297423548, "ci_int_lo": 25.02760669010781, "ci_int_hi": 27.37078478276039}, {"name": "れいわ", "slope": -18.90068119891007, "intercept": 26.130681198910082, "R2": 0.015324867393138542, "n": 18, "ci_slope_lo": -27.7951071786689, "ci_slope_hi": -10.006255219151244, "ci_int_lo": 25.002603186167917, "ci_int_hi": 27.258759211652247}, {"name": "みらい", "slope": -13.984968553459117, "intercept": 25.901635220125776, "R2": 0.002827166528577174, "n": 6, "ci_slope_lo": -29.40422260128669, "ci_slope_hi": 1.4342854943684546, "ci_int_lo": 24.772557218628005, "ci_int_hi": 27.030713221623547}];
+const FIG_A_MEANS      = [{"x": 0, "y": 28.3631}, {"x": 1, "y": 17.8899}];
+const FIG_B_MEANS      = [{"x": 0, "y": 13.8774}, {"x": 1, "y": 42.998}, {"x": 2, "y": 31.8027}];
+const FIG_C_MEANS      = [{"x": 0, "y": 50.3979}, {"x": 1, "y": 30.3451}, {"x": 2, "y": 10.761}, {"x": 3, "y": 7.5973}, {"x": 4, "y": 21.5038}, {"x": 5, "y": 21.4075}, {"x": 6, "y": 7.23}, {"x": 7, "y": 11.9167}];
+const SIM              = {"vars": ["const", "age", "female", "incumbent", "former", "自民", "中道", "参政", "共産", "国民", "維新", "れいわ", "みらい"], "beta": [11.768215935343068, -0.03908843396275481, -0.7877566458144538, 16.44258282199158, 3.157849495728864, 29.83995125065543, 9.007643665862265, 0.8955455802897709, -1.913545055138459, 7.261499408300429, 5.02645386104187, -8.648939198602053, 0.9144444064376871], "cov": [[2.610038950222217, -0.031057267061733344, -0.06752876442090798, 0.10827363671860869, 0.12433272046926509, -0.963358286779176, -0.9701848335669336, -1.2074581990029427, -0.8387995711501065, -1.2130041274363657, -1.0475998180655743, -0.9844294125557117, -1.2995897014770188], [-0.031057267061729496, 0.0005718671899776351, -0.0001459512496422117, -0.0039949196787908165, -0.004803375647296426, 0.002550930389849648, 0.002649763969623104, 0.0058790840775989174, -0.0010146431926157228, 0.0062774433167693605, 0.0036268981508042982, 0.0027370268937786002, 0.007997117118401132], [-0.06752876442089037, -0.00014595124964220265, 0.3734952833762268, 0.01843267355583661, 0.024286709947774404, 0.02206182058051955, -0.01594110808459394, -0.09449795495736017, -0.05938078614991897, -0.02296839834299863, 0.01699477786493038, -0.12002530984660473, 0.003484209485150877], [0.10827363671849692, -0.003994919678789722, 0.018432673555838715, 0.5165122011863673, 0.3304391270091524, -0.27047779809977585, -0.2715262538563606, 0.05440004427572459, 0.10142680239420317, -0.07750438517311319, -0.1519609148742175, -0.1256486357622319, -0.04904475851309868], [0.12433272046919451, -0.0048033756472958215, 0.02428670994777604, 0.3304391270091541, 1.2970868551396646, -0.2718953588548093, -0.1347370760377557, 0.07349793194674242, 0.12502252594508978, -0.037397639487899995, -0.21169351982915682, -0.08326221453338475, -0.35339707506544493], [-0.9633582867793071, 0.002550930389852321, 0.022061820580529714, -0.2704777980998226, -0.27189535885484234, 1.2790351294709796, 1.0194812260219064, 0.8435890479389903, 0.8168845435707899, 0.921502640718816, 0.9742687839193422, 0.9378443289781417, 0.9401979411388727], [-0.9701848335670358, 0.0026497639696254674, -0.01594110808458423, -0.27152625385640666, -0.13473707603778712, 1.0194812260218948, 1.3707385792700042, 0.8631789156719828, 0.8310002319394418, 0.9293911371482796, 0.9590871948559324, 0.9512384608270251, 0.90337256557156], [-1.2074581990031248, 0.005879084077602755, -0.09449795495734695, 0.05440004427566487, 0.07349793194670175, 0.8435890479389972, 0.8631789156720044, 1.3719355700323812, 0.9093062704560188, 0.9466170594204983, 0.8812320912916793, 0.9188567764997545, 0.9449280848305975], [-0.83879957115036, -0.00101464319261173, -0.05938078614990648, 0.10142680239415627, 0.12502252594505583, 0.8168845435708411, 0.8310002319395042, 0.9093062704560771, 1.355855531742695, 0.8689845988463091, 0.8404781298720289, 0.8757074938624982, 0.8508209580080602], [-1.2130041274365309, 0.006277443316772918, -0.02296839834298708, -0.0775043851731705, -0.03739763948794392, 0.9215026407188154, 0.9293911371482926, 0.9466170594204915, 0.8689845988462466, 1.6371355220719086, 0.9248973513473008, 0.9250483122440727, 0.958321770482312], [-1.0475998180657249, 0.0036268981508073596, 0.016994777864941277, -0.15196091487426788, -0.21169351982919418, 0.9742687839193446, 0.9590871948559468, 0.8812320912916757, 0.8404781298719761, 0.9248973513473041, 1.7486700208658854, 0.9183379726071977, 0.9587707581881107], [-0.9844294125558796, 0.002737026893782018, -0.12002530984659336, -0.12564863576228055, -0.08326221453342007, 0.937844328978154, 0.9512384608270487, 0.9188567764997632, 0.8757074938624566, 0.9250483122440879, 0.9183379726072083, 4.820531403857244, 0.9140393747932003], [-1.299589701477143, 0.007997117118404175, 0.0034842094851625276, -0.04904475851315889, -0.3533970750654865, 0.940197941138851, 0.9033725655715539, 0.9449280848305637, 0.850820958007973, 0.9583217704822847, 0.9587707581880833, 0.9140393747931599, 12.673218796960764]], "dof": 1106, "t90": 1.646232518489445, "mse": 69.60971796592261, "age_min": 25.0, "age_max": 92.0, "parties": ["自民", "中道", "参政", "共産", "国民", "維新", "れいわ", "みらい"]};
+
+// ── パレット ────────────────────────────────────────────────────────────
+const PAL_STATUS = ["#2563eb","#d97706","#16a34a"];
+const PAL_PARTY  = ["#dc2626","#2563eb","#16a34a","#f59e0b","#8b5cf6","#ef4444","#0ea5e9","#ec4899","#94a3b8"];
+const PAL_GENDER = ["#3b82f6","#f43f5e"];
+
+// ── Fig.1 Scatter: age vs voteshare ──────────────────────────────────────
+(function(){
+  const wins  = SCATTER.filter(d=>d.win===1);
+  const loses = SCATTER.filter(d=>d.win===0);
+  const jitter = () => (Math.random()-0.5)*0.6;
+  new Chart(document.getElementById("scatterAge"),{
+    type:"scatter",
+    data:{
+      datasets:[
+        {
+          type:"line",
+          label:"回帰直線（age単回帰）",
+          data:[
+            {x:REGLINE.xmin, y:REGLINE.intercept + REGLINE.slope*REGLINE.xmin},
+            {x:REGLINE.xmax, y:REGLINE.intercept + REGLINE.slope*REGLINE.xmax}
+          ],
+          borderColor:"#111827",
+          borderWidth:2,
+          pointRadius:0,
+          fill:false,
+          order:0,
+        },
+        {
+          label:"当選",
+          data: wins.map(d=>({x:d.age+jitter(),y:d.vs})),
+          backgroundColor:"rgba(37,99,235,0.45)",
+          pointRadius:3,
+          order:1,
+        },
+        {
+          label:"落選",
+          data: loses.map(d=>({x:d.age+jitter(),y:d.vs})),
+          backgroundColor:"rgba(220,38,38,0.30)",
+          pointRadius:2.5,
+          order:2,
+        }
+      ]
+    },
+    options:{
+      animation:false,
+      plugins:{legend:{position:"top"}},
+      scales:{
+        x:{title:{display:true,text:"年齢（歳）"}},
+        y:{title:{display:true,text:"得票率（%）"}}
+      }
+    }
+  });
+})();
+
+// ── Fig.1d Scatter: 新現元別（age vs voteshare, 群別単回帰）────────────────
+(function(){
+  var sKeys  = ["現職","元職","新人"];
+  var sTest  = [
+    function(d){return d.sc===1;},
+    function(d){return d.sc===2;},
+    function(d){return d.sc!==1&&d.sc!==2;},
+  ];
+  var BG_COLS = ["rgba(37,99,235,0.40)","rgba(217,119,6,0.40)","rgba(22,163,74,0.35)"];
+  var BD_COLS = ["#2563eb","#d97706","#16a34a"];
+  var jitter  = function(){return (Math.random()-0.5)*0.6;};
+  var datasets = [];
+  // 群別回帰直線
+  sKeys.forEach(function(k,i){
+    var rl = STATUS_RL[k];
+    if(rl && rl.slope !== undefined){
+      datasets.push({
+        type:"line",
+        label: k + " 回帰直線",
+        data:[{x:rl.xmin, y:rl.intercept+rl.slope*rl.xmin},
+              {x:rl.xmax, y:rl.intercept+rl.slope*rl.xmax}],
+        borderColor: BD_COLS[i], borderWidth:2,
+        pointRadius:0, fill:false, order:0,
+      });
+    }
+  });
+  // 散布点
+  sKeys.forEach(function(k,i){
+    var rl  = STATUS_RL[k];
+    var pts = SCATTER.filter(sTest[i]).map(function(d){return {x:d.age+jitter(),y:d.vs};});
+    datasets.push({
+      label: k + (rl ? " (N="+rl.n+")" : ""),
+      data: pts, backgroundColor: BG_COLS[i], pointRadius: 3, order: 1+i,
+    });
+  });
+  new Chart(document.getElementById("scatterStatusGroup"),{
+    type:"scatter",
+    data:{datasets:datasets},
+    options:{
+      animation:false,
+      plugins:{legend:{position:"top"}},
+      scales:{
+        x:{title:{display:true,text:"年齢（歳）"}},
+        y:{title:{display:true,text:"得票率（%）"}}
+      }
+    }
+  });
+})();
+
+// ── Fig.A 性別 (female 0/1) vs 得票率 単回帰 ─────────────────────────────
+(function(){
+  var jitter = function(){return (Math.random()-0.5)*0.15;};
+  var males   = SCATTER.filter(function(d){return d.gender!=="female";});
+  var females = SCATTER.filter(function(d){return d.gender==="female";});
+  new Chart(document.getElementById("scatterFemaleUni"),{
+    type:"scatter",
+    data:{
+      datasets:[
+        {  // 平均マーカー ◆（男性/女性それぞれの平均得票率）
+          type:"scatter",
+          label:"平均",
+          data: FIG_A_MEANS,
+          backgroundColor:"#fbbf24",
+          borderColor:"#111827",
+          borderWidth:1.5,
+          pointStyle:"rectRot",
+          pointRadius:11,
+          pointHoverRadius:13,
+          order:-1,
+        },
+        {  // 回帰直線
+          type:"line",
+          label:"回帰直線",
+          data:[{x:FEM_UNI.xmin, y:FEM_UNI.intercept+FEM_UNI.slope*FEM_UNI.xmin},
+                {x:FEM_UNI.xmax, y:FEM_UNI.intercept+FEM_UNI.slope*FEM_UNI.xmax}],
+          borderColor:"#111827", borderWidth:2, pointRadius:0, fill:false, order:0,
+        },
+        {
+          label:"男性 (N="+FEM_UNI.n_male+")",
+          data: males.map(function(d){return {x:0+jitter(),y:d.vs};}),
+          backgroundColor:"rgba(59,130,246,0.35)", pointRadius:2.5, order:1,
+        },
+        {
+          label:"女性 (N="+FEM_UNI.n_female+")",
+          data: females.map(function(d){return {x:1+jitter(),y:d.vs};}),
+          backgroundColor:"rgba(244,63,94,0.40)", pointRadius:2.5, order:2,
+        }
+      ]
+    },
+    options:{
+      animation:false,
+      plugins:{legend:{position:"top"}},
+      scales:{
+        x:{min:-0.5,max:1.5,title:{display:true,text:"female (0=男 / 1=女)"},
+           ticks:{callback:function(v){return v===0?"男(0)":v===1?"女(1)":"";},stepSize:1}},
+        y:{title:{display:true,text:"得票率（%）"}}
+      }
+    },
+    plugins:[{
+      id:"meanFemA",
+      afterDraw:function(chart){
+        var ctx=chart.ctx, xSc=chart.scales.x, ySc=chart.scales.y;
+        var cats=[
+          {xv:0, mean:GENDER.mean_vs[0], color:"#1d4ed8"},
+          {xv:1, mean:GENDER.mean_vs[1], color:"#be123c"}
+        ];
+        ctx.save(); ctx.lineWidth=4;
+        ctx.font="bold 11px sans-serif"; ctx.textAlign="center";
+        cats.forEach(function(cat){
+          var xPx=xSc.getPixelForValue(cat.xv), yPx=ySc.getPixelForValue(cat.mean);
+          var x1=xSc.getPixelForValue(cat.xv-0.2), x2=xSc.getPixelForValue(cat.xv+0.2);
+          ctx.strokeStyle=cat.color;
+          ctx.beginPath(); ctx.moveTo(x1,yPx); ctx.lineTo(x2,yPx); ctx.stroke();
+          ctx.fillStyle='#111';
+          ctx.fillText(cat.mean.toFixed(2)+"%", xPx, yPx-10);
+        });
+        ctx.restore();
+      }
+    }]
+  });
+  document.getElementById("eqFemale").textContent = FEM_UNI.eq;
+})();
+
+// ── Fig.B 新現元 (status_code 0/1/2) vs 得票率 単回帰 ────────────────────
+(function(){
+  var jitter  = function(){return (Math.random()-0.5)*0.18;};
+  var sColors = ["rgba(22,163,74,0.35)","rgba(37,99,235,0.40)","rgba(217,119,6,0.40)"];
+  var sLabels = ["新人(0)","現職(1)","元職(2)"];
+  var sTests  = [
+    function(d){return d.sc===0;},
+    function(d){return d.sc===1;},
+    function(d){return d.sc===2;},
+  ];
+  var datasets = [];
+  // 平均マーカー ◆（各新現元カテゴリの平均得票率）
+  datasets.push({
+    type:"scatter",
+    label:"平均",
+    data: FIG_B_MEANS,
+    backgroundColor:"#fbbf24",
+    borderColor:"#111827",
+    borderWidth:1.5,
+    pointStyle:"rectRot",
+    pointRadius:11,
+    pointHoverRadius:13,
+    order:-1,
+  });
+  sLabels.forEach(function(lbl,i){
+    var pts = SCATTER.filter(sTests[i]).map(function(d){return {x:i+jitter(),y:d.vs};});
+    datasets.push({
+      label: lbl + " (N="+pts.length+")",
+      data: pts, backgroundColor: sColors[i], pointRadius:2.5, order:1+i,
+    });
+  });
+  new Chart(document.getElementById("scatterStatusUni"),{
+    type:"scatter",
+    data:{datasets:datasets},
+    options:{
+      animation:false,
+      plugins:{legend:{position:"top"}},
+      scales:{
+        x:{min:-0.5,max:2.5,title:{display:true,text:"status_code (0=新人 / 1=現職 / 2=元職)"},
+           ticks:{callback:function(v){return v===0?"新人(0)":v===1?"現職(1)":v===2?"元職(2)":"";} ,stepSize:1}},
+        y:{title:{display:true,text:"得票率（%）"}}
+      }
+    },
+    plugins:[{
+      id:"meanStatB",
+      afterDraw:function(chart){
+        var ctx=chart.ctx, xSc=chart.scales.x, ySc=chart.scales.y;
+        // STATUS.mean_vs: [0]=現職, [1]=元職, [2]=新人 → x: 0=新人,1=現職,2=元職
+        var cats=[
+          {xv:0, mean:STATUS.mean_vs[2], color:"rgba(22,163,74,1)"},
+          {xv:1, mean:STATUS.mean_vs[0], color:"rgba(37,99,235,1)"},
+          {xv:2, mean:STATUS.mean_vs[1], color:"rgba(217,119,6,1)"}
+        ];
+        ctx.save(); ctx.lineWidth=4;
+        ctx.font="bold 11px sans-serif"; ctx.textAlign="center";
+        cats.forEach(function(cat){
+          var xPx=xSc.getPixelForValue(cat.xv), yPx=ySc.getPixelForValue(cat.mean);
+          var x1=xSc.getPixelForValue(cat.xv-0.25), x2=xSc.getPixelForValue(cat.xv+0.25);
+          ctx.strokeStyle=cat.color;
+          ctx.beginPath(); ctx.moveTo(x1,yPx); ctx.lineTo(x2,yPx); ctx.stroke();
+          ctx.fillStyle='#111';
+          ctx.fillText(cat.mean.toFixed(2)+"%", xPx, yPx-10);
+        });
+        ctx.restore();
+      }
+    }]
+  });
+})();
+
+// ── Fig.C 政党別ダミー vs 得票率 単回帰（散布図 + 係数テーブル）────────────
+(function(){
+  // 散布図: x 軸 = 政党インデックス (0〜7)、y = 得票率
+  var jitter  = function(){return (Math.random()-0.5)*0.18;};
+  var BD_COLS = PAL_PARTY;
+  var BG_COLS = [
+    "rgba(220,38,38,0.28)","rgba(37,99,235,0.28)","rgba(22,163,74,0.28)",
+    "rgba(245,158,11,0.28)","rgba(139,92,246,0.28)","rgba(239,68,68,0.28)",
+    "rgba(14,165,233,0.28)","rgba(236,72,153,0.28)"
+  ];
+  var datasets = [];
+  // 平均マーカー ◆（各政党の平均得票率）
+  datasets.push({
+    type:"scatter",
+    label:"平均",
+    data: FIG_C_MEANS,
+    backgroundColor:"#fbbf24",
+    borderColor:"#111827",
+    borderWidth:1.5,
+    pointStyle:"rectRot",
+    pointRadius:11,
+    pointHoverRadius:13,
+    order:-1,
+  });
+  // 散布点（ダミー=1 の候補者をその政党の x=idx に）
+  PARTY_UNI.forEach(function(r,i){
+    var pts = SCATTER.filter(function(d){return d.party===r.name;})
+                     .map(function(d){return {x:i+jitter(),y:d.vs};});
+    datasets.push({
+      label:r.name+" (N="+r.n+")",
+      data:pts, backgroundColor:BG_COLS[i], pointRadius:2.5, order:1+i,
+    });
+  });
+  new Chart(document.getElementById("scatterPartyUni"),{
+    type:"scatter",
+    data:{datasets:datasets},
+    options:{
+      animation:false,
+      plugins:{legend:{position:"right",labels:{font:{size:10},boxWidth:12}}},
+      scales:{
+        x:{
+          min:-0.6,max:PARTY_UNI.length-0.4,
+          title:{display:true,text:"政党（各政党ダミー）"},
+          ticks:{callback:function(v){
+            var idx=Math.round(v);
+            return (idx>=0&&idx<PARTY_UNI.length)?PARTY_UNI[idx].name:"";
+          },stepSize:1}
+        },
+        y:{title:{display:true,text:"得票率（%）"}}
+      }
+    },
+    plugins:[{
+      id:"meanPartyC",
+      afterDraw:function(chart){
+        var ctx=chart.ctx, xSc=chart.scales.x, ySc=chart.scales.y;
+        ctx.save(); ctx.lineWidth=4;
+        ctx.font="bold 10px sans-serif"; ctx.textAlign="center";
+        PARTY_UNI.forEach(function(r,i){
+          var mean=PARTY.mean_vs[i];
+          var xPx=xSc.getPixelForValue(i), yPx=ySc.getPixelForValue(mean);
+          var x1=xSc.getPixelForValue(i-0.2), x2=xSc.getPixelForValue(i+0.2);
+          ctx.strokeStyle=BD_COLS[i];
+          ctx.beginPath(); ctx.moveTo(x1,yPx); ctx.lineTo(x2,yPx); ctx.stroke();
+          ctx.fillStyle='#111';
+          ctx.fillText(mean.toFixed(2)+"%", xPx, yPx-8);
+        });
+        ctx.restore();
+      }
+    }]
+  });
+
+  // 係数テーブル生成
+  var html = '<div class="table-wrap"><table class="reg-table">'
+    + '<thead><tr><th>政党</th><th>N（所属）</th><th>切片 (非所属平均)</th>'
+    + '<th>slope (所属−非所属差)</th><th>R²</th></tr></thead><tbody>';
+  PARTY_UNI.forEach(function(r){
+    html += '<tr><td class="td-var">'+r.name+'</td>'
+      +'<td class="td-num">'+r.n+'</td>'
+      +'<td class="td-num">'+r.intercept.toFixed(3)+'</td>'
+      +'<td class="td-num" style="font-weight:700">'+r.slope.toFixed(3)+'</td>'
+      +'<td class="td-num">'+r.R2.toFixed(4)+'</td></tr>';
+  });
+  html += '</tbody></table></div>'
+    + '<p style="font-size:0.78rem;color:#6b7280;margin-top:4px">'
+    + 'slope = 当該政党所属候補の得票率と非所属候補の得票率の差（多変量コントロールなし）</p>';
+  document.getElementById("partyUniTable").innerHTML = html;
+})();
+
+// ── Fig.2 経歴別 当選率 ────────────────────────────────────────────────
+new Chart(document.getElementById("barStatusWin"),{
+  type:"bar",
+  data:{
+    labels: STATUS.labels,
+    datasets:[{
+      label:"当選率(%)",
+      data: STATUS.win_rate,
+      backgroundColor: PAL_STATUS,
+    }]
+  },
+  options:{
+    plugins:{legend:{display:false}},
+    scales:{y:{min:0,max:100,title:{display:true,text:"%"}}}
+  }
+});
+
+// ── Fig.4 政党別 当選率 ────────────────────────────────────────────────
+new Chart(document.getElementById("barPartyWin"),{
+  type:"bar",
+  data:{
+    labels: PARTY.labels,
+    datasets:[{
+      label:"当選率(%)",
+      data: PARTY.win_rate,
+      backgroundColor: PAL_PARTY,
+    }]
+  },
+  options:{
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{font:{size:11}}},
+      y:{min:0,max:100,title:{display:true,text:"%"}}
+    }
+  }
+});
+
+// ── Fig.6 性別 当選率 ──────────────────────────────────────────────────
+new Chart(document.getElementById("barGenderWin"),{
+  type:"bar",
+  data:{
+    labels: GENDER.labels,
+    datasets:[{
+      label:"当選率(%)",
+      data: GENDER.win_rate,
+      backgroundColor: PAL_GENDER,
+    }]
+  },
+  options:{
+    plugins:{legend:{display:false}},
+    scales:{y:{min:0,max:100,title:{display:true,text:"%"}}}
+  }
+});
+
+// ── 票読みシミュレータ ────────────────────────────────────────────────────
+(function(){
+  function calcSim(){
+    var age      = parseFloat(document.getElementById("simAge").value) || 50;
+    var female   = parseInt(document.getElementById("simGender").value, 10);
+    var status   = parseInt(document.getElementById("simStatus").value, 10);
+    var partyVal = document.getElementById("simParty").value;
+    var noParty  = document.getElementById("simNoParty").checked;
+    var incumbent = (status === 1) ? 1 : 0;
+    var former    = (status === 2) ? 1 : 0;
+    // x ベクトル: VAR_NAMES 順 = [const, age, female, incumbent, former, 各政党ダミー]
+    var x = [1, age, female, incumbent, former];
+    SIM.parties.forEach(function(p){
+      x.push((noParty || partyVal !== p) ? 0 : 1);
+    });
+    // pred = x·beta
+    var pred = 0;
+    for (var i = 0; i < x.length; i++) { pred += x[i] * SIM.beta[i]; }
+    // varMean = xᵀ Cov x
+    var varMean = 0;
+    for (var i = 0; i < x.length; i++) {
+      for (var j = 0; j < x.length; j++) {
+        varMean += x[i] * SIM.cov[i][j] * x[j];
+      }
+    }
+    var se  = Math.sqrt(Math.max(varMean + SIM.mse, 0));
+    var lo  = pred - SIM.t90 * se;
+    var hi  = pred + SIM.t90 * se;
+    var rng = (hi - lo).toFixed(2);
+    // CI バー（基準 0〜30%）
+    var base = 30;
+    var loP  = (Math.min(Math.max(lo / base * 100, 0), 100)).toFixed(3);
+    var wiP  = (Math.min(Math.max((hi - lo) / base * 100, 0), 100)).toFixed(3);
+    var prP  = (Math.min(Math.max(pred / base * 100, 0), 100)).toFixed(3);
+    document.getElementById("simResult").innerHTML =
+      '<div style="font-size:1.5rem;font-weight:800;color:#4c1d95;margin-bottom:6px">'
+      + '予想得票率: <span style="font-size:2rem">' + pred.toFixed(2) + '%</span></div>'
+      + '<div style="font-size:0.95rem;color:#374151;margin-bottom:10px">'
+      + '90% 予測区間: [' + lo.toFixed(2) + '%, ' + hi.toFixed(2) + '%]'
+      + '&nbsp;（幅: ' + rng + ' pp）</div>'
+      + '<div style="background:#e9d5ff;border-radius:6px;height:16px;position:relative;overflow:hidden;margin-bottom:4px">'
+      + '<div style="position:absolute;left:' + loP + '%;width:' + wiP + '%;height:100%;background:#7c3aed55;"></div>'
+      + '<div style="position:absolute;left:' + prP + '%;width:3px;height:100%;background:#4c1d95;transform:translateX(-1px)"></div>'
+      + '</div>'
+      + '<div style="font-size:0.78rem;color:#6b7280">バー幅 = 90%予測区間、縦線 = 予測点（目盛り: 0〜30%）</div>';
+  }
+  ["simAge","simGender","simStatus","simParty"].forEach(function(id){
+    var el = document.getElementById(id);
+    el.addEventListener("input",  calcSim);
+    el.addEventListener("change", calcSim);
+  });
+  document.getElementById("simNoParty").addEventListener("change", calcSim);
+  // 初期計算
+  calcSim();
+})();
+
+
+</script>
+</body>
+</html>
