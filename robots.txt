@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://yusukesakai0925.github.io/densuke-web/sitemap.xml
