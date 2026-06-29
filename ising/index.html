@@ -672,10 +672,11 @@ document.getElementById('btnMarkMode').addEventListener('click', function() {
   // 凡例マーク
   const a = document.getElementById('legMarkAgree');
   const o = document.getElementById('legMarkOppose');
-  // 世論モード=色付き○/✕札、磁石モード=単色の縦棒（棒磁石）。どちらも「＝」の左辺を埋める
-  function styleMark(el, ch, col) {
+  // 世論モード=色付き○/✕札、磁石モード=色付き四角の中に↑/↓。どちらも「＝」の左辺を埋める
+  function styleMark(el, ch, arrow, col) {
     el.style.background = col;
     el.style.color = '#fff';
+    el.style.fontWeight = '700';
     if (opinion) {
       el.textContent = ch;
       el.style.display = '';
@@ -683,17 +684,21 @@ document.getElementById('btnMarkMode').addEventListener('click', function() {
       el.style.height = '';
       el.style.padding = '0 5px';
       el.style.borderRadius = '4px';
+      el.style.fontSize = '';
     } else {
-      el.textContent = '';
-      el.style.display = 'inline-block';
-      el.style.width = '8px';
-      el.style.height = '22px';
+      el.textContent = arrow;
+      el.style.display = 'inline-flex';
+      el.style.alignItems = 'center';
+      el.style.justifyContent = 'center';
+      el.style.width = '20px';
+      el.style.height = '20px';
       el.style.padding = '0';
-      el.style.borderRadius = '3px';
+      el.style.borderRadius = '4px';
+      el.style.fontSize = '0.95em';
     }
   }
-  styleMark(a, '○', CONFIG.COLOR_AGREE);
-  styleMark(o, '✕', CONFIG.COLOR_OPPOSE);
+  styleMark(a, '○', '↑', CONFIG.COLOR_AGREE);
+  styleMark(o, '✕', '↓', CONFIG.COLOR_OPPOSE);
   // 凡例テキスト
   document.getElementById('legTextAgree').textContent  = opinion
     ? '＝ 賛成 (+1)' : '＝ 磁力が上向き (+1)';
