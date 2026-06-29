@@ -244,7 +244,7 @@
     <!-- 磁化バー -->
     <div class="mag-panel">
       <div class="mag-label-row">
-        <span class="mag-title" id="magTitle">世論の偏り（磁化 M）</span>
+        <span class="mag-title" id="magTitle">世論の偏り M</span>
         <span><span id="magValue">0.00</span><span id="magWord">　拮抗</span></span>
       </div>
       <div class="mag-bar-wrap">
@@ -319,7 +319,7 @@
       各人は<em>隣の4人の意見</em>に引っぱられ、毎ステップ「意見を変えるか」を確率で決めます。</p>
 
       <p>下のバーは、社会全体が賛成・反対のどちらへ傾いているかを表します。
-      この「<strong>世論の偏り</strong>」が、物理のイジング模型では「<strong>磁化 M</strong>」にあたります。</p>
+      この「<strong>世論の偏り</strong>」の大きさを、−1（全員が反対）〜 +1（全員が賛成）の数値 <strong>M</strong> で表しています。</p>
 
       <h3>🌡 温度 T を動かす</h3>
       <ul>
@@ -706,7 +706,7 @@ document.getElementById('btnMarkMode').addEventListener('click', function() {
     ? '＝ 反対 (−1)' : '＝ 磁力が下向き (−1)';
   // 磁化バー: 世論モード=「世論の偏り／賛成多数・反対多数」、磁石モード=「全体的な磁力／上向き・下向き」
   document.getElementById('magTitle').textContent = opinion
-    ? '世論の偏り（磁化 M）' : '全体的な磁力（磁化 M）';
+    ? '世論の偏り M' : '全体的な磁力 M';
   document.getElementById('axisNeg').textContent = opinion ? '← 反対多数 (−1)' : '← 磁力が下向き (−1)';
   document.getElementById('axisPos').textContent = opinion ? '賛成多数 (+1) →' : '磁力が上向き (+1) →';
   // 一括ボタン: 世論モード=「全員賛成/反対」、磁石モード=「全粒子上向き/下向き」
