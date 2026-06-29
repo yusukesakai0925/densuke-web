@@ -704,6 +704,9 @@ document.getElementById('btnMarkMode').addEventListener('click', function() {
     ? '世論の偏り（磁化 M）' : '全体的な磁力（磁化 M）';
   document.getElementById('axisNeg').textContent = opinion ? '← 反対多数 (−1)' : '← 磁力が下向き (−1)';
   document.getElementById('axisPos').textContent = opinion ? '賛成多数 (+1) →' : '磁力が上向き (+1) →';
+  // 一括ボタン: 世論モード=「全員賛成/反対」、磁石モード=「全粒子上向き/下向き」
+  document.getElementById('btnAllAgree').textContent  = opinion ? '🔴 全員賛成にそろえる' : '🔴 全粒子上向きにそろえる';
+  document.getElementById('btnAllOppose').textContent = opinion ? '🔵 全員反対にそろえる' : '🔵 全粒子下向きにそろえる';
   updateMagUI(calcMagnetization());  // 「賛成多数/反対多数」⇔「上向き/下向き」を即反映
 });
 
