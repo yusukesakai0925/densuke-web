@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>世論のイジング模型 ― 世論はなぜ急に動くのか</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+    background: #0f1117;
+    color: #e8eaf0;
+    height: 100vh;
+    overflow: hidden;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+  }
+  h1 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 2px;
+    color: #f0f4ff;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 0.82rem;
+    color: #8a8fa8;
+    margin-bottom: 8px;
+  }
+  .main-layout {
+    display: flex;
+    gap: 16px;
+    flex-wrap: nowrap;
+    justify-content: center;
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+  .right-col {
+    flex: 1 1 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 280px;
+    max-width: 480px;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  /* --- Canvas --- */
+  #isingCanvas {
+    display: block;
+    border: 2px solid #2a2d3e;
+    border-radius: 6px;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    /* 画面の縦に収める: 高さからタイトル・凡例・磁化バー分を差し引いた残りに正方形を収縮 */
+    max-height: calc(100vh - 230px);
+  }
+
+  /* --- 凡例 --- */
+  .legend {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    color: #a0a8c0;
+    padding: 6px 10px;
+    background: #1a1d2e;
+    border-radius: 6px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-sq {
+    width: 14px; height: 14px;
+    border-radius: 2px;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .sq-agree  { background: #e84545; }
+  .sq-oppose { background: #3a7bd5; }
+
+  /* --- 磁化バー --- */
+  .mag-panel {
+    background: #1a1d2e;
+    border-radius: 6px;
+    padding: 10px 14px;
+  }
+  .mag-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .mag-title { font-size: 0.85rem; color: #8a8fa8; }
+  #magValue { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+  #magWord  { font-size: 0.8rem; color: #a0a8c0; margin-left: 6px; }
+  .mag-bar-wrap {
+    position: relative;
+    height: 18px;
+    background: #2a2d3e;
+    border-radius: 9px;
+    overflow: hidden;
+  }
+  #magBar {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 50%;
+    width: 0;
+    transition: width 0.1s, left 0.1s, background 0.2s;
+    border-radius: 9px;
+  }
+  .mag-axis {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: #555a72;
+    margin-top: 3px;
+  }
+
+  /* --- コントロール --- */
+  .ctrl-panel {
+    background: #1a1d2e;
+    border-radius: 6px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .ctrl-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ctrl-row label {
+    font-size: 0.78rem;
+    color: #8a8fa8;
+    flex: 0 0 110px;
+    line-height: 1.3;
+  }
+  .ctrl-row input[type=range] {
+    flex: 1;
+    accent-color: #5b8dee;
+    cursor: pointer;
+  }
+  .ctrl-row .val-badge {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #c8d0f0;
+    flex: 0 0 44px;
+    text-align: right;
+  }
+
+  /* --- ボタン --- */
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    flex: 1 1 80px;
+    padding: 7px 10px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-primary   { background: #5b8dee; color: #fff; }
+  .btn-secondary { background: #2a2d3e; color: #c8d0f0; }
+  .btn-accent    { background: #e84545; color: #fff; }
+  .btn-accent2   { background: #3a7bd5; color: #fff; }
+
+  /* --- 教育テキスト --- */
+  .edu-panel {
+    background: #1a1d2e;
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    color: #b0b8d0;
+  }
+  .edu-panel h2 {
+    font-size: 0.92rem;
+    color: #f0f4ff;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #2a2d3e;
+    padding-bottom: 4px;
+  }
+  .edu-panel h3 {
+    font-size: 0.82rem;
+    color: #c8d0f0;
+    margin: 10px 0 3px;
+  }
+  .edu-panel ul {
+    padding-left: 1.2em;
+  }
+  .edu-panel li { margin-bottom: 4px; }
+  .disclaimer {
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: #12151f;
+    border-left: 3px solid #444a66;
+    border-radius: 0 4px 4px 0;
+    font-size: 0.75rem;
+    color: #6a7090;
+    line-height: 1.5;
+  }
+
+  /* --- FPS表示 --- */
+  .fps-row {
+    font-size: 0.7rem;
+    color: #444a66;
+    text-align: right;
+    padding: 0 2px;
+  }
+</style>
+</head>
+<body>
+
+<h1>世論のイジング模型</h1>
+<p class="subtitle">温度と磁場をいじって、世論が染まる・崩れるを手で確かめる</p>
+
+<div class="main-layout">
+  <!-- 左カラム: Canvas + 凡例 + 磁化 -->
+  <div class="left-col">
+    <canvas id="isingCanvas" width="840" height="840"></canvas>
+
+    <div class="legend">
+      <div class="legend-item">
+        <span id="legPerson1" style="font-size:1.2em">🧑</span>
+        <span id="legMarkAgree" style="background:#e84545;color:#fff;border-radius:4px;padding:0 5px;font-weight:700">○</span>
+        <span id="legTextAgree">＝ 賛成 (+1)</span>
+      </div>
+      <div class="legend-item">
+        <span id="legPerson2" style="font-size:1.2em">🧑</span>
+        <span id="legMarkOppose" style="background:#3a7bd5;color:#fff;border-radius:4px;padding:0 5px;font-weight:700">✕</span>
+        <span id="legTextOppose">＝ 反対 (−1)</span>
+      </div>
+    </div>
+
+    <!-- 磁化バー -->
+    <div class="mag-panel">
+      <div class="mag-label-row">
+        <span class="mag-title" id="magTitle">世論の偏り（磁化 M）</span>
+        <span><span id="magValue">0.00</span><span id="magWord">　拮抗</span></span>
+      </div>
+      <div class="mag-bar-wrap">
+        <div id="magBar"></div>
+      </div>
+      <div class="mag-axis">
+        <span id="axisNeg">← 反対多数 (−1)</span>
+        <span>中心 (0)</span>
+        <span id="axisPos">賛成多数 (+1) →</span>
+      </div>
+    </div>
+
+    <div class="fps-row" id="fpsLabel">— fps</div>
+  </div>
+
+  <!-- 右カラム: コントロール + 教育テキスト -->
+  <div class="right-col">
+
+    <!-- パラメータスライダー -->
+    <div class="ctrl-panel">
+      <div class="ctrl-row">
+        <label>🌡 温度 T<br><small>社会のゆらぎ</small></label>
+        <input type="range" id="sliderT" min="0.1" max="5.0" step="0.05" value="2.27">
+        <span class="val-badge" id="valT">2.27</span>
+      </div>
+      <div class="ctrl-row">
+        <label>📢 外部磁場 h<br><small>メディア圧力</small></label>
+        <input type="range" id="sliderH" min="-1.0" max="1.0" step="0.01" value="0">
+        <span class="val-badge" id="valH">0.00</span>
+      </div>
+      <div class="ctrl-row">
+        <label>⚡ 速度<br><small>1秒あたりの更新回数</small></label>
+        <input type="range" id="sliderSpeed" min="1" max="60" step="1" value="10">
+        <span class="val-badge" id="valSpeed">10</span>
+      </div>
+    </div>
+
+    <!-- 操作ボタン -->
+    <div class="ctrl-panel">
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnPlayPause">⏸ 一時停止</button>
+        <button class="btn btn-secondary" id="btnReset">🔀 ランダム初期化</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-accent" id="btnAllAgree">🔴 全員賛成にそろえる</button>
+        <button class="btn btn-accent2" id="btnAllOppose">🔵 全員反対にそろえる</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="btnMarkMode">🧲 棒磁石アイコンに切替</button>
+      </div>
+    </div>
+
+    <!-- 教育テキスト -->
+    <div class="edu-panel">
+      <h2>遊び方と見どころ</h2>
+
+      <p>画面の各マスは1人の人です。
+      <strong>赤い○札</strong>を掲げていれば<strong>賛成</strong>、<strong>青い✕札</strong>なら<strong>反対</strong>。
+      各人は<em>隣の4人の意見</em>に引っぱられ、毎ステップ「意見を変えるか」を確率で決めます。
+      下の磁化バーは、社会全体がどちらへ傾いているか（世論の偏り M）を表します。</p>
+
+      <h3>🌡 温度 T を動かす</h3>
+      <ul>
+        <li><strong>下げる</strong>と周りに同調しやすくなり、世論が一色に染まっていきます。</li>
+        <li><strong>上げる</strong>と一人ひとりが周囲に流されず動き、賛成・反対がモザイク状に混ざります。</li>
+        <li><strong>臨界温度 Tc ≈ 2.27</strong> 付近では、小さなきっかけで世論が一気に転ぶ <em>相転移</em> が見られます。</li>
+      </ul>
+
+      <h3>📢 外部磁場 h を動かす</h3>
+      <ul>
+        <li>全員を一方向へ押す外力です。メディアの大合唱や強い「空気」に当たります。</li>
+        <li>温度を下げてから弱い磁場をかけると、社会がほぼ一瞬で染まりきる様子を試せます。</li>
+      </ul>
+
+      <h3>🔘 ボタン</h3>
+      <ul>
+        <li><strong>ランダム初期化</strong>でバラバラに戻す（押すたび、賛成・反対どちらに転ぶかは毎回変わります）。</li>
+        <li><strong>全員賛成／全員反対</strong>でそろえた状態から温度を上げると、崩れていく様子も見られます。</li>
+      </ul>
+
+      <div class="disclaimer">
+        ⚠️ <strong>このデモについて</strong>：2次元イジング模型という物理モデルを、世論形成の<em>比喩</em>として動かしたものです。
+        現実の社会は格子状ではなく、人は確率ではなく戦略的に動き、情報も局所的でなく広く伝わります。
+        「こういう傾向がある」という直感をつかむための道具で、現実の世論を数値で予測するものではありません。
+      </div>
+    </div>
+
+  </div><!-- right-col -->
+</div><!-- main-layout -->
+
+<script>
+// ============================================================
+// イジング模型シミュレーション
+// ============================================================
+const CONFIG = {
+  N: 30,          // 格子サイズ (N×N)
+  J: 1.0,         // 交換相互作用（固定）
+  T_INIT: 2.27,   // 初期温度（臨界温度付近）
+  H_INIT: 0.0,    // 初期外部磁場
+  SPEED_INIT: 10, // 初期スイープ数/秒
+  // 色: 賛成=赤系、反対=青系
+  COLOR_AGREE:  '#e84545',
+  COLOR_OPPOSE: '#3a7bd5',
+  // 磁化バーの色
+  BAR_AGREE:  '#e84545',
+  BAR_OPPOSE: '#3a7bd5',
+};
+
+// --- 状態変数 ---
+const N = CONFIG.N;
+let spins = new Int8Array(N * N);  // +1 or -1
+let T = CONFIG.T_INIT;
+let h = CONFIG.H_INIT;
+let sweepsPerSec = CONFIG.SPEED_INIT;  // 1秒あたりのスイープ回数（時間基準）
+let sweepAcc = 0;       // 端数スイープの繰り越し
+let lastFrameNow = 0;   // 前フレーム時刻（経過時間の算出用）
+let running = true;
+let rafId = null;
+
+// --- パフォーマンス: 絵文字先焼き ---
+const canvas = document.getElementById('isingCanvas');
+const ctx = canvas.getContext('2d');
+const CELL = canvas.width / N;  // 28px when 840/30
+
+// 背景タイル色（半透明で向きを色でも補助）
+const BG_AGREE  = 'rgba(232,69,69,0.20)';
+const BG_OPPOSE = 'rgba(58,123,213,0.20)';
+
+// 絵文字をオフスクリーンCanvasに先焼き（毎フレームfillTextコストを排除しblit化）
+const offAgree  = document.createElement('canvas');
+const offOppose = document.createElement('canvas');
+offAgree.width  = offAgree.height  = CELL;
+offOppose.width = offOppose.height = CELL;
+// 人が「賛成＝赤○札」「反対＝青✕札」を掲げている絵をセルに先焼き。
+// 札の色＋記号で意見を一目で判別。足元に影を落として擬似的に立体感を出す。
+function renderPerson(ctx, boardColor, mark) {
+  const S = CELL;
+  ctx.clearRect(0, 0, S, S);
+
+  // ① 足元の影（楕円）＝少し浮いて見える立体感
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.28)';
+  ctx.beginPath();
+  ctx.ellipse(S * 0.5, S * 0.93, S * 0.34, S * 0.09, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // ② 人の本体。上半分に配置して下に札の場所を空ける
+  ctx.font = `${S * 0.66}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🧑', S * 0.5, S * 0.38);
+
+  // ③ 掲げた札（角丸の色札＋白い記号 ○/✕）
+  const bw = S * 0.7, bh = S * 0.42;
+  const bx = (S - bw) / 2, by = S * 0.5;
+  const rad = S * 0.1;
+  ctx.save();
+  // 札の影
+  ctx.fillStyle = 'rgba(0,0,0,0.22)';
+  roundRect(ctx, bx + S * 0.04, by + S * 0.04, bw, bh, rad);
+  ctx.fill();
+  // 札本体
+  ctx.fillStyle = boardColor;
+  roundRect(ctx, bx, by, bw, bh, rad);
+  ctx.fill();
+  // 記号
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `bold ${S * 0.34}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(mark, S * 0.5, by + bh * 0.54);
+  ctx.restore();
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// 棒磁石アイコン（磁石モード）。1本の棒を1色で塗る——赤一色＝賛成 / 青一色＝反対。
+// 赤青の塗り分けは色での識別がしづらいため、棒全体を単色にして一目で見分けられるようにした。
+// 記事のイジング模型（原子＝棒磁石のスピン）の比喩に直接重ねられる。
+function renderMagnet(ctx, spin) {
+  const S = CELL;
+  ctx.clearRect(0, 0, S, S);
+
+  const color = spin === 1 ? CONFIG.COLOR_AGREE : CONFIG.COLOR_OPPOSE;
+
+  const bw = S * 0.34, bh = S * 0.80;
+  const bx = (S - bw) / 2, by = (S - bh) / 2;
+  const rad = S * 0.08;
+
+  // ① 影＝少し浮いて見える立体感
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  roundRect(ctx, bx + S * 0.035, by + S * 0.05, bw, bh, rad);
+  ctx.fill();
+  ctx.restore();
+
+  // ② 棒磁石本体（単色の角丸長方形）
+  ctx.fillStyle = color;
+  roundRect(ctx, bx, by, bw, bh, rad);
+  ctx.fill();
+}
+
+// 表記モード: 'opinion'=人＋○/✕（世論） / 'magnet'=棒磁石（物理）
+let markMode = 'opinion';
+const MARKS = { opinion: { agree: '○', oppose: '✕' } };
+
+function renderBoards() {
+  const ca = offAgree.getContext('2d');
+  const co = offOppose.getContext('2d');
+  if (markMode === 'magnet') {
+    renderMagnet(ca,  1);  // +1 賛成＝上向き（赤）
+    renderMagnet(co, -1);  // -1 反対＝下向き（青）
+  } else {
+    const m = MARKS.opinion;
+    renderPerson(ca, CONFIG.COLOR_AGREE,  m.agree); // +1 賛成
+    renderPerson(co, CONFIG.COLOR_OPPOSE, m.oppose); // -1 反対
+  }
+}
+renderBoards();
+
+// --- 初期化 ---
+function initRandom() {
+  for (let i = 0; i < N * N; i++) {
+    spins[i] = Math.random() < 0.5 ? 1 : -1;
+  }
+}
+
+function initAll(val) {
+  spins.fill(val);
+}
+
+// --- インデックスヘルパー ---
+function idx(r, c) {
+  // 周期境界条件（トーラス）
+  return ((r + N) % N) * N + ((c + N) % N);
+}
+
+// --- 1スイープ = N*N 回のメトロポリス試行 ---
+function sweep() {
+  const NN = N * N;
+  for (let k = 0; k < NN; k++) {
+    // ランダムにセルを選ぶ
+    const pos = (Math.random() * NN) | 0;
+    const r = (pos / N) | 0;
+    const c = pos % N;
+    const si = spins[pos];
+
+    // 近傍4スピンの和（周期境界）
+    const sumNeighbors =
+      spins[idx(r - 1, c)] +
+      spins[idx(r + 1, c)] +
+      spins[idx(r, c - 1)] +
+      spins[idx(r, c + 1)];
+
+    // エネルギー変化 ΔE = 2 * s_i * (J * Σ近傍 + h)
+    const dE = 2 * si * (CONFIG.J * sumNeighbors + h);
+
+    // メトロポリス受理規則
+    if (dE <= 0) {
+      spins[pos] = -si;
+    } else {
+      // T=0 のゼロ割を避けるガード（T < 1e-9 なら拒否）
+      if (T > 1e-9 && Math.random() < Math.exp(-dE / T)) {
+        spins[pos] = -si;
+      }
+    }
+  }
+}
+
+// --- 磁化 M = 平均スピン ---
+function calcMagnetization() {
+  let sum = 0;
+  for (let i = 0; i < N * N; i++) sum += spins[i];
+  return sum / (N * N);
+}
+
+// --- Canvas 描画（人の絵文字をオフスクリーンからblit） ---
+// 毎フリップ描画禁止: そのフレーム分のスイープ完了後にまとめて全描画（frame()内）
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      const spin = spins[r * N + c];
+      const x = c * CELL;
+      const y = r * CELL;
+      // 背景タイル: 暖色=賛成 / 寒色=反対（色でも向きを補助）
+      ctx.fillStyle = spin === 1 ? BG_AGREE : BG_OPPOSE;
+      ctx.fillRect(x, y, CELL, CELL);
+      // 人＋札: 赤○=賛成 / 青✕=反対（先焼きオフスクリーンをblit）
+      ctx.drawImage(spin === 1 ? offAgree : offOppose, x, y);
+    }
+  }
+}
+
+// --- 磁化 UI 更新 ---
+const magValueEl = document.getElementById('magValue');
+const magWordEl  = document.getElementById('magWord');
+const magBarEl   = document.getElementById('magBar');
+
+function updateMagUI(M) {
+  magValueEl.textContent = M.toFixed(3);
+
+  const magnet = (markMode === 'magnet');
+  let word, color;
+  if (M > 0.6)       { word = magnet ? '磁力が上向き 🔴'   : '賛成多数 🔴'; color = CONFIG.BAR_AGREE; }
+  else if (M > 0.2)  { word = magnet ? '磁力がやや上向き'   : 'やや賛成多数'; color = CONFIG.BAR_AGREE; }
+  else if (M > -0.2) { word = '拮抗';                                color = '#888ea8'; }
+  else if (M > -0.6) { word = magnet ? '磁力がやや下向き'   : 'やや反対多数'; color = CONFIG.BAR_OPPOSE; }
+  else               { word = magnet ? '磁力が下向き 🔵'   : '反対多数 🔵'; color = CONFIG.BAR_OPPOSE; }
+
+  magWordEl.textContent = '　' + word;
+  magValueEl.style.color = color;
+
+  // バー: 中央(50%)を0として左右に伸ばす
+  const pct = Math.abs(M) * 50;   // 0〜50%
+  magBarEl.style.width  = pct + '%';
+  magBarEl.style.background = color;
+  if (M >= 0) {
+    magBarEl.style.left = '50%';
+  } else {
+    magBarEl.style.left = (50 - pct) + '%';
+  }
+}
+
+// --- FPS ---
+let lastTime = performance.now();
+let frameCount = 0;
+const fpsLabel = document.getElementById('fpsLabel');
+
+// --- メインループ ---
+function frame(now) {
+  if (running) {
+    if (!lastFrameNow) lastFrameNow = now;
+    const dt = Math.min(now - lastFrameNow, 250) / 1000;  // 経過秒（タブ復帰時の暴走防止に上限）
+    sweepAcc += sweepsPerSec * dt;
+    let n = Math.floor(sweepAcc);
+    if (n > 0) { sweepAcc -= n; for (let s = 0; s < n; s++) sweep(); }
+  } else {
+    sweepAcc = 0;  // 停止中は端数を持ち越さない
+  }
+  lastFrameNow = now;
+  draw();
+  const M = calcMagnetization();
+  updateMagUI(M);
+
+  // FPS（30フレームごとに更新）
+  frameCount++;
+  if (frameCount >= 30) {
+    const fps = (30000 / (now - lastTime)).toFixed(1);
+    fpsLabel.textContent = fps + ' fps';
+    lastTime = now;
+    frameCount = 0;
+  }
+
+  rafId = requestAnimationFrame(frame);
+}
+
+// --- スライダーのイベント ---
+document.getElementById('sliderT').addEventListener('input', function() {
+  T = parseFloat(this.value);
+  document.getElementById('valT').textContent = T.toFixed(2);
+});
+document.getElementById('sliderH').addEventListener('input', function() {
+  h = parseFloat(this.value);
+  document.getElementById('valH').textContent = h.toFixed(2);
+});
+document.getElementById('sliderSpeed').addEventListener('input', function() {
+  sweepsPerSec = parseInt(this.value);
+  document.getElementById('valSpeed').textContent = sweepsPerSec;
+});
+
+// --- ボタン ---
+const btnPlayPause = document.getElementById('btnPlayPause');
+btnPlayPause.addEventListener('click', function() {
+  running = !running;
+  this.textContent = running ? '⏸ 一時停止' : '▶ 再開';
+});
+
+document.getElementById('btnReset').addEventListener('click', function() {
+  initRandom();
+});
+
+document.getElementById('btnAllAgree').addEventListener('click', function() {
+  initAll(1);
+});
+
+document.getElementById('btnAllOppose').addEventListener('click', function() {
+  initAll(-1);
+});
+
+// 人（○/✕） ⇄ 棒磁石 で表示を切り替え（世論⇔物理の橋渡し）
+document.getElementById('btnMarkMode').addEventListener('click', function() {
+  markMode = (markMode === 'opinion') ? 'magnet' : 'opinion';
+  renderBoards();  // オフスクリーンの先焼きを焼き直す
+  const opinion = markMode === 'opinion';
+  // ボタン
+  this.textContent = opinion ? '🧲 棒磁石アイコンに切替' : '🧑 人（○/✕）に切替';
+  // 凡例の人の絵文字（磁石モードでは隠す）
+  document.getElementById('legPerson1').style.display = opinion ? '' : 'none';
+  document.getElementById('legPerson2').style.display = opinion ? '' : 'none';
+  // 凡例マーク
+  const a = document.getElementById('legMarkAgree');
+  const o = document.getElementById('legMarkOppose');
+  // 世論モード=色付き○/✕札、磁石モード=単色の縦棒（棒磁石）。どちらも「＝」の左辺を埋める
+  function styleMark(el, ch, col) {
+    el.style.background = col;
+    el.style.color = '#fff';
+    if (opinion) {
+      el.textContent = ch;
+      el.style.display = '';
+      el.style.width = '';
+      el.style.height = '';
+      el.style.padding = '0 5px';
+      el.style.borderRadius = '4px';
+    } else {
+      el.textContent = '';
+      el.style.display = 'inline-block';
+      el.style.width = '8px';
+      el.style.height = '22px';
+      el.style.padding = '0';
+      el.style.borderRadius = '3px';
+    }
+  }
+  styleMark(a, '○', CONFIG.COLOR_AGREE);
+  styleMark(o, '✕', CONFIG.COLOR_OPPOSE);
+  // 凡例テキスト
+  document.getElementById('legTextAgree').textContent  = opinion
+    ? '＝ 賛成 (+1)' : '＝ 磁力が上向き (+1)';
+  document.getElementById('legTextOppose').textContent = opinion
+    ? '＝ 反対 (−1)' : '＝ 磁力が下向き (−1)';
+  // 磁化バー: 世論モード=「世論の偏り／賛成多数・反対多数」、磁石モード=「全体的な磁力／上向き・下向き」
+  document.getElementById('magTitle').textContent = opinion
+    ? '世論の偏り（磁化 M）' : '全体的な磁力（磁化 M）';
+  document.getElementById('axisNeg').textContent = opinion ? '← 反対多数 (−1)' : '← 磁力が下向き (−1)';
+  document.getElementById('axisPos').textContent = opinion ? '賛成多数 (+1) →' : '磁力が上向き (+1) →';
+  updateMagUI(calcMagnetization());  // 「賛成多数/反対多数」⇔「上向き/下向き」を即反映
+});
+
+// --- 起動 ---
+initRandom();
+rafId = requestAnimationFrame(frame);
+</script>
+</body>
+</html>
