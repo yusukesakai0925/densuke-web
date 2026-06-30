@@ -239,9 +239,7 @@
 <div class="main-layout">
   <!-- 左カラム: Canvas + 凡例 + 磁化 -->
   <div class="left-col">
-    <canvas id="isingCanvas" width="840" height="840"></canvas>
-
-    <!-- 磁化バー -->
+    <!-- 世論の偏り（M）バーを左カラム最上部へ（指摘①: ○×凡例と上下入替えMを上に） -->
     <div class="mag-panel">
       <div class="mag-label-row">
         <span class="mag-title" id="magTitle">世論の偏り（磁力の向き）</span>
@@ -256,6 +254,8 @@
         <span id="axisPos">賛成多数 (+1) →</span>
       </div>
     </div>
+
+    <canvas id="isingCanvas" width="840" height="840"></canvas>
 
     <div class="legend">
       <div class="legend-item">
@@ -332,6 +332,18 @@
       <ul>
         <li>全員を一方向へ押す外力です。メディアの大合唱や強い「空気」に当たります。</li>
         <li>温度を下げてから弱い磁場をかけると、社会がほぼ一瞬で染まりきる様子を試せます。</li>
+      </ul>
+
+      <h3>⚙️ 各人が意見を決めるルール（アルゴリズム）</h3>
+      <p>毎ステップ、次の手順をくり返しています（メトロポリス法）。</p>
+      <ul>
+        <li>① ランダムに1人を選ぶ。その人の意見を <strong>sᵢ</strong>（賛成=+1 / 反対=−1）とする。</li>
+        <li>② もし意見を変えたら、エネルギーがどれだけ変わるかを計算する：<br>
+            <strong>ΔE = 2 · sᵢ · ( J · (隣4人の意見の合計) + h )</strong><br>
+            <small>J=周りへの同調の強さ（=1で固定）、h=外部磁場。隣と同じ意見ほど ΔE は小さい。</small></li>
+        <li>③ <strong>ΔE ≤ 0</strong>（変えた方が安定）なら、必ず意見を変える。</li>
+        <li>④ <strong>ΔE &gt; 0</strong>（変えると不安定）でも、確率 <strong>exp(−ΔE / T)</strong> で意見を変える。T（世論のアツさ）が高いほど、損でも気まぐれに変えやすい。</li>
+        <li>⑤ ①〜④を人数ぶん（30×30=900回）くり返すと「1スイープ」。これを毎秒くり返して画面が動く。</li>
       </ul>
 
       <h3>🔘 ボタン</h3>
@@ -469,6 +481,15 @@ function renderMagnet(ctx, spin) {
   ctx.fillStyle = color;
   roundRect(ctx, bx, by, bw, bh, rad);
   ctx.fill();
+
+  // ③ 中の白い矢印（上向き=+1 / 下向き=-1）＝向きを記号でも明示
+  ctx.save();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `bold ${S * 0.46}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(spin === 1 ? '↑' : '↓', S * 0.5, S * 0.5);
+  ctx.restore();
 }
 
 // 表記モード: 'opinion'=人＋○/✕（世論） / 'magnet'=棒磁石（物理）
