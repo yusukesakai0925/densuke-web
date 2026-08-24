@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>政策議論を正しく戦うために v1.2</title>
+
+<style>
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #1a1a2e; color: #eee; }
+.slide {
+  min-height: 100vh; display: flex; flex-direction: column;
+  justify-content: center; padding: 60px 40px 50px;
+  border-bottom: 2px solid #16213e;
+  position: relative;
+}
+.slide-inner { max-width: 960px; width: 100%; margin: 0 auto; }
+.slide-num {
+  position: absolute; top: 20px; right: 30px;
+  font-size: 12px; color: #555; letter-spacing: 1px;
+}
+.tag {
+  font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
+  color: #4cc9f0; margin-bottom: 16px;
+}
+h1 { font-size: 42px; font-weight: 700; line-height: 1.2; margin-bottom: 20px; color: #fff; }
+h2 { font-size: 28px; font-weight: 600; margin-bottom: 24px; color: #f0f0f0; }
+.subtitle { font-size: 18px; color: #888; margin-bottom: 10px; }
+ul { list-style: none; }
+ul li { padding: 10px 0; border-bottom: 1px solid #2a2a4a; font-size: 16px; line-height: 1.6; }
+ul li:last-child { border-bottom: none; }
+ul li::before { content: "▶ "; color: #4cc9f0; font-size: 12px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 10px; }
+.card {
+  background: #16213e; border: 1px solid #2a2a5e;
+  border-radius: 12px; padding: 20px;
+}
+.card h3 { font-size: 16px; color: #4cc9f0; margin-bottom: 10px; }
+.card p  { font-size: 14px; color: #aaa; line-height: 1.6; }
+.text-body { font-size: 16px; line-height: 1.8; color: #ccc; white-space: pre-wrap; }
+.highlight { color: #4cc9f0; font-weight: 700; }
+
+/* テーブル */
+.fallacy-table {
+  width: 100%; border-collapse: collapse; margin-top: 12px;
+  background: #16213e; border: 1px solid #2a2a5e;
+}
+.fallacy-table th, .fallacy-table td {
+  padding: 12px; text-align: left; border-bottom: 1px solid #2a2a5e; font-size: 14px;
+}
+.fallacy-table th {
+  background: #0f3460; color: #4cc9f0; font-weight: 600;
+}
+.fallacy-table td:nth-child(1) {
+  color: #4cc9f0; font-weight: 600; width: 20%;
+}
+.fallacy-table td:nth-child(2) {
+  width: 40%; color: #ccc;
+}
+.fallacy-table td:nth-child(3) {
+  width: 40%; color: #999; font-size: 13px;
+}
+
+/* フロー図 */
+.flow-diagram {
+  background: #16213e; border: 1px solid #2a2a5e; border-radius: 8px; padding: 20px;
+  margin-top: 12px;
+}
+.flow-box {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+  font-size: 14px;
+}
+.flow-box:last-child { margin-bottom: 0; }
+.flow-num {
+  background: #4cc9f0; color: #0f3460; border-radius: 50%;
+  width: 28px; height: 28px; display: flex; align-items: center;
+  justify-content: center; font-weight: 700; flex-shrink: 0;
+}
+.flow-text { flex: 1; color: #ccc; }
+.flow-arrow { color: #4cc9f0; font-size: 18px; }
+
+.slide-cover { background: linear-gradient(135deg, #16213e 0%, #0f3460 100%); }
+.slide-summary { background: #0d0d1f; }
+.disclaimer {
+  margin-top: 28px; padding-top: 10px;
+  border-top: 1px solid rgba(255,100,100,0.25);
+  color: #ff9999; font-size: 11px; letter-spacing: 1px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="slide slide-cover">
+  <div class="slide-num">1 / 11</div>
+  <div class="slide-inner">
+    <div class="tag">2026-06-04 · v1.2</div>
+    <h1>政策議論を正しく戦うために</h1>
+    <div class="disclaimer">この資料は秘書AI「でんすけ」が作成したものです。数字・固有名詞は一次資料での確認をおすすめします。</div>
+    <div class="subtitle">ガスライティング・詭弁の識別と対抗法 — 支援者向け教材 v1.2</div>
+    <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  </div>
+</div>
+
+
+<div class="slide">
+  <div class="slide-num">2 / 11</div>
+  <div class="slide-inner">
+    <div class="tag">OVERVIEW</div>
+    <h2>この資料で学ぶこと</h2>
+    <ul><li>ガスライティング：事実・記憶・認識を歪める心理的操作の手口（8パターン）</li>
+<li>詭弁（論理的誤謬）：論理的に見えるが実は破綻している議論パターン（12パターン）</li>
+<li>それぞれの識別法と対抗法</li>
+<li>政治議論での実例とNGワード集</li></ul>
+    <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  </div>
+</div>
+
+
+<div class="slide">
+  <div class="slide-num">3 / 11</div>
+  <div class="slide-inner">
+    <div class="tag">GASLIGHTING</div>
+    <h2>ガスライティングとは</h2>
+    <div class="text-body">ガスライティング（Gaslighting）とは、相手に「自分の認識・記憶・判断が間違っている」と思わせることで、心理的優位に立つ操作の技法。
+
+政治議論では「あなたの理解が間違っている」「そんなことは言っていない」「過去の発言を誤解している」などの形で現れる。相手の「事実」を崩すのが目的。
+
+特に有権者向けの街頭演説や討論会で相手候補・批判者から仕掛けられることがある。適切に識別して冷静に返すことが重要。</div>
+    <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  </div>
+</div>
+
+
+<div class="slide">
+  <div class="slide-num">4 / 11</div>
+  <div class="slide-inner">
+    <div class="tag">GASLIGHTING</div>
+    <h2>ガスライティングの典型パターン（前編）</h2>
+    <ul><li><span class="highlight">①否定</span>：「そんなことは言っていない」「記録に残っていない」→ 実際は発言・文書がある</li>
+<li><span class="highlight">②矮小化</span>：「大げさに解釈しすぎ」「そこまで重要な話ではない」→ 問題を小さく見せる</li>
+<li><span class="highlight">③転嫁</span>：「あなたが誤解しているだけ」「あなたの理解力の問題」→ 批判を批判者に返す</li>
+<li><span class="highlight">④記憶の改ざん</span>：「以前もそう説明した」「最初から言っていた」→ 実は言っていない</li>
+<li><span class="highlight">⑤信頼の毀損</span>：「あなたは感情的になっている」「専門家でもない人が言っても」→ 主張者を貶める</li>
+<li><span class="highlight">⑥情報の圧倒</span>：大量の資料・数字を提示して混乱させ、批判を諦めさせる</li></ul>
+    <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  </div>
+</div>
+
+
+<div class="slide">
+  <div class="slide-num">5 / 11</div>
+  <div class="slide-inner">
+    <div class="tag">GASLIGHTING — NEW</div>
+    <h2>ガスライティングの追加パターン（後編）</h2>
+    <ul><li><span class="highlight">⑦多人数での執拗な攻撃</span>：複数の相手が同じ批判を繰り返す。「みんなが言っている」「これが常識」と思わせ独断を強化する。【例】SNSで複数のアカウントから同じ日に同じ批判が投稿される / 討論会で複数の出席者から同じ指摘が連続で飛ぶ</li>
+<li><span class="highlight">⑧いい警官・悪い警官</span>：味方のふりをして接近し、相手を油断させたうえで結局同じメッセージを伝える。見方は複数で、それぞれが「違うメッセージを言っている」かのように見えるが、実は同じ結論に誘導している。【例】「〇〇さんの気持ちもわかる。でも実は…」の形で巧妙に転向させられる</li></ul>
+    <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  </div>
+</div>
+
+
+<div class="slide">
+  <div class="slide-num">6 / 11</div>
+  <div class="slide-inner">
+    <div class="tag">GASLIGHTING</div>
+    <h2>ガスライティングへの対抗法</h2>
+    <ul><li>【記録を残す】発言・文書は必ず保存。「〇月〇日の議事録P.3に記載があります」と具体的に示す</li>
+<li>【感情を切り離す】「感情的」と言われても落ち着いて事実に戻る。「感情の話ではなく記録の話をしています」</li>
+<li>【第三者を巻き込む】「では第三者に確認しましょう」と提案。逃げられない状況を作る</li>
+<li>【要約を求める】「今おっしゃったことを一文でまとめてください」で論点を明確化</li>
+<li>【その場で完結しない】判断を保留する権利がある。「確認してから回答します」はOK</li>
+<li>【パターンを見抜く】同じ手口が繰り返されるなら「これはガスライティングのパターンです」と明示する</li></ul>
+    <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  </div>
+</div>
+
+
+<div class="slide">
+  <div class="slide-num">7 / 11</div>
+  <div class="slide-inner">
+    <div class="tag">FALLACY</div>
+    <h2>詭弁（論理的誤謬）とは</h2>
+    <div class="text-body">詭弁（Fallacy）とは、論理的に見えるが実は構造的に間違っている議論のパターン。感情に訴えたり、論点をずらしたりすることで、反論が難しい状況を作る。
+
+政治議論では特に多用される。相手が詭弁を使っていることに気づかないと、正論で反論していても「負けた」ように見えてしまうことがある。
+
+パターンを覚えれば「それは○○の誤謬ですね」と指摘できる。指摘した時点で相手の論法は崩れる。</div>
+    <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  </div>
+</div>
+
+
+<div class="slide">
+  <div class="slide-num">8 / 11</div>
+  <div class="slide-inner">
+    <div class="tag">FALLACY</div>
+    <h2>主要な詭弁パターン ①</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>藁人形（Straw Man）</h3>
+        <p>相手の主張を歪めて、その歪めた版を攻撃する。</p>
+        <p style="margin-top:8px; color:#999; font-size:13px;">例「あなたは増税に反対なんですね＝社会保障を壊したいんですね」</p>
+      </div>
+      <div class="card">
+        <h3>人身攻撃（Ad Hominem）</h3>
+        <p>議論の内容でなく、話している人を攻撃する。</p>
+        <p style="margin-top:8px; color:#999; font-size:13px;">例「あなたは若い（経験がない）から」「あの人は〇〇だから信用できない」</p>
+      </div>
+      <div class="card">
+        <h3>滑り坂（Slippery Slope）</h3>
+        <p>一つの行動が必然的に悪い結果の連鎖を引き起こすと主張。</p>
+        <p style="margin-top:8px; color:#999; font-size:13px;">例「外国人参政権を認めたら日本が乗っ取られる」</p>
+      </div>
+      <div class="card">
+        <h3>虚偽の二分法（False Dichotomy）</h3>
+        <p>選択肢が2つしかないかのように見せる。</p>
+        <p style="margin-top:8px; color:#999; font-size:13px;">例「この政策に反対するなら市民の敵だ」</p>
+      </div>
+      <div class="card">
+        <h3>権威への訴え（Appeal to Authority）</h3>
+        <p>権威者が言ったから正しいと主張。権威者の専門外・根拠が別途必要。</p>
+        <p style="margin-top:8px; color:#999; font-size:13px;">例「〇〇教授も言っている」だけでは根拠にならない</p>
+      </div>
+      <div class="card">
+        <h3>感情への訴え（Appeal to Emotion）</h3>
+        <p>論拠でなく感情（恐怖・同情・怒り）で判断を誘導する。</p>
+        <p style="margin-top:8px; color:#999; font-size:13px;">例「子どもたちのためを思えば反対できないはずだ」</p>
+      </div>
+    </div>
+    <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  </div>
+</div>
+
+
+<div class="slide">
+  <div class="slide-num">9 / 11</div>
+  <div class="slide-inner">
+    <div class="tag">FALLACY</div>
+    <h2>主要な詭弁パターン ②</h2>
+    <div class="grid">
+      <div class="card"><h3>赤いニシン（Red Herring）</h3><p>関係ない話題に誘導して本題から逃げる。「財源の話をすると言ったが、そもそも今の問題は野党の審議拒否だ」</p></div>
+      <div class="card"><h3>循環論法（Circular Reasoning）</h3><p>結論を前提として使う。「この政策は正しい。なぜなら正しいからだ」</p></div>
+      <div class="card"><h3>多数への訴え（Bandwagon）</h3><p>多くの人が支持・信じているから正しいと主張。「世論調査では8割が賛成」＝多数決と論理的正しさは別問題</p></div>
+      <div class="card"><h3>チェリーピッキング</h3><p>自分に都合の良いデータだけを選んで提示する。反証データを意図的に隠す。「この年だけ見れば改善している」</p></div>
+      <div class="card"><h3>合成の誤謬（Composition）</h3><p>部分が正しければ全体も正しいとする。「個々の政策は良い。だからこの政党を支持すべきだ」</p></div>
+      <div class="card"><h3>後知恵バイアス（Hindsight Bias）</h3><p>結果がわかった後に「最初からわかっていた」と主張。「あの時に反対しなかったあなたにも責任がある」</p></div>
+      <div class="card"><h3>ごはん論法</h3><p>嘘はつかず、論点をずらして都合の悪い部分を隠す答弁術。「朝ごはんは食べた？」に対し、パンは食べたのに「ごはん（＝米）は食べていません」と答える形。2018年の国会答弁を機に広まった呼称。</p></div>
+      <div class="card"><h3>複問（多重質問・Loaded Question）</h3><p>yes・noのどちらで答えても不利になるよう前提を仕込んだ質問。「あなたは不正をもうやめましたか？」＝はいでも過去の不正を、いいえでも現在の不正を認めることになる。</p></div>
+    </div>
+    <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  </div>
+</div>
+
+
+<div class="slide">
+  <div class="slide-num">10 / 11</div>
+  <div class="slide-inner">
+    <div class="tag">REFERENCE</div>
+    <h2>詭弁パターン早見表</h2>
+    <table class="fallacy-table">
+      <thead>
+        <tr>
+          <th>パターン</th>
+          <th>手口</th>
+          <th>対抗法</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>藁人形</td>
+          <td>主張を歪めて攻撃</td>
+          <td>「それは私の主張ではなく、〇〇です」と正確に言い直す</td>
+        </tr>
+        <tr>
+          <td>人身攻撃</td>
+          <td>話者を貶める</td>
+          <td>「議論の内容を聞いてください」と話題を戻す</td>
+        </tr>
+        <tr>
+          <td>虚偽の二分法</td>
+          <td>選択肢を限定</td>
+          <td>「第3の選択肢があります」と複数案を示す</td>
+        </tr>
+        <tr>
+          <td>感情への訴え</td>
+          <td>感情で判断誘導</td>
+          <td>「感情的にはわかりますが、データは…」と冷徹に返す</td>
+        </tr>
+        <tr>
+          <td>多数への訴え</td>
+          <td>多数派が正しいと主張</td>
+          <td>「多数決と論理的正しさは別」と指摘</td>
+        </tr>
+        <tr>
+          <td>権威への訴え</td>
+          <td>権威者を後ろ盾に</td>
+          <td>「その人のこの主張の根拠は？」と追及</td>
+        </tr>
+        <tr>
+          <td>ごはん論法</td>
+          <td>論点をずらして核心を隠す</td>
+          <td>質問を一問一答に分解し「聞いたのは米でなく朝食全体です」と論点を確定させる</td>
+        </tr>
+        <tr>
+          <td>複問（多重質問）</td>
+          <td>yes/noどちらでも不利な前提を仕込む</td>
+          <td>「その質問は〇〇を前提にしていますが、それ自体が誤りです」と前提を否定してから答える</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  </div>
+</div>
+
+
+<div class="slide">
+  <div class="slide-num">11 / 11</div>
+  <div class="slide-inner">
+    <div class="tag">SUMMARY</div>
+    <h2>まとめ：対話で使える3原則</h2>
+    <ul><li>①記録で返す：記憶ではなく文書・データ・日時で話す。感情論に引き込まれない</li>
+<li>②パターンを名指す：「それは詭弁の○○ですね」と言語化することで論点を正常化できる</li>
+<li>③その場で完結しない：「確認してから回答します」は正しい姿勢。即答を迫られても焦らない</li>
+<li>【NGワード】「あなたが嘘をついている」→ 感情的に見える。代わりに「記録と異なります」と事実ベースで</li>
+<li>【NGワード】「普通に考えれば分かる」→ 自分の常識を前提にする詭弁になる。根拠を示す形に</li>
+<li>この資料はAIで作成しているため事実確認が必要です</li></ul>
+    <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  </div>
+</div>
+
+
+</body>
+</html>

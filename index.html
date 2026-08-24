@@ -279,6 +279,10 @@
 
   <div class="room-photos">
     <figure>
+      <img src="img/app_bash.png" alt="黒い作業画面。AIが調べる操作を4回行い、それぞれの結果が下に表示されている。" loading="lazy">
+      <figcaption><b>頼めば自分で調べて数える</b> ─ 会話に答えるだけでなく、パソコンの中を自分で調べて数字を出せる。写真は「このアプリの規模を数えて」と頼んだときの画面で、プログラムの本数と行数、動いているAIの数、開発を始めてからの日数を、手順を自分で組み立てて答えている。※外に出して困らない操作だけを選んで撮影しています。</figcaption>
+    </figure>
+    <figure>
       <img src="img/app_agents.png" alt="でんすけほか8体のAIのチャット画面。上部にAIの名前一覧が並ぶ。" loading="lazy">
       <figcaption><b>AIと話す（個別モード）</b> ─ 8体のAIが同じ部屋にいて、名前をクリックすると話す相手が切り替わる。画面上部のボタンから、AIに自分で考えて動いてもらう『自律行動』の開始や、その日の日記の閲覧ができる。</figcaption>
     </figure>
@@ -310,7 +314,7 @@
 
   <h3>指示がなくても動く仕組み</h3>
   <ul class="feat-list">
-    <li><b>自律行動</b> ─ AIごとに「何分おきに自分で動くか」を設定できます。2026年8月現在は、でんすけが1日1回、夜半とAIさかいが1日4回。起動すると、その時いちばん役に立つことを自分で選んで作業します。</li>
+    <li><b>自律行動</b> ─ AIごとに「何分おきに自分で動くか」を設定できます。2026年8月現在は、でんすけが2時間おき、夜半とAIさかいが1日4回、たぬきが1日1回。起動すると、その時いちばん役に立つことを自分で選んで作業します。</li>
     <li><b>決まった時刻の作業</b> ─ 毎朝7時にその日の天気・株価・予定をLINEで送る、夕方18時にその日の活動をスライドにまとめる、夜22時半に一日を振り返る。ほかに週のはじめと終わりの棚卸しがあります。</li>
     <li><b>AI同士の会話</b> ─ 曜日ごとに組み合わせが決まっていて、AI同士が相談する時間があります。人間が見ていない時間にも会話が進みます。</li>
     <li><b>仕事の割り振り</b> ─ でんすけが調査・実装・戦略をそれぞれの担当AIに投げ、返ってきたものを確かめてから酒井さんに渡します。AIの答えをそのまま人に渡さない、という決まりです。</li>
@@ -411,6 +415,28 @@
   <h2>成果物</h2>
   <p class="works-lede">秘書AIのでんすけが調査・分析してまとめたレポートです。公開前に酒井さん（人間）が内容を確認したうえで、ここに置いています。</p>
   <div class="work-grid">
+    <article class="work-card">
+      <div class="w-date">2026-08-09</div>
+      <h3>MCPとは何か ── AIと外部サービスをつなぐ仕組み</h3>
+      <p>MCP（Model Context Protocol）とは、AIが外部のサービスやデータを呼び出すための差込口の形を統一した仕組み（USB-Cのような規格）を解説した資料。Cloudflareの公式サーバーに実際に接続し、認証不要で試せるものとアカウントの許可が必要なものの違いを確認した結果も含む。</p>
+      <div class="w-tags">
+        <span class="w-tag">技術</span><span class="w-tag">AI</span><span class="w-tag">解説</span>
+      </div>
+      <div class="w-links">
+        <a class="w-primary" href="reports/mcp-intro.html">› 解説を読む</a>
+      </div>
+    </article>
+          <article class="work-card">
+      <div class="w-date">2026-06-22</div>
+      <h3>政策議論を正しく戦うために ── 詭弁の見分け方</h3>
+      <p>政治の議論で仕掛けられることのある、事実のすり替えや心理的な揺さぶり（ガスライティング8パターン）と、一見もっともらしく見える論理の誤り（詭弁12パターン）をまとめた支援者向け教材（v1.2）。それぞれの見分け方と返し方を政治議論の実例とあわせて整理している。</p>
+      <div class="w-tags">
+        <span class="w-tag">政治</span><span class="w-tag">議論</span><span class="w-tag">読み物</span>
+      </div>
+      <div class="w-links">
+        <a class="w-primary" href="reports/policy-debate-fallacies.html">› 資料を読む</a>
+      </div>
+    </article>
     <article class="work-card">
       <div class="w-date">2026-06-29</div>
       <h3>世論の伝播を物理モデルで遊んでみた（イジング模型）</h3>
