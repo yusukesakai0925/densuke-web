@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ウルトラクイズ 早押し練習</title>
+<style>
+:root{
+  --fg:#1c1c1e; --dim:#6b7280; --line:#e5e7eb; --bg:#fff; --panel:#f6f7f9;
+  --accent:#0b5cad; --accbg:#eaf1fb;
+  --ok:#0f7b3e; --okbg:#e7f6ec; --ng:#a32a22; --ngbg:#fdecea;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--panel); color:var(--fg);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+  line-height:1.7; -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:720px;margin:0 auto;padding:18px 14px 60px;background:var(--bg);min-height:100vh}
+h1{font-size:21px;margin:0 0 2px}
+h2{font-size:16px;margin:26px 0 8px;padding-bottom:6px;border-bottom:2px solid var(--fg)}
+p{margin:8px 0}
+.sub{color:var(--dim);font-size:13px;margin:0 0 14px}
+.dim{color:var(--dim);font-size:13px}
+.hidden{display:none !important}
+
+/* ── 選択肢（開始画面のフィルタ） ───────────────────── */
+.field{margin:16px 0}
+.field > .lbl{display:block;font-weight:700;font-size:14px;margin-bottom:6px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts button{
+  font:inherit;font-size:14px;min-height:44px;padding:8px 14px;cursor:pointer;
+  border:1px solid var(--line);border-radius:8px;background:#fafafa;color:var(--fg);
+}
+.opts button .n{color:var(--dim);font-size:12.5px;margin-left:6px;font-variant-numeric:tabular-nums}
+.opts button[aria-pressed="true"]{border-color:var(--accent);background:var(--accbg);font-weight:700}
+.opts button[aria-pressed="true"] .n{color:var(--accent)}
+.opts button[disabled]{opacity:.45;cursor:not-allowed}
+
+/* ── 主ボタン ───────────────────────────────────── */
+.primary{
+  display:block;width:100%;font:inherit;font-size:17px;font-weight:700;
+  min-height:52px;margin:18px 0 6px;padding:12px;cursor:pointer;
+  border:0;border-radius:10px;background:var(--accent);color:#fff;
+}
+.primary[disabled]{background:#c3ccd8;cursor:not-allowed}
+.ghost{
+  display:block;width:100%;font:inherit;font-size:15px;min-height:48px;margin:8px 0;
+  padding:10px;cursor:pointer;border:1px solid var(--line);border-radius:10px;
+  background:#fafafa;color:var(--fg);
+}
+
+/* ── 出題画面 ───────────────────────────────────── */
+.qhead{display:flex;align-items:baseline;gap:10px;font-size:13px;color:var(--dim);margin-bottom:6px}
+.qhead .no{font-size:15px;font-weight:700;color:var(--fg);font-variant-numeric:tabular-nums}
+.qhead .tag{margin-left:auto}
+.pbar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.pbar > i{display:block;height:100%;width:0;background:var(--accent)}
+.qtext{font-size:19px;font-weight:700;line-height:1.6;margin:18px 0 16px;min-height:5.2em}
+.qtext .cur{color:var(--accent)}
+/* 押した位置 */
+.spot{background:var(--accbg);border-radius:10px;padding:10px 14px;margin:0 0 14px;font-size:14px}
+.spot .big{font-size:26px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.3}
+.spot .sub2{color:var(--dim);font-size:13px}
+.choices{display:flex;flex-direction:column;gap:10px}
+.ch{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  font:inherit;font-size:16px;min-height:56px;padding:10px 14px;
+  border:2px solid var(--line);border-radius:10px;background:#fff;color:var(--fg);
+}
+.ch .k{
+  flex:0 0 auto;min-width:26px;height:26px;line-height:26px;text-align:center;
+  border-radius:13px;background:var(--panel);color:var(--dim);font-size:13px;font-weight:700;
+}
+.ch.ok{border-color:var(--ok);background:var(--okbg)}
+.ch.ok .k{background:var(--ok);color:#fff}
+.ch.muted{opacity:.5}
+.verdict{margin:18px 0 0;padding:12px 14px;border-radius:10px;font-size:15px;
+  background:var(--okbg);border-left:4px solid var(--ok)}
+.verdict .head{font-weight:700;font-size:16px;color:var(--ok)}
+.verdict .exp{margin:6px 0 0;font-size:14.5px;line-height:1.75}
+.src{display:inline-block;margin-top:6px;font-size:13px;color:var(--accent)}
+.keyhint{margin-top:14px;font-size:12px;color:var(--dim)}
+
+/* ── 画面下の大ボタン（スマホの親指が届く位置に固定） ─────── */
+#sc-quiz{padding-bottom:210px}
+.dock{
+  position:fixed;left:0;right:0;bottom:0;z-index:5;
+  background:var(--bg);border-top:1px solid var(--line);
+  padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));
+}
+.dock .inner{max-width:720px;margin:0 auto}
+.hit{
+  display:block;width:100%;font:inherit;font-size:30px;font-weight:700;
+  min-height:104px;padding:10px;cursor:pointer;
+  border:0;border-radius:14px;background:var(--accent);color:#fff;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;
+}
+.hit:active{background:#08447e}
+.hit .k{display:block;font-size:12px;font-weight:400;opacity:.85;margin-top:2px}
+.hit.late{background:#6b7280;font-size:19px}
+.hit.late:active{background:#4b5563}
+.selfrow{display:flex;gap:10px}
+.selfrow button{
+  flex:1 1 0;font:inherit;font-size:20px;font-weight:700;min-height:76px;padding:8px;
+  cursor:pointer;border:2px solid;border-radius:14px;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+.selfrow .yes{border-color:var(--ok);background:var(--okbg);color:var(--ok)}
+.selfrow .no{border-color:var(--ng);background:var(--ngbg);color:var(--ng)}
+.selfrow button .k{display:block;font-size:12px;font-weight:400;color:var(--dim);margin-top:2px}
+
+/* ── 結果画面 ───────────────────────────────────── */
+.score{background:var(--panel);border-radius:10px;padding:16px;text-align:center;margin:12px 0}
+.score .big{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.3}
+.score .rate{font-size:15px;color:var(--dim)}
+.stats{display:flex;gap:10px;margin:12px 0}
+.stats > div{flex:1 1 0;background:var(--panel);border-radius:10px;padding:12px;text-align:center}
+.stats .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.4}
+.stats .l{font-size:12px;color:var(--dim)}
+.miss{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+.miss .q{font-weight:700;font-size:15px;margin:0 0 6px}
+.miss .row{font-size:14px;margin:2px 0}
+.miss .mine{color:var(--ng)}
+.miss .right{color:var(--ok)}
+.hist{font-size:13px;color:var(--dim);margin:4px 0}
+.hist span{font-variant-numeric:tabular-nums}
+
+/* ── 人名ふりがな（readings.json）───────────────────── */
+/* rt は本文の 0.5em。ruby 1行分は 1em + 0.5em ≒ 1.5em になるので、
+   ふりがなが載りうる箱の line-height を 1.85 に揃え、行間の伸び縮みを消す。
+   .qtext は「1文字ずつ出している最中（ふりがな無し）」と「押したあとの全文
+   （ふりがな有り）」で同じ要素を使い回すため、ここを揃えないと押した瞬間に
+   行がずれる。 */
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.5em;font-weight:400;line-height:1;color:var(--dim);letter-spacing:0}
+.qtext{line-height:1.85}
+.ch{line-height:1.8}
+.verdict .exp,.miss .q,.miss .row{line-height:1.85}
+
+/* ── エラー ─────────────────────────────────────── */
+.err{background:#fffbeb;border-left:4px solid #d97706;padding:14px 16px;border-radius:6px}
+.err .head{font-weight:700;font-size:16px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;
+  background:#f3f4f6;padding:1px 5px;border-radius:3px}
+footer{margin-top:40px;padding-top:12px;border-top:1px solid var(--line);color:var(--dim);font-size:12px}
+/* ── ページ間ナビ ───────────────────────────────── */
+.navbar{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px;padding-bottom:10px;
+  border-bottom:1px solid var(--line)}
+.navbar a,.navbar span{display:flex;align-items:center;justify-content:center;
+  min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line);
+  font-size:13px;line-height:1.2;text-decoration:none;color:var(--dim)}
+.navbar span{color:var(--fg);font-weight:700;border-color:var(--fg)}
+@media (max-width:420px){
+  .wrap{padding:14px 12px 48px}
+  .qtext{font-size:18px}
+  h1{font-size:19px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ── ページ間ナビ ─────────────────────────────── -->
+<nav class="navbar">
+  <a href="index.html">4択練習</a>
+  <span>早押し練習</span>
+  <a href="cram.html">一枚読み</a>
+</nav>
+
+<!-- ── 読み込み中 ───────────────────────────────── -->
+<div id="sc-load">
+  <h1>早押し練習</h1>
+  <p class="dim">問題データを読み込んでいます…</p>
+</div>
+
+<!-- ── エラー ─────────────────────────────────── -->
+<div id="sc-error" class="hidden">
+  <h1>早押し練習</h1>
+  <div class="err">
+    <div class="head">問題データがまだありません</div>
+    <p id="err-detail" class="dim"></p>
+    <p class="dim">このページと同じ場所に <code>questions.json</code> が置かれると出題できます。</p>
+  </div>
+  <button class="ghost" id="btn-reload">読み込み直す</button>
+</div>
+
+<!-- ── 開始画面 ───────────────────────────────── -->
+<div id="sc-start" class="hidden">
+  <h1>早押し練習</h1>
+  <p class="sub" id="start-sub"></p>
+  <button class="primary hidden" id="btn-review" style="margin-bottom:18px">押せなかった・不正解だった問題だけ復習</button>
+  <p class="dim">問題文が1文字ずつ出ます。分かった瞬間に大きなボタン（キーボードは Space）を押すと、そこで文字が止まります。<b>正誤は自己申告</b>です。<a href="index.html">通常の練習アプリ</a>／<a href="cram.html">直前チェックシート</a></p>
+
+  <div class="field">
+    <span class="lbl">カテゴリ</span>
+    <div class="opts" id="f-cat"></div>
+  </div>
+  <div class="field">
+    <span class="lbl">出題数</span>
+    <div class="opts" id="f-num"></div>
+  </div>
+  <div class="field">
+    <span class="lbl">読み上げ速度</span>
+    <div class="opts" id="f-speed"></div>
+  </div>
+
+  <button class="primary" id="btn-start">開始する</button>
+  <p class="dim" id="start-note"></p>
+
+  <div id="hist-box" class="hidden">
+    <h2>これまでの記録</h2>
+    <div id="hist-list"></div>
+  </div>
+</div>
+
+<!-- ── 出題画面 ───────────────────────────────── -->
+<div id="sc-quiz" class="hidden">
+  <div class="qhead">
+    <span class="no" id="q-no">1/10問目</span>
+    <span id="q-tag"></span>
+    <span class="tag" id="q-score"></span>
+  </div>
+  <div class="pbar"><i id="q-bar"></i></div>
+
+  <p class="qtext" id="q-text"></p>
+
+  <div id="q-spot" class="hidden"></div>
+  <div class="choices hidden" id="q-choices"></div>
+  <div id="q-verdict" class="hidden"></div>
+
+  <p class="keyhint">キーボード：読み上げ中は <b>Space</b> で押す／答えを見たあとは <b>1</b>=正解、<b>2</b>=不正解</p>
+  <button class="ghost" id="btn-abort">中断して最初に戻る</button>
+
+  <!-- 画面下に固定（親指が届く位置） -->
+  <div class="dock" id="dock">
+    <div class="inner">
+      <button class="hit" id="btn-hit">押す<span class="k">Space</span></button>
+      <div class="selfrow hidden" id="self-row">
+        <button class="yes" id="btn-yes">正解<span class="k">1</span></button>
+        <button class="no" id="btn-no">不正解<span class="k">2</span></button>
+      </div>
+      <button class="primary hidden" id="btn-next" style="margin:0">次へ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 結果画面 ───────────────────────────────── -->
+<div id="sc-result" class="hidden">
+  <h1>結果</h1>
+  <div class="score">
+    <div class="big" id="r-score"></div>
+    <div class="rate" id="r-rate"></div>
+  </div>
+  <div class="stats">
+    <div><div class="v" id="r-pos">-</div><div class="l">平均の押し位置</div></div>
+    <div><div class="v" id="r-chars">-</div><div class="l">平均の文字数</div></div>
+    <div><div class="v" id="r-skip">-</div><div class="l">押せなかった</div></div>
+  </div>
+  <div id="r-missbox" class="hidden">
+    <h2>不正解・押せなかった問題</h2>
+    <div id="r-misses"></div>
+  </div>
+  <button class="primary hidden" id="btn-again">この問題だけもう一度</button>
+  <button class="ghost" id="btn-home">最初に戻る</button>
+</div>
+
+<footer>2026/9/12 全国クイズ大会の練習用。問題データは <code>questions.json</code>（通常の練習アプリと同じファイル）／記録はこの端末のブラウザにだけ保存されます。正誤は自己申告です。<br>⚠ 問題はAIが作成しています。出典URLで事実確認してください。</footer>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ── localStorage（壊れていたら黙って初期化する） ──────────────
+  // 通常の練習アプリ（index.html）とはキーを分ける。あちらは自動採点、
+  // こちらは自己申告なので、同じ箱に混ぜると「間違えた問題」の意味が変わる。
+  var LS_RESULT = 'ultraquiz_hayaoshi_v1_results';   // {qid: {ok:bool, at:ms, pressed:bool}}
+  var LS_HIST   = 'ultraquiz_hayaoshi_v1_history';   // [{at:ms, correct:n, judged:n, skipped:n, pct:n}]
+
+  function lsRead(key, isArray){
+    var empty = isArray ? [] : {};
+    try {
+      var raw = localStorage.getItem(key);
+      if (!raw) return empty;
+      var v = JSON.parse(raw);
+      if (!v || typeof v !== 'object') throw new Error('type');
+      if (isArray !== Array.isArray(v)) throw new Error('shape');
+      return v;
+    } catch (e) {
+      try { localStorage.removeItem(key); } catch (e2) {}
+      return empty;
+    }
+  }
+  function lsWrite(key, val){
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
+  }
+
+  var results = lsRead(LS_RESULT, false);
+  var history = lsRead(LS_HIST, true);
+
+  // ── DOM ショートカット ────────────────────────────────
+  function $(id){ return document.getElementById(id); }
+  function show(id){
+    ['sc-load','sc-error','sc-start','sc-quiz','sc-result'].forEach(function(s){
+      $(s).classList.toggle('hidden', s !== id);
+    });
+    window.scrollTo(0, 0);
+  }
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function str(v){ return (typeof v === 'string') ? v.trim() : ''; }
+
+  // ── 人名ふりがな（readings.json） ─────────────────────
+  // readings.json が無い・壊れている・fetch に失敗しても、ふりがな無しで
+  // これまで通り動く（ここで throw を外に出さない）。
+  // このページでは「押したあとに出す全文・選択肢・正解・解説」だけに当てる。
+  // 1文字ずつ出す途中の表示に当てると、途中まで出ている人名にふりがなが付いて
+  // 先が読めてしまい、早押しの練習にならない。
+  var RUBY_RE = null;    // surface を長い順に並べた「1本の」正規表現
+  var RUBY_MAP = {};     // エスケープ済み surface → <ruby>…</ruby> のHTML
+
+  function reQuote(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  // 'constructor' のような Object 由来のキーを拾わないようにする
+  function hasKey(o, k){ return Object.prototype.hasOwnProperty.call(o, k); }
+
+  function buildRuby(data){
+    if (!data || !Array.isArray(data.names)) return;
+    var surfaces = [];
+    data.names.forEach(function(n){
+      if (!n || typeof n.surface !== 'string' || !n.surface) return;
+      if (!Array.isArray(n.ruby) || !n.ruby.length) return;
+      var html = '';
+      for (var i = 0; i < n.ruby.length; i++){
+        var pair = n.ruby[i];
+        if (!Array.isArray(pair) || pair.length < 2 || !pair[0]) { html = ''; break; }
+        if (pair[1]) {
+          html += '<ruby>' + esc(String(pair[0])) + '<rt>' + esc(String(pair[1])) + '</rt></ruby>';
+        } else {
+          html += esc(String(pair[0]));
+        }
+      }
+      if (!html) return;
+      var key = esc(n.surface);          // 置換はエスケープ後の文字列に対して行う
+      if (hasKey(RUBY_MAP, key)) return;   // 同じ surface が2度出てきたら先勝ち
+      RUBY_MAP[key] = html;
+      surfaces.push(key);
+    });
+    if (!surfaces.length) return;
+    // 長い順（readings.json も長い順だが、こちらでも保証する）。
+    // 「井上尚弥」が「井上」より先に選択肢へ並べば、正規表現の左優先で長い方が当たる。
+    surfaces.sort(function(a, b){ return b.length - a.length; });
+    try { RUBY_RE = new RegExp(surfaces.map(reQuote).join('|'), 'g'); }
+    catch (e) { RUBY_RE = null; }
+  }
+
+  function loadReadings(){
+    return fetch('readings.json', {cache:'no-store'})
+      .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(data){ buildRuby(data); })
+      .catch(function(){ RUBY_RE = null; });
+  }
+
+  // 文字列 → 表示用HTML。必ず「エスケープ → そのあと ruby を差し込む」順。
+  // 逆にすると差し込んだタグ自身がエスケープされ、画面にタグ文字列が出る。
+  // 置換は1本の正規表現を1回走らせるだけなので、差し込んだ <ruby> の中身に
+  // 二重で当たることはない。
+  function rubyHtml(s){
+    var h = esc(s);
+    if (!RUBY_RE) return h;
+    try {
+      RUBY_RE.lastIndex = 0;
+      return h.replace(RUBY_RE, function(m){ return hasKey(RUBY_MAP, m) ? RUBY_MAP[m] : m; });
+    } catch (e) { return h; }
+  }
+
+  // ふりがな付きのテキストを要素に入れる（textContent の置き換え用）
+  function setRuby(el, s){ el.innerHTML = rubyHtml(s); }
+
+  // ── 問題データの正規化（壊れた1問はその1問だけ捨てる） ─────────
+  function normalize(raw, i){
+    if (!raw || typeof raw !== 'object') return null;
+    var q = str(raw.question) || str(raw.q);           // q は旧スキーマの別名
+    var choices = raw.choices;
+    if (!q || !Array.isArray(choices) || choices.length < 2) return null;
+    var ans = raw.answer;
+    if (typeof ans !== 'number' || ans < 0 || ans >= choices.length) return null;
+    var fmt = str(raw.format);
+    if (fmt === 'choice4') fmt = 'choice';
+    if (fmt === 'maru_batsu' || fmt === 'maruxbatsu') fmt = 'ox';
+    if (fmt !== 'choice' && fmt !== 'ox') fmt = (choices.length === 2 ? 'ox' : 'choice');
+
+    // 4択問題は選択肢をシャッフル（ox 形式は「○」「×」が固定なので除外）
+    if (fmt === 'choice' && choices.length > 1) {
+      var indices = [];
+      for (var k = 0; k < choices.length; k++) indices.push(k);
+      shuffle(indices);
+      var newChoices = [];
+      for (var k = 0; k < indices.length; k++) {
+        newChoices.push(choices[indices[k]]);
+      }
+      // 元の正解位置が、シャッフル後のどこに移動したか
+      ans = indices.indexOf(ans);
+      choices = newChoices;
+    }
+
+    var src = str(raw.source);
+    if (src && !/^https?:\/\//i.test(src)) src = '';
+    return {
+      id: str(raw.id) || ('q' + (i + 1)),
+      category: str(raw.category) || str(raw.genre) || 'その他',
+      sub: str(raw.subcategory),
+      format: fmt,
+      question: q,
+      chars: chars(q),                                  // 1文字ずつ出すための配列
+      choices: choices.map(function(c){ return String(c); }),
+      answer: ans,
+      explanation: str(raw.explanation) || str(raw.fact),
+      source: src
+    };
+  }
+
+  // サロゲートペア（絵文字など）で半分に割らないよう配列にしておく
+  function chars(s){
+    if (typeof Array.from === 'function') return Array.from(s);
+    return String(s).split('');
+  }
+
+  var ALL = [];          // 正規化済みの全問題
+  var generated = '';
+
+  function fail(detail){
+    $('err-detail').textContent = detail;
+    show('sc-error');
+  }
+
+  function load(){
+    show('sc-load');
+    if (!window.fetch) { fail('このブラウザは questions.json を読み込めません（fetch 非対応）。'); return; }
+    fetch('questions.json', {cache:'no-store'})
+      .then(function(r){
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.text();
+      })
+      .then(function(text){
+        var data;
+        try { data = JSON.parse(text); }
+        catch (e) { throw new Error('questions.json の中身が JSON として読めません。'); }
+        if (!data || !Array.isArray(data.questions)) throw new Error('questions.json に questions の配列がありません。');
+        generated = str(data.generated);
+        ALL = data.questions.map(normalize).filter(function(q){ return !!q; });
+        if (!ALL.length) throw new Error('questions.json に出題できる問題が1問もありません。');
+        initStart();
+      })
+      .catch(function(e){
+        var msg = (e && e.message) ? e.message : String(e);
+        if (location.protocol === 'file:') {
+          msg += '（この画面を file:// で開いた場合、ブラウザの制限で questions.json を読めません。簡易サーバ経由で開いてください）';
+        }
+        fail(msg);
+      });
+  }
+
+  // ── 開始画面のフィルタ ────────────────────────────────
+  // speed は「1文字あたりのミリ秒」。ふつう=120ms は 1分あたり約500字で、
+  // 読み上げの実測レンジ（350〜550字/分）の真ん中あたり。
+  var SPEEDS = [{key:'slow', label:'ゆっくり', ms:180},
+                {key:'mid',  label:'ふつう',   ms:120},
+                {key:'fast', label:'はやい',   ms:75}];
+  var sel = {cat:'*', num:10, speed:'mid'};
+
+  function speedMs(){
+    for (var i = 0; i < SPEEDS.length; i++) if (SPEEDS[i].key === sel.speed) return SPEEDS[i].ms;
+    return 120;
+  }
+  function match(q){
+    return (sel.cat === '*' || q.category === sel.cat);
+  }
+  function countBy(cat){
+    var n = 0;
+    for (var i = 0; i < ALL.length; i++){
+      if (cat === '*' || ALL[i].category === cat) n++;
+    }
+    return n;
+  }
+  function missIds(){
+    var ids = [];
+    for (var i = 0; i < ALL.length; i++){
+      var r = results[ALL[i].id];
+      if (r && typeof r === 'object' && r.ok === false) ids.push(ALL[i].id);
+    }
+    return ids;
+  }
+
+  function optButton(box, label, count, active, disabled, onClick){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('aria-pressed', active ? 'true' : 'false');
+    b.appendChild(document.createTextNode(label));
+    if (count !== null){
+      var s = document.createElement('span');
+      s.className = 'n';
+      s.textContent = count + '問';
+      b.appendChild(s);
+    }
+    if (disabled) b.disabled = true;
+    b.addEventListener('click', onClick);
+    box.appendChild(b);
+    return b;
+  }
+
+  function cats(){
+    var seen = {}, list = [];
+    for (var i = 0; i < ALL.length; i++){
+      var c = ALL[i].category;
+      if (!seen[c]) { seen[c] = 1; list.push(c); }
+    }
+    var head = ['芸能','スポーツ'];
+    list.sort(function(a, b){
+      var ia = head.indexOf(a), ib = head.indexOf(b);
+      if (ia < 0) ia = 99; if (ib < 0) ib = 99;
+      return ia - ib;
+    });
+    return list;
+  }
+
+  function renderStart(){
+    var box;
+
+    box = $('f-cat'); box.innerHTML = '';
+    optButton(box, 'すべて', countBy('*'), sel.cat === '*', false, function(){ sel.cat = '*'; renderStart(); });
+    cats().forEach(function(c){
+      optButton(box, c, countBy(c), sel.cat === c, false, function(){ sel.cat = c; renderStart(); });
+    });
+
+    var avail = countBy(sel.cat);
+
+    box = $('f-num'); box.innerHTML = '';
+    [10, 20].forEach(function(n){
+      optButton(box, n + '問', null, sel.num === n, avail === 0, function(){ sel.num = n; renderStart(); });
+    });
+    optButton(box, '全部', avail, sel.num === 0, avail === 0, function(){ sel.num = 0; renderStart(); });
+
+    box = $('f-speed'); box.innerHTML = '';
+    SPEEDS.forEach(function(s){
+      optButton(box, s.label, null, sel.speed === s.key, false, function(){ sel.speed = s.key; renderStart(); });
+    });
+
+    var willAsk = sel.num === 0 ? avail : Math.min(sel.num, avail);
+    $('btn-start').disabled = (avail === 0);
+    $('btn-start').textContent = avail === 0 ? 'この組み合わせは0問です' : ('開始する（' + willAsk + '問）');
+    $('start-note').textContent = (avail === 0)
+      ? 'カテゴリを変えてください。'
+      : ('該当 ' + avail + '問から ' + willAsk + '問を順不同で出題します（1文字あたり ' + speedMs() + 'ミリ秒で表示）。');
+
+    var ms = missIds();
+    $('btn-review').classList.toggle('hidden', ms.length === 0);
+    if (ms.length) $('btn-review').textContent = '押せなかった・不正解だった問題だけ復習（' + ms.length + '問）';
+
+    $('hist-box').classList.toggle('hidden', history.length === 0);
+    if (history.length){
+      var h = '';
+      history.slice(0, 8).forEach(function(x){
+        var d = new Date(x.at);
+        var rate = x.judged ? Math.round(x.correct / x.judged * 100) : 0;
+        h += '<p class="hist"><span>' + esc(fmtDate(d)) + '</span> ／ ' +
+             '<span>' + x.correct + '/' + x.judged + '問</span> 正答率 <span>' + rate + '%</span>' +
+             ' ／ 平均 <span>' + (x.pct === null || x.pct === undefined ? '-' : x.pct + '%') + '</span>' +
+             ' で押す ／ 押せず <span>' + (x.skipped || 0) + '問</span></p>';
+      });
+      $('hist-list').innerHTML = h;
+    }
+  }
+  function fmtDate(d){
+    function p(n){ return ('0' + n).slice(-2); }
+    return d.getFullYear() + '/' + p(d.getMonth() + 1) + '/' + p(d.getDate()) + ' ' +
+           p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  function initStart(){
+    $('start-sub').textContent = '全' + ALL.length + '問' + (generated ? '（データ作成 ' + generated + '）' : '');
+    renderStart();
+    show('sc-start');
+  }
+
+  // ── 出題 ───────────────────────────────────────────
+  // phase: 'reading'（1文字ずつ表示中）／'judge'（押したので自己申告待ち）
+  //        'skip'（押さずに読み終えた＝スルー、次へ待ち）
+  var S = null;   // {list, idx, correct, judged, skipped, sumPct, sumAt, answers:[], ms}
+  var phase = 'reading', reveal = 0, tick = null;
+
+  function shuffle(a){
+    for (var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function startSession(list, ms){
+    if (!list.length) return;
+    S = {list:list, idx:0, correct:0, judged:0, skipped:0, sumPct:0, sumAt:0, answers:[], ms:ms};
+    show('sc-quiz');
+    renderQuestion();
+  }
+  function startNormal(){
+    var pool = ALL.filter(match);
+    shuffle(pool);
+    if (sel.num > 0) pool = pool.slice(0, sel.num);
+    startSession(pool, speedMs());
+  }
+  function startReview(ids){
+    var set = {};
+    ids.forEach(function(id){ set[id] = 1; });
+    var pool = ALL.filter(function(q){ return set[q.id]; });
+    shuffle(pool);
+    startSession(pool, speedMs());
+  }
+
+  function cur(){ return S.list[S.idx]; }
+
+  function renderQuestion(){
+    var q = cur();
+    phase = 'reading'; reveal = 0;
+    $('q-no').textContent = (S.idx + 1) + '/' + S.list.length + '問目';
+    $('q-tag').textContent = q.category + (q.sub ? '・' + q.sub : '');
+    $('q-score').textContent = '正解 ' + S.correct;
+    $('q-bar').style.width = Math.round(S.idx / S.list.length * 100) + '%';
+    $('q-text').textContent = '';
+    $('q-spot').classList.add('hidden');
+    $('q-spot').innerHTML = '';
+    $('q-choices').classList.add('hidden');
+    $('q-choices').innerHTML = '';
+    $('q-verdict').classList.add('hidden');
+    $('q-verdict').innerHTML = '';
+
+    var hit = $('btn-hit');
+    hit.classList.remove('hidden', 'late');
+    hit.innerHTML = '押す<span class="k">Space</span>';
+    $('self-row').classList.add('hidden');
+    $('btn-next').classList.add('hidden');
+
+    startReveal();
+  }
+
+  // ── 1文字ずつ表示 ───────────────────────────────────
+  function startReveal(){
+    stopReveal();
+    var q = cur();
+    tick = setInterval(function(){
+      if (reveal >= q.chars.length){ revealDone(); return; }
+      reveal++;
+      $('q-text').textContent = q.chars.slice(0, reveal).join('');
+    }, S.ms);
+  }
+  function stopReveal(){
+    if (tick){ clearInterval(tick); tick = null; }
+  }
+  // 最後まで押されずに読み終えた（＝スルーにできる状態）
+  function revealDone(){
+    stopReveal();
+    if (phase !== 'reading') return;
+    var hit = $('btn-hit');
+    hit.classList.add('late');
+    hit.innerHTML = '押せなかった<span class="k">答えを見る（Space）</span>';
+  }
+
+  // ── 押す ───────────────────────────────────────────
+  function press(){
+    if (phase !== 'reading') return;
+    var q = cur(), total = q.chars.length;
+    stopReveal();
+    var done = (reveal >= total);
+    var at = done ? total : reveal;
+    var pct = total ? Math.round(at / total * 100) : 0;
+
+    if (done){
+      // 読み終わってから押した＝スルー扱い（正誤の分母に入れない）
+      phase = 'skip';
+      S.skipped++;
+      S.answers.push({q:q, pressed:false, at:total, pct:100, ok:null});
+      results[q.id] = {ok:false, at:Date.now(), pressed:false};
+      lsWrite(LS_RESULT, results);
+      showSpot(null, null);
+    } else {
+      phase = 'judge';
+      S.sumPct += pct; S.sumAt += at;
+      S.answers.push({q:q, pressed:true, at:at, pct:pct, ok:null});
+      showSpot(at, pct);
+    }
+    showAnswer(done);
+  }
+
+  function showSpot(at, pct){
+    var box = $('q-spot');
+    if (at === null){
+      box.innerHTML = '<div class="big">押せなかった</div>' +
+                      '<div class="sub2">問題文を最後まで読み切りました（スルー扱い・正解数には数えません）。</div>';
+    } else {
+      var q = cur();
+      box.innerHTML = '<div class="big">' + pct + '%</div>' +
+                      '<div class="sub2">' + at + '文字目で押した（全' + q.chars.length + '文字）</div>';
+    }
+    box.className = 'spot';
+  }
+
+  function showAnswer(wasSkip){
+    var q = cur();
+    setRuby($('q-text'), q.question);              // ここで全文を出す（ふりがなはここから）
+
+    if (q.format === 'choice'){
+      var box = $('q-choices');
+      box.innerHTML = '';
+      q.choices.forEach(function(c, i){
+        var d = document.createElement('div');
+        d.className = 'ch' + (i === q.answer ? ' ok' : ' muted');
+        var k = document.createElement('span');
+        k.className = 'k'; k.textContent = String(i + 1);
+        d.appendChild(k);
+        var t = document.createElement('span');
+        setRuby(t, c);
+        d.appendChild(t);
+        box.appendChild(d);
+      });
+      box.classList.remove('hidden');
+    }
+
+    var html = '<div class="head">正解：' + rubyHtml(q.choices[q.answer]) + '</div>';
+    if (q.explanation) html += '<p class="exp">' + rubyHtml(q.explanation) + '</p>';
+    if (q.source) html += '<a class="src" href="' + esc(q.source) + '" target="_blank" rel="noopener">出典を開く</a>';
+    var v = $('q-verdict');
+    v.className = 'verdict';
+    v.innerHTML = html;
+
+    $('btn-hit').classList.add('hidden');
+    if (wasSkip){
+      $('btn-next').textContent = (S.idx + 1 >= S.list.length) ? '結果を見る' : '次へ';
+      $('btn-next').classList.remove('hidden');
+    } else {
+      $('self-row').classList.remove('hidden');
+    }
+  }
+
+  // ── 自己申告 ───────────────────────────────────────
+  function judge(ok){
+    if (phase !== 'judge') return;
+    var q = cur();
+    S.judged++;
+    if (ok) S.correct++;
+    S.answers[S.answers.length - 1].ok = ok;
+    results[q.id] = {ok:ok, at:Date.now(), pressed:true};
+    lsWrite(LS_RESULT, results);
+    $('q-score').textContent = '正解 ' + S.correct;
+    next();
+  }
+
+  function next(){
+    stopReveal();
+    $('q-bar').style.width = Math.round((S.idx + 1) / S.list.length * 100) + '%';
+    if (S.idx + 1 >= S.list.length){ finish(); return; }
+    S.idx++;
+    renderQuestion();
+    window.scrollTo(0, 0);
+  }
+
+  function finish(){
+    stopReveal();
+    var pressed = S.answers.filter(function(a){ return a.pressed; }).length;
+    var avgPct = pressed ? Math.round(S.sumPct / pressed) : null;
+    var avgAt  = pressed ? Math.round(S.sumAt / pressed * 10) / 10 : null;
+
+    history.unshift({at:Date.now(), correct:S.correct, judged:S.judged,
+                     skipped:S.skipped, pct:avgPct});
+    history = history.slice(0, 50);
+    lsWrite(LS_HIST, history);
+
+    $('r-score').textContent = S.correct + ' / ' + S.judged + '問';
+    $('r-rate').textContent = '自己申告の正答率 ' +
+      (S.judged ? Math.round(S.correct / S.judged * 100) : 0) + '％' +
+      '（全' + S.list.length + '問中、押したのは' + S.judged + '問）';
+    $('r-pos').textContent   = (avgPct === null) ? '-' : avgPct + '%';
+    $('r-chars').textContent = (avgAt === null)  ? '-' : avgAt + '字';
+    $('r-skip').textContent  = S.skipped + '問';
+
+    var misses = S.answers.filter(function(a){ return a.ok === false || !a.pressed; });
+    $('r-missbox').classList.toggle('hidden', misses.length === 0);
+    $('btn-again').classList.toggle('hidden', misses.length === 0);
+    if (misses.length){
+      $('btn-again').textContent = 'この問題だけもう一度（' + misses.length + '問）';
+      var h = '';
+      misses.forEach(function(a){
+        h += '<div class="miss">';
+        h += '<p class="q">' + rubyHtml(a.q.question) + '</p>';
+        h += '<p class="row mine">' + (a.pressed
+              ? ('不正解（' + a.at + '文字目・' + a.pct + '%で押した）')
+              : '押せなかった（読み切り）') + '</p>';
+        h += '<p class="row right">正解：' + rubyHtml(a.q.choices[a.q.answer]) + '</p>';
+        if (a.q.explanation) h += '<p class="row dim">' + rubyHtml(a.q.explanation) + '</p>';
+        if (a.q.source) h += '<a class="src" href="' + esc(a.q.source) + '" target="_blank" rel="noopener">出典を開く</a>';
+        h += '</div>';
+      });
+      $('r-misses').innerHTML = h;
+    }
+    lastMisses = misses.map(function(a){ return a.q.id; });
+    show('sc-result');
+  }
+  var lastMisses = [];
+
+  // ── キーボード ──────────────────────────────────────
+  document.addEventListener('keydown', function(e){
+    if ($('sc-quiz').classList.contains('hidden')) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var k = e.key;
+    if (phase === 'reading'){
+      if (k === ' ' || k === 'Spacebar' || k === 'Enter'){ e.preventDefault(); press(); }
+      return;
+    }
+    if (phase === 'judge'){
+      if (k === '1'){ e.preventDefault(); judge(true); return; }
+      if (k === '2'){ e.preventDefault(); judge(false); return; }
+      return;
+    }
+    if (phase === 'skip'){
+      if (k === ' ' || k === 'Spacebar' || k === 'Enter' || k === '1' || k === '2'){
+        e.preventDefault(); next();
+      }
+    }
+  });
+
+  // ── イベント ────────────────────────────────────────
+  $('btn-start').addEventListener('click', startNormal);
+  $('btn-review').addEventListener('click', function(){ startReview(missIds()); });
+  $('btn-hit').addEventListener('click', press);
+  $('btn-yes').addEventListener('click', function(){ judge(true); });
+  $('btn-no').addEventListener('click', function(){ judge(false); });
+  $('btn-next').addEventListener('click', function(){ if (phase === 'skip') next(); });
+  $('btn-abort').addEventListener('click', function(){ stopReveal(); S = null; renderStart(); show('sc-start'); });
+  $('btn-again').addEventListener('click', function(){ startReview(lastMisses); });
+  $('btn-home').addEventListener('click', function(){ renderStart(); show('sc-start'); });
+  $('btn-reload').addEventListener('click', load);
+
+  // ふりがな辞書を先に読んでから questions.json を読む（描画時には辞書が揃っている）。
+  // 辞書側で失敗しても load() には必ず進む。
+  if (window.fetch && window.Promise) { loadReadings().then(load, load); }
+  else { load(); }
+})();
+</script>
+</body>
+</html>

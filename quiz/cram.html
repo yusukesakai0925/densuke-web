@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ウルトラクイズ 直前チェックシート</title>
+<style>
+:root{
+  --fg:#1c1c1e; --dim:#6b7280; --line:#e5e7eb; --bg:#fff; --panel:#f6f7f9;
+  --accent:#0b5cad; --accbg:#eaf1fb;
+  --ok:#0f7b3e; --okbg:#e7f6ec; --ng:#a32a22; --ngbg:#fdecea;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--panel); color:var(--fg);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+  line-height:1.5; -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:720px;margin:0 auto;padding:16px 14px 60px;background:var(--bg);min-height:100vh}
+h1{font-size:19px;margin:0 0 2px}
+h2{font-size:15px;margin:22px 0 6px;padding-bottom:5px;border-bottom:2px solid var(--fg)}
+h3{font-size:13px;margin:12px 0 4px;color:var(--dim);font-weight:700}
+p{margin:6px 0}
+.sub{color:var(--dim);font-size:12.5px;margin:0 0 10px}
+.dim{color:var(--dim);font-size:13px}
+.hidden{display:none !important}
+
+/* ── 件数と内訳 ─────────────────────────────────── */
+.counts{background:var(--panel);border-radius:8px;padding:10px 12px;margin:10px 0 12px;font-size:13px}
+.counts .total{font-size:15px;font-weight:700}
+.counts .total b{font-size:20px;font-variant-numeric:tabular-nums}
+.counts ul{list-style:none;display:flex;flex-wrap:wrap;gap:4px 10px;margin:6px 0 0;padding:0;color:var(--dim)}
+.counts li{font-size:12.5px}
+.counts li span{font-variant-numeric:tabular-nums;color:var(--fg);font-weight:700}
+
+/* ── 検索 ───────────────────────────────────────── */
+.searchbox{position:sticky;top:0;z-index:2;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line)}
+.searchbox input{
+  font:inherit;font-size:15px;width:100%;min-height:44px;padding:8px 12px;
+  border:1px solid var(--line);border-radius:8px;background:#fafafa;color:var(--fg);
+}
+.searchbox input:focus{outline:0;border-color:var(--accent);background:#fff}
+.hits{font-size:12.5px;color:var(--dim);margin:6px 0 0}
+
+/* ── 1問1行 ─────────────────────────────────────── */
+.item{padding:7px 0;border-bottom:1px solid var(--line)}
+.fact{font-size:14px;line-height:1.85;margin:0}
+.fact .a{font-weight:700;color:var(--accent)}
+.badge{
+  display:inline-block;min-width:20px;height:20px;line-height:20px;text-align:center;
+  border-radius:10px;font-size:12.5px;font-weight:700;margin-right:6px;padding:0 5px;
+}
+.badge.ok{background:var(--okbg);color:var(--ok)}
+.badge.ng{background:var(--ngbg);color:var(--ng)}
+.exp{font-size:12.5px;line-height:1.85;color:var(--dim);margin:2px 0 0}
+.exp .src{color:var(--accent);white-space:nowrap;margin-left:4px;font-size:12px}
+
+/* ── 人名ふりがな（readings.json）───────────────────── */
+/* rt は本文の 0.5em。ruby 1行分は 1em + 0.5em ≒ 1.5em になるので、
+   本文の line-height を 1.85 に揃えて、ふりがなが付く行と付かない行で
+   行間が伸び縮みしないようにしている（.fact / .exp とも同じ値）。 */
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.5em;font-weight:400;line-height:1;color:var(--dim);letter-spacing:0}
+
+/* ── エラー ─────────────────────────────────────── */
+.err{background:#fffbeb;border-left:4px solid #d97706;padding:14px 16px;border-radius:6px}
+.err .head{font-weight:700;font-size:16px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;
+  background:#f3f4f6;padding:1px 5px;border-radius:3px}
+footer{margin-top:36px;padding-top:12px;border-top:1px solid var(--line);color:var(--dim);font-size:12px}
+/* ── ページ間ナビ ───────────────────────────────── */
+.navbar{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px;padding-bottom:10px;
+  border-bottom:1px solid var(--line)}
+.navbar a,.navbar span{display:flex;align-items:center;justify-content:center;
+  min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line);
+  font-size:13px;line-height:1.2;text-decoration:none;color:var(--dim)}
+.navbar span{color:var(--fg);font-weight:700;border-color:var(--fg)}
+@media (max-width:420px){
+  .wrap{padding:12px 12px 48px}
+  h1{font-size:18px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ── ページ間ナビ ─────────────────────────────── -->
+<nav class="navbar">
+  <a href="index.html">4択練習</a>
+  <a href="hayaoshi.html">早押し練習</a>
+  <span>一枚読み</span>
+</nav>
+
+<h1>直前チェックシート</h1>
+<p class="sub" id="gen">2026/9/12 全国クイズ大会・当日の読み流し用。<a href="index.html">練習アプリはこちら</a></p>
+
+<!-- ── 読み込み中 ───────────────────────────────── -->
+<div id="sc-load">
+  <p class="dim">questions.json を読み込んでいます…</p>
+</div>
+
+<!-- ── エラー ───────────────────────────────────── -->
+<div id="sc-error" class="hidden">
+  <div class="err">
+    <p class="head">読み込めませんでした</p>
+    <p id="err-detail" class="dim"></p>
+    <p class="dim">このページと同じ場所に <code>questions.json</code> が置かれると表示できます。</p>
+  </div>
+</div>
+
+<!-- ── 本体 ─────────────────────────────────────── -->
+<div id="sc-main" class="hidden">
+  <div class="counts" id="counts"></div>
+  <div class="searchbox">
+    <input id="q" type="search" placeholder="絞り込み（例: サッカー／万博／ノーベル）" autocomplete="off">
+    <p class="hits" id="hits"></p>
+  </div>
+  <div id="list"></div>
+</div>
+
+<footer>問題データは <code>questions.json</code>（練習アプリと同じファイル）。問題文・解説は原文のままです。<br>⚠ 問題はAIが作成しています。出典URLで事実確認してください。</footer>
+
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // 見出しの並び順。ここに無い category は末尾へ回す。
+  var CAT_ORDER = ['スポーツ','芸能','科学・技術','社会','経済','政治','国際'];
+
+  function $(id){ return document.getElementById(id); }
+  function show(id){
+    ['sc-load','sc-error','sc-main'].forEach(function(x){
+      $(x).classList.toggle('hidden', x !== id);
+    });
+  }
+  function str(v){ return (v === null || v === undefined) ? '' : String(v); }
+  function esc(s){
+    return str(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                 .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  function fail(detail){
+    $('err-detail').textContent = detail;
+    show('sc-error');
+  }
+
+  // ── 人名ふりがな（readings.json） ─────────────────────
+  // readings.json が無い・壊れている・fetch に失敗しても、ふりがな無しで
+  // これまで通り動く（ここで throw を外に出さない）。
+  var RUBY_RE = null;    // surface を長い順に並べた「1本の」正規表現
+  var RUBY_MAP = {};     // エスケープ済み surface → <ruby>…</ruby> のHTML
+
+  function reQuote(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  // 'constructor' のような Object 由来のキーを拾わないようにする
+  function hasKey(o, k){ return Object.prototype.hasOwnProperty.call(o, k); }
+
+  function buildRuby(data){
+    if (!data || !Array.isArray(data.names)) return;
+    var surfaces = [];
+    data.names.forEach(function(n){
+      if (!n || typeof n.surface !== 'string' || !n.surface) return;
+      if (!Array.isArray(n.ruby) || !n.ruby.length) return;
+      var html = '';
+      for (var i = 0; i < n.ruby.length; i++){
+        var pair = n.ruby[i];
+        if (!Array.isArray(pair) || pair.length < 2 || !pair[0]) { html = ''; break; }
+        if (pair[1]) {
+          html += '<ruby>' + esc(String(pair[0])) + '<rt>' + esc(String(pair[1])) + '</rt></ruby>';
+        } else {
+          html += esc(String(pair[0]));
+        }
+      }
+      if (!html) return;
+      var key = esc(n.surface);          // 置換はエスケープ後の文字列に対して行う
+      if (hasKey(RUBY_MAP, key)) return;   // 同じ surface が2度出てきたら先勝ち
+      RUBY_MAP[key] = html;
+      surfaces.push(key);
+    });
+    if (!surfaces.length) return;
+    // 長い順（readings.json も長い順だが、こちらでも保証する）。
+    // 「井上尚弥」が「井上」より先に選択肢へ並べば、正規表現の左優先で長い方が当たる。
+    surfaces.sort(function(a, b){ return b.length - a.length; });
+    try { RUBY_RE = new RegExp(surfaces.map(reQuote).join('|'), 'g'); }
+    catch (e) { RUBY_RE = null; }
+  }
+
+  function loadReadings(){
+    return fetch('readings.json', {cache:'no-store'})
+      .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(data){ buildRuby(data); })
+      .catch(function(){ RUBY_RE = null; });
+  }
+
+  // 文字列 → 表示用HTML。必ず「エスケープ → そのあと ruby を差し込む」順。
+  // 逆にすると差し込んだタグ自身がエスケープされ、画面にタグ文字列が出る。
+  // 置換は1本の正規表現を1回走らせるだけなので、差し込んだ <ruby> の中身に
+  // 二重で当たることはない。
+  function rubyHtml(s){
+    var h = esc(s);
+    if (!RUBY_RE) return h;
+    try {
+      RUBY_RE.lastIndex = 0;
+      return h.replace(RUBY_RE, function(m){ return hasKey(RUBY_MAP, m) ? RUBY_MAP[m] : m; });
+    } catch (e) { return h; }
+  }
+
+  // ── 読み込み ────────────────────────────────────────
+  function load(){
+    show('sc-load');
+    if (!window.fetch) { fail('このブラウザは questions.json を読み込めません（fetch 非対応）。'); return; }
+    fetch('questions.json', {cache:'no-store'})
+      .then(function(r){
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.text();
+      })
+      .then(function(text){
+        var data;
+        try { data = JSON.parse(text); }
+        catch (e) { throw new Error('questions.json の中身が JSON として読めません。'); }
+        if (!data || !Array.isArray(data.questions)) throw new Error('questions.json に questions の配列がありません。');
+        var rows = data.questions.map(normalize).filter(function(q){ return !!q; });
+        if (!rows.length) throw new Error('questions.json に表示できる問題が1問もありません。');
+        render(rows, str(data.generated));
+        show('sc-main');
+      })
+      .catch(function(e){
+        var msg = (e && e.message) ? e.message : String(e);
+        if (location.protocol === 'file:') {
+          msg += '（この画面を file:// で開いた場合、ブラウザの制限で questions.json を読めません。簡易サーバ経由で開いてください）';
+        }
+        fail(msg);
+      });
+  }
+
+  // ── 1件を「事実1行」に整える ──────────────────────────
+  // question / explanation の文言は書き換えない（末尾の「？」を落とすだけ）。
+  function normalize(raw){
+    if (!raw || typeof raw !== 'object') return null;
+    var q = str(raw.question);
+    if (!q) return null;
+    var choices = Array.isArray(raw.choices) ? raw.choices.map(str) : [];
+    var ai = (typeof raw.answer === 'number') ? raw.answer : parseInt(raw.answer, 10);
+    var ans = (ai >= 0 && ai < choices.length) ? choices[ai] : '';
+    var fmt = (str(raw.format) === 'ox') ? 'ox' : 'choice';
+
+    var head;
+    if (fmt === 'ox') {
+      // ○× … 問題文はそのまま、頭に ○／× のバッジ
+      var cls = (ans === '×' || ans === 'x' || ans === 'X') ? 'ng' : 'ok';
+      head = '<span class="badge ' + cls + '">' + esc(ans || '?') + '</span>' + rubyHtml(q);
+    } else {
+      // 4択 … 末尾の「？」を落として、正解を「 → 」でつなぐ
+      var stem = q.replace(/[？?]\s*$/, '');
+      head = rubyHtml(stem) + (ans ? ' <span class="a">→ ' + rubyHtml(ans) + '</span>' : '');
+    }
+
+    return {
+      category: str(raw.category) || 'その他',
+      subcategory: str(raw.subcategory) || '',
+      html: head,
+      explanation: str(raw.explanation),
+      source: str(raw.source),
+      // 検索は表示している文字すべてを対象にする
+      text: (q + ' ' + ans + ' ' + str(raw.explanation) + ' ' +
+             str(raw.category) + ' ' + str(raw.subcategory)).toLowerCase()
+    };
+  }
+
+  // ── 描画 ────────────────────────────────────────────
+  function render(rows, generated){
+    if (generated) {
+      $('gen').innerHTML = '2026/9/12 全国クイズ大会・当日の読み流し用（データ: ' +
+        esc(generated) + '）　<a href="index.html">練習アプリはこちら</a>';
+    }
+
+    // category → subcategory の順で束ねる（出現順を保つ）
+    var cats = [], catMap = {};
+    rows.forEach(function(r){
+      var c = catMap[r.category];
+      if (!c) { c = catMap[r.category] = {name:r.category, n:0, subs:[], subMap:{}}; cats.push(c); }
+      c.n++;
+      var s = c.subMap[r.subcategory];
+      if (!s) { s = c.subMap[r.subcategory] = {name:r.subcategory, items:[]}; c.subs.push(s); }
+      s.items.push(r);
+    });
+    cats.sort(function(a, b){
+      var ia = CAT_ORDER.indexOf(a.name), ib = CAT_ORDER.indexOf(b.name);
+      if (ia < 0) ia = CAT_ORDER.length;
+      if (ib < 0) ib = CAT_ORDER.length;
+      return ia - ib;
+    });
+
+    // 件数と内訳（読み込んだ実数）
+    var lis = cats.map(function(c){
+      return '<li>' + esc(c.name) + ' <span>' + c.n + '</span></li>';
+    }).join('');
+    $('counts').innerHTML =
+      '<p class="total">全 <b>' + rows.length + '</b> 件</p><ul>' + lis + '</ul>';
+
+    // 本体
+    var html = cats.map(function(c){
+      var body = c.subs.map(function(s){
+        var items = s.items.map(function(r){
+          var exp = '';
+          if (r.explanation || r.source) {
+            exp = '<p class="exp">' + rubyHtml(r.explanation) +
+              (r.source ? '<a class="src" href="' + esc(r.source) +
+                          '" target="_blank" rel="noopener">出典</a>' : '') + '</p>';
+          }
+          return '<div class="item" data-t="' + esc(r.text) + '">' +
+                 '<p class="fact">' + r.html + '</p>' + exp + '</div>';
+        }).join('');
+        return '<section class="sub-sec">' +
+               (s.name ? '<h3>' + esc(s.name) + '</h3>' : '') + items + '</section>';
+      }).join('');
+      return '<section class="cat-sec"><h2>' + esc(c.name) +
+             ' <span class="dim">' + c.n + '</span></h2>' + body + '</section>';
+    }).join('');
+    $('list').innerHTML = html;
+
+    initFilter(rows.length);
+  }
+
+  // ── 検索（入力文字を含む行だけ残す） ────────────────────
+  function initFilter(total){
+    var input = $('q'), hits = $('hits'), list = $('list');
+    var items = [].slice.call(list.querySelectorAll('.item'));
+    var subs  = [].slice.call(list.querySelectorAll('.sub-sec'));
+    var sects = [].slice.call(list.querySelectorAll('.cat-sec'));
+
+    function anyVisible(el, sel){
+      var kids = el.querySelectorAll(sel);
+      for (var i = 0; i < kids.length; i++) {
+        if (!kids[i].classList.contains('hidden')) return true;
+      }
+      return false;
+    }
+
+    function apply(){
+      var kw = input.value.trim().toLowerCase();
+      var n = 0;
+      items.forEach(function(el){
+        var hit = !kw || el.getAttribute('data-t').indexOf(kw) >= 0;
+        el.classList.toggle('hidden', !hit);
+        if (hit) n++;
+      });
+      // 中身が全部消えた小見出し・見出しごと隠す
+      subs.forEach(function(el){ el.classList.toggle('hidden', !anyVisible(el, '.item')); });
+      sects.forEach(function(el){ el.classList.toggle('hidden', !anyVisible(el, '.item')); });
+      hits.textContent = kw ? (n + ' / ' + total + ' 件を表示中') : '';
+    }
+
+    input.addEventListener('input', apply);
+    apply();
+  }
+
+  // ふりがな辞書を先に読んでから questions.json を読む（描画時には辞書が揃っている）。
+  // 辞書側で失敗しても load() には必ず進む。
+  if (window.fetch && window.Promise) { loadReadings().then(load, load); }
+  else { load(); }
+})();
+</script>
+</body>
+</html>
