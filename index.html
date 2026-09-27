@@ -5,20 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>でんすけの作業場 — 8体のAIが暮らす自作アプリ「ai-agents」の紹介</title>
 <meta name="description" content="酒井勇輔が自宅サーバーで動かす自作AIアプリ「ai-agents」の紹介ページ。8体のAIが役割を分けて働き、指示がなくても自分で動きます。画面のスクリーンショット、できることの一覧、2026年4月19日から続く開発の年表、AIがまとめた調査レポートを公開しています。">
-<link rel="canonical" href="https://yusukesakai0925.github.io/densuke-web/">
+<link rel="canonical" href="https://densuke.yusukesakai.jp/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="でんすけの作業場">
 <meta property="og:locale" content="ja_JP">
-<meta property="og:url" content="https://yusukesakai0925.github.io/densuke-web/">
+<meta property="og:url" content="https://densuke.yusukesakai.jp/">
 <meta property="og:title" content="でんすけの作業場 — 8体のAIが暮らす自作アプリ「ai-agents」の紹介">
 <meta property="og:description" content="8体のAIが役割を分けて暮らす自作アプリ。ブラウザの中の3D部屋、できることの一覧、開発の年表、AIの調査レポートを公開しています。">
-<meta property="og:image" content="https://yusukesakai0925.github.io/densuke-web/img/room_full.png">
+<meta property="og:image" content="https://densuke.yusukesakai.jp/img/room_full.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="でんすけの作業場 — 8体のAIが暮らす自作アプリ「ai-agents」の紹介">
 <meta name="twitter:description" content="8体のAIが役割を分けて暮らす自作アプリ。ブラウザの中の3D部屋、できることの一覧、開発の年表、AIの調査レポートを公開しています。">
-<meta name="twitter:image" content="https://yusukesakai0925.github.io/densuke-web/img/room_full.png">
+<meta name="twitter:image" content="https://densuke.yusukesakai.jp/img/room_full.png">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebSite","name":"でんすけの作業場","url":"https://yusukesakai0925.github.io/densuke-web/","inLanguage":"ja","author":{"@type":"Person","name":"酒井勇輔","url":"https://x.com/sakai_politics"}}
+{"@context":"https://schema.org","@type":"WebSite","name":"でんすけの作業場","url":"https://densuke.yusukesakai.jp/","inLanguage":"ja","author":{"@type":"Person","name":"酒井勇輔","url":"https://x.com/sakai_politics"}}
 </script>
 <style>
   :root {
@@ -334,7 +334,7 @@
   <div class="hero-nav">
     <a class="primary" href="#shots">実際の画面を見る</a>
     <a href="#agents">8体のAIを見る</a>
-    <a href="#works">AIがまとめたレポートを読む</a>
+    <a href="#works">レポート・作ったものを見る</a>
   </div>
   <div class="facts">
     <div><span class="n">8体</span><span class="l">住んでいるAI</span></div>
@@ -349,10 +349,6 @@
   <p class="intro-lede">動いているアプリの画面をそのまま撮ったものです。外に出して困らない操作だけを選び、タスク名や数値は伏せています。</p>
 
   <div class="shots">
-    <figure class="wide">
-      <img src="img/app_bash.png" alt="黒い作業画面。AIが調べる操作を4回行い、それぞれの結果が下に表示されている。" loading="lazy">
-      <figcaption><b>頼めば自分で調べて数える</b>会話に答えるだけでなく、パソコンの中を自分で調べて数字を出せる。写真は「このアプリの規模を数えて」と頼んだときの画面で、プログラムの本数と行数、動いているAIの数、開発を始めてからの日数を、手順を自分で組み立てて答えている。<span class="note">※外に出して困らない操作だけを選んで撮影しています。</span></figcaption>
-    </figure>
     <figure>
       <img src="img/app_agents.png" alt="でんすけほか8体のAIのチャット画面。上部にAIの名前一覧が並ぶ。" loading="lazy">
       <figcaption><b>AIと話す（個別モード）</b>8体のAIが同じ部屋にいて、名前をクリックすると話す相手が切り替わる。画面上部のボタンから、AIに自分で考えて動いてもらう『自律行動』の開始や、その日の日記の閲覧ができる。</figcaption>
@@ -360,14 +356,6 @@
     <figure>
       <img src="img/app_room.png" alt="縁側と庭のある家の中を歩き回れるモード。左端にアイコン列がある。" loading="lazy">
       <figcaption><b>部屋を歩く（家モード）</b>縁側と庭のある家の中を歩き回れるモード。左端のアイコン列が各機能への入口になっている。</figcaption>
-    </figure>
-    <figure>
-      <img src="img/app_todo.png" alt="タスク名を伏せたTODOリスト画面。担当者・期限・優先度の列がある。" loading="lazy">
-      <figcaption><b>TODOリスト</b>酒井さんとAIが同じ1つのリストを共有する。1件ごとに担当者（酒井・でんすけ・夜半・たぬき）と期限と優先度が付き、AIが自分で進捗を書き込む。<span class="note">※スクリーンショットではタスク名を伏せています。</span></figcaption>
-    </figure>
-    <figure>
-      <img src="img/app_sns.png" alt="複数のSNSの投稿頻度をまとめる画面。数値は伏せている。" loading="lazy">
-      <figcaption><b>SNS投稿頻度</b>複数のSNSについて、最後に投稿してからの間隔を1画面にまとめる。<span class="note">※スクリーンショットでは実際の数値を伏せています。</span></figcaption>
     </figure>
     <figure>
       <img src="img/app_music.png" alt="英語のプロンプトを入力して音楽を生成する画面。" loading="lazy">
@@ -499,9 +487,20 @@
 
 <!-- 7: 成果物 -->
 <section class="works" id="works">
-  <h2><span class="num">06 ─ 成果物</span>AIがまとめたレポート</h2>
-  <p class="intro-lede">秘書AIのでんすけが調査・分析してまとめたレポートです。公開前に酒井さん（人間）が内容を確認したうえで、ここに置いています。</p>
+  <h2><span class="num">06 ─ 成果物</span>AIがまとめたレポート・作ったもの</h2>
+  <p class="intro-lede">秘書AIのでんすけが調査・分析してまとめたレポートと、実際に作って動かしているものです。公開前に酒井さん（人間）が内容を確認したうえで、ここに置いています。</p>
   <div class="work-grid">
+    <article class="work-card">
+      <div class="w-date">2026-09-26</div>
+      <h3>役所手続きオンライン化の目安箱（いま動いています）</h3>
+      <p>「この役所の手続き、オンラインでできたら助かる」という声を集めるページ。AIが「どの役所の・どの課の・どんな手続きか」「いま何が負担か」を対話で聞き取り、要約案を見せて直してもらったうえで投稿になります。集まった声は一覧で読めます。文章を書いているのはこのPCの中で動くAIなので、送った内容は外部のAI事業者に渡りません（このページの他のレポートとは別のしくみです）。自宅のPC1台で動かしているため、返事に時間がかかることがあります。</p>
+      <div class="w-tags">
+        <span class="w-tag">政治</span><span class="w-tag">行政手続き</span><span class="w-tag">動くもの</span>
+      </div>
+      <div class="w-links">
+        <a class="w-primary" href="https://sakai-densuke.tail01143c.ts.net/meyasubako/" target="_blank" rel="noopener">› 目安箱を開く</a>
+      </div>
+    </article>
     <article class="work-card">
       <div class="w-date">2026-06-29</div>
       <h3>世論の伝播を物理モデルで遊んでみた（イジング模型）</h3>
@@ -633,8 +632,8 @@ const MILESTONES = [
   { date: '2026-08-15', title: '一部のAIの頭脳を自宅のPCに移す',
     body: '外部のAIサービスを使っていた4体を、自宅のPCのGPUで動くAIに切り替えた。文章を外に送らずに済み、使用料もかからない。速さと正確さを実際に測り比べたうえでの入れ替えで、当面は試用期間。',
     tags: ['しくみ'] },
-  { date: '2026-08-23', title: '演説の動画を切り抜いて字幕をつけられるようになる',
-    body: '長い街頭演説の動画から短い場面を切り出し、話した言葉を自動で文字にして、画面に字幕として焼き付けられるようにした。1本ずつ手で作っていた作業が、まとめて処理できる。',
+  { date: '2026-08-23', title: '長い動画を切り抜いて字幕をつけられるようになる',
+    body: '長い動画から短い場面を切り出し、話した言葉を自動で文字にして、画面に字幕として焼き付けられるようにした。1本ずつ手で作っていた作業が、まとめて処理できる。',
     tags: ['使える機能'] },
 ];
 
