@@ -70,7 +70,7 @@ body.present .slide.on{display:block}
   .help{display:none!important}
   @page{size:1280px 720px;margin:0}
 }
-/* 15枚目の詳細（7つの段階・くわしく） */
+/* 16枚目の詳細（7つの段階・くわしく） */
 
 .strip{display:flex;gap:6px;margin:-2px 0 12px}
 .chip{font-size:15px;font-weight:700;padding:4px 10px;border-radius:999px;background:#eef1f4;color:#7b8794}
@@ -266,7 +266,7 @@ table.sum td.pn{font-weight:800;color:#fff;background:var(--c);white-space:nowra
 <section class="slide">
   <div class="kicker">今日の流れ</div>
   <h2>目次</h2>
-  <div class="toc"><div class="tocc" style="--tc:var(--a);--tb:var(--a2)"><div class="toch">① 何を作るのか<small>アプリのしくみ・5〜11枚目</small></div><ol><li><span>お店のたとえ</span><b>6</b></li><li><span>Web3層構造</span><b>7</b></li><li><span>クライアントサーバ</span><b>8</b></li><li><span>サーバとの役割分担</span><b>9</b></li><li><span>3層に分ける理由</span><b>10</b></li><li><span>演習：カートに入れる</span><b>11</b></li></ol></div><div class="tocc" style="--tc:var(--b);--tb:var(--b2)"><div class="toch">② どう作るのか<small>プロジェクトの進め方・12〜30枚目</small></div><ol><li><span>ITプロジェクトの型</span><b>13</b></li><li><span>プロジェクトの7段階</span><b>14</b></li><li><span>段階ごとの詳細</span><b>15〜21</b></li><li><span>段階のまとめ表</span><b>22</b></li><li><span>PMの仕事・組織・会議</span><b>23〜25</b></li><li><span>ガントチャート</span><b>26</b></li><li><span>開発費・QCD</span><b>27・28</b></li><li><span>進め方と契約</span><b>29</b></li><li><span>演習：3社の見積書</span><b>30</b></li></ol></div><div class="tocc" style="--tc:var(--c);--tb:var(--c2)"><div class="toch">③ AI時代のITプロジェクト<small>AIとクラウド・32〜40枚目</small></div><ol><li><span>生成AIとは</span><b>32</b></li><li><span>AIのしくみ</span><b>33</b></li><li><span>AIエージェント</span><b>34</b></li><li><span>AI導入の課題</span><b>35</b></li><li><span>クラウドとは</span><b>36</b></li><li><span>借り方の3段階</span><b>37</b></li><li><span>クラウドに移る理由</span><b>38</b></li><li><span>クラウドの落とし穴</span><b>39</b></li><li><span>標準化とガバメントクラウド</span><b>40</b></li></ol></div></div>
+  <div class="toc"><div class="tocc" style="--tc:var(--a);--tb:var(--a2)"><div class="toch">① 何を作るのか<small>アプリのしくみ・5〜11枚目</small></div><ol><li><span>お店のたとえ</span><b>6</b></li><li><span>Web3層構造</span><b>7</b></li><li><span>クライアントサーバ</span><b>8</b></li><li><span>サーバとの役割分担</span><b>9</b></li><li><span>3層に分ける理由</span><b>10</b></li><li><span>演習：カートに入れる</span><b>11</b></li></ol></div><div class="tocc" style="--tc:var(--b);--tb:var(--b2)"><div class="toch">② どう作るのか<small>プロジェクトの進め方・12〜30枚目</small></div><ol><li><span>ITプロジェクトの型</span><b>13</b></li><li><span>進め方と契約</span><b>14</b></li><li><span>7段階（ウォーターフォール）</span><b>15</b></li><li><span>段階ごとの詳細</span><b>16〜22</b></li><li><span>段階のまとめ表</span><b>23</b></li><li><span>PMの仕事・組織・会議</span><b>24〜26</b></li><li><span>ガントチャート</span><b>27</b></li><li><span>開発費・QCD</span><b>28・29</b></li><li><span>演習：3社の見積書</span><b>30</b></li></ol></div><div class="tocc" style="--tc:var(--c);--tb:var(--c2)"><div class="toch">③ AI時代のITプロジェクト<small>AIとクラウド・32〜40枚目</small></div><ol><li><span>生成AIとは</span><b>32</b></li><li><span>AIのしくみ</span><b>33</b></li><li><span>AIエージェント</span><b>34</b></li><li><span>AI導入の課題</span><b>35</b></li><li><span>クラウドとは</span><b>36</b></li><li><span>借り方の3段階</span><b>37</b></li><li><span>クラウドに移る理由</span><b>38</b></li><li><span>クラウドの落とし穴</span><b>39</b></li><li><span>標準化とガバメントクラウド</span><b>40</b></li></ol></div></div>
   <div class="tocf"><span>用語クイズ 41〜44枚目</span></div>
   <div class="pg"></div>
 </section>
@@ -545,8 +545,55 @@ table.sum td.pn{font-weight:800;color:#fff;background:var(--c);white-space:nowra
 </section>
 
 <section class="slide part2">
-  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">プロジェクトの7段階</span></div>
-  <h2 class="msg">7つの段階で進む。発注側の出番は最初と最後が重い</h2>
+  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">進め方と契約</span></div>
+  <h2 class="msg">進め方は2通り。契約もそれに合わせる</h2>
+  <svg viewBox="0 0 1136 470" width="1136" height="470">
+    <defs><marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#e07a2e"/></marker></defs>
+    <text x="0" y="30" font-size="26" font-weight="800">一気に作る（ウォーターフォール）</text>
+    <g font-size="20" text-anchor="middle">
+      <rect x="0"   y="50"  width="150" height="50" fill="#fbe6d6" stroke="#e07a2e"/><text x="75"  y="82">決める</text>
+      <rect x="150" y="100" width="150" height="50" fill="#fbe6d6" stroke="#e07a2e"/><text x="225" y="132">設計</text>
+      <rect x="300" y="150" width="150" height="50" fill="#fbe6d6" stroke="#e07a2e"/><text x="375" y="182">作る</text>
+      <rect x="450" y="200" width="150" height="50" fill="#fbe6d6" stroke="#e07a2e"/><text x="525" y="232">確かめる</text>
+    </g>
+    <g font-size="20" fill="#1f2933">
+      <text x="0" y="300">◎ 最初に総額と期日が決まる</text>
+      <text x="0" y="335">△ 途中で変えると高い</text>
+      <text x="0" y="370">向く：やることが最初から決まっている</text>
+      <text x="0" y="415" font-weight="700">契約＝「これを作ってください」</text>
+      <text x="0" y="445" font-size="18" fill="#52606d">（完成物に対して払う）</text>
+    </g>
+    <line x1="640" y1="20" x2="640" y2="450" stroke="#cbd2d9" stroke-width="2"/>
+    <text x="680" y="30" font-size="26" font-weight="800">少しずつ作る（アジャイル）</text>
+    <defs><marker id="ac" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0,0L10,5L0,10z" fill="#e07a2e"/></marker></defs>
+    <g transform="translate(680,50)">
+      <g fill="none" stroke="#e07a2e" stroke-width="4" marker-end="url(#ac)">
+        <path d="M280,41 A90,90 0 0 1 318,115"/>
+        <path d="M280,189 A90,90 0 0 1 176,189"/>
+        <path d="M138,115 A90,90 0 0 1 176,41"/>
+      </g>
+      <g font-size="20" text-anchor="middle" font-weight="700">
+        <rect x="183" y="7" width="90" height="36" rx="8" fill="#fbe6d6" stroke="#e07a2e" stroke-width="2"/><text x="228" y="32">決める</text>
+        <rect x="261" y="142" width="90" height="36" rx="8" fill="#fbe6d6" stroke="#e07a2e" stroke-width="2"/><text x="306" y="167">作る</text>
+        <rect x="105" y="142" width="90" height="36" rx="8" fill="#fbe6d6" stroke="#e07a2e" stroke-width="2"/><text x="150" y="167">見せる</text>
+      </g>
+      <g font-size="17" text-anchor="middle" fill="#52606d"><text x="228" y="108">1〜2週間で</text><text x="228" y="132">1周</text></g>
+      <g font-size="17" fill="#1f2933"><text x="355" y="45">何周も</text><text x="355" y="70">回して、</text><text x="355" y="95">使える所を</text><text x="355" y="120">広げていく</text></g>
+    </g>
+    <g font-size="20" fill="#1f2933">
+      <text x="680" y="300">◎ 使いながら直せる</text>
+      <text x="680" y="335">△ 総額が最初には決まらない</text>
+      <text x="680" y="370">向く：使ってみないと分からない</text>
+      <text x="680" y="415" font-weight="700">契約＝「この期間、一緒に作ってください」</text>
+      <text x="680" y="445" font-size="18" fill="#52606d">（期間と人に対して払う）</text>
+    </g>
+  </svg>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part2">
+  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">プロジェクトの7段階（ウォーターフォール）</span></div>
+  <h2 class="msg">ウォーターフォールは7段階。発注側は最初と最後が重い</h2>
   <svg viewBox="0 0 1136 470" width="1136" height="470">
     <g font-size="22" font-weight="800" text-anchor="middle" fill="#fff">
       <path d="M0 40 h140 l20 45 l-20 45 h-140 z" fill="#e07a2e"/><text x="72" y="93">企画</text>
@@ -1019,53 +1066,6 @@ table.sum td.pn{font-weight:800;color:#fff;background:var(--c);white-space:nowra
 </section>
 
 <section class="slide part2">
-  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">進め方と契約</span></div>
-  <h2 class="msg">進め方は2通り。契約もそれに合わせる</h2>
-  <svg viewBox="0 0 1136 470" width="1136" height="470">
-    <defs><marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#e07a2e"/></marker></defs>
-    <text x="0" y="30" font-size="26" font-weight="800">一気に作る（ウォーターフォール）</text>
-    <g font-size="20" text-anchor="middle">
-      <rect x="0"   y="50"  width="150" height="50" fill="#fbe6d6" stroke="#e07a2e"/><text x="75"  y="82">決める</text>
-      <rect x="150" y="100" width="150" height="50" fill="#fbe6d6" stroke="#e07a2e"/><text x="225" y="132">設計</text>
-      <rect x="300" y="150" width="150" height="50" fill="#fbe6d6" stroke="#e07a2e"/><text x="375" y="182">作る</text>
-      <rect x="450" y="200" width="150" height="50" fill="#fbe6d6" stroke="#e07a2e"/><text x="525" y="232">確かめる</text>
-    </g>
-    <g font-size="20" fill="#1f2933">
-      <text x="0" y="300">◎ 最初に総額と期日が決まる</text>
-      <text x="0" y="335">△ 途中で変えると高い</text>
-      <text x="0" y="370">向く：やることが最初から決まっている</text>
-      <text x="0" y="415" font-weight="700">契約＝「これを作ってください」</text>
-      <text x="0" y="445" font-size="18" fill="#52606d">（完成物に対して払う）</text>
-    </g>
-    <line x1="640" y1="20" x2="640" y2="450" stroke="#cbd2d9" stroke-width="2"/>
-    <text x="680" y="30" font-size="26" font-weight="800">少しずつ作る（アジャイル）</text>
-    <defs><marker id="ac" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0,0L10,5L0,10z" fill="#e07a2e"/></marker></defs>
-    <g transform="translate(680,50)">
-      <g fill="none" stroke="#e07a2e" stroke-width="4" marker-end="url(#ac)">
-        <path d="M280,41 A90,90 0 0 1 318,115"/>
-        <path d="M280,189 A90,90 0 0 1 176,189"/>
-        <path d="M138,115 A90,90 0 0 1 176,41"/>
-      </g>
-      <g font-size="20" text-anchor="middle" font-weight="700">
-        <rect x="183" y="7" width="90" height="36" rx="8" fill="#fbe6d6" stroke="#e07a2e" stroke-width="2"/><text x="228" y="32">決める</text>
-        <rect x="261" y="142" width="90" height="36" rx="8" fill="#fbe6d6" stroke="#e07a2e" stroke-width="2"/><text x="306" y="167">作る</text>
-        <rect x="105" y="142" width="90" height="36" rx="8" fill="#fbe6d6" stroke="#e07a2e" stroke-width="2"/><text x="150" y="167">見せる</text>
-      </g>
-      <g font-size="17" text-anchor="middle" fill="#52606d"><text x="228" y="108">1〜2週間で</text><text x="228" y="132">1周</text></g>
-      <g font-size="17" fill="#1f2933"><text x="355" y="45">何周も</text><text x="355" y="70">回して、</text><text x="355" y="95">使える所を</text><text x="355" y="120">広げていく</text></g>
-    </g>
-    <g font-size="20" fill="#1f2933">
-      <text x="680" y="300">◎ 使いながら直せる</text>
-      <text x="680" y="335">△ 総額が最初には決まらない</text>
-      <text x="680" y="370">向く：使ってみないと分からない</text>
-      <text x="680" y="415" font-weight="700">契約＝「この期間、一緒に作ってください」</text>
-      <text x="680" y="445" font-size="18" fill="#52606d">（期間と人に対して払う）</text>
-    </g>
-  </svg>
-  <div class="pg"></div>
-</section>
-
-<section class="slide part2">
   <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">演習：3社の見積書</span></div>
   <h2 class="msg">3社の見積書。どこが外れそう？</h2>
   <table class="t">
@@ -1445,14 +1445,14 @@ table.sum td.pn{font-weight:800;color:#fff;background:var(--c);white-space:nowra
 <section class="slide">
   <div class="ttl"><span class="pt">おまけ</span><span class="tt">用語クイズの答え（1/2）</span></div>
   <h2 class="msg">答え（1〜8）と、出てきたスライド</h2>
-  <table class="t ans"><tr><th>問</th><th>答え</th><th>出てきたスライド</th></tr><tr><td class="n">1</td><td class="a">Web3層構造</td><td class="s">7枚目</td></tr><tr><td class="n">2</td><td class="a">クライアントサーバ</td><td class="s">8枚目</td></tr><tr><td class="n">3</td><td class="a">データセンター</td><td class="s">8枚目</td></tr><tr><td class="n">4</td><td class="a">スクラッチ開発</td><td class="s">13枚目</td></tr><tr><td class="n">5</td><td class="a">PoC</td><td class="s">13枚目</td></tr><tr><td class="n">6</td><td class="a">要件定義</td><td class="s">14枚目</td></tr><tr><td class="n">7</td><td class="a">受け入れテスト</td><td class="s">19枚目</td></tr><tr><td class="n">8</td><td class="a">PMO</td><td class="s">24枚目</td></tr></table>
+  <table class="t ans"><tr><th>問</th><th>答え</th><th>出てきたスライド</th></tr><tr><td class="n">1</td><td class="a">Web3層構造</td><td class="s">7枚目</td></tr><tr><td class="n">2</td><td class="a">クライアントサーバ</td><td class="s">8枚目</td></tr><tr><td class="n">3</td><td class="a">データセンター</td><td class="s">8枚目</td></tr><tr><td class="n">4</td><td class="a">スクラッチ開発</td><td class="s">13枚目</td></tr><tr><td class="n">5</td><td class="a">PoC</td><td class="s">13枚目</td></tr><tr><td class="n">6</td><td class="a">要件定義</td><td class="s">15枚目</td></tr><tr><td class="n">7</td><td class="a">受け入れテスト</td><td class="s">20枚目</td></tr><tr><td class="n">8</td><td class="a">PMO</td><td class="s">25枚目</td></tr></table>
   <div class="pg"></div>
 </section>
 
 <section class="slide">
   <div class="ttl"><span class="pt">おまけ</span><span class="tt">用語クイズの答え（2/2）</span></div>
   <h2 class="msg">答え（9〜16）と、出てきたスライド</h2>
-  <table class="t ans"><tr><th>問</th><th>答え</th><th>出てきたスライド</th></tr><tr><td class="n">9</td><td class="a">人月</td><td class="s">27枚目</td></tr><tr><td class="n">10</td><td class="a">QCD</td><td class="s">28枚目</td></tr><tr><td class="n">11</td><td class="a">ウォーターフォール</td><td class="s">29枚目</td></tr><tr><td class="n">12</td><td class="a">アジャイル</td><td class="s">29枚目</td></tr><tr><td class="n">13</td><td class="a">生成AI</td><td class="s">32枚目</td></tr><tr><td class="n">14</td><td class="a">AIエージェント</td><td class="s">34枚目</td></tr><tr><td class="n">15</td><td class="a">クラウド</td><td class="s">36枚目</td></tr><tr><td class="n">16</td><td class="a">SaaS</td><td class="s">37枚目</td></tr></table>
+  <table class="t ans"><tr><th>問</th><th>答え</th><th>出てきたスライド</th></tr><tr><td class="n">9</td><td class="a">人月</td><td class="s">28枚目</td></tr><tr><td class="n">10</td><td class="a">QCD</td><td class="s">29枚目</td></tr><tr><td class="n">11</td><td class="a">ウォーターフォール</td><td class="s">14枚目</td></tr><tr><td class="n">12</td><td class="a">アジャイル</td><td class="s">14枚目</td></tr><tr><td class="n">13</td><td class="a">生成AI</td><td class="s">32枚目</td></tr><tr><td class="n">14</td><td class="a">AIエージェント</td><td class="s">34枚目</td></tr><tr><td class="n">15</td><td class="a">クラウド</td><td class="s">36枚目</td></tr><tr><td class="n">16</td><td class="a">SaaS</td><td class="s">37枚目</td></tr></table>
   <div class="pg"></div>
 </section>
 
