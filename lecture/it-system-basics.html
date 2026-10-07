@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>システム開発は何を・どう作るのか ― 発注者の目線で</title>
+<style>
+:root{
+  --ink:#1f2933; --sub:#52606d; --line:#cbd2d9; --bg:#ffffff; --paper:#f5f7fa;
+  --a:#2f6fdf; --a2:#dbe7fb; --b:#e07a2e; --b2:#fbe6d6; --c:#2f9e6e; --c2:#d7f0e4; --r:#d64545; --r2:#f9dede;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:#3e4c59;font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;color:var(--ink)}
+.deck{display:flex;flex-direction:column;align-items:center;gap:28px;padding:28px 0}
+.slide{width:1280px;height:720px;background:var(--bg);position:relative;padding:56px 72px 48px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+.slide h1{font-size:54px;margin:0 0 18px;line-height:1.25}
+.slide h2{font-size:40px;margin:0 0 22px;line-height:1.3}
+.slide p,.slide li{font-size:26px;line-height:1.6}
+.slide ul{margin:0;padding-left:1.2em}
+.kicker{font-size:20px;font-weight:700;letter-spacing:.08em;color:var(--sub);margin-bottom:8px}
+.part1 .kicker{color:var(--a)} .part2 .kicker{color:var(--b)} .part3 .kicker{color:var(--c)}
+.ttl{display:flex;align-items:center;gap:14px;font-size:24px;font-weight:800;color:var(--ink);padding-bottom:8px;margin-bottom:14px;border-bottom:2px solid var(--line)}
+.ttl .pt{font-size:15px;font-weight:700;color:#fff;background:var(--sub);padding:3px 10px;border-radius:4px;letter-spacing:.04em}
+.part1 .ttl .pt{background:var(--a)} .part2 .ttl .pt{background:#e07a2e} .part3 .ttl .pt{background:#2f9e6e}
+.slide h2.msg{border-left:6px solid var(--sub);padding-left:16px}
+.part1 h2.msg{border-left-color:var(--a)} .part2 h2.msg{border-left-color:#e07a2e} .part3 h2.msg{border-left-color:#2f9e6e}
+.ph .ttl{margin-bottom:6px;padding-bottom:4px;font-size:22px}
+.ph h2.msg{margin-bottom:4px}
+.pg{position:absolute;right:28px;bottom:18px;font-size:16px;color:var(--sub)}
+.time{display:none}
+.slide::after{content:"作成中資料";position:absolute;top:14px;right:20px;background:#d64545;color:#fff;font-size:15px;font-weight:700;padding:3px 12px;border-radius:999px;letter-spacing:.05em}
+.center{display:flex;flex-direction:column;justify-content:center;height:100%}
+.big{font-size:44px;font-weight:800;line-height:1.45}
+.q{font-size:48px;font-weight:800;line-height:1.5}
+.take{border-left:10px solid var(--ink);padding:18px 28px;background:var(--paper);font-size:38px;font-weight:800;line-height:1.5}
+.part1 .take{border-color:var(--a)} .part2 .take{border-color:var(--b)} .part3 .take{border-color:var(--c)}
+.cols{display:flex;gap:40px;align-items:center}
+.cols>*{flex:1}
+svg text{font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif}
+table.t{border-collapse:collapse;font-size:22px;width:100%}
+table.t th,table.t td{border:1px solid var(--line);padding:10px 14px;text-align:left}
+table.t th{background:var(--paper)}
+.small{font-size:18px!important;color:var(--sub)}
+.cover{background:linear-gradient(135deg,#1f2933 0%,#323f4b 100%);color:#fff}
+.cover .pg,.cover .time{color:#9aa5b1}
+.section{color:#fff}
+.section.part1{background:var(--a)} .section.part2{background:var(--b)} .section.part3{background:var(--c)}
+.section .kicker{color:rgba(255,255,255,.8)!important}
+.section .pg,.section .time{color:rgba(255,255,255,.75)}
+.help{position:fixed;right:12px;top:12px;background:rgba(0,0,0,.6);color:#fff;font-size:13px;padding:6px 10px;border-radius:6px;z-index:9}
+/* おまけ：用語クイズ */
+.quiz{margin:0;padding-left:1.6em}
+.quiz li{font-size:20px;line-height:1.35;margin-bottom:5px}
+.quiz .opt{display:block;font-size:18px;color:var(--sub);font-weight:700}
+table.ans td,table.ans th{padding:6px 14px;font-size:21px}
+table.ans td.n{width:70px;text-align:center;color:var(--sub)} table.ans td.a{font-weight:800} table.ans td.s{width:220px;color:var(--sub)}
+/* プレゼンモード：1枚ずつ全画面 */
+body.present{background:#000;overflow:hidden}
+body.present .deck{padding:0;gap:0;height:100vh;justify-content:center}
+body.present .slide{display:none;box-shadow:none;transform-origin:center center}
+body.present .slide.on{display:block}
+@media print{
+  html,body{background:#fff}
+  .deck{padding:0;gap:0}
+  .slide{box-shadow:none;page-break-after:always;break-after:page}
+  .help{display:none!important}
+  @page{size:1280px 720px;margin:0}
+}
+/* 16枚目の詳細（7つの段階・くわしく） */
+
+.strip{display:flex;gap:6px;margin:-2px 0 12px}
+.chip{font-size:15px;font-weight:700;padding:4px 10px;border-radius:999px;background:#eef1f4;color:#7b8794}
+.chip.on{background:var(--c);color:#fff}
+.ph h2{font-size:36px;margin-bottom:14px;display:flex;align-items:center;gap:14px}
+.ph h2 .num{display:inline-flex;width:52px;height:52px;border-radius:50%;background:var(--c);color:#fff;align-items:center;justify-content:center;font-size:30px}
+.body{display:flex;gap:30px;height:438px}
+.left{flex:0 0 520px;display:flex;flex-direction:column}
+.right{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0}
+.lab{font-size:18px;font-weight:800;color:var(--c);letter-spacing:.06em;margin-bottom:6px}
+ol.todo{margin:0 0 10px;padding-left:1.4em}
+ol.todo li{font-size:22px;line-height:1.35;margin-bottom:8px;font-weight:700}
+ol.todo li span{display:block;font-size:17px;font-weight:400;color:var(--sub)}
+.meta{font-size:17px;color:var(--ink);margin-bottom:10px}
+.meta b{display:inline-block;background:#eef1f4;padding:1px 8px;border-radius:4px;margin-right:6px;font-size:15px}
+.owner{margin-top:auto;background:var(--b2);border-left:8px solid var(--c);padding:10px 16px;font-size:19px;line-height:1.5}
+.lab2{font-size:15px;font-weight:800;color:var(--c)}
+.doc{border:1px solid #cbd2d9;border-radius:8px;box-shadow:3px 4px 0 #e4e7eb;background:#fff;overflow:hidden}
+.dh{background:#f5f7fa;border-bottom:1px solid #cbd2d9;padding:6px 12px;font-size:18px;font-weight:800}
+.tag{display:inline-block;background:var(--c);color:#fff;font-size:13px;padding:1px 8px;border-radius:4px;margin-right:8px;vertical-align:2px}
+.db{padding:10px 12px}
+table.mini{border-collapse:collapse;width:100%;font-size:16px}
+table.mini th,table.mini td{border:1px solid #e4e7eb;padding:4px 8px;text-align:left;vertical-align:top}
+table.mini th{background:#fafbfc;white-space:nowrap;color:var(--sub)}
+table.mini.c td:first-child{white-space:nowrap}
+.must{color:#d64545;font-weight:800}
+.ok{color:#2f9e6e;font-weight:800;text-align:center!important}
+.ng{color:#d64545;font-weight:800;white-space:nowrap}
+.lines{font-size:16px;line-height:1.6;color:var(--ink)}
+.ex{position:absolute;left:72px;right:72px;bottom:40px;font-size:18px;color:var(--sub);border-top:1px dashed #cbd2d9;padding-top:8px}
+.wire{border:2px solid #9aa5b1;border-radius:10px;padding:10px;background:#fafbfc;font-size:17px;padding:8px 10px}
+.wtop{font-weight:800;border-bottom:1px solid #cbd2d9;padding-bottom:4px;margin-bottom:6px}
+.wrow{display:flex;gap:10px;margin-bottom:6px}.wsel{border:1px solid #9aa5b1;background:#fff;padding:3px 10px;border-radius:4px}
+table.wgrid{border-collapse:collapse;width:100%;text-align:center;margin-bottom:6px}
+table.wgrid th,table.wgrid td{border:1px solid #cbd2d9;padding:1px 6px}
+table.wgrid td.o{color:#2f6fdf;font-weight:800;background:#dbe7fb}table.wgrid td.x{color:#9aa5b1}
+.wbtn{background:#2f6fdf;color:#fff;text-align:center;padding:4px;border-radius:6px;font-weight:800;width:60%;margin:0 auto}
+pre.code{margin:0;background:#1f2933;color:#e4e7eb;padding:12px 14px;border-radius:6px;font-size:16px;line-height:1.5;font-family:"Noto Sans Mono","Noto Sans JP",monospace;white-space:pre}
+pre.code .cm{color:#9aa5b1}
+.prog .ph2{font-size:15px;color:var(--sub);margin-bottom:4px}
+.bar{height:14px;background:#eef1f4;border-radius:7px;overflow:hidden}.bar span{display:block;height:100%;background:#2f9e6e}
+.bl{font-size:15px;margin:2px 0 8px}
+.kpi{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi div{background:#f5f7fa;border-radius:6px;padding:8px 10px;font-size:15px;color:var(--sub)}
+.kpi b{display:block;font-size:26px;color:var(--ink)}
+.case{background:var(--paper);border-radius:10px;padding:16px 22px;font-size:24px;line-height:1.6;margin-bottom:22px}
+.ov{display:flex;gap:8px}
+.ovc{flex:1;text-align:center}
+.ovh{background:var(--c);color:#fff;font-weight:800;font-size:21px;padding:12px 4px;border-radius:8px;line-height:1.3}
+.ovd{border:1px solid #cbd2d9;border-radius:8px;margin-top:8px;padding:14px 6px;font-size:18px;font-weight:700;min-height:86px;display:flex;align-items:center;justify-content:center;box-shadow:3px 4px 0 #e4e7eb}
+.ovm{margin-top:8px;font-size:17px;color:var(--sub)}
+.ovlab{display:flex;gap:24px;font-size:15px;color:var(--sub);margin-top:10px}
+table.sum td,table.sum th{font-size:19px;padding:8px 12px}
+.case2{font-size:16px;line-height:1.4;background:var(--paper);border-radius:6px;padding:5px 12px;margin:-4px 0 6px;color:var(--ink)}
+.case2+.strip{margin-bottom:6px}
+.case2~h2{margin-bottom:8px}
+.case2~.body{height:400px}
+.pages{display:flex;gap:14px;flex:1;min-height:0}
+.paper{flex:1;border:1px solid #cbd2d9;background:#fff;box-shadow:4px 5px 0 #e4e7eb;padding:14px 16px;position:relative;font-size:14px;line-height:1.45}
+.paper p{font-size:14px;line-height:1.45;margin:0 0 6px}
+.paper .h3{font-size:15px;font-weight:800;border-bottom:2px solid var(--c);margin-bottom:3px}
+.pcover{display:flex;flex-direction:column;justify-content:center;text-align:center;border-top:10px solid var(--c)}
+.pcover .pt{font-size:14px;color:var(--sub)}
+.pcover .ptitle{font-size:24px;font-weight:800;line-height:1.4;margin:18px 0 40px}
+.pcover .pfoot{font-size:14px;color:var(--sub)}
+.pno{position:absolute;bottom:6px;left:0;right:0;text-align:center;font-size:12px;color:var(--sub)}
+.flow{display:flex;align-items:center;gap:6px;margin:4px 0 8px;font-size:15px}
+.flow i{font-style:normal;color:var(--sub)}
+.fl{flex:0 0 58px;font-weight:800;color:var(--sub);font-size:14px}.fl.nw{color:#2f6fdf}
+.fb{white-space:nowrap;border:1px solid #9aa5b1;border-radius:6px;padding:5px 8px;background:#fafbfc;text-align:center;line-height:1.25}
+.fb.nw{border-color:#2f6fdf;background:#dbe7fb}
+.trans{display:flex;align-items:center;gap:6px;font-size:17px}
+.trans span{flex:1;border:2px solid #9aa5b1;border-radius:8px;padding:8px 4px;text-align:center;background:#fff;line-height:1.25}
+.trans span.on{border-color:#2f6fdf;background:#dbe7fb;font-weight:800}
+.trans small{font-size:14px;color:var(--sub);font-weight:400}
+.trans i{font-style:normal;color:var(--sub)}
+.ticket{font-size:16px;line-height:1.5;border-left:6px solid #d64545;padding-left:12px}
+.ticket i{font-style:normal;display:inline-block;width:92px;font-size:14px;color:var(--sub);font-weight:700}
+.sev{background:#d64545;color:#fff;font-weight:800;padding:0 8px;border-radius:4px}
+.tl{border-left:3px solid #cbd2d9;margin:4px 0 4px 10px;padding-left:22px}
+.tli{position:relative;font-size:17px;line-height:1.3;margin-bottom:14px}
+.tli:last-child{margin-bottom:2px}
+.tli::before{content:"";position:absolute;left:-31px;top:2px;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid #9aa5b1}
+.tli b{display:inline-block;width:112px}
+.tli em{font-style:normal;color:var(--sub);margin-left:10px;font-size:14px;background:#eef1f4;padding:0 6px;border-radius:4px}
+.tli.key{color:#d64545;font-weight:800}.tli.key::before{background:#d64545;border-color:#d64545}
+.tli.go::before{background:#2f9e6e;border-color:#2f9e6e}
+.dh .lg{float:right;font-size:15px;font-weight:400;color:var(--sub);margin-top:3px}
+.kpi3{display:flex;gap:8px;margin-bottom:6px}
+.kpi3 div{flex:1;background:#f5f7fa;border-radius:6px;padding:6px 10px;font-size:14px;color:var(--sub)}
+.kpi3 b{display:block;font-size:22px;color:var(--ink)}
+table.sum td.pn{font-weight:800;color:#fff;background:var(--c);white-space:nowrap}
+/* 目次 */
+.toc{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+.tocc{background:var(--tb);border-radius:12px;overflow:hidden}
+.toch{background:var(--tc);color:#fff;font-size:24px;font-weight:800;padding:12px 18px;line-height:1.3}
+.toch small{display:block;font-size:15px;font-weight:400;opacity:.9}
+.tocc ol{list-style:none;margin:0;padding:10px 18px 14px}
+.tocc li{display:flex;justify-content:space-between;gap:10px;font-size:19px;line-height:1.3;padding:6px 0;border-bottom:1px dotted rgba(0,0,0,.15)}
+.tocc li:last-child{border-bottom:none}
+.tocc li b{color:var(--tc);white-space:nowrap}
+.tocf{display:flex;gap:40px;margin-top:16px;font-size:19px;color:var(--sub);font-weight:700}
+</style>
+</head>
+<body>
+<div class="help">P：1枚ずつ表示（←→で移動）／Esc：一覧に戻る</div>
+<div class="deck">
+<section class="slide cover">
+  <div class="center">
+    <h1>システム開発は何を・どう作るのか</h1>
+    <p style="font-size:36px;color:#e4e7eb;margin-top:-8px">― 発注者の目線で</p>
+    <p style="font-size:28px;color:#cbd2d9">① 何を作るのか ― アプリのしくみ<br>② どう作るのか ― プロジェクトの進め方<br>③ AI時代のITプロジェクト ― AIとクラウド</p>
+  </div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide">
+  <div class="ttl"><span class="pt">はじめに</span><span class="tt">自己紹介</span></div>
+  <h2 class="msg">金融のシステム案件を担当した元ITコンサルタント</h2>
+  <svg viewBox="0 0 1136 470" width="1136" height="470">
+    <defs><clipPath id="faceclip"><circle cx="90" cy="68" r="66"/></clipPath></defs>
+    <circle cx="90" cy="68" r="68" fill="#e4e7eb"/>
+    <image href="lecture_img/sakai_portrait.png" x="12" y="-8" width="156" height="238" clip-path="url(#faceclip)" preserveAspectRatio="xMidYMin meet"/>
+    <text x="180" y="44" font-size="28" font-weight="800">酒井 勇輔（さかい ゆうすけ）</text>
+    <text x="180" y="84" font-size="20" fill="#52606d"><tspan font-weight="800" fill="#1f2933">政治活動</tspan>　2026年2月の衆議院選挙に、京都2区（左京区・東山区・山科区）から立候補</text>
+    <text x="180" y="120" font-size="20" fill="#52606d"><tspan font-weight="800" fill="#1f2933">取り組む政策</tspan>　IT・AI・データ活用／金融／宇宙</text>
+    <g font-size="20">
+      <rect x="0" y="150" width="364" height="300" rx="14" fill="#fbe6d6"/>
+      <rect x="0" y="150" width="364" height="44" rx="14" fill="#e07a2e"/><rect x="0" y="176" width="364" height="18" fill="#e07a2e"/>
+      <text x="182" y="180" fill="#fff" font-weight="800" text-anchor="middle" font-size="22">某銀行</text>
+      <text x="20" y="232" font-weight="800">金融リスクを金融庁に</text>
+      <text x="20" y="262" font-weight="800">報告するシステムの</text>
+      <text x="20" y="292" font-weight="800">機能追加</text>
+      <text x="20" y="330" fill="#52606d">既製のパッケージに</text>
+      <text x="20" y="358" fill="#52606d">機能を足すプロジェクト</text>
+      <rect x="20" y="390" width="200" height="38" rx="19" fill="#fff" stroke="#e07a2e" stroke-width="2"/>
+      <text x="120" y="416" text-anchor="middle" font-size="18" fill="#c7671f" font-weight="700">→ ② プロジェクト</text>
+
+      <rect x="386" y="150" width="364" height="300" rx="14" fill="#d7f0e4"/>
+      <rect x="386" y="150" width="364" height="44" rx="14" fill="#2f9e6e"/><rect x="386" y="176" width="364" height="18" fill="#2f9e6e"/>
+      <text x="568" y="180" fill="#fff" font-weight="800" text-anchor="middle" font-size="22">某保険会社</text>
+      <text x="406" y="232" font-weight="800">メインフレームの</text>
+      <text x="406" y="262" font-weight="800">モダナイゼーション・</text>
+      <text x="406" y="292" font-weight="800">クラウド移行のPMO</text>
+      <text x="406" y="330" fill="#52606d">古い大型コンピュータの</text>
+      <text x="406" y="358" fill="#52606d">仕組みを作り替える案件の管理</text>
+      <rect x="406" y="390" width="300" height="38" rx="19" fill="#fff" stroke="#2f9e6e" stroke-width="2"/>
+      <text x="556" y="416" text-anchor="middle" font-size="18" fill="#2f9e6e" font-weight="700">→ ② プロジェクト・③ クラウド</text>
+
+      <rect x="772" y="150" width="364" height="300" rx="14" fill="#dbe7fb"/>
+      <rect x="772" y="150" width="364" height="44" rx="14" fill="#2f6fdf"/><rect x="772" y="176" width="364" height="18" fill="#2f6fdf"/>
+      <text x="954" y="180" fill="#fff" font-weight="800" text-anchor="middle" font-size="22">某証券会社</text>
+      <text x="792" y="232" font-weight="800">バックオフィスへの</text>
+      <text x="792" y="262" font-weight="800">AI-OCR導入</text>
+      <text x="792" y="330" fill="#52606d">紙の書類をAIで読み取り、</text>
+      <text x="792" y="358" fill="#52606d">手入力を減らす</text>
+      <rect x="792" y="390" width="160" height="38" rx="19" fill="#fff" stroke="#2f6fdf" stroke-width="2"/>
+      <text x="872" y="416" text-anchor="middle" font-size="18" fill="#2f6fdf" font-weight="700">→ ③ AI</text>
+    </g>
+  </svg>
+  <div class="time">導入 0〜3分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide">
+  <div class="ttl"><span class="pt">はじめに</span><span class="tt">なぜ政治家がITを学ぶのか</span></div>
+  <h2 class="msg">議会は、予算を通し・出来を問い・直させる側</h2>
+  <svg viewBox="0 0 1136 240" width="1136" height="240">
+    <g font-size="21">
+      <rect x="0" y="0" width="364" height="236" rx="14" fill="#dbe7fb"/>
+      <text x="24" y="52" font-size="27" font-weight="800" fill="#2f6fdf">作る前：予算を通す</text>
+      <text x="24" y="104">役所のシステムは税金で作る。</text>
+      <text x="24" y="136">その予算を通すのは議会。</text>
+      <text x="24" y="168">見積もりを問えないと、</text>
+      <text x="24" y="200">出された額を通すしかない</text>
+      <rect x="386" y="0" width="364" height="236" rx="14" fill="#fbe6d6"/>
+      <text x="410" y="52" font-size="27" font-weight="800" fill="#c7671f">作った後：出来を問う</text>
+      <text x="410" y="104">遅れた・動かない・</text>
+      <text x="410" y="136">使われないシステムを、</text>
+      <text x="410" y="168">決算の審査で</text>
+      <text x="410" y="200">問いただすのも議会</text>
+      <rect x="772" y="0" width="364" height="236" rx="14" fill="#d7f0e4"/>
+      <text x="796" y="52" font-size="27" font-weight="800" fill="#2f9e6e">窓口がアプリになる</text>
+      <text x="796" y="104">申請・届け出・相談が</text>
+      <text x="796" y="136">スマホに移っていく。</text>
+      <text x="796" y="168">使いにくければ直させるのも</text>
+      <text x="796" y="200">政治の仕事</text>
+    </g>
+  </svg>
+  <div class="take" style="margin-top:28px;font-size:32px">政治家は、住民に代わる「発注者」。<br>だから今日は、発注者の目線でITを見ていきます。</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide">
+  <div class="ttl"><span class="pt">今日の流れ</span><span class="tt">時間割</span></div>
+  <h2 class="msg">120分を3つのパートに分けて進める</h2>
+  <svg viewBox="0 0 1136 360" width="1136" height="360">
+    <rect x="0" y="40" width="46" height="90" fill="#9aa5b1"/>
+    <rect x="46" y="40" width="276" height="90" fill="#2f6fdf"/>
+    <rect x="322" y="40" width="368" height="90" fill="#e07a2e"/>
+    <rect x="690" y="40" width="92" height="90" fill="#cbd2d9"/>
+    <rect x="782" y="40" width="239" height="90" fill="#2f9e6e"/>
+    <rect x="1021" y="40" width="115" height="90" fill="#52606d"/>
+    <g font-size="22" fill="#fff" font-weight="700" text-anchor="middle">
+      <text x="184" y="80">① 何を作るのか</text><text x="184" y="110" font-size="18" font-weight="400">アプリのしくみ・30分</text>
+      <text x="506" y="80">② どう作るのか</text><text x="506" y="110" font-size="18" font-weight="400">プロジェクトの進め方・40分</text>
+      <text x="736" y="80" fill="#1f2933">休憩</text><text x="736" y="110" font-size="18" font-weight="400" fill="#1f2933">10分</text>
+      <text x="901" y="80" font-size="18">③ AI時代のITプロジェクト</text><text x="901" y="110" font-size="18" font-weight="400">AIとクラウド・26分</text>
+    </g>
+    <g font-size="17" fill="#52606d" text-anchor="middle">
+      <text x="23" y="160">導入5</text><text x="1078" y="160">質問</text>
+      <text x="0" y="30" text-anchor="start">0分</text><text x="690" y="30">75分</text><text x="1136" y="30" text-anchor="end">120分</text>
+    </g>
+    <g font-size="20" fill="#1f2933">
+      <text x="46" y="205">・Web3層構造</text><text x="46" y="235">・クライアントサーバ</text><text x="46" y="265">・3層に分ける理由</text>
+      <text x="322" y="205">・ITプロジェクトの型と7段階</text><text x="322" y="235">・組織図とPMの仕事</text><text x="322" y="265">・開発費とQCD</text>
+      <text x="782" y="205">・生成AI／AIエージェント</text><text x="782" y="235">・クラウドとは／移る理由</text><text x="782" y="265">・クラウドの落とし穴</text><text x="782" y="295">・AI導入の課題</text>
+    </g>
+  </svg>
+  <div class="time">導入 3〜5分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide">
+  <div class="kicker">今日の流れ</div>
+  <h2>目次</h2>
+  <div class="toc"><div class="tocc" style="--tc:var(--a);--tb:var(--a2)"><div class="toch">① 何を作るのか<small>アプリのしくみ・6〜12枚目</small></div><ol><li><span>お店のたとえ</span><b>7</b></li><li><span>Web3層構造</span><b>8</b></li><li><span>クライアントサーバ</span><b>9</b></li><li><span>サーバとの役割分担</span><b>10</b></li><li><span>3層に分ける理由</span><b>11</b></li><li><span>演習：カートに入れる</span><b>12</b></li></ol></div><div class="tocc" style="--tc:var(--b);--tb:var(--b2)"><div class="toch">② どう作るのか<small>プロジェクトの進め方・13〜30枚目</small></div><ol><li><span>ITプロジェクトの型</span><b>14</b></li><li><span>プロジェクトの7段階</span><b>15</b></li><li><span>段階ごとの詳細</span><b>16〜22</b></li><li><span>段階のまとめ表</span><b>23</b></li><li><span>組織図・PMの仕事</span><b>24・25</b></li><li><span>開発費・QCD</span><b>26・27</b></li><li><span>進め方と契約</span><b>28</b></li><li><span>演習：3社の見積書</span><b>29</b></li></ol></div><div class="tocc" style="--tc:var(--c);--tb:var(--c2)"><div class="toch">③ AI時代のITプロジェクト<small>AIとクラウド・32〜39枚目</small></div><ol><li><span>生成AIとは</span><b>32</b></li><li><span>AIのしくみ</span><b>33</b></li><li><span>AIエージェント</span><b>34</b></li><li><span>AI導入の課題</span><b>35</b></li><li><span>クラウドとは</span><b>36</b></li><li><span>借り方の3段階</span><b>37</b></li><li><span>クラウドに移る理由</span><b>38</b></li><li><span>クラウドの落とし穴</span><b>39</b></li></ol></div></div>
+  <div class="tocf"><span>休憩 30枚目</span><span>用語クイズ 40〜43枚目</span></div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide section part1">
+  <div class="center">
+    <div class="kicker">PART 1　（5〜35分）</div>
+    <h1 style="font-size:64px">何を作るのか<br><span style="font-size:40px;font-weight:600">アプリのしくみ</span></h1>
+  </div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part1">
+  <div class="ttl"><span class="pt">PART 1 何を作るのか</span><span class="tt">お店のたとえ</span></div>
+  <h2 class="msg">お店は「受け付ける・作る・覚える」の3係で回る</h2>
+  <svg viewBox="0 0 1136 470" width="1136" height="470">
+    <defs><marker id="w3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0L10,5L0,10z" fill="#1f2933"/></marker></defs>
+    <circle cx="65" cy="170" r="38" fill="#fff" stroke="#1f2933" stroke-width="3"/>
+    <rect x="15" y="215" width="100" height="90" rx="40" fill="#fff" stroke="#1f2933" stroke-width="3"/>
+    <text x="65" y="345" font-size="26" font-weight="800" text-anchor="middle">お客さん</text>
+    <text x="65" y="380" font-size="20" text-anchor="middle" fill="#52606d">注文する</text>
+    <line x1="140" y1="225" x2="196" y2="225" stroke="#1f2933" stroke-width="4" marker-end="url(#w3)"/>
+    <g>
+      <rect x="205" y="40" width="290" height="330" rx="16" fill="#dbe7fb" stroke="#2f6fdf" stroke-width="3"/>
+      <text x="350" y="120" font-size="36" font-weight="800" text-anchor="middle">ホール係</text>
+      <text x="350" y="190" font-size="22" text-anchor="middle">注文を聞く</text>
+      <text x="350" y="226" font-size="22" text-anchor="middle">メニューを見せる</text>
+      <text x="350" y="262" font-size="22" text-anchor="middle">料理を運ぶ</text>
+      <text x="350" y="335" font-size="19" text-anchor="middle" fill="#52606d">お客さんと話すのはここだけ</text>
+    </g>
+    <line x1="500" y1="225" x2="556" y2="225" stroke="#1f2933" stroke-width="4" marker-end="url(#w3)"/>
+    <g>
+      <rect x="565" y="40" width="270" height="330" rx="16" fill="#fbe6d6" stroke="#e07a2e" stroke-width="3"/>
+      <text x="700" y="120" font-size="36" font-weight="800" text-anchor="middle">厨房</text>
+      <text x="700" y="190" font-size="22" text-anchor="middle">レシピどおりに作る</text>
+      <text x="700" y="226" font-size="22" text-anchor="middle">お会計を計算する</text>
+      <text x="700" y="262" font-size="22" text-anchor="middle">品切れを判断する</text>
+      <text x="700" y="335" font-size="19" text-anchor="middle" fill="#52606d">お客さんからは見えない</text>
+    </g>
+    <line x1="840" y1="225" x2="896" y2="225" stroke="#1f2933" stroke-width="4" marker-end="url(#w3)"/>
+    <g>
+      <rect x="905" y="40" width="231" height="330" rx="16" fill="#d7f0e4" stroke="#2f9e6e" stroke-width="3"/>
+      <text x="1020" y="105" font-size="32" font-weight="800" text-anchor="middle">冷蔵庫</text>
+      <text x="1020" y="143" font-size="32" font-weight="800" text-anchor="middle">と台帳</text>
+      <text x="1020" y="190" font-size="22" text-anchor="middle">材料をしまう</text>
+      <text x="1020" y="226" font-size="22" text-anchor="middle">予約・常連さん</text>
+      <text x="1020" y="262" font-size="22" text-anchor="middle">売上を書き残す</text>
+      <text x="1020" y="335" font-size="19" text-anchor="middle" fill="#52606d">一番奥にある</text>
+    </g>
+    <text x="568" y="438" font-size="26" font-weight="700" text-anchor="middle">受け付ける → 作る・計算する → 覚えておく</text>
+  </svg>
+  <div class="time">5〜9分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part1">
+  <div class="ttl"><span class="pt">PART 1 何を作るのか</span><span class="tt">Web3層構造</span></div>
+  <h2 class="msg">毎日使うアプリも、同じ3段の形</h2>
+  <svg viewBox="0 0 1136 470" width="1136" height="470">
+    <g font-size="20" font-weight="800" text-anchor="middle">
+      <rect x="214" y="0" width="300" height="52" rx="10" fill="#2f6fdf"/><text x="364" y="25" fill="#fff">Webサーバ</text><text x="364" y="45" fill="#fff" font-size="15" font-weight="400">画面で受け付ける＝ホール係</text>
+      <rect x="524" y="0" width="300" height="52" rx="10" fill="#e07a2e"/><text x="674" y="25" fill="#fff">APサーバ</text><text x="674" y="45" fill="#fff" font-size="15" font-weight="400">作る・計算する＝厨房</text>
+      <rect x="834" y="0" width="300" height="52" rx="10" fill="#2f9e6e"/><text x="984" y="25" fill="#fff">DBサーバ</text><text x="984" y="45" fill="#fff" font-size="15" font-weight="400">覚えておく＝冷蔵庫と台帳</text>
+    </g>
+    <g font-size="19">
+      <rect x="0" y="62" width="204" height="54" rx="8" fill="#323f4b"/><text x="102" y="97" fill="#fff" font-weight="800" text-anchor="middle">ネットスーパー</text>
+      <rect x="214" y="62" width="300" height="54" rx="8" fill="#dbe7fb"/><text x="364" y="97" text-anchor="middle">商品一覧・カート</text>
+      <rect x="524" y="62" width="300" height="54" rx="8" fill="#fbe6d6"/><text x="674" y="97" text-anchor="middle">合計・送料・在庫の確認</text>
+      <rect x="834" y="62" width="300" height="54" rx="8" fill="#d7f0e4"/><text x="984" y="97" text-anchor="middle">商品・在庫・注文履歴</text>
+      <rect x="0" y="124" width="204" height="54" rx="8" fill="#323f4b"/><text x="102" y="159" fill="#fff" font-weight="800" text-anchor="middle">銀行アプリ</text>
+      <rect x="214" y="124" width="300" height="54" rx="8" fill="#dbe7fb"/><text x="364" y="159" text-anchor="middle">残高・振込の画面</text>
+      <rect x="524" y="124" width="300" height="54" rx="8" fill="#fbe6d6"/><text x="674" y="159" text-anchor="middle">残高は足りるか・手数料</text>
+      <rect x="834" y="124" width="300" height="54" rx="8" fill="#d7f0e4"/><text x="984" y="159" text-anchor="middle">口座・取引の記録</text>
+      <rect x="0" y="186" width="204" height="54" rx="8" fill="#323f4b"/><text x="102" y="221" fill="#fff" font-weight="800" text-anchor="middle">乗換アプリ</text>
+      <rect x="214" y="186" width="300" height="54" rx="8" fill="#dbe7fb"/><text x="364" y="221" text-anchor="middle">出発・到着の入力</text>
+      <rect x="524" y="186" width="300" height="54" rx="8" fill="#fbe6d6"/><text x="674" y="221" text-anchor="middle">経路を探す計算</text>
+      <rect x="834" y="186" width="300" height="54" rx="8" fill="#d7f0e4"/><text x="984" y="221" text-anchor="middle">時刻表・運行情報</text>
+      <rect x="0" y="248" width="204" height="54" rx="8" fill="#323f4b"/><text x="102" y="283" fill="#fff" font-weight="800" text-anchor="middle">役所の電子申請</text>
+      <rect x="214" y="248" width="300" height="54" rx="8" fill="#dbe7fb"/><text x="364" y="283" text-anchor="middle">申請フォーム</text>
+      <rect x="524" y="248" width="300" height="54" rx="8" fill="#fbe6d6"/><text x="674" y="283" text-anchor="middle">記入漏れの確認・受付番号</text>
+      <rect x="834" y="248" width="300" height="54" rx="8" fill="#d7f0e4"/><text x="984" y="283" text-anchor="middle">申請の中身・受付の記録</text>
+      <rect x="0" y="310" width="204" height="54" rx="8" fill="#323f4b"/><text x="102" y="345" fill="#fff" font-weight="800" text-anchor="middle">Gmail</text>
+      <rect x="214" y="310" width="300" height="54" rx="8" fill="#dbe7fb"/><text x="364" y="345" text-anchor="middle">受信箱・作成画面</text>
+      <rect x="524" y="310" width="300" height="54" rx="8" fill="#fbe6d6"/><text x="674" y="345" text-anchor="middle">送信・迷惑メールの判定</text>
+      <rect x="834" y="310" width="300" height="54" rx="8" fill="#d7f0e4"/><text x="984" y="345" text-anchor="middle">メール・連絡先</text>
+    </g>
+    <rect x="0" y="378" width="1136" height="92" rx="12" fill="#f5f7fa" stroke="#1f2933" stroke-width="3"/>
+    <text x="568" y="416" font-size="27" font-weight="800" text-anchor="middle">この3段の形を、ITの言葉で <tspan fill="#2f6fdf">Web3層構造</tspan> と呼ぶ</text>
+    <text x="568" y="452" font-size="21" text-anchor="middle" fill="#52606d">上の列見出しの3つのサーバで仕事を分ける　→　身の回りのアプリは、ほとんどこの形</text>
+  </svg>
+  <div class="time">9〜13分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part1">
+  <div class="ttl"><span class="pt">PART 1 何を作るのか</span><span class="tt">クライアントサーバ</span></div>
+  <h2 class="msg">頼む側の機械と、応える側の機械に分かれて動く</h2>
+  <svg viewBox="0 0 1136 470" width="1136" height="470">
+    <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0L10,5L0,10z" fill="#1f2933"/></marker></defs>
+    <text x="0" y="28" font-size="24" font-weight="800" fill="#2f6fdf">クライアント（頼む側）</text>
+    <!-- ラップトップ -->
+    <rect x="20" y="58" width="170" height="110" rx="6" fill="#323f4b"/><rect x="30" y="68" width="150" height="90" rx="3" fill="#dbe7fb"/>
+    <rect x="0" y="168" width="210" height="14" rx="4" fill="#9aa5b1"/>
+    <text x="105" y="212" font-size="20" text-anchor="middle">ラップトップPC</text>
+    <!-- スマホ -->
+    <rect x="240" y="52" width="76" height="132" rx="12" fill="#fff" stroke="#1f2933" stroke-width="4"/><rect x="249" y="68" width="58" height="96" rx="3" fill="#dbe7fb"/>
+    <text x="278" y="212" font-size="20" text-anchor="middle">スマホ</text>
+    <!-- 会社のPC -->
+    <rect x="25" y="245" width="160" height="96" rx="6" fill="#323f4b"/><rect x="35" y="255" width="140" height="76" rx="3" fill="#dbe7fb"/>
+    <rect x="95" y="341" width="20" height="18" fill="#9aa5b1"/><rect x="65" y="357" width="80" height="8" rx="3" fill="#9aa5b1"/>
+    <text x="105" y="392" font-size="20" text-anchor="middle">会社のPC</text>
+    <!-- タブレット -->
+    <rect x="220" y="255" width="116" height="90" rx="10" fill="#fff" stroke="#1f2933" stroke-width="4"/><rect x="230" y="265" width="96" height="70" rx="3" fill="#dbe7fb"/>
+    <text x="278" y="392" font-size="20" text-anchor="middle">店のタブレット</text>
+    <text x="0" y="440" font-size="20" fill="#52606d">みなさんの手元にある、画面のある機械</text>
+    <!-- インターネット -->
+    <g fill="#f5f7fa" stroke="#9aa5b1" stroke-width="2">
+      <ellipse cx="465" cy="215" rx="85" ry="55"/>
+    </g>
+    <text x="465" y="210" font-size="20" text-anchor="middle" font-weight="700">インターネット</text>
+    <text x="465" y="236" font-size="16" text-anchor="middle" fill="#52606d">（回線）</text>
+    <line x1="350" y1="130" x2="582" y2="130" stroke="#1f2933" stroke-width="4" marker-end="url(#ar)"/>
+    <text x="465" y="115" font-size="22" text-anchor="middle" font-weight="700">依頼</text>
+    <line x1="582" y1="300" x2="350" y2="300" stroke="#1f2933" stroke-width="4" marker-end="url(#ar)"/>
+    <text x="465" y="332" font-size="22" text-anchor="middle" font-weight="700">結果</text>
+    <!-- データセンター -->
+    <text x="600" y="28" font-size="24" font-weight="800" fill="#2f9e6e">サーバ（応える側）</text>
+    <rect x="600" y="44" width="536" height="330" rx="12" fill="#f5f7fa" stroke="#52606d" stroke-width="2"/>
+    <text x="868" y="76" font-size="20" text-anchor="middle" fill="#52606d">データセンター（サーバを置く専用の建物）の中</text>
+    <g>
+      <rect x="630" y="94" width="140" height="210" rx="6" fill="#323f4b"/>
+      <rect x="798" y="94" width="140" height="210" rx="6" fill="#323f4b"/>
+      <rect x="966" y="94" width="140" height="210" rx="6" fill="#323f4b"/>
+      <g fill="#52606d">
+        <rect x="642" y="110" width="116" height="36" rx="3"/><rect x="642" y="156" width="116" height="36" rx="3"/><rect x="642" y="202" width="116" height="36" rx="3"/><rect x="642" y="248" width="116" height="36" rx="3"/>
+        <rect x="810" y="110" width="116" height="36" rx="3"/><rect x="810" y="156" width="116" height="36" rx="3"/><rect x="810" y="202" width="116" height="36" rx="3"/><rect x="810" y="248" width="116" height="36" rx="3"/>
+        <rect x="978" y="110" width="116" height="36" rx="3"/><rect x="978" y="156" width="116" height="36" rx="3"/><rect x="978" y="202" width="116" height="36" rx="3"/><rect x="978" y="248" width="116" height="36" rx="3"/>
+      </g>
+      <g fill="#7bd389">
+        <circle cx="656" cy="128" r="5"/><circle cx="656" cy="174" r="5"/><circle cx="656" cy="220" r="5"/><circle cx="656" cy="266" r="5"/>
+        <circle cx="824" cy="128" r="5"/><circle cx="824" cy="174" r="5"/><circle cx="824" cy="220" r="5"/><circle cx="824" cy="266" r="5"/>
+        <circle cx="992" cy="128" r="5"/><circle cx="992" cy="174" r="5"/><circle cx="992" cy="220" r="5"/><circle cx="992" cy="266" r="5"/>
+      </g>
+      <g font-size="19" font-weight="700" text-anchor="middle">
+        <rect x="630" y="318" width="140" height="38" rx="19" fill="#dbe7fb" stroke="#2f6fdf" stroke-width="2"/><text x="700" y="344">Webサーバ</text>
+        <rect x="798" y="318" width="140" height="38" rx="19" fill="#fbe6d6" stroke="#e07a2e" stroke-width="2"/><text x="868" y="344">APサーバ</text>
+        <rect x="966" y="318" width="140" height="38" rx="19" fill="#d7f0e4" stroke="#2f9e6e" stroke-width="2"/><text x="1036" y="344">DBサーバ</text>
+      </g>
+    </g>
+    <text x="600" y="410" font-size="20">サーバ＝画面もキーボードも無い、24時間動く機械</text>
+    <text x="600" y="440" font-size="20" fill="#52606d">Web・AP・DBも、実物は棚（ラック）の中の箱</text>
+  </svg>
+  <div class="time">13〜16分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part1">
+  <div class="ttl"><span class="pt">PART 1 何を作るのか</span><span class="tt">サーバとの役割分担</span></div>
+  <h2 class="msg">スマホは「聞いているだけ」。重い仕事はサーバ側でやる</h2>
+  <svg viewBox="0 0 1136 470" width="1136" height="470">
+    <defs><marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0L10,5L0,10z" fill="#2f6fdf"/></marker></defs>
+    <!-- スマホ -->
+    <rect x="60" y="70" width="190" height="340" rx="28" fill="#fff" stroke="#1f2933" stroke-width="4"/>
+    <rect x="80" y="110" width="150" height="250" rx="6" fill="#dbe7fb"/>
+    <text x="155" y="170" font-size="20" text-anchor="middle">出発：東京</text>
+    <text x="155" y="205" font-size="20" text-anchor="middle">到着：京都</text>
+    <text x="155" y="240" font-size="20" text-anchor="middle">9:00 発</text>
+    <rect x="100" y="280" width="110" height="44" rx="8" fill="#2f6fdf"/><text x="155" y="310" font-size="20" fill="#fff" text-anchor="middle">検索</text>
+    <text x="155" y="450" font-size="24" font-weight="700" text-anchor="middle">クライアント</text>
+    <!-- 矢印 -->
+    <path d="M270 170 L600 170" stroke="#2f6fdf" stroke-width="5" marker-end="url(#ab)"/>
+    <rect x="300" y="110" width="270" height="44" rx="6" fill="#fff" stroke="#2f6fdf" stroke-width="2"/>
+    <text x="435" y="140" font-size="20" text-anchor="middle">東京→京都 9:00 を教えて</text>
+    <path d="M600 310 L270 310" stroke="#2f6fdf" stroke-width="5" marker-end="url(#ab)"/>
+    <rect x="300" y="325" width="270" height="44" rx="6" fill="#fff" stroke="#2f6fdf" stroke-width="2"/>
+    <text x="435" y="355" font-size="20" text-anchor="middle">9:03 のぞみ → 11:17 着</text>
+    <!-- サーバ -->
+    <g transform="translate(620,60)">
+      <rect x="0" y="0" width="200" height="360" rx="10" fill="#323f4b"/>
+      <g fill="#52606d"><rect x="20" y="25" width="160" height="60" rx="4"/><rect x="20" y="105" width="160" height="60" rx="4"/><rect x="20" y="185" width="160" height="60" rx="4"/><rect x="20" y="265" width="160" height="60" rx="4"/></g>
+      <g fill="#7bd389"><circle cx="40" cy="55" r="6"/><circle cx="40" cy="135" r="6"/><circle cx="40" cy="215" r="6"/><circle cx="40" cy="295" r="6"/></g>
+      <text x="100" y="400" font-size="24" font-weight="700" text-anchor="middle">サーバ</text>
+    </g>
+    <!-- サーバの中身 -->
+    <g font-size="22" fill="#1f2933">
+      <text x="860" y="120">サーバが持っているもの</text>
+      <text x="860" y="170">・全国の時刻表</text>
+      <text x="860" y="210">・運休・遅延の情報</text>
+      <text x="860" y="250">・経路を探す計算力</text>
+      <text x="860" y="330" fill="#2f6fdf" font-weight="700">重い仕事は</text>
+      <text x="860" y="365" fill="#2f6fdf" font-weight="700">ぜんぶこっち</text>
+    </g>
+  </svg>
+  <div class="time">16〜19分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part1">
+  <div class="ttl"><span class="pt">PART 1 何を作るのか</span><span class="tt">3層に分ける理由</span></div>
+  <h2 class="msg">3つに分けると、部分ごとに増やす・守る・直せる</h2>
+  <svg viewBox="0 0 1136 470" width="1136" height="470">
+    <!-- 1 増やせる -->
+    <rect x="0" y="0" width="360" height="460" rx="16" fill="#f5f7fa"/>
+    <text x="180" y="45" font-size="28" font-weight="800" text-anchor="middle">① 混んだら増やせる</text>
+    <g fill="#dbe7fb" stroke="#2f6fdf" stroke-width="3">
+      <rect x="40" y="90" width="80" height="60" rx="8"/><rect x="40" y="170" width="80" height="60" rx="8"/><rect x="40" y="250" width="80" height="60" rx="8"/>
+    </g>
+    <g fill="#fbe6d6" stroke="#e07a2e" stroke-width="3"><rect x="150" y="130" width="80" height="60" rx="8"/><rect x="150" y="210" width="80" height="60" rx="8"/></g>
+    <rect x="260" y="170" width="70" height="60" rx="8" fill="#d7f0e4" stroke="#2f9e6e" stroke-width="3"/>
+    <g font-size="17" text-anchor="middle"><text x="80" y="126">Web</text><text x="80" y="206">Web</text><text x="80" y="286">Web</text><text x="190" y="166">AP</text><text x="190" y="246">AP</text><text x="295" y="206">DB</text></g>
+    <text x="180" y="370" font-size="21" text-anchor="middle">混む層だけ台数を増やす</text>
+    <text x="180" y="402" font-size="21" text-anchor="middle">（セールの日はWebを3台に）</text>
+    <!-- 2 守れる -->
+    <rect x="388" y="0" width="360" height="460" rx="16" fill="#f5f7fa"/>
+    <text x="568" y="45" font-size="28" font-weight="800" text-anchor="middle">② 大事な物を奥に置ける</text>
+    <rect x="410" y="90" width="316" height="240" rx="10" fill="#fff" stroke="#9aa5b1" stroke-width="2"/>
+    <rect x="425" y="150" width="80" height="60" rx="8" fill="#dbe7fb" stroke="#2f6fdf" stroke-width="3"/>
+    <rect x="528" y="150" width="80" height="60" rx="8" fill="#fbe6d6" stroke="#e07a2e" stroke-width="3"/>
+    <rect x="630" y="150" width="80" height="60" rx="8" fill="#d7f0e4" stroke="#2f9e6e" stroke-width="3"/>
+    <g font-size="17" text-anchor="middle"><text x="465" y="186">Web</text><text x="568" y="186">AP</text><text x="670" y="186">DB</text></g>
+    <line x1="516" y1="100" x2="516" y2="320" stroke="#d64545" stroke-width="5"/>
+    <line x1="619" y1="100" x2="619" y2="320" stroke="#d64545" stroke-width="5"/>
+    <text x="465" y="255" font-size="17" text-anchor="middle">外から</text><text x="465" y="278" font-size="17" text-anchor="middle">届く</text>
+    <text x="670" y="255" font-size="17" text-anchor="middle" fill="#d64545" font-weight="700">外から</text><text x="670" y="278" font-size="17" text-anchor="middle" fill="#d64545" font-weight="700">届かない</text>
+    <text x="568" y="370" font-size="21" text-anchor="middle">顧客データは一番奥。</text>
+    <text x="568" y="402" font-size="21" text-anchor="middle">間に壁（ファイアウォール）を置く</text>
+    <!-- 3 作り替え -->
+    <rect x="776" y="0" width="360" height="460" rx="16" fill="#f5f7fa"/>
+    <text x="956" y="45" font-size="28" font-weight="800" text-anchor="middle">③ 一部だけ作り替えられる</text>
+    <rect x="806" y="110" width="110" height="70" rx="8" fill="#dbe7fb" stroke="#2f6fdf" stroke-width="3" stroke-dasharray="6 4"/>
+    <rect x="806" y="200" width="110" height="70" rx="8" fill="#dbe7fb" stroke="#2f6fdf" stroke-width="3"/>
+    <text x="861" y="151" font-size="18" text-anchor="middle">旧画面</text><text x="861" y="241" font-size="18" text-anchor="middle">新画面</text>
+    <rect x="996" y="155" width="110" height="70" rx="8" fill="#fbe6d6" stroke="#e07a2e" stroke-width="3"/>
+    <text x="1051" y="190" font-size="18" text-anchor="middle">AP・DB</text><text x="1051" y="212" font-size="15" text-anchor="middle">そのまま</text>
+    <line x1="920" y1="235" x2="990" y2="200" stroke="#1f2933" stroke-width="3"/>
+    <text x="956" y="370" font-size="21" text-anchor="middle">画面だけ新しくする、</text>
+    <text x="956" y="402" font-size="21" text-anchor="middle">スマホアプリを足す、ができる</text>
+  </svg>
+  <div class="time">19〜28分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part1">
+  <div class="ttl"><span class="pt">PART 1 何を作るのか</span><span class="tt">演習：カートに入れる（5分）</span></div>
+  <h2 class="msg">ネットスーパーで「カートに入れる」を押したら</h2>
+  <svg viewBox="-3 0 1142 170" width="1136" height="170">
+    <defs><marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#52606d"/></marker></defs>
+    <g font-size="22" text-anchor="middle">
+      <rect x="0" y="10" width="230" height="110" rx="12" fill="#fff" stroke="#1f2933" stroke-width="3"/><text x="115" y="58" font-weight="800">ラップトップPC</text><text x="115" y="92" font-size="18" fill="#52606d">クライアント</text>
+      <rect x="302" y="10" width="230" height="110" rx="12" fill="#dbe7fb" stroke="#2f6fdf" stroke-width="3"/><text x="417" y="58" font-weight="800">Webサーバ</text><text x="417" y="92" font-size="18" fill="#52606d">ホール係</text>
+      <rect x="604" y="10" width="230" height="110" rx="12" fill="#fbe6d6" stroke="#e07a2e" stroke-width="3"/><text x="719" y="58" font-weight="800">APサーバ</text><text x="719" y="92" font-size="18" fill="#52606d">厨房</text>
+      <rect x="906" y="10" width="230" height="110" rx="12" fill="#d7f0e4" stroke="#2f9e6e" stroke-width="3"/><text x="1021" y="58" font-weight="800">DBサーバ</text><text x="1021" y="92" font-size="18" fill="#52606d">冷蔵庫と台帳</text>
+    </g>
+    <g stroke="#52606d" stroke-width="3"><line x1="236" y1="65" x2="296" y2="65" marker-end="url(#ag)"/><line x1="538" y1="65" x2="598" y2="65" marker-end="url(#ag)"/><line x1="840" y1="65" x2="900" y2="65" marker-end="url(#ag)"/></g>
+    <g font-size="22" font-weight="700" fill="#2f6fdf" text-anchor="middle"><text x="115" y="155">何をした？</text><text x="417" y="155">何をした？</text><text x="719" y="155">何をした？</text><text x="1021" y="155">何をした？</text></g>
+  </svg>
+  <ol style="font-size:24px;line-height:1.6;padding-left:1.3em;margin-top:10px">
+    <li>4つの機械は、それぞれ何をした？</li>
+    <li>次の変更、直すのはどの層？<br><b>ア</b> ボタンの色を変える　<b>イ</b> 送料のルールを変える　<b>ウ</b> 購入履歴を10年分残す</li>
+    <li>年末セールで注文が10倍に。どの機械を増やす？</li>
+  </ol>
+  <div class="time">28〜35分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide section part2">
+  <div class="center">
+    <div class="kicker">PART 2　（35〜75分）</div>
+    <h1 style="font-size:64px">どう作るのか<br><span style="font-size:40px;font-weight:600">プロジェクトの進め方</span></h1>
+  </div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part2">
+  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">ITプロジェクトの型</span></div>
+  <h2 class="msg">型は「作る・変える・使い続ける」の3群に分かれる</h2>
+  <svg viewBox="0 -3 1136 470" width="1136" height="470">
+    <rect x="0" y="0" width="122" height="118" rx="12" fill="#e07a2e"/><text x="61" y="52" font-size="21" font-weight="800" fill="#fff" text-anchor="middle">新しく</text><text x="61" y="80" font-size="17" font-weight="700" fill="#fff" text-anchor="middle">作る・試す</text><rect x="135" y="0" width="320" height="118" rx="12" fill="#fbe6d6" stroke="#e07a2e" stroke-width="2"/><text x="151" y="34" font-size="23" font-weight="800">スクラッチ開発</text><text x="151" y="68" font-size="18">ゼロから専用に作る</text><text x="151" y="98" font-size="18" fill="#c7671f" font-weight="700">注意：自由な分、高くつきやすい</text><rect x="468" y="0" width="320" height="118" rx="12" fill="#fbe6d6" stroke="#e07a2e" stroke-width="2"/><text x="484" y="34" font-size="23" font-weight="800">パッケージ導入</text><text x="484" y="68" font-size="18">既製品を買う・借りて使う</text><text x="484" y="98" font-size="18" fill="#c7671f" font-weight="700">注意：作り込むほど高くつく</text><rect x="801" y="0" width="320" height="118" rx="12" fill="#fbe6d6" stroke="#e07a2e" stroke-width="2"/><text x="817" y="34" font-size="23" font-weight="800">AI・データ活用</text><text x="817" y="68" font-size="18">小さく試して（PoC）から本番へ</text><text x="817" y="98" font-size="18" fill="#c7671f" font-weight="700">注意：試すまで効果が読めない</text><rect x="0" y="130" width="122" height="118" rx="12" fill="#e07a2e"/><text x="61" y="182" font-size="21" font-weight="800" fill="#fff" text-anchor="middle">今ある</text><text x="61" y="210" font-size="17" font-weight="700" fill="#fff" text-anchor="middle">ものを変える</text><rect x="135" y="130" width="320" height="118" rx="12" fill="#fbe6d6" stroke="#e07a2e" stroke-width="2"/><text x="151" y="164" font-size="23" font-weight="800">機能追加・改修</text><text x="151" y="198" font-size="18">法改正・新サービスに合わせる</text><text x="151" y="228" font-size="18" fill="#c7671f" font-weight="700">注意：締切が法律で決まりがち</text><rect x="468" y="130" width="320" height="118" rx="12" fill="#fbe6d6" stroke="#e07a2e" stroke-width="2"/><text x="484" y="164" font-size="23" font-weight="800">クラウド移行</text><text x="484" y="198" font-size="18">古い大型機などから移す</text><text x="484" y="228" font-size="18" fill="#c7671f" font-weight="700">注意：同じに動くかの確認が重い</text><rect x="801" y="130" width="320" height="118" rx="12" fill="#fbe6d6" stroke="#e07a2e" stroke-width="2"/><text x="817" y="164" font-size="23" font-weight="800">基盤更改</text><text x="817" y="198" font-size="18">機械やソフトの寿命で入れ替える</text><text x="817" y="228" font-size="18" fill="#c7671f" font-weight="700">注意：利用者には変化が見えない</text><rect x="0" y="260" width="122" height="84" rx="12" fill="#52606d"/><text x="61" y="310" font-size="21" font-weight="800" fill="#fff" text-anchor="middle">使い続ける</text><rect x="135" y="260" width="986" height="84" rx="12" fill="#e4e7eb" stroke="#52606d" stroke-width="2"/><text x="151" y="294" font-size="23" font-weight="800">運用・保守</text><text x="300" y="294" font-size="18">障害の対応・問い合わせ・部品の更新・小さな直し</text><text x="151" y="328" font-size="18" fill="#c7671f" font-weight="700">注意：上のどの型でも、作った後ろに毎年かかり続ける。最初の予算に入れておく</text>
+    <text x="0" y="400" font-size="22">型によって<tspan font-weight="800">お金がかかる所</tspan>と<tspan font-weight="800">発注側が気を付ける所</tspan>が変わる。</text>
+    <text x="0" y="436" font-size="20" fill="#52606d">このあとの「流れ・人・費用・QCD」は、どの型にも共通する話。</text>
+  </svg>
+  <div class="time">35〜39分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part2">
+  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">プロジェクトの7段階</span></div>
+  <h2 class="msg">7つの段階で進む。発注側の出番は最初と最後が重い</h2>
+  <svg viewBox="0 0 1136 470" width="1136" height="470">
+    <g font-size="22" font-weight="800" text-anchor="middle" fill="#fff">
+      <path d="M0 40 h140 l20 45 l-20 45 h-140 z" fill="#e07a2e"/><text x="72" y="93">企画</text>
+      <path d="M162 40 h140 l20 45 l-20 45 h-140 l20 -45 z" fill="#e07a2e"/><text x="242" y="93">要件定義</text>
+      <g font-size="15" font-weight="800" fill="#d64545" text-anchor="middle"><text x="323" y="22">▼ ここで業者を選ぶ（調達）</text></g>
+      <path d="M324 40 h140 l20 45 l-20 45 h-140 l20 -45 z" fill="#c7671f"/><text x="404" y="93">設計</text>
+      <path d="M486 40 h140 l20 45 l-20 45 h-140 l20 -45 z" fill="#c7671f"/><text x="566" y="93">開発</text>
+      <path d="M648 40 h140 l20 45 l-20 45 h-140 l20 -45 z" fill="#c7671f"/><text x="728" y="93">テスト</text>
+      <path d="M810 40 h140 l20 45 l-20 45 h-140 l20 -45 z" fill="#e07a2e"/><text x="890" y="80">移行</text><text x="890" y="108">・公開</text>
+      <path d="M972 40 h164 v90 h-164 l20 -45 z" fill="#52606d"/><text x="1064" y="80">運用</text><text x="1064" y="108">・保守</text>
+    </g>
+    <g font-size="18" text-anchor="middle" fill="#1f2933">
+      <text x="72" y="165">何のため？</text><text x="72" y="190">予算は？</text>
+      <text x="242" y="165">何ができれば</text><text x="242" y="190">合格か決める</text>
+      <text x="404" y="165">画面・データの</text><text x="404" y="190">形を決める</text>
+      <text x="566" y="165">作る</text>
+      <text x="728" y="165">決めた通りに</text><text x="728" y="190">動くか確かめる</text>
+      <text x="890" y="165">古いデータを</text><text x="890" y="190">移して切替</text>
+      <text x="1064" y="165">直す・見張る</text><text x="1064" y="190">（何年も続く）</text>
+    </g>
+    <g font-size="16" font-weight="800" text-anchor="middle" fill="#9a4f14">
+      <rect x="0" y="204" width="1136" height="50" rx="6" fill="#fdf3ea"/>
+      <text x="72" y="225">企画書</text><text x="72" y="245">情報提供依頼</text>
+      <text x="242" y="225">要件定義書</text><text x="242" y="245">調達仕様書</text>
+      <text x="404" y="225">設計書</text><text x="404" y="245">（画面・遷移図）</text>
+      <text x="566" y="225">プログラム</text><text x="566" y="245">進捗報告</text>
+      <text x="728" y="225">不具合票</text><text x="728" y="245">テスト結果報告書</text>
+      <text x="890" y="225">切替手順書</text><text x="890" y="245">マニュアル</text>
+      <text x="1064" y="225">月次報告書</text><text x="1064" y="245">保守契約</text>
+    </g>
+    <rect x="0" y="266" width="1136" height="4" fill="#cbd2d9"/>
+    <text x="0" y="300" font-size="22" font-weight="800">発注する側の出番</text>
+    <g font-size="20">
+      <rect x="0" y="312" width="322" height="100" rx="10" fill="#fbe6d6"/>
+      <text x="16" y="343" font-weight="800">◎ 一番重い</text><text x="16" y="370">やりたいことと</text><text x="16" y="396">合格の基準を決める</text>
+      <rect x="324" y="312" width="484" height="100" rx="10" fill="#f5f7fa"/>
+      <text x="340" y="343" font-weight="800">○ 途中で確認</text><text x="340" y="370">画面を見て「これで合ってる？」に答える</text><text x="340" y="396">最後は自分で触って確かめる（受け入れ）</text>
+      <rect x="810" y="312" width="326" height="100" rx="10" fill="#e4e7eb"/>
+      <text x="826" y="343" font-weight="800">○ 払い続ける</text><text x="826" y="370">保守の費用を</text><text x="826" y="396">毎年の予算に入れる</text>
+    </g>
+    <text x="0" y="452" font-size="22">失敗の多くは<tspan font-weight="800">最初の2段階</tspan>（何を作るかが決まっていない）で仕込まれる、とよく言われる。</text>
+  </svg>
+  <div class="time">39〜42分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part2 ph" style="--c:#e07a2e">
+  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">段階ごとの詳細 1/7：企画</span></div>
+  <div class="case2"><b>ここから7枚の例：区民センターの部屋予約システム</b>（電話と紙の台帳 → ネット予約）。数字・名前は架空です。</div>
+  <div class="strip"><span class="chip on" style="--c:#e07a2e">1 企画</span><span class="chip" style="--c:#e07a2e">2 要件定義</span><span class="chip" style="--c:#c7671f">3 設計</span><span class="chip" style="--c:#c7671f">4 開発</span><span class="chip" style="--c:#c7671f">5 テスト</span><span class="chip" style="--c:#e07a2e">6 移行・公開</span><span class="chip" style="--c:#52606d">7 運用・保守</span></div>
+  <h2 class="msg"><span class="num">1</span>何のために、いくらで作るかを決める</h2>
+  <div class="body">
+    <div class="left">
+      <div class="lab">やること</div>
+      <ol class="todo"><li>困りごとを書き出す<span>電話がつながらない・二重予約・利用実績の集計が手作業</span></li><li>やり方を比べる<span>ゼロから作る／既製品を買う／今のやり方を直すだけ</span></li><li>予算と効果を見積もる<span>必要なら複数社に作り方と費用の見込みを聞く（情報提供依頼＝RFI）。発注はまだしない</span></li></ol>
+      <div class="meta"><b>中心になる人</b>発注側（役所の担当課）<br><b>期間の例</b>1〜2か月</div>
+      <div class="owner"><div class="lab2">発注する側の出番</div><b>目的を一文で言える状態にする</b>。ここがぶれると、あとの段階が全部ぶれる。</div>
+    </div>
+    <div class="right">
+      <div class="lab">成果物（手元に残るもの）</div>
+      <div class="pages">
+        <div class="paper pcover"><div class="pt">令和◯年度</div><div class="ptitle">区民センター<br>部屋予約システム<br>導入企画書</div><div class="pfoot">◯◯区 地域振興課<br>◯年◯月◯日</div></div>
+        <div class="paper"><div class="h3">1. 目的</div><p>窓口と電話の予約をネットで受け、職員の手間と二重予約をなくす。</p><div class="h3">2. いま困っていること</div><p>・夕方は電話がつながらない<br>・二重予約が年に◯件<br>・利用実績の集計が手作業</p><div class="h3">3. やり方の比較</div><p>ゼロから作る／既製品を借りる（推し）／今のまま</p><div class="h3">4. 予算と時期</div><p>初年度 ◯◯◯万円・再来年4月から</p></div>
+      </div>
+      <div class="lines">業者を選ぶのは、次の要件定義が終わってから（国の標準ガイドラインの順番）。</div>
+    </div>
+  </div>
+  <div class="ex">例の区民センター予約では：「電話が混む」を数字で示せると、予算を通す説明（議会での説明）がしやすい。</div>
+  <div class="pg"></div>
+</section>
+<section class="slide part2 ph" style="--c:#e07a2e">
+  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">段階ごとの詳細 2/7：要件定義</span></div>
+  <div class="strip"><span class="chip" style="--c:#e07a2e">1 企画</span><span class="chip on" style="--c:#e07a2e">2 要件定義</span><span class="chip" style="--c:#c7671f">3 設計</span><span class="chip" style="--c:#c7671f">4 開発</span><span class="chip" style="--c:#c7671f">5 テスト</span><span class="chip" style="--c:#e07a2e">6 移行・公開</span><span class="chip" style="--c:#52606d">7 運用・保守</span></div>
+  <h2 class="msg"><span class="num">2</span>何ができれば合格かを決める</h2>
+  <div class="body">
+    <div class="left">
+      <div class="lab">やること</div>
+      <ol class="todo"><li>今の仕事の流れと、システム後の流れを描く<span>電話を受ける→台帳を見る→書き込む…が、どう変わるか</span></li><li>必要な機能を一覧にする<span>「必須」と「あれば嬉しい」を分ける</span></li><li>機能以外の条件を決める<span>何人が同時に使うか・止まってよい時間・個人情報の扱い</span></li><li>要件定義書を付けて業者を募り、選ぶ<span>「調達」。作る業者がここで決まる</span></li></ol>
+      <div class="meta"><b>中心になる人</b>発注側（役所の担当課）<br><b>期間の例</b>2〜3か月</div>
+      <div class="owner"><div class="lab2">発注する側の出番</div><b>◎ 一番重い</b>。書き漏らした機能は、業者を選んだあとに足すと追加料金になる。「必須」を絞るのも発注側。</div>
+    </div>
+    <div class="right">
+      <div class="lab">成果物（手元に残るもの）</div>
+      <div class="doc"><div class="dh"><span class="tag">図</span>要件定義書（業務の流れ図）</div><div class="db">
+<div class="flow"><span class="fl">いま</span><span class="fb">区民が電話</span><i>→</i><span class="fb">職員が台帳を見る</span><i>→</i><span class="fb">台帳に書く</span></div>
+<div class="flow"><span class="fl nw">導入後</span><span class="fb nw">区民がネットで空きを見る</span><i>→</i><span class="fb nw">その場で予約</span><i>→</i><span class="fb nw">集計は自動</span></div></div></div>
+      <div class="doc"><div class="dh"><span class="tag">表</span>要件定義書（機能一覧の一部）</div><div class="db"><table class="mini c">
+<tr><th>No</th><th>機能</th><th>使う人</th><th>区分</th></tr>
+<tr><td>1</td><td>空いている部屋と時間を見る</td><td>区民</td><td class="must">必須</td></tr>
+<tr><td>2</td><td>予約する・取り消す</td><td>区民</td><td class="must">必須</td></tr>
+<tr><td>3</td><td>利用料をネットで払う</td><td>区民</td><td>あれば</td></tr>
+</table>
+<div class="lines" style="margin-top:6px"><b>機能以外：</b>同時に200人が使っても3秒以内に表示／夜中の2時間は止めてよい</div></div></div>
+    </div>
+  </div>
+  <div class="ex">例の区民センター予約では：「抽選予約」を言い忘れると、テストの段階で気づいても追加の見積もりになる。</div>
+  <div class="pg"></div>
+</section>
+<section class="slide part2 ph" style="--c:#c7671f">
+  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">段階ごとの詳細 3/7：設計</span></div>
+  <div class="strip"><span class="chip" style="--c:#e07a2e">1 企画</span><span class="chip" style="--c:#e07a2e">2 要件定義</span><span class="chip on" style="--c:#c7671f">3 設計</span><span class="chip" style="--c:#c7671f">4 開発</span><span class="chip" style="--c:#c7671f">5 テスト</span><span class="chip" style="--c:#e07a2e">6 移行・公開</span><span class="chip" style="--c:#52606d">7 運用・保守</span></div>
+  <h2 class="msg"><span class="num">3</span>画面とデータの形を決める</h2>
+  <div class="body">
+    <div class="left">
+      <div class="lab">やること</div>
+      <ol class="todo"><li>画面の見た目と、押したらどこへ進むかを決める</li><li>持つデータの項目を決める<span>予約番号・部屋・日時・利用者・人数・料金…</span></li><li>他のシステムとのつなぎ方と、サーバの組み方を決める<span>支払い・職員のログイン／PART 1 の3層</span></li></ol>
+      <div class="meta"><b>中心になる人</b>業者（発注側は確認）<br><b>期間の例</b>2〜3か月</div>
+      <div class="owner"><div class="lab2">発注する側の出番</div><b>画面イメージを見て「これで合っている？」に答える</b>。紙の上で直すのが一番安い。作ったあとで直すと何倍もかかる。</div>
+    </div>
+    <div class="right">
+      <div class="lab">成果物（手元に残るもの）</div>
+      <div class="doc"><div class="dh"><span class="tag">ラフ</span>基本設計書（画面のラフ）</div><div class="db"><div class="wire">
+<div class="wtop">区民センター 部屋の予約</div>
+<div class="wrow"><span class="wsel">部屋：会議室A ▼</span><span class="wsel">日付：5月12日 ▼</span></div>
+<table class="wgrid"><tr><th></th><th>9-12時</th><th>13-17時</th><th>18-21時</th></tr>
+<tr><th>会議室A</th><td class="x">×</td><td class="o">○</td><td class="o">○</td></tr>
+<tr><th>和室</th><td class="o">○</td><td class="x">×</td><td class="o">○</td></tr></table>
+<div class="wbtn">この時間で予約する</div>
+</div></div></div>
+      <div class="doc"><div class="dh"><span class="tag">図</span>画面遷移図（押したらどこへ進むか）</div><div class="db"><div class="trans"><span>トップ</span><i>→</i><span class="on">空き状況<br><small>上の画面</small></span><i>→</i><span>名前など<br>入力</span><i>→</i><span>確認</span><i>→</i><span>完了<br><small>メール送信</small></span></div></div></div>
+    </div>
+  </div>
+  <div class="ex">例の区民センター予約では：「団体で借りる人は代表者名も要る」と、ここで職員が気づけば直すのは書類1枚で済む。</div>
+  <div class="pg"></div>
+</section>
+<section class="slide part2 ph" style="--c:#c7671f">
+  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">段階ごとの詳細 4/7：開発</span></div>
+  <div class="strip"><span class="chip" style="--c:#e07a2e">1 企画</span><span class="chip" style="--c:#e07a2e">2 要件定義</span><span class="chip" style="--c:#c7671f">3 設計</span><span class="chip on" style="--c:#c7671f">4 開発</span><span class="chip" style="--c:#c7671f">5 テスト</span><span class="chip" style="--c:#e07a2e">6 移行・公開</span><span class="chip" style="--c:#52606d">7 運用・保守</span></div>
+  <h2 class="msg"><span class="num">4</span>設計書どおりに作る</h2>
+  <div class="body">
+    <div class="left">
+      <div class="lab">やること</div>
+      <ol class="todo"><li>設計書どおりにプログラムを書く</li><li>部品ごとに、作った人が動きを確かめる<span>「単体テスト」と呼ぶ</span></li><li>毎週、進み具合と遅れを報告する</li></ol>
+      <div class="meta"><b>中心になる人</b>業者（プログラマー）<br><b>期間の例</b>3〜4か月</div>
+      <div class="owner"><div class="lab2">発注する側の出番</div><b>出番は少ない</b>。週1回の報告で遅れを早く知る。ここで「やっぱりこうして」と言うと、一番高くつく。</div>
+    </div>
+    <div class="right">
+      <div class="lab">成果物（手元に残るもの）</div>
+      <div class="doc"><div class="dh"><span class="tag">成果物</span>プログラム（中身のイメージ）</div><div class="db"><pre class="code">もし 部屋が空いている(部屋, 日時) なら
+    予約を保存し、確認メールを送る
+そうでなければ
+    「埋まりました」と表示する</pre></div></div><div class="doc"><div class="dh"><span class="tag">毎週</span>進捗報告（10月第2週）<span class="lg">灰＝予定／緑＝済み／赤＝遅れ</span></div><div class="db" style="padding:4px 12px">
+<svg viewBox="0 0 560 150" width="100%" height="140" font-size="17">
+  <g fill="#52606d" text-anchor="middle"><text x="228" y="14">10月</text><text x="444" y="14">11月</text>
+  <text x="147" y="30">1</text><text x="201" y="30">2</text><text x="255" y="30">3</text><text x="309" y="30">4</text><text x="363" y="30">1</text><text x="417" y="30">2</text><text x="471" y="30">3</text><text x="525" y="30">4</text></g>
+  <g stroke="#e4e7eb"><line x1="120" y1="36" x2="120" y2="140"/><line x1="336" y1="4" x2="336" y2="140"/><line x1="552" y1="36" x2="552" y2="140"/></g>
+  <g fill="#1f2933"><text x="0" y="56">画面づくり</text><text x="0" y="82">予約の処理</text><text x="0" y="108">支払い連携</text><text x="0" y="134">結合の準備</text></g>
+  <g fill="#e4e7eb"><rect x="120" y="44" width="162" height="16" rx="3"/><rect x="174" y="70" width="216" height="16" rx="3"/><rect x="174" y="96" width="162" height="16" rx="3"/><rect x="336" y="122" width="216" height="16" rx="3"/></g>
+  <rect x="120" y="44" width="108" height="16" rx="3" fill="#2f9e6e"/>
+  <rect x="174" y="70" width="54" height="16" rx="3" fill="#2f9e6e"/>
+  <rect x="174" y="96" width="14" height="16" rx="3" fill="#d64545"/>
+  <text x="344" y="109" fill="#d64545" font-weight="800">1週遅れ（確認待ち）</text>
+  <line x1="228" y1="36" x2="228" y2="142" stroke="#d64545" stroke-dasharray="4 3" stroke-width="2"/>
+  <text x="232" y="146" fill="#d64545" font-size="15">今週</text>
+</svg></div></div>
+    </div>
+  </div>
+  <div class="ex">例の区民センター予約では：支払いの業者側の都合で1週遅れ。早く知れば、公開日をずらすか機能を後回しにするかを選べる。</div>
+  <div class="pg"></div>
+</section>
+<section class="slide part2 ph" style="--c:#c7671f">
+  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">段階ごとの詳細 5/7：テスト</span></div>
+  <div class="strip"><span class="chip" style="--c:#e07a2e">1 企画</span><span class="chip" style="--c:#e07a2e">2 要件定義</span><span class="chip" style="--c:#c7671f">3 設計</span><span class="chip" style="--c:#c7671f">4 開発</span><span class="chip on" style="--c:#c7671f">5 テスト</span><span class="chip" style="--c:#e07a2e">6 移行・公開</span><span class="chip" style="--c:#52606d">7 運用・保守</span></div>
+  <h2 class="msg"><span class="num">5</span>決めた通りに動くか確かめる</h2>
+  <div class="body">
+    <div class="left">
+      <div class="lab">やること</div>
+      <ol class="todo"><li>部品をつないで確かめる<span>予約→支払い→メール が一続きで動くか</span></li><li>全体で確かめる<span>200人が同時に使う・夜中の停止から戻る</span></li><li>発注側が実際に触って確かめる<span>「受け入れテスト」。要件定義で決めた合格基準と照らす</span></li></ol>
+      <div class="meta"><b>中心になる人</b>業者 → 最後は発注側<br><b>期間の例</b>2〜3か月</div>
+      <div class="owner"><div class="lab2">発注する側の出番</div><b>職員が普段の仕事どおりに操作してみる</b>（受け入れ）。合格の基準は要件定義で決めたもの。基準が無いと「なんとなく不安」で終わる。</div>
+    </div>
+    <div class="right">
+      <div class="lab">成果物（手元に残るもの）</div>
+      <div class="doc"><div class="dh"><span class="tag">1件ずつ</span>不具合票 No.027</div><div class="db"><div class="ticket">
+<div><i>見つけた日</i>2月14日（職員の受け入れテスト）</div>
+<div><i>画面</i>職員用の代理予約</div>
+<div><i>起きたこと</i>電話の予約を入れると、利用者名が空のまま保存される</div>
+<div><i>重さ</i><span class="sev">高</span><i style="margin-left:18px">状態</i>直した・確認待ち</div></div></div></div>
+<div class="doc"><div class="dh"><span class="tag">グラフ</span>テスト結果報告書（不具合の件数）</div><div class="db">
+<svg viewBox="0 0 560 150" width="100%" height="150" font-size="13">
+  <line x1="40" y1="124" x2="550" y2="124" stroke="#cbd2d9"/>
+  <g fill="#f3c6a0">
+    <rect x="58" y="88" width="30" height="36"/><rect x="120" y="97" width="30" height="27"/><rect x="182" y="100" width="30" height="24"/><rect x="244" y="106" width="30" height="18"/>
+    <rect x="306" y="112" width="30" height="12"/><rect x="368" y="118" width="30" height="6"/><rect x="430" y="121" width="30" height="3"/></g>
+  <polyline points="73,88 135,79 197,82 259,94 321,106 383,115 445,121 507,121" fill="none" stroke="#1f2933" stroke-width="3"/>
+  <g fill="#1f2933"><circle cx="73" cy="88" r="4"/><circle cx="135" cy="79" r="4"/><circle cx="197" cy="82" r="4"/><circle cx="259" cy="94" r="4"/><circle cx="321" cy="106" r="4"/><circle cx="383" cy="115" r="4"/><circle cx="445" cy="121" r="4"/><circle cx="507" cy="121" r="4"/></g>
+  <g fill="#52606d" text-anchor="middle"><text x="73" y="140">1週</text><text x="135" y="140">2</text><text x="197" y="140">3</text><text x="259" y="140">4</text><text x="321" y="140">5</text><text x="383" y="140">6</text><text x="445" y="140">7</text><text x="507" y="140">8週</text></g>
+  <text x="141" y="70" font-weight="800">15</text><text x="513" y="113" font-weight="800">1</text>
+  <rect x="300" y="14" width="14" height="10" fill="#f3c6a0"/><text x="318" y="24">その週に見つかった件数</text>
+  <line x1="300" y1="40" x2="314" y2="40" stroke="#1f2933" stroke-width="3"/><text x="318" y="44">まだ直っていない件数</text>
+</svg>
+<div class="lines" style="font-size:15px">合計42件見つかり、41件直した。残り1件は公開後に直す（職員が手で回避）</div></div></div>
+    </div>
+  </div>
+  <div class="ex">例の区民センター予約では：職員が窓口の流れで試したら「電話の予約を職員が代わりに入れる画面」が使いにくいと判明。</div>
+  <div class="pg"></div>
+</section>
+<section class="slide part2 ph" style="--c:#e07a2e">
+  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">段階ごとの詳細 6/7：移行・公開</span></div>
+  <div class="strip"><span class="chip" style="--c:#e07a2e">1 企画</span><span class="chip" style="--c:#e07a2e">2 要件定義</span><span class="chip" style="--c:#c7671f">3 設計</span><span class="chip" style="--c:#c7671f">4 開発</span><span class="chip" style="--c:#c7671f">5 テスト</span><span class="chip on" style="--c:#e07a2e">6 移行・公開</span><span class="chip" style="--c:#52606d">7 運用・保守</span></div>
+  <h2 class="msg"><span class="num">6</span>古いデータを移して切り替える</h2>
+  <div class="body">
+    <div class="left">
+      <div class="lab">やること</div>
+      <ol class="todo"><li>今あるデータを新しいシステムへ移す<span>紙の台帳とExcelにある、先の日付の予約</span></li><li>職員の練習と、区民へのお知らせ</li><li>切替の当日の段取りを決め、リハーサルする<span>うまくいかなかったら元に戻す手順も用意</span></li></ol>
+      <div class="meta"><b>中心になる人</b>業者＋発注側<br><b>期間の例</b>1か月（当日は1日）</div>
+      <div class="owner"><div class="lab2">発注する側の出番</div><b>「戻すかどうか」を決める人と時刻を先に決めておく</b>。当日その場で迷うと、翌朝に間に合わない。</div>
+    </div>
+    <div class="right">
+      <div class="lab">成果物（手元に残るもの）</div>
+      <div class="doc"><div class="dh"><span class="tag">書類</span>切替手順書（当日のタイムライン）</div><div class="db"><div class="tl">
+<div class="tli"><b>3/31 17:00</b>窓口と電話の受付を止める<em>職員</em></div>
+<div class="tli"><b>18:00</b>事前に移した予約 1,240件に当日分を反映<em>業者</em></div>
+<div class="tli"><b>21:00</b>件数と中身を台帳と照合<em>職員</em></div>
+<div class="tli key"><b>22:00</b>続けるか戻すかを判断<em>課長</em></div>
+<div class="tli go"><b>4/1 9:00</b>公開</div>
+</div></div></div><div class="doc"><div class="dh"><span class="tag">書類</span>操作マニュアル</div><div class="db"><div class="lines">区民向け：予約のしかた（図入り4ページ）<br>職員向け：代理予約・取消・一覧の印刷</div></div></div>
+    </div>
+  </div>
+  <div class="ex">例の区民センター予約では：前の晩に照合したら3件ずれていた。手順書どおり紙で確認して直し、予定どおり公開。</div>
+  <div class="pg"></div>
+</section>
+<section class="slide part2 ph" style="--c:#52606d">
+  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">段階ごとの詳細 7/7：運用・保守</span></div>
+  <div class="strip"><span class="chip" style="--c:#e07a2e">1 企画</span><span class="chip" style="--c:#e07a2e">2 要件定義</span><span class="chip" style="--c:#c7671f">3 設計</span><span class="chip" style="--c:#c7671f">4 開発</span><span class="chip" style="--c:#c7671f">5 テスト</span><span class="chip" style="--c:#e07a2e">6 移行・公開</span><span class="chip on" style="--c:#52606d">7 運用・保守</span></div>
+  <h2 class="msg"><span class="num">7</span>直す・見張るが何年も続く</h2>
+  <div class="body">
+    <div class="left">
+      <div class="lab">やること</div>
+      <ol class="todo"><li>止まっていないか見張る<span>止まったら知らせが来て、すぐ直す</span></li><li>問い合わせと不具合に対応する</li><li>変化に合わせて直す<span>料金の改定・法律の改正・OSやソフトの更新</span></li><li>数年ごとに「使い続けるか・作り直すか」を決める</li></ol>
+      <div class="meta"><b>中心になる人</b>業者（保守契約）＋発注側<br><b>期間の例</b>5年以上</div>
+      <div class="owner"><div class="lab2">発注する側の出番</div><b>保守の費用を毎年の予算に入れる</b>。作って終わりではなく、使う年数のあいだ払い続ける。</div>
+    </div>
+    <div class="right">
+      <div class="lab">成果物（手元に残るもの）</div>
+      <div class="doc"><div class="dh"><span class="tag">書類</span>月次報告書（9月分）</div><div class="db">
+<div class="kpi3"><div><b>99.9%</b>動いていた時間</div><div><b>1件</b>障害（20分停止）</div><div><b>12件</b>問い合わせ</div></div>
+<svg viewBox="0 0 560 170" width="100%" height="170" font-size="13">
+  <text x="0" y="14" font-weight="800" fill="#1f2933">予約の件数（4月〜9月）</text>
+  <line x1="40" y1="140" x2="550" y2="140" stroke="#cbd2d9"/>
+  <g fill="#2f6fdf"><rect x="60" y="76" width="34" height="64"/><rect x="142" y="69" width="34" height="71"/><rect x="224" y="62" width="34" height="78"/><rect x="306" y="58" width="34" height="82"/><rect x="388" y="55" width="34" height="85"/><rect x="470" y="51" width="34" height="89"/></g>
+  <g fill="#9aa5b1"><rect x="96" y="131" width="34" height="9"/><rect x="178" y="132" width="34" height="8"/><rect x="260" y="133" width="34" height="7"/><rect x="342" y="134" width="34" height="6"/><rect x="424" y="135" width="34" height="5"/><rect x="506" y="136" width="34" height="4"/></g>
+  <g fill="#52606d" text-anchor="middle"><text x="95" y="156">4月</text><text x="177" y="156">5月</text><text x="259" y="156">6月</text><text x="341" y="156">7月</text><text x="423" y="156">8月</text><text x="505" y="156">9月</text></g>
+  <g font-weight="800" text-anchor="middle"><text x="77" y="70" fill="#2f6fdf">2,180</text><text x="487" y="45" fill="#2f6fdf">3,010</text><text x="113" y="126" fill="#52606d">310</text><text x="523" y="131" fill="#52606d">150</text></g>
+  <rect x="300" y="6" width="12" height="10" fill="#2f6fdf"/><text x="316" y="15">ネット</text><rect x="370" y="6" width="12" height="10" fill="#9aa5b1"/><text x="386" y="15">電話・窓口</text>
+</svg>
+<div class="lines" style="font-size:15px">来月の予定：料金改定（来年4月から）に合わせた変更の見積もり</div></div></div>
+<div class="lines" style="font-size:15px">あわせて、毎年更新する<b>保守契約</b>（見張りの時間帯・直すまでの時間・毎年の費用）。</div>
+    </div>
+  </div>
+  <div class="ex">例の区民センター予約では：ネット予約の割合が数字で出るので、来年の電話受付の人員を減らす判断の材料になる。</div>
+  <div class="pg"></div>
+</section>
+<section class="slide part2">
+  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">段階のまとめ表</span></div>
+  <h2 class="msg">発注する側の出番は、7つのどの段階にもある</h2>
+  <table class="t sum"><tr><th>段階</th><th>やること</th><th>成果物</th><th>発注する側の出番</th></tr><tr><td class="pn" style="--c:#e07a2e">1 企画</td><td>目的・予算・やり方を決める</td><td>企画書・情報提供依頼</td><td><b>目的を一文で言う</b></td></tr><tr><td class="pn" style="--c:#e07a2e">2 要件定義</td><td>必要な機能と合格の基準を決め、業者を選ぶ</td><td>要件定義書・調達仕様書</td><td><b>◎「必須」を決めて絞る</b></td></tr><tr><td class="pn" style="--c:#c7671f">3 設計</td><td>画面とデータの形を決める</td><td>設計書・画面イメージ</td><td><b>画面を見て答える</b></td></tr><tr><td class="pn" style="--c:#c7671f">4 開発</td><td>作る・部品ごとに確かめる</td><td>プログラム・進捗報告</td><td><b>遅れを早く知る</b></td></tr><tr><td class="pn" style="--c:#c7671f">5 テスト</td><td>つないで・全体で・実際に触って確かめる</td><td>テスト結果報告書</td><td><b>自分で触って合否を出す</b></td></tr><tr><td class="pn" style="--c:#e07a2e">6 移行・公開</td><td>データを移して切り替える</td><td>切替手順書・マニュアル</td><td><b>戻す判断の人を決める</b></td></tr><tr><td class="pn" style="--c:#52606d">7 運用・保守</td><td>見張る・直す・作り直しを判断</td><td>月次報告書・保守契約</td><td><b>毎年の予算に入れる</b></td></tr></table>
+  <div class="take" style="margin-top:18px;font-size:28px">成果物は「次の段階への約束」。前の段階の書類があいまいだと、後ろの段階で高くつく。</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part2">
+  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">組織図</span></div>
+  <h2 class="msg">発注側にも人が要る。返事が遅れるほど費用がかかる</h2>
+  <svg viewBox="0 0 1136 470" width="1136" height="470">
+    <defs><marker id="ct" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#52606d"/></marker></defs>
+    <!-- 最上段 -->
+    <rect x="318" y="0" width="500" height="70" rx="12" fill="#52606d"/>
+    <text x="568" y="30" font-size="23" font-weight="800" fill="#fff" text-anchor="middle">ステアリングコミッティ（運営委員会）</text>
+    <text x="568" y="58" font-size="17" fill="#fff" text-anchor="middle">役員・部長クラス。予算と方針を最後に決める</text>
+    <g stroke="#52606d" stroke-width="3" fill="none"><path d="M568 70 V100 H150 V135"/><path d="M568 100 H866 V135"/></g>
+    <!-- 発注側 -->
+    <rect x="0" y="95" width="540" height="245" rx="16" fill="#dbe7fb" opacity="0.6"/>
+    <rect x="596" y="95" width="540" height="245" rx="16" fill="#fbe6d6" opacity="0.6"/>
+    <text x="16" y="124" font-size="19" font-weight="800" fill="#2f6fdf">発注側（お金を出す側）</text>
+    <text x="1120" y="124" font-size="19" font-weight="800" fill="#c7671f" text-anchor="end">業者側（作る側）</text>
+    <g text-anchor="middle">
+      <rect x="30" y="135" width="240" height="70" rx="10" fill="#2f6fdf"/>
+      <text x="150" y="165" font-size="21" font-weight="800" fill="#fff">発注側のPM</text><text x="150" y="191" font-size="16" fill="#fff">決める・答える窓口</text>
+      <line x1="270" y1="170" x2="290" y2="170" stroke="#2f6fdf" stroke-width="3" stroke-dasharray="5 4"/>
+      <rect x="290" y="135" width="230" height="70" rx="10" fill="#fff" stroke="#2f6fdf" stroke-width="3" stroke-dasharray="7 5"/>
+      <text x="405" y="165" font-size="21" font-weight="800">PMO</text><text x="405" y="191" font-size="15">進み具合・課題を見張る事務局</text>
+      <g stroke="#2f6fdf" stroke-width="3" fill="none"><path d="M150 205 V222 H405 V240"/><path d="M150 222 V240"/></g>
+      <rect x="30" y="240" width="240" height="80" rx="10" fill="#fff" stroke="#2f6fdf" stroke-width="2"/>
+      <text x="150" y="274" font-size="20" font-weight="800">業務部門（現場）</text><text x="150" y="302" font-size="15">「現場ではこう使う」を答える</text>
+      <rect x="290" y="240" width="230" height="80" rx="10" fill="#fff" stroke="#2f6fdf" stroke-width="2"/>
+      <text x="405" y="274" font-size="20" font-weight="800">情報システム部門</text><text x="405" y="302" font-size="15">今のシステム・社内の決まり</text>
+      <!-- 業者側 -->
+      <rect x="746" y="135" width="240" height="70" rx="10" fill="#e07a2e"/>
+      <text x="866" y="165" font-size="21" font-weight="800" fill="#fff">業者のPM</text><text x="866" y="191" font-size="16" fill="#fff">作る側のまとめ役</text>
+      <g stroke="#e07a2e" stroke-width="3" fill="none"><path d="M866 205 V222 H691 V240"/><path d="M866 222 V240"/><path d="M866 222 H1046 V240"/></g>
+      <rect x="606" y="240" width="170" height="80" rx="10" fill="#fff" stroke="#e07a2e" stroke-width="2"/>
+      <text x="691" y="274" font-size="20" font-weight="800">設計・開発</text><text x="691" y="302" font-size="15">画面・プログラム</text>
+      <rect x="786" y="240" width="170" height="80" rx="10" fill="#fff" stroke="#e07a2e" stroke-width="2"/>
+      <text x="871" y="274" font-size="20" font-weight="800">基盤</text><text x="871" y="302" font-size="15">サーバ・クラウド</text>
+      <rect x="966" y="240" width="160" height="80" rx="10" fill="#fff" stroke="#e07a2e" stroke-width="2"/>
+      <text x="1046" y="274" font-size="20" font-weight="800">テスト</text><text x="1046" y="302" font-size="15">決めた通りか確かめる</text>
+      <line x1="550" y1="190" x2="586" y2="190" stroke="#52606d" stroke-width="3" marker-start="url(#ct)" marker-end="url(#ct)"/>
+      <text x="568" y="170" font-size="16" font-weight="700" fill="#52606d">契約</text>
+    </g>
+    <text x="0" y="385" font-size="22"><tspan font-weight="800">発注側にも人が要る。</tspan>返事が1週間遅れれば、その間も業者の費用はかかり続ける。</text>
+    <text x="0" y="423" font-size="20" fill="#52606d">人のほかにかかるもの：サーバ・クラウドやソフトの利用料、開発・テスト用の環境</text>
+    <text x="0" y="458" font-size="17" fill="#52606d">PM＝プロジェクトマネージャ（その案件の責任者）</text>
+  </svg>
+  <div class="time">42〜45分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part2">
+  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">PMの仕事</span></div>
+  <h2 class="msg">PMの仕事＝5W1Hを1つずつ確定させていくこと</h2>
+  <svg viewBox="0 0 1136 470" width="1136" height="470">
+    <g>
+      <rect x="0" y="10" width="368" height="150" rx="14" fill="#fbe6d6" stroke="#e07a2e" stroke-width="3"/>
+      <text x="20" y="56" font-size="28" font-weight="800">いつ<tspan font-size="17" font-weight="400" fill="#52606d">　When</tspan></text>
+      <text x="20" y="102" font-size="21">いつまでに、どの順で</text>
+      <text x="20" y="136" font-size="17" fill="#52606d">締切・段階ごとの日程</text>
+      <rect x="384" y="10" width="368" height="150" rx="14" fill="#fbe6d6" stroke="#e07a2e" stroke-width="3"/>
+      <text x="404" y="56" font-size="28" font-weight="800">どこで<tspan font-size="17" font-weight="400" fill="#52606d">　Where</tspan></text>
+      <text x="404" y="102" font-size="21">どこで作り、どこで動かす</text>
+      <text x="404" y="136" font-size="17" fill="#52606d">作業場所・自社サーバかクラウドか</text>
+      <rect x="768" y="10" width="368" height="150" rx="14" fill="#fbe6d6" stroke="#e07a2e" stroke-width="3"/>
+      <text x="788" y="56" font-size="28" font-weight="800">だれが<tspan font-size="17" font-weight="400" fill="#52606d">　Who</tspan></text>
+      <text x="788" y="102" font-size="21">だれが何を受け持つ</text>
+      <text x="788" y="136" font-size="17" fill="#52606d">前のスライドの組織図</text>
+      <rect x="0" y="180" width="368" height="150" rx="14" fill="#fbe6d6" stroke="#e07a2e" stroke-width="3"/>
+      <text x="20" y="226" font-size="28" font-weight="800">どのような仕事を<tspan font-size="17" font-weight="400" fill="#52606d">　What</tspan></text>
+      <text x="20" y="272" font-size="21">何を作り、何は作らない</text>
+      <text x="20" y="306" font-size="17" fill="#52606d">作るものの範囲＝費用の元</text>
+      <rect x="384" y="180" width="368" height="150" rx="14" fill="#fbe6d6" stroke="#e07a2e" stroke-width="3"/>
+      <text x="404" y="226" font-size="28" font-weight="800">なぜ<tspan font-size="17" font-weight="400" fill="#52606d">　Why</tspan></text>
+      <text x="404" y="272" font-size="21">何のために作るのか</text>
+      <text x="404" y="306" font-size="17" fill="#52606d">目的・合格の基準</text>
+      <rect x="768" y="180" width="368" height="150" rx="14" fill="#fbe6d6" stroke="#e07a2e" stroke-width="3"/>
+      <text x="788" y="226" font-size="28" font-weight="800">どのように<tspan font-size="17" font-weight="400" fill="#52606d">　How</tspan></text>
+      <text x="788" y="272" font-size="21">どう進め、どう確かめる</text>
+      <text x="788" y="306" font-size="17" fill="#52606d">進め方・テストのやり方</text>
+    </g>
+    <text x="0" y="395" font-size="22">始めはどれも決まっていない。<tspan font-weight="800">PMは関係者に聞いて回り、1つずつ確定させていく。</tspan></text>
+    <text x="0" y="440" font-size="22">決まらない欄が残ると、<tspan font-weight="800">後で決まるたびに費用と納期が動く。</tspan></text>
+  </svg>
+  <div class="time">45〜48分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part2">
+  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">開発費</span></div>
+  <h2 class="msg">開発費は、ほぼ人の時間で決まる</h2>
+  <svg viewBox="0 0 1136 470" width="1136" height="470">
+    <defs><marker id="cs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0L10,5L0,10z" fill="#1f2933"/></marker></defs>
+    <g font-size="18" text-anchor="middle">
+      <rect x="0" y="20" width="200" height="150" rx="14" fill="#fbe6d6" stroke="#e07a2e" stroke-width="3"/>
+      <text x="100" y="58" font-size="23" font-weight="800">作るものの量</text>
+      <text x="100" y="95">画面・機能の数</text><text x="100" y="125">つなぐ他システム</text><text x="100" y="155">移すデータ</text>
+      <text x="215" y="105" font-size="34" font-weight="800">×</text>
+      <rect x="230" y="20" width="220" height="150" rx="14" fill="#fbe6d6" stroke="#e07a2e" stroke-width="3"/>
+      <text x="340" y="58" font-size="23" font-weight="800">難しさ</text>
+      <text x="340" y="95">止まってはいけない？</text><text x="340" y="125">利用者は何人？</text><text x="340" y="155">守るべき情報は？</text>
+      <line x1="458" y1="95" x2="505" y2="95" stroke="#1f2933" stroke-width="4" marker-end="url(#cs)"/>
+      <rect x="512" y="20" width="180" height="150" rx="14" fill="#e07a2e"/>
+      <text x="602" y="80" font-size="25" font-weight="800" fill="#fff">工数</text>
+      <text x="602" y="118" fill="#fff">何人で何か月</text><text x="602" y="148" fill="#fff" font-size="16">（単位＝人月）</text>
+      <text x="712" y="105" font-size="34" font-weight="800">×</text>
+      <rect x="732" y="20" width="150" height="150" rx="14" fill="#fbe6d6" stroke="#e07a2e" stroke-width="3"/>
+      <text x="807" y="80" font-size="25" font-weight="800">単価</text>
+      <text x="807" y="118">1人1か月</text><text x="807" y="148">いくら</text>
+      <text x="902" y="105" font-size="34" font-weight="800">＝</text>
+      <rect x="922" y="20" width="214" height="150" rx="14" fill="#1f2933"/>
+      <text x="1029" y="105" font-size="28" font-weight="800" fill="#fff">開発費</text>
+    </g>
+    <!-- 架空の例：5人×6か月のマス目 -->
+    <text x="0" y="226" font-size="21" font-weight="800">例：5人で6か月かかる開発</text>
+    <g font-size="15" fill="#52606d"><text x="81" y="258" text-anchor="middle">1月</text><text x="127" y="258" text-anchor="middle">2月</text><text x="173" y="258" text-anchor="middle">3月</text><text x="219" y="258" text-anchor="middle">4月</text><text x="265" y="258" text-anchor="middle">5月</text><text x="311" y="258" text-anchor="middle">6月</text><text x="50" y="291" text-anchor="end">1人目</text><text x="50" y="329" text-anchor="end">2人目</text><text x="50" y="367" text-anchor="end">3人目</text><text x="50" y="405" text-anchor="end">4人目</text><text x="50" y="443" text-anchor="end">5人目</text></g>
+    <g fill="#e07a2e" stroke="#fff"><rect x="60" y="268" width="42" height="34" rx="4"/><rect x="106" y="268" width="42" height="34" rx="4"/><rect x="152" y="268" width="42" height="34" rx="4"/><rect x="198" y="268" width="42" height="34" rx="4"/><rect x="244" y="268" width="42" height="34" rx="4"/><rect x="290" y="268" width="42" height="34" rx="4"/><rect x="60" y="306" width="42" height="34" rx="4"/><rect x="106" y="306" width="42" height="34" rx="4"/><rect x="152" y="306" width="42" height="34" rx="4"/><rect x="198" y="306" width="42" height="34" rx="4"/><rect x="244" y="306" width="42" height="34" rx="4"/><rect x="290" y="306" width="42" height="34" rx="4"/><rect x="60" y="344" width="42" height="34" rx="4"/><rect x="106" y="344" width="42" height="34" rx="4"/><rect x="152" y="344" width="42" height="34" rx="4"/><rect x="198" y="344" width="42" height="34" rx="4"/><rect x="244" y="344" width="42" height="34" rx="4"/><rect x="290" y="344" width="42" height="34" rx="4"/><rect x="60" y="382" width="42" height="34" rx="4"/><rect x="106" y="382" width="42" height="34" rx="4"/><rect x="152" y="382" width="42" height="34" rx="4"/><rect x="198" y="382" width="42" height="34" rx="4"/><rect x="244" y="382" width="42" height="34" rx="4"/><rect x="290" y="382" width="42" height="34" rx="4"/><rect x="60" y="420" width="42" height="34" rx="4"/><rect x="106" y="420" width="42" height="34" rx="4"/><rect x="152" y="420" width="42" height="34" rx="4"/><rect x="198" y="420" width="42" height="34" rx="4"/><rect x="244" y="420" width="42" height="34" rx="4"/><rect x="290" y="420" width="42" height="34" rx="4"/></g>
+    <g font-size="20">
+      <text x="355" y="290" font-size="17" fill="#52606d">1マス＝1人が1か月働く分</text>
+      <text x="355" y="340" font-weight="800">30マス ＝ 30人月</text>
+      <text x="355" y="385">× 単価 100万円</text>
+      <text x="355" y="440" font-size="30" font-weight="800" fill="#e07a2e">＝ 3,000万円</text>
+    </g>
+    <g font-size="19">
+      <text x="610" y="270" font-size="21" font-weight="800">見積書でここを見る</text>
+      <text x="610" y="305">・人月は段階（設計・開発・テスト）ごとにいくつ？</text>
+      <text x="610" y="338">・単価は役割ごとに違う（PMと新人で違う）</text>
+      <text x="610" y="371">・作った後の<tspan font-weight="800">保守費は毎年</tspan>別にかかる</text>
+      <text x="610" y="404">・「量」が決まっていないと、工数も決まらない</text>
+    </g>
+    <text x="610" y="438" font-size="19">・人のほかに<tspan font-weight="800">サーバ代・AIの利用料</tspan>もかかる</text>
+    <text x="628" y="463" font-size="16" fill="#52606d">クラウドやAIは使った量に応じて毎月払う</text>
+  </svg>
+  <div class="time">48〜52分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part2">
+  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">QCD</span></div>
+  <h2 class="msg">QCDは引っ張り合う。何を守るかを先に決める</h2>
+  <svg viewBox="0 0 1136 470" width="1136" height="470">
+    <polygon points="270,40 40,420 500,420" fill="#fbe6d6" stroke="#e07a2e" stroke-width="4"/>
+    <g text-anchor="middle">
+      <circle cx="270" cy="70" r="58" fill="#e07a2e"/><text x="270" y="68" font-size="38" font-weight="800" fill="#fff">Q</text><text x="270" y="96" font-size="18" fill="#fff">品質</text>
+      <circle cx="90" cy="380" r="58" fill="#e07a2e"/><text x="90" y="378" font-size="38" font-weight="800" fill="#fff">C</text><text x="90" y="406" font-size="18" fill="#fff">費用</text>
+      <circle cx="450" cy="380" r="58" fill="#e07a2e"/><text x="450" y="378" font-size="38" font-weight="800" fill="#fff">D</text><text x="450" y="406" font-size="18" fill="#fff">納期</text>
+      <text x="270" y="270" font-size="22" font-weight="800">やること</text>
+      <text x="270" y="300" font-size="22" font-weight="800">（機能の量）</text>
+    </g>
+    <g font-size="20">
+      <text x="560" y="45" font-size="24" font-weight="800">3つの意味</text>
+      <rect x="560" y="60" width="576" height="56" rx="10" fill="#f5f7fa"/>
+      <text x="578" y="96"><tspan font-weight="800">Q 品質</tspan><tspan font-size="16" fill="#52606d">（Quality）</tspan>　決めた通りに動く・止まらない・漏れない</text>
+      <rect x="560" y="124" width="576" height="56" rx="10" fill="#f5f7fa"/>
+      <text x="578" y="160"><tspan font-weight="800">C 費用</tspan><tspan font-size="16" fill="#52606d">（Cost）</tspan>　人の時間（人月）とモノのお金</text>
+      <rect x="560" y="188" width="576" height="56" rx="10" fill="#f5f7fa"/>
+      <text x="578" y="224"><tspan font-weight="800">D 納期</tspan><tspan font-size="16" fill="#52606d">（Delivery）</tspan>　いつ使い始められるか</text>
+      <text x="560" y="290" font-size="24" font-weight="800">機能を1つ足したいとき、動くのは…</text>
+      <rect x="560" y="305" width="180" height="80" rx="10" fill="#fbe6d6"/><text x="650" y="338" text-anchor="middle" font-weight="700">C を足す</text><text x="650" y="366" text-anchor="middle" font-size="17">予算を増やす</text>
+      <rect x="758" y="305" width="180" height="80" rx="10" fill="#fbe6d6"/><text x="848" y="338" text-anchor="middle" font-weight="700">D を延ばす</text><text x="848" y="366" text-anchor="middle" font-size="17">公開を遅らせる</text>
+      <rect x="957" y="305" width="176" height="80" rx="10" fill="#f9dede" stroke="#d64545" stroke-width="2"/><text x="1046" y="338" text-anchor="middle" font-weight="700" fill="#d64545">Q が削られる</text><text x="1046" y="366" text-anchor="middle" font-size="17">何も言わないと</text>
+      <text x="560" y="430" font-size="22">発注側は<tspan font-weight="800">「何を一番守るか」</tspan>を先に決めて伝える。</text>
+    </g>
+  </svg>
+  <div class="time">52〜58分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part2">
+  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">進め方と契約</span></div>
+  <h2 class="msg">進め方は2通り。契約もそれに合わせる</h2>
+  <svg viewBox="0 0 1136 470" width="1136" height="470">
+    <defs><marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#e07a2e"/></marker></defs>
+    <text x="0" y="30" font-size="26" font-weight="800">一気に作る（ウォーターフォール）</text>
+    <g font-size="20" text-anchor="middle">
+      <rect x="0"   y="50"  width="150" height="50" fill="#fbe6d6" stroke="#e07a2e"/><text x="75"  y="82">決める</text>
+      <rect x="150" y="100" width="150" height="50" fill="#fbe6d6" stroke="#e07a2e"/><text x="225" y="132">設計</text>
+      <rect x="300" y="150" width="150" height="50" fill="#fbe6d6" stroke="#e07a2e"/><text x="375" y="182">作る</text>
+      <rect x="450" y="200" width="150" height="50" fill="#fbe6d6" stroke="#e07a2e"/><text x="525" y="232">確かめる</text>
+    </g>
+    <g font-size="20" fill="#1f2933">
+      <text x="0" y="300">◎ 最初に総額と期日が決まる</text>
+      <text x="0" y="335">△ 途中で変えると高い</text>
+      <text x="0" y="370">向く：やることが最初から決まっている</text>
+      <text x="0" y="415" font-weight="700">契約＝「これを作ってください」</text>
+      <text x="0" y="445" font-size="18" fill="#52606d">（完成物に対して払う）</text>
+    </g>
+    <line x1="640" y1="20" x2="640" y2="450" stroke="#cbd2d9" stroke-width="2"/>
+    <text x="680" y="30" font-size="26" font-weight="800">少しずつ作る（アジャイル）</text>
+    <defs><marker id="ac" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0,0L10,5L0,10z" fill="#e07a2e"/></marker></defs>
+    <g transform="translate(680,50)">
+      <g fill="none" stroke="#e07a2e" stroke-width="4" marker-end="url(#ac)">
+        <path d="M280,41 A90,90 0 0 1 318,115"/>
+        <path d="M280,189 A90,90 0 0 1 176,189"/>
+        <path d="M138,115 A90,90 0 0 1 176,41"/>
+      </g>
+      <g font-size="20" text-anchor="middle" font-weight="700">
+        <rect x="183" y="7" width="90" height="36" rx="8" fill="#fbe6d6" stroke="#e07a2e" stroke-width="2"/><text x="228" y="32">決める</text>
+        <rect x="261" y="142" width="90" height="36" rx="8" fill="#fbe6d6" stroke="#e07a2e" stroke-width="2"/><text x="306" y="167">作る</text>
+        <rect x="105" y="142" width="90" height="36" rx="8" fill="#fbe6d6" stroke="#e07a2e" stroke-width="2"/><text x="150" y="167">見せる</text>
+      </g>
+      <g font-size="17" text-anchor="middle" fill="#52606d"><text x="228" y="108">1〜2週間で</text><text x="228" y="132">1周</text></g>
+      <g font-size="17" fill="#1f2933"><text x="355" y="45">何周も</text><text x="355" y="70">回して、</text><text x="355" y="95">使える所を</text><text x="355" y="120">広げていく</text></g>
+    </g>
+    <g font-size="20" fill="#1f2933">
+      <text x="680" y="300">◎ 使いながら直せる</text>
+      <text x="680" y="335">△ 総額が最初には決まらない</text>
+      <text x="680" y="370">向く：使ってみないと分からない</text>
+      <text x="680" y="415" font-weight="700">契約＝「この期間、一緒に作ってください」</text>
+      <text x="680" y="445" font-size="18" fill="#52606d">（期間と人に対して払う）</text>
+    </g>
+  </svg>
+  <div class="time">58〜62分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part2">
+  <div class="ttl"><span class="pt">PART 2 どう作るのか</span><span class="tt">演習：3社の見積書（8分）</span></div>
+  <h2 class="msg">3社の見積書。どこが外れそう？</h2>
+  <table class="t">
+    <tr><th>会員アプリ</th><th>A社</th><th>B社</th><th>C社</th></tr>
+    <tr><td>総額</td><td>800万円</td><td>350万円</td><td>500万円</td></tr>
+    <tr><td>期間</td><td>8か月</td><td>3か月</td><td>5か月</td></tr>
+    <tr><td>画面の数</td><td>12画面</td><td>「必要な画面」</td><td>10画面</td></tr>
+    <tr><td>今のデータの移し替え</td><td>含む</td><td>記載なし</td><td>別途見積もり</td></tr>
+    <tr><td>完成後の修正</td><td>3か月無料</td><td>記載なし</td><td>1か月無料</td></tr>
+    <tr><td>仕様変更</td><td>1回まで含む</td><td>都度相談</td><td>都度見積もり</td></tr>
+  </table>
+  <p style="font-size:24px;margin-top:18px">① 一番安いB社を選んだら、後で何が起きそう？　② 業者に何を聞けば比べられるようになる？</p>
+  <div class="time">67〜75分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide" style="background:var(--paper)">
+  <div class="center" style="align-items:center;text-align:center">
+    <div class="big">休憩　10分</div>
+    <p>このあと：AIとクラウド</p>
+  </div>
+  <div class="time">75〜85分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide section part3">
+  <div class="center">
+    <div class="kicker">PART 3　（85〜111分）</div>
+    <h1 style="font-size:64px">AI時代のITプロジェクト<br><span style="font-size:40px;font-weight:600">AIとクラウド</span></h1>
+  </div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part3">
+  <div class="ttl"><span class="pt">PART 3 AI時代のITプロジェクト</span><span class="tt">生成AIとは</span></div>
+  <h2 class="msg">「AI」はとても広い言葉。いま話題なのは生成AI</h2>
+  <div class="cols">
+    <svg viewBox="0 0 600 460" width="600" height="460">
+      <ellipse cx="300" cy="230" rx="295" ry="225" fill="#d7f0e4" stroke="#2f9e6e" stroke-width="3"/>
+      <ellipse cx="320" cy="260" rx="225" ry="175" fill="#b5e3cc" stroke="#2f9e6e" stroke-width="3"/>
+      <ellipse cx="340" cy="290" rx="160" ry="125" fill="#8fd1b1" stroke="#2f9e6e" stroke-width="3"/>
+      <ellipse cx="355" cy="320" rx="100" ry="75" fill="#2f9e6e"/>
+      <g font-size="22" font-weight="800" text-anchor="middle">
+        <text x="300" y="45">AI（人工知能）</text>
+        <text x="320" y="120">機械学習</text>
+        <text x="340" y="200">ディープラーニング</text>
+        <text x="355" y="315" fill="#fff">生成AI</text>
+        <text x="355" y="345" fill="#fff" font-size="17" font-weight="400">文章・画像を作る</text>
+      </g>
+    </svg>
+    <div>
+      <table class="t" style="font-size:21px">
+        <tr><th>範囲</th><th>身近な例</th></tr>
+        <tr><td>AI（広い意味）</td><td>決まった答えを返すボット</td></tr>
+        <tr><td>機械学習</td><td>迷惑メールの振り分け</td></tr>
+        <tr><td>ディープラーニング</td><td>顔認証・音声入力</td></tr>
+        <tr><td><b>生成AI</b></td><td><b>ChatGPT・画像生成</b></td></tr>
+      </table>
+      <p style="font-size:22px;margin-top:16px">機械学習＝ルールを人が書かず、<b>大量の例からコンピュータが覚える</b>やり方</p>
+    </div>
+  </div>
+  <div class="time">85〜88分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part3">
+  <div class="ttl"><span class="pt">PART 3 AI時代のITプロジェクト</span><span class="tt">AIのしくみ</span></div>
+  <h2 class="msg">AIは「次に来そうな言葉」を選び続けている</h2>
+  <div class="cols">
+    <svg viewBox="0 0 640 420" width="640" height="420">
+      <text x="0" y="40" font-size="26" font-weight="700">「京都でおすすめの朝ごはんは」の次は…</text>
+      <g font-size="24">
+        <text x="0" y="110">湯豆腐</text><rect x="140" y="88" width="300" height="32" fill="#2f9e6e"/><text x="452" y="112" fill="#52606d">よく来る</text>
+        <text x="0" y="170">おばんざい</text><rect x="140" y="148" width="230" height="32" fill="#2f9e6e"/>
+        <text x="0" y="230">パン</text><rect x="140" y="208" width="190" height="32" fill="#2f9e6e"/>
+        <text x="0" y="290">お粥</text><rect x="140" y="268" width="120" height="32" fill="#2f9e6e"/>
+        <text x="0" y="350">カレー</text><rect x="140" y="328" width="30" height="32" fill="#2f9e6e"/><text x="182" y="352" fill="#52606d">めったに来ない</text>
+      </g>
+      </svg>
+    <div>
+      <ul>
+        <li>大量の文章から「この後に来やすい言葉」を覚えている</li>
+        <li>毎回、上位から<b>少しだけばらつかせて</b>選ぶ → 答えが変わる</li>
+        <li>「正しいか」ではなく<b>「ありそうか」</b>で選ぶ</li>
+      </ul>
+      <p style="margin-top:16px">だから、<b>ありそうな嘘</b>（実在しない本・条文・数字）も、すらすら出てくる。</p>
+    </div>
+  </div>
+  <div class="time">88〜92分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part3">
+  <div class="ttl"><span class="pt">PART 3 AI時代のITプロジェクト</span><span class="tt">AIエージェント</span></div>
+  <h2 class="msg">道具を使い、自分で何手も進めるAI</h2>
+  <svg viewBox="0 0 1136 470" width="1136" height="470">
+    <defs><marker id="ag2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0L10,5L0,10z" fill="#2f9e6e"/></marker></defs><marker id="ag3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0L10,5L0,10z" fill="#1f2933"/></marker>
+    <!-- チャット -->
+    <rect x="0" y="0" width="360" height="460" rx="16" fill="#f5f7fa"/>
+    <text x="180" y="42" font-size="26" font-weight="800" text-anchor="middle">チャットAI</text>
+    <rect x="40" y="80" width="280" height="60" rx="10" fill="#dbe7fb"/><text x="180" y="118" font-size="20" text-anchor="middle">人：質問する</text>
+    <line x1="180" y1="145" x2="180" y2="185" stroke="#1f2933" stroke-width="3" marker-end="url(#ag3)"/>
+    <rect x="40" y="190" width="280" height="60" rx="10" fill="#d7f0e4"/><text x="180" y="228" font-size="20" text-anchor="middle">AI：文章で答える</text>
+    <line x1="180" y1="255" x2="180" y2="295" stroke="#1f2933" stroke-width="3" marker-end="url(#ag3)"/>
+    <rect x="40" y="300" width="280" height="60" rx="10" fill="#dbe7fb"/><text x="180" y="338" font-size="20" text-anchor="middle">人：読んで、自分で動く</text>
+    <text x="180" y="420" font-size="21" text-anchor="middle" font-weight="700">1問1答。動くのは人</text>
+    <!-- エージェント -->
+    <rect x="390" y="0" width="746" height="460" rx="16" fill="#d7f0e4"/>
+    <text x="763" y="42" font-size="26" font-weight="800" text-anchor="middle">AIエージェント</text>
+    <rect x="420" y="70" width="230" height="56" rx="10" fill="#dbe7fb"/><text x="535" y="106" font-size="20" text-anchor="middle">人：目標だけ渡す</text>
+    <g font-size="20" text-anchor="middle" font-weight="700">
+      <circle cx="560" cy="270" r="62" fill="#fff" stroke="#2f9e6e" stroke-width="3"/><text x="560" y="265">① 考える</text><text x="560" y="290" font-size="16" font-weight="400">次に何をする？</text>
+      <circle cx="760" cy="190" r="66" fill="#fff" stroke="#2f9e6e" stroke-width="3"/><text x="760" y="185">② 道具を使う</text><text x="760" y="210" font-size="14" font-weight="400">検索・ファイル</text><text x="760" y="228" font-size="14" font-weight="400">・送信</text>
+      <circle cx="760" cy="355" r="66" fill="#fff" stroke="#2f9e6e" stroke-width="3"/><text x="760" y="350">③ 結果を見る</text><text x="760" y="375" font-size="14" font-weight="400">足りなければ</text><text x="760" y="393" font-size="14" font-weight="400">①に戻る</text>
+    </g>
+    <g stroke="#2f9e6e" stroke-width="4" fill="none">
+      <path d="M615 240 Q660 200 695 195" marker-end="url(#ag2)"/>
+      <path d="M770 255 L770 290" marker-end="url(#ag2)"/>
+      <path d="M700 365 Q640 350 610 315" marker-end="url(#ag2)"/>
+    </g>
+    <line x1="535" y1="130" x2="550" y2="200" stroke="#1f2933" stroke-width="3" marker-end="url(#ag3)"/>
+    <g font-size="19">
+      <text x="855" y="110" font-weight="800">例：「来週の出張を手配して」</text>
+      <text x="855" y="145">→ 予定表を見る</text>
+      <text x="855" y="175">→ 新幹線を調べる</text>
+      <text x="855" y="205">→ ホテルを比べる</text>
+      <text x="855" y="235">→ 案をまとめて報告</text>
+      <text x="855" y="300" font-weight="800" fill="#d64545">渡した道具の範囲で</text>
+      <text x="855" y="328" font-weight="800" fill="#d64545">動けてしまう</text>
+      <text x="855" y="365">・できる操作を絞る</text>
+      <text x="855" y="395">・お金・送信の前で</text>
+      <text x="855" y="423">　人の確認をはさむ</text>
+    </g>
+  </svg>
+  <div class="time">92〜96分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part3">
+  <div class="ttl"><span class="pt">PART 3 AI時代のITプロジェクト</span><span class="tt">AI導入の課題</span></div>
+  <h2 class="msg">AIをシステムに組み込むと、新しい課題が増える</h2>
+  <svg viewBox="0 0 1136 470" width="1136" height="470">
+    <g font-size="20">
+      <rect x="0" y="0" width="550" height="210" rx="16" fill="#f9dede"/>
+      <text x="24" y="44" font-size="25" font-weight="800">① AIをだます攻撃がある</text>
+      <text x="24" y="85">読ませたメールや資料に「命令」を紛れ込ませ、</text><text x="24" y="117">AIを操る（プロンプトインジェクション）。</text>
+      <text x="24" y="170" font-weight="700">→ AIに渡す権限を絞る・外の文章を信用しない</text>
+      <rect x="586" y="0" width="550" height="210" rx="16" fill="#f9dede"/>
+      <text x="610" y="44" font-size="25" font-weight="800">② 間違えたとき、誰の責任か</text>
+      <text x="610" y="85">使った側・作った会社・AIの提供元の</text><text x="610" y="117">どこが負うかが、決まっていないことが多い。</text>
+      <text x="610" y="170" font-weight="700">→ 契約で決める・最後に判断するのは人</text>
+      <rect x="0" y="235" width="550" height="210" rx="16" fill="#f9dede"/>
+      <text x="24" y="279" font-size="25" font-weight="800">③ もっともらしい嘘をつく</text>
+      <text x="24" y="320">実在しない条文や数字を、</text><text x="24" y="352">正しそうな文章で返してくる。</text>
+      <text x="24" y="405" font-weight="700">→ 出典を確かめる工程を組み込む</text>
+      <rect x="586" y="235" width="550" height="210" rx="16" fill="#f9dede"/>
+      <text x="610" y="279" font-size="25" font-weight="800">④ 入れた情報が外に出る</text>
+      <text x="610" y="320">入力した文章は、AIの提供元に送られる。</text><text x="610" y="352">個人情報・非公開の情報は特に注意。</text>
+      <text x="610" y="405" font-weight="700">→ 入れてよい情報を決めて、契約で確かめる</text>
+    </g>
+  </svg>
+  <div class="time">96〜99分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part3">
+  <div class="ttl"><span class="pt">PART 3 AI時代のITプロジェクト</span><span class="tt">クラウドとは</span></div>
+  <h2 class="msg">クラウド＝コンピュータを持たずに「借りる」こと</h2>
+  <svg viewBox="0 0 1136 450" width="1136" height="450">
+    <g>
+      <rect x="20" y="20" width="520" height="410" rx="16" fill="#f5f7fa" stroke="#9aa5b1" stroke-width="2"/>
+      <text x="280" y="65" font-size="30" font-weight="800" text-anchor="middle">自前で持つ</text>
+      <rect x="45" y="90" width="260" height="250" rx="6" fill="#fff" stroke="#52606d" stroke-width="3"/>
+      <text x="175" y="120" font-size="20" font-weight="700" text-anchor="middle">会社のサーバ室</text>
+      <rect x="80" y="135" width="80" height="150" rx="6" fill="#323f4b"/>
+      <rect x="90" y="150" width="60" height="16" rx="2" fill="#52606d"/><circle cx="142" cy="158" r="3" fill="#3ecf8e"/>
+      <rect x="90" y="176" width="60" height="16" rx="2" fill="#52606d"/><circle cx="142" cy="184" r="3" fill="#3ecf8e"/>
+      <rect x="90" y="202" width="60" height="16" rx="2" fill="#52606d"/><circle cx="142" cy="210" r="3" fill="#3ecf8e"/>
+      <rect x="90" y="228" width="60" height="16" rx="2" fill="#52606d"/><circle cx="142" cy="236" r="3" fill="#3ecf8e"/>
+      <rect x="90" y="254" width="60" height="16" rx="2" fill="#52606d"/><circle cx="142" cy="262" r="3" fill="#3ecf8e"/>
+      <rect x="180" y="135" width="80" height="150" rx="6" fill="#323f4b"/>
+      <rect x="190" y="150" width="60" height="16" rx="2" fill="#52606d"/><circle cx="242" cy="158" r="3" fill="#3ecf8e"/>
+      <rect x="190" y="176" width="60" height="16" rx="2" fill="#52606d"/><circle cx="242" cy="184" r="3" fill="#3ecf8e"/>
+      <rect x="190" y="202" width="60" height="16" rx="2" fill="#52606d"/><circle cx="242" cy="210" r="3" fill="#3ecf8e"/>
+      <rect x="190" y="228" width="60" height="16" rx="2" fill="#52606d"/><circle cx="242" cy="236" r="3" fill="#3ecf8e"/>
+      <rect x="190" y="254" width="60" height="16" rx="2" fill="#52606d"/><circle cx="242" cy="262" r="3" fill="#3ecf8e"/>
+      <rect x="268" y="135" width="26" height="60" rx="4" fill="#9fd4f5" stroke="#52606d"/><text x="281" y="215" font-size="16" text-anchor="middle" fill="#52606d">冷房</text>
+      <text x="170" y="315" font-size="20" text-anchor="middle">自社で買ったサーバ</text>
+      <text x="330" y="120" font-size="20" font-weight="700" fill="#52606d">自分でやること</text>
+      <g font-size="22"><text x="330" y="160">・買う</text><text x="330" y="198">・置く部屋</text><text x="330" y="236">・電気・冷房</text><text x="330" y="274">・壊れたら直す</text><text x="330" y="312">・5年で買い替え</text></g>
+      <text x="280" y="395" font-size="22" text-anchor="middle" font-weight="700">ピークに合わせて買う → ふだんは余る</text>
+    </g>
+    <g>
+      <rect x="596" y="20" width="520" height="410" rx="16" fill="#d7f0e4" stroke="#2f9e6e" stroke-width="2"/>
+      <text x="856" y="65" font-size="30" font-weight="800" text-anchor="middle">クラウドで借りる</text>
+      <path d="M700 230 a55 55 0 0 1 40 -95 a75 75 0 0 1 140 -10 a60 60 0 0 1 90 60 a50 50 0 0 1 -20 95 h-220 a50 50 0 0 1 -30 -50z" fill="#fff" stroke="#2f9e6e" stroke-width="3"/>
+      <text x="840" y="225" font-size="22" text-anchor="middle">大きな会社の計算機</text>
+      <g font-size="22"><text x="640" y="330">・使った分だけ払う（電気代のように）</text><text x="640" y="365">・増やす・減らすがすぐできる</text></g>
+      <text x="856" y="410" font-size="22" text-anchor="middle" font-weight="700">ただし、借り続ける限り払い続ける</text>
+    </g>
+  </svg>
+  <div class="time">99〜104分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part3">
+  <div class="ttl"><span class="pt">PART 3 AI時代のITプロジェクト</span><span class="tt">借り方の3段階</span></div>
+  <h2 class="msg">借り方は3段階。どこまで任せるかが違う</h2>
+  <svg viewBox="0 0 1136 470" width="1136" height="470">
+    <g font-size="19" text-anchor="middle">
+      <text x="110" y="30" font-size="20" font-weight="800">自前</text>
+      <text x="370" y="30" font-size="20" font-weight="800">IaaS</text><text x="370" y="52" font-size="16" fill="#52606d">サーバを借りる</text>
+      <text x="630" y="30" font-size="20" font-weight="800">PaaS</text><text x="630" y="52" font-size="16" fill="#52606d">土台まで借りる</text>
+      <text x="890" y="30" font-size="20" font-weight="800">SaaS</text><text x="890" y="52" font-size="16" fill="#52606d">アプリまで借りる</text>
+    </g>
+    <g font-size="18" text-anchor="middle">
+      <!-- rows: アプリ, OS・土台, データセンター -->
+      <g transform="translate(20,70)">
+        <rect y="0" width="180" height="100" fill="#dbe7fb" stroke="#fff" stroke-width="3"/><text x="90" y="56">アプリ</text>
+        <rect y="100" width="180" height="100" fill="#dbe7fb" stroke="#fff" stroke-width="3"/><text x="90" y="156">OS・土台ソフト</text>
+        <rect y="200" width="180" height="100" fill="#dbe7fb" stroke="#fff" stroke-width="3"/><text x="90" y="256">データセンター</text>
+      </g>
+      <g transform="translate(280,70)">
+        <rect y="0" width="180" height="100" fill="#dbe7fb" stroke="#fff" stroke-width="3"/><text x="90" y="56">アプリ</text>
+        <rect y="100" width="180" height="100" fill="#dbe7fb" stroke="#fff" stroke-width="3"/><text x="90" y="156">OS・土台ソフト</text>
+        <rect y="200" width="180" height="100" fill="#2f9e6e" stroke="#fff" stroke-width="3"/><text x="90" y="256" fill="#fff">データセンター</text>
+      </g>
+      <g transform="translate(540,70)">
+        <rect y="0" width="180" height="100" fill="#dbe7fb" stroke="#fff" stroke-width="3"/><text x="90" y="56">アプリ</text>
+        <rect y="100" width="180" height="100" fill="#2f9e6e" stroke="#fff" stroke-width="3"/><text x="90" y="156" fill="#fff">OS・土台ソフト</text>
+        <rect y="200" width="180" height="100" fill="#2f9e6e" stroke="#fff" stroke-width="3"/><text x="90" y="256" fill="#fff">データセンター</text>
+      </g>
+      <g transform="translate(800,70)">
+        <rect y="0" width="180" height="100" fill="#2f9e6e" stroke="#fff" stroke-width="3"/><text x="90" y="56" fill="#fff">アプリ</text>
+        <rect y="100" width="180" height="100" fill="#2f9e6e" stroke="#fff" stroke-width="3"/><text x="90" y="156" fill="#fff">OS・土台ソフト</text>
+        <rect y="200" width="180" height="100" fill="#2f9e6e" stroke="#fff" stroke-width="3"/><text x="90" y="256" fill="#fff">データセンター</text>
+      </g>
+    </g>
+    <g font-size="19">
+      <rect x="1000" y="80" width="26" height="26" fill="#dbe7fb"/><text x="1034" y="100">自分で</text>
+      <rect x="1000" y="120" width="26" height="26" fill="#2f9e6e"/><text x="1034" y="140">借りる</text>
+    </g>
+    <g font-size="20" text-anchor="middle">
+      <text x="110" y="420">会社のサーバ室</text>
+      <text x="370" y="420">サーバだけ借りる</text>
+      <text x="630" y="420">アプリを載せる土台</text>
+      <text x="890" y="420">Gmail・会計ソフト</text>
+    </g>
+    <text x="568" y="460" font-size="21" text-anchor="middle">右に行くほど手間は減るが、<tspan font-weight="800">自由に作り替えにくくなる</tspan>。</text>
+  </svg>
+  <div class="time">104〜107分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part3">
+  <div class="ttl"><span class="pt">PART 3 AI時代のITプロジェクト</span><span class="tt">クラウドに移る理由</span></div>
+  <h2 class="msg">クラウドに移る理由は4つ。国も「まずクラウド」の方針</h2>
+  <svg viewBox="0 0 1136 470" width="1136" height="470">
+    <g font-size="20">
+      <rect x="0" y="0" width="550" height="170" rx="16" fill="#d7f0e4"/>
+      <text x="24" y="44" font-size="26" font-weight="800">① すぐ始められる</text>
+      <text x="24" y="85">機械を買って届くのを待たない。</text><text x="24" y="117">申し込んだその日に使える。</text><text x="24" y="149">失敗したらやめられる。</text>
+      <rect x="586" y="0" width="550" height="170" rx="16" fill="#d7f0e4"/>
+      <text x="610" y="44" font-size="26" font-weight="800">② 増やす・減らすが自在</text>
+      <polyline points="620,160 680,150 740,154 800,102 850,98 900,150 960,156 1020,152 1100,155" fill="none" stroke="#2f9e6e" stroke-width="4"/>
+      <text x="825" y="88" font-size="17" text-anchor="middle">セールの日</text>
+      <text x="610" y="128" font-size="17" fill="#52606d">混む日だけ増やせる</text>
+      <rect x="0" y="190" width="550" height="170" rx="16" fill="#d7f0e4"/>
+      <text x="24" y="234" font-size="26" font-weight="800">③ 守る・見張る人が足りない</text>
+      <text x="24" y="275">自前の機械は、更新・故障・停電対応に</text><text x="24" y="307">専門の人が要る。その人が採れない。</text><text x="24" y="339">建物と機械の守りを任せられる。</text>
+      <rect x="586" y="190" width="550" height="170" rx="16" fill="#d7f0e4"/>
+      <text x="610" y="234" font-size="26" font-weight="800">④ 新しい機能がすぐ使える</text>
+      <text x="610" y="275">AIのような最新の機能は、</text><text x="610" y="307">まずクラウドで提供される。</text><text x="610" y="339">自前で同じ設備はそろえにくい。</text>
+    </g>
+    <rect x="0" y="380" width="1136" height="80" rx="12" fill="#fff" stroke="#2f9e6e" stroke-width="3"/>
+    <text x="24" y="415" font-size="21"><tspan font-weight="800">国も同じ方針</tspan>：政府の情報システムは「クラウド・バイ・デフォルト原則」</text>
+    <text x="24" y="445" font-size="18" fill="#52606d">（まずクラウドを検討する。出典：デジタル庁「標準ガイドライン群」）</text>
+  </svg>
+  <div class="time">107〜109分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide part3">
+  <div class="ttl"><span class="pt">PART 3 AI時代のITプロジェクト</span><span class="tt">クラウドの落とし穴</span></div>
+  <h2 class="msg">クラウドの落とし穴は4つ。どれも契約と設定で備えられる</h2>
+  <svg viewBox="0 0 1136 470" width="1136" height="470">
+    <g font-size="20">
+      <rect x="0" y="0" width="550" height="210" rx="16" fill="#f9dede"/>
+      <text x="24" y="44" font-size="25" font-weight="800">① 引っ越しにくい</text>
+      <text x="24" y="85">その会社だけの機能を使うほど、</text><text x="24" y="117">別の会社に移すのが大工事になる。</text>
+      <text x="24" y="170" font-weight="700">→ データの持ち出し方を最初に確かめる</text>
+      <rect x="586" y="0" width="550" height="210" rx="16" fill="#f9dede"/>
+      <text x="610" y="44" font-size="25" font-weight="800">② 相手が止まると一緒に止まる</text>
+      <text x="610" y="85">大手でも障害は起きる。</text><text x="610" y="117">そのとき自分では直せない。</text>
+      <text x="610" y="170" font-weight="700">→ 止まったときの手順を決めておく</text>
+      <rect x="0" y="235" width="550" height="210" rx="16" fill="#f9dede"/>
+      <text x="24" y="279" font-size="25" font-weight="800">③ 料金に上限が無い</text>
+      <text x="24" y="320">使った分だけ払う＝設定ミスや</text><text x="24" y="352">消し忘れでも請求が積み上がる。</text>
+      <text x="24" y="405" font-weight="700">→ 使いすぎの通知（予算アラート）を設定する</text>
+      <rect x="586" y="235" width="550" height="210" rx="16" fill="#f9dede"/>
+      <text x="610" y="279" font-size="25" font-weight="800">④ データがどこの国にあるか</text>
+      <text x="610" y="320">置き場所や事業者の国の法律が及ぶことがある。</text><text x="610" y="352">個人情報は特に注意。</text>
+      <text x="610" y="405" font-weight="700">→ 保存先と事業者の国を確かめて契約する</text>
+    </g>
+  </svg>
+  <div class="time">109〜111分</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide" style="background:var(--paper)">
+  <div class="ttl"><span class="pt">おまけ</span><span class="tt">用語クイズ（1/2）</span></div>
+  <h2 class="msg">用語を一言で答えてください</h2>
+  <ol class="quiz"><li value="1">お店の「ホール係・厨房・冷蔵庫と台帳」のように、アプリを3つの役割に分ける作りを何という？</li><li value="2">「頼む側の機械（PCやスマホ）」と「応える側の機械」に分けて動かす仕組みを何という？</li><li value="3">サーバをたくさん置いておく専用の建物を何という？</li><li value="4">既製品を使わず、ゼロから専用のシステムを作る開発を何という？</li><li value="5">本番の前に、小さく試して効果を確かめることを何という？</li><li value="6">プロジェクトの最初のほうで「何ができれば合格か」を決める段階を何という？</li><li value="7">完成したシステムを、発注した側が最後に自分で触って確かめることを何という？</li><li value="8">プロジェクトの進み具合や課題を見張り、PMを支える事務局を何という？</li></ol>
+  <div class="time">おまけ・問題</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide" style="background:var(--paper)">
+  <div class="ttl"><span class="pt">おまけ</span><span class="tt">用語クイズ（2/2）</span></div>
+  <h2 class="msg">用語を一言で答えてください</h2>
+  <ol class="quiz"><li value="9">「5人で6か月」のように、かかる手間を表す単位を何という？</li><li value="10">品質・費用・納期の3つを、英語の頭文字で何という？</li><li value="11">最初に全部決めてから、一気に作る進め方を何という？</li><li value="12">少し作って見せる、を何周も繰り返す進め方を何という？</li><li value="13">ChatGPTのように、文章や画像を新しく作るAIを何という？</li><li value="14">目標を渡すと、自分で道具を使って何手も進めるAIを何という？</li><li value="15">コンピュータを自前で持たず、ネット越しに借りて使うことを何という？</li><li value="16">機械や土台だけでなく、アプリまでクラウド側に載っていて、ネット越しに使うだけの借り方を何という？</li></ol>
+  <div class="time">おまけ・問題</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide">
+  <div class="ttl"><span class="pt">おまけ</span><span class="tt">用語クイズの答え（1/2）</span></div>
+  <h2 class="msg">答え（1〜8）と、出てきたスライド</h2>
+  <table class="t ans"><tr><th>問</th><th>答え</th><th>出てきたスライド</th></tr><tr><td class="n">1</td><td class="a">Web3層構造</td><td class="s">8枚目</td></tr><tr><td class="n">2</td><td class="a">クライアントサーバ</td><td class="s">9枚目</td></tr><tr><td class="n">3</td><td class="a">データセンター</td><td class="s">9枚目</td></tr><tr><td class="n">4</td><td class="a">スクラッチ開発</td><td class="s">14枚目</td></tr><tr><td class="n">5</td><td class="a">PoC</td><td class="s">14枚目</td></tr><tr><td class="n">6</td><td class="a">要件定義</td><td class="s">15枚目</td></tr><tr><td class="n">7</td><td class="a">受け入れテスト</td><td class="s">20枚目</td></tr><tr><td class="n">8</td><td class="a">PMO</td><td class="s">24枚目</td></tr></table>
+  <div class="time">おまけ・答え</div>
+  <div class="pg"></div>
+</section>
+
+<section class="slide">
+  <div class="ttl"><span class="pt">おまけ</span><span class="tt">用語クイズの答え（2/2）</span></div>
+  <h2 class="msg">答え（9〜16）と、出てきたスライド</h2>
+  <table class="t ans"><tr><th>問</th><th>答え</th><th>出てきたスライド</th></tr><tr><td class="n">9</td><td class="a">人月</td><td class="s">26枚目</td></tr><tr><td class="n">10</td><td class="a">QCD</td><td class="s">27枚目</td></tr><tr><td class="n">11</td><td class="a">ウォーターフォール</td><td class="s">28枚目</td></tr><tr><td class="n">12</td><td class="a">アジャイル</td><td class="s">28枚目</td></tr><tr><td class="n">13</td><td class="a">生成AI</td><td class="s">32枚目</td></tr><tr><td class="n">14</td><td class="a">AIエージェント</td><td class="s">34枚目</td></tr><tr><td class="n">15</td><td class="a">クラウド</td><td class="s">36枚目</td></tr><tr><td class="n">16</td><td class="a">SaaS</td><td class="s">37枚目</td></tr></table>
+  <div class="time">おまけ・答え</div>
+  <div class="pg"></div>
+</section>
+
+</div>
+<script>
+(function(){
+  const slides=[...document.querySelectorAll('.slide')];
+  slides.forEach((el,k)=>{const p=el.querySelector('.pg');if(p)p.textContent=k+1;});
+  let i=0;
+  function fit(){
+    if(!document.body.classList.contains('present'))return;
+    const s=Math.min(innerWidth/1280,innerHeight/720);
+    slides.forEach(el=>el.style.transform='scale('+s+')');
+  }
+  function show(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((el,k)=>el.classList.toggle('on',k===i));
+    fit();
+  }
+  document.addEventListener('keydown',e=>{
+    const k=e.key;
+    if(k==='p'||k==='P'){document.body.classList.add('present');show(i);}
+    else if(k==='Escape'){document.body.classList.remove('present');slides.forEach(el=>el.style.transform='');slides[i].scrollIntoView();}
+    else if(document.body.classList.contains('present')){
+      if(k==='ArrowRight'||k===' '||k==='PageDown')show(i+1);
+      if(k==='ArrowLeft'||k==='PageUp')show(i-1);
+    }
+  });
+  document.addEventListener('click',e=>{
+    if(!document.body.classList.contains('present'))return;
+    show(e.clientX>innerWidth/2?i+1:i-1);
+  });
+  addEventListener('resize',fit);
+})();
+</script>
+</body>
+</html>
