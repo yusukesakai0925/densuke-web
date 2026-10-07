@@ -12,6 +12,10 @@
 *{box-sizing:border-box}
 html,body{margin:0;background:#3e4c59;font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;color:var(--ink)}
 .deck{display:flex;flex-direction:column;align-items:center;gap:28px;padding:28px 0}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+/* 画面幅が1280pxより狭いとき：スライドを丸ごと縮めて表示（中の配置は変えない） */
+@media (max-width:1300px){.deck{gap:12px;padding:8px 0}}
+@media (hover:none){.help{display:none}}
 .slide{width:1280px;height:720px;background:var(--bg);position:relative;padding:56px 72px 48px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.35)}
 .slide h1{font-size:54px;margin:0 0 18px;line-height:1.25}
 .slide h2{font-size:40px;margin:0 0 22px;line-height:1.3}
@@ -1409,10 +1413,16 @@ table.sum td.pn{font-weight:800;color:#fff;background:var(--c);white-space:nowra
   slides.forEach((el,k)=>{const p=el.querySelector('.pg');if(p)p.textContent=k+1;});
   let i=0;
   function fit(){
-    if(!document.body.classList.contains('present'))return;
+    if(!document.body.classList.contains('present')){
+      const z=Math.min(1,(document.documentElement.clientWidth-16)/1280);
+      slides.forEach(el=>el.style.zoom=z<1?z:'');
+      return;
+    }
+    slides.forEach(el=>el.style.zoom='');
     const s=Math.min(innerWidth/1280,innerHeight/720);
     slides.forEach(el=>el.style.transform='scale('+s+')');
   }
+  fit();
   function show(n){
     i=Math.max(0,Math.min(slides.length-1,n));
     slides.forEach((el,k)=>el.classList.toggle('on',k===i));
@@ -1421,7 +1431,7 @@ table.sum td.pn{font-weight:800;color:#fff;background:var(--c);white-space:nowra
   document.addEventListener('keydown',e=>{
     const k=e.key;
     if(k==='p'||k==='P'){document.body.classList.add('present');show(i);}
-    else if(k==='Escape'){document.body.classList.remove('present');slides.forEach(el=>el.style.transform='');slides[i].scrollIntoView();}
+    else if(k==='Escape'){document.body.classList.remove('present');slides.forEach(el=>el.style.transform='');fit();slides[i].scrollIntoView();}
     else if(document.body.classList.contains('present')){
       if(k==='ArrowRight'||k===' '||k==='PageDown')show(i+1);
       if(k==='ArrowLeft'||k==='PageUp')show(i-1);
