@@ -1176,22 +1176,73 @@ table.sum td.pn{font-weight:800;color:#fff;background:var(--c);white-space:nowra
   <div class="ttl"><span class="pt">PART 3 AI時代のITプロジェクト</span><span class="tt">AIを使ったアプリの例</span></div>
   <h2 class="msg">AIは、すでに身近なアプリの中で働いている</h2>
   <svg viewBox="0 0 1136 470" width="1136" height="470">
+    <defs><marker id="ex35" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0L10,5L0,10z" fill="#2f9e6e"/></marker></defs>
     <g font-size="20">
-      <rect x="0" y="0" width="360" height="320" rx="16" fill="#d7f0e4"/>
-      <text x="22" y="46" font-size="25" font-weight="800">① 相談しながら申し込む</text>
-      <text x="22" y="80" font-size="17" fill="#52606d">例：銀行アプリ</text>
-      <text x="22" y="135">「口座を作りたい」と書くと、</text><text x="22" y="167">AIが質問を返しながら</text><text x="22" y="199">申込みの画面を埋めていく。</text>
-      <text x="22" y="262" font-weight="700">→ 人は答えて、</text><text x="22" y="294" font-weight="700">　最後に確かめるだけ</text>
-      <rect x="388" y="0" width="360" height="320" rx="16" fill="#d7f0e4"/>
-      <text x="410" y="46" font-size="25" font-weight="800">② AI-OCR</text>
-      <text x="410" y="80" font-size="17" fill="#52606d">例：紙の申請書の入力</text>
-      <text x="410" y="135">紙の書類や手書きの文字を</text><text x="410" y="167">読み取って、データにする。</text>
-      <text x="410" y="262" font-weight="700">→ 打ち込む手間が減る。</text><text x="410" y="294" font-weight="700">　読み違いは人が直す</text>
-      <rect x="776" y="0" width="360" height="320" rx="16" fill="#d7f0e4"/>
-      <text x="798" y="46" font-size="25" font-weight="800">③ 文字起こし</text>
-      <text x="798" y="80" font-size="17" fill="#52606d">例：会議の議事録</text>
-      <text x="798" y="135">会議や窓口の会話を文字にし、</text><text x="798" y="167">議事録の下書きを作る。</text>
-      <text x="798" y="262" font-weight="700">→ 書き起こしが速くなる。</text><text x="798" y="294" font-weight="700">　名前の誤りは人が直す</text>
+      <!-- ① -->
+      <g>
+        <rect x="0" y="0" width="360" height="460" rx="16" fill="#d7f0e4"/>
+        <text x="22" y="46" font-size="25" font-weight="800">① 相談しながら申し込む</text>
+        <text x="22" y="78" font-size="17" fill="#52606d">例：銀行アプリ</text>
+        <rect x="22" y="105" width="122" height="210" rx="16" fill="#fff" stroke="#1f2933" stroke-width="3"/>
+        <rect x="62" y="125" width="74" height="40" rx="8" fill="#dbe7fb"/><text x="99" y="141" font-size="13" text-anchor="middle">口座を</text><text x="99" y="158" font-size="13" text-anchor="middle">作りたい</text>
+        <rect x="30" y="177" width="78" height="26" rx="8" fill="#d7f0e4"/><text x="69" y="195" font-size="13" text-anchor="middle">お名前は？</text>
+        <rect x="70" y="215" width="66" height="26" rx="8" fill="#dbe7fb"/><text x="103" y="233" font-size="13" text-anchor="middle">山田です</text>
+        <rect x="30" y="253" width="78" height="26" rx="8" fill="#d7f0e4"/><text x="69" y="271" font-size="13" text-anchor="middle">ご住所は？</text>
+        <rect x="152" y="172" width="56" height="30" rx="15" fill="#2f9e6e"/><text x="180" y="194" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">AI</text>
+        <line x1="150" y1="218" x2="206" y2="218" stroke="#2f9e6e" stroke-width="4" marker-end="url(#ex35)"/>
+        <rect x="216" y="105" width="122" height="210" rx="10" fill="#fff" stroke="#1f2933" stroke-width="3"/>
+        <text x="277" y="134" font-size="15" font-weight="800" text-anchor="middle">申込み画面</text>
+        <g font-size="14"><text x="228" y="170">氏名</text><text x="228" y="210">住所</text><text x="228" y="250">職業</text></g>
+        <g stroke="#2f9e6e" stroke-width="4"><line x1="266" y1="165" x2="326" y2="165"/><line x1="266" y1="205" x2="326" y2="205"/><line x1="266" y1="245" x2="326" y2="245"/></g>
+        <rect x="236" y="272" width="82" height="28" rx="6" fill="#2f9e6e"/><text x="277" y="291" font-size="14" fill="#fff" text-anchor="middle">確認する</text>
+        <g font-size="16" fill="#52606d" text-anchor="middle"><text x="83" y="342">スマホで相談</text><text x="277" y="342">画面が埋まる</text></g>
+        <text x="22" y="398" font-weight="700">→ 人は答えて、</text><text x="22" y="430" font-weight="700">　最後に確かめるだけ</text>
+      </g>
+      <!-- ② -->
+      <g transform="translate(388,0)">
+        <rect x="0" y="0" width="360" height="460" rx="16" fill="#d7f0e4"/>
+        <text x="22" y="46" font-size="25" font-weight="800">② AI-OCR</text>
+        <text x="22" y="78" font-size="17" fill="#52606d">例：紙の申請書の入力</text>
+        <path d="M22 105 H120 L144 129 V315 H22 Z" fill="#fff" stroke="#1f2933" stroke-width="3"/><path d="M120 105 V129 H144" fill="none" stroke="#1f2933" stroke-width="3"/>
+        <text x="34" y="140" font-size="14" font-weight="800">申請書</text>
+        <g font-size="12" fill="#52606d"><text x="34" y="178">氏名</text><text x="34" y="228">住所</text><text x="34" y="278">電話</text></g>
+        <g fill="none" stroke="#1f4fa3" stroke-width="2.5" stroke-linecap="round">
+          <path d="M66 175 q6 -12 12 0 t12 0 t12 0 t12 0 t12 0"/>
+          <path d="M66 225 q5 -10 10 0 t10 0 t10 0 t10 0 t10 0 t10 0"/>
+          <path d="M66 275 q6 -12 12 0 t12 0 t12 0 t12 0"/>
+        </g>
+        <rect x="152" y="172" width="56" height="30" rx="15" fill="#2f9e6e"/><text x="180" y="194" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">AI</text>
+        <line x1="150" y1="218" x2="206" y2="218" stroke="#2f9e6e" stroke-width="4" marker-end="url(#ex35)"/>
+        <g font-size="14">
+          <rect x="216" y="130" width="122" height="150" fill="#fff" stroke="#1f2933" stroke-width="3"/>
+          <rect x="216" y="130" width="46" height="150" fill="#f5f7fa"/>
+          <g stroke="#1f2933" stroke-width="1.5"><line x1="216" y1="180" x2="338" y2="180"/><line x1="216" y1="230" x2="338" y2="230"/><line x1="262" y1="130" x2="262" y2="280"/></g>
+          <text x="225" y="160">氏名</text><text x="270" y="160">山田 花子</text>
+          <text x="225" y="210">住所</text><text x="270" y="210">○○市…</text>
+          <text x="225" y="260">電話</text><text x="270" y="260">03-…</text>
+        </g>
+        <g font-size="16" fill="#52606d" text-anchor="middle"><text x="83" y="342">手書きの紙</text><text x="277" y="342">パソコンのデータ</text></g>
+        <text x="22" y="398" font-weight="700">→ 打ち込む手間が減る。</text><text x="22" y="430" font-weight="700">　読み違いは人が直す</text>
+      </g>
+      <!-- ③ -->
+      <g transform="translate(776,0)">
+        <rect x="0" y="0" width="360" height="460" rx="16" fill="#d7f0e4"/>
+        <text x="22" y="46" font-size="25" font-weight="800">③ 文字起こし</text>
+        <text x="22" y="78" font-size="17" fill="#52606d">例：会議の議事録</text>
+        <rect x="22" y="250" width="122" height="22" rx="4" fill="#c9a26b"/>
+        <g fill="#52606d"><circle cx="50" cy="200" r="15"/><path d="M28 250 q22 -36 44 0 z"/><circle cx="116" cy="200" r="15"/><path d="M94 250 q22 -36 44 0 z"/></g>
+        <rect x="76" y="232" width="14" height="18" rx="5" fill="#1f2933"/>
+        <rect x="24" y="112" width="62" height="40" rx="10" fill="#fff" stroke="#1f2933" stroke-width="2"/><path d="M42 152 l2 14 l10 -14" fill="#fff" stroke="#1f2933" stroke-width="2"/><text x="55" y="138" font-size="14" text-anchor="middle">発言…</text>
+        <rect x="84" y="128" width="60" height="40" rx="10" fill="#fff" stroke="#1f2933" stroke-width="2"/><path d="M118 168 l-2 14 l-10 -14" fill="#fff" stroke="#1f2933" stroke-width="2"/><text x="114" y="154" font-size="14" text-anchor="middle">発言…</text>
+        <rect x="152" y="172" width="56" height="30" rx="15" fill="#2f9e6e"/><text x="180" y="194" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">AI</text>
+        <line x1="150" y1="218" x2="206" y2="218" stroke="#2f9e6e" stroke-width="4" marker-end="url(#ex35)"/>
+        <rect x="216" y="105" width="122" height="210" rx="6" fill="#fff" stroke="#1f2933" stroke-width="3"/>
+        <text x="277" y="134" font-size="15" font-weight="800" text-anchor="middle">議事録</text>
+        <g font-size="12" fill="#1f2933"><text x="228" y="166">山田：</text><text x="228" y="216">佐藤：</text><text x="228" y="266">山田：</text></g>
+        <g stroke="#9aa5b1" stroke-width="3"><line x1="266" y1="162" x2="326" y2="162"/><line x1="228" y1="182" x2="326" y2="182"/><line x1="266" y1="212" x2="326" y2="212"/><line x1="228" y1="232" x2="300" y2="232"/><line x1="266" y1="262" x2="326" y2="262"/><line x1="228" y1="282" x2="310" y2="282"/></g>
+        <g font-size="16" fill="#52606d" text-anchor="middle"><text x="83" y="342">会議の会話</text><text x="277" y="342">議事録の下書き</text></g>
+        <text x="22" y="398" font-weight="700">→ 書き起こしが速くなる。</text><text x="22" y="430" font-weight="700">　名前の誤りは人が直す</text>
+      </g>
     </g>
   </svg>
   <div class="pg"></div>
