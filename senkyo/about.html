@@ -1,0 +1,463 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="「公選法を逆から引く」の収録範囲、全条文の地図、アプリの約束事、使っている判例、Prologのソース全部。">
+<title>収録範囲・仕組み｜公選法を逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針（2026-10-10 作り直し）：道路交通法版（自転車の青切符）と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。
+   UIはゴシック、条文の原文だけ明朝（官報の組み）。公選法版のみ：判例ボタン（--hr）・集合型の木（--in）を追加。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff; --hr:#8a2f5a; --in:#7a3fb0;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d; --hr:#e899c0; --in:#c49bea;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭（書式の表題欄） ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.9rem,11vw,5.6rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue)}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力（書式の升目） ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:720px){.slots{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:440px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.slot .desc:empty{display:none}
+.slot.q{background:var(--blue)}
+.slot.q label,.slot.q label::before,.slot.q .hint{color:#fff}
+.slot.q .field{border-color:#fff}
+.slot.q .field select{color:var(--blue)}
+.slot.q .field::after{background:#fff;color:var(--blue)}
+.act-slot{grid-column:1 / -1}
+/* act-find: 章・言葉で絞り込む欄（公選法版のみ） */
+.act-find{display:flex;flex-wrap:wrap;gap:0 4px;padding:0 10px}
+.act-find .field{flex:0 1 auto;margin:4px 0 0;display:flex}
+.act-find .field select{font-size:.88rem;font-weight:400;padding-block:5px}
+.field-q{flex:1 1 10em;position:relative;display:block;margin:4px 0 0;border:2px solid var(--line);background:var(--field);min-width:0}
+.field-q input{appearance:none;font:inherit;font-size:.92rem;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 10px;min-width:0;width:100%}
+.field-q:hover{border-color:var(--blue)}
+.field-q:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.slot.q .field-q{border-color:#fff}
+.slot.q .field-q input{color:#fff}
+#act-n{font-weight:400;font-size:.72rem;margin-left:10px}
+.want{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:.88rem}
+.want[hidden]{display:none}
+.want .seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line)}
+.want button{font:inherit;font-size:.85rem;cursor:pointer;border:0;background:transparent;color:var(--ink);padding:4px 14px}
+.want button + button{border-left:2px solid var(--line)}
+.want button[aria-pressed="true"]{background:var(--ink);color:var(--paper);font-weight:700}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定（表題の帯＝判定者・結論、その下に根拠） ── */
+.verdict,.results{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.verdict.ng .vhead{background:var(--red);color:#fff}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big,.vhead .count{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
+.vhead .big{font-size:clamp(1.3rem,4.4vw,2rem);line-height:1.25}
+.vhead .count{font-size:1rem}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.pen{font-size:.86rem}
+.tree{margin-top:6px;font-size:.88rem;min-width:22em}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.no{color:var(--muted)} .tree .m.ng{color:var(--ng)} .tree .m.fine{color:var(--ok)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.no{color:var(--muted)}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.tree .pc.o-in::before,.tree .pc.o-in::after{border-color:var(--in);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)} .c-in{color:var(--in)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)} .sw.in{border-top:2.5px solid var(--in)}
+.m.and,.m.or,.m.in{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)} .m.in{color:var(--in);border:2px solid var(--in)}
+.tree .t.and,.tree .t.or,.tree .t.in{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft);box-shadow:inset 3px 0 0 var(--blue)}
+.lawtext .it{padding-left:1.2em}
+/* 判例テキスト（公選法版のみ） */
+.hrtext{background:var(--bg);border-top:1px solid var(--hr);border-bottom:1px solid var(--hr);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.hrtext h4{margin:0 0 4px;font-size:.9rem}
+.hrtext p{margin:0 0 4px}
+.why-btn{font:inherit;font-size:.76rem;cursor:pointer;border:0;border-bottom:1px solid currentColor;background:transparent;color:var(--blue);padding:0;margin-left:10px}
+.rows .tree-box{grid-column:1 / -1}
+.rows{list-style:none;margin:0;padding:0;display:grid}
+.rows li{padding:9px 0;display:grid;grid-template-columns:3.2rem minmax(0,1fr);gap:2px 12px;border-bottom:1px solid var(--hair)}
+.rows .k{font-weight:700;font-size:.8rem;grid-row:span 2;align-self:start;text-align:center;padding:1px 0;border:1.5px solid var(--ink)}
+.rows .k.ng{color:#fff;background:var(--red);border-color:var(--red)} .rows .k.ok{color:var(--ink)}
+.rows .what{font-weight:700;min-width:0;overflow-wrap:anywhere}
+.rows .what .v{color:var(--blue)}
+.rows .why{font-size:.82rem;color:var(--muted);min-width:0}
+.more{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--line);background:transparent;color:var(--ink);padding:5px 16px;justify-self:start;font-weight:700}
+.disclaimer-inline{margin-top:10px;font-size:.78rem;color:var(--muted);border-top:1px solid var(--hair);padding-top:8px;line-height:1.65}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+/* 判例の印（公選法版のみ） */
+.hr{display:inline-block;font:inherit;font-family:var(--f-body);font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--hr);border:1.5px solid var(--hr);background:transparent}
+button.hr{cursor:pointer}
+
+/* ── 付録（about.html 共通スタイル） ── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue)}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border-left:2px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html（収録範囲・仕組み） ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+</style>
+
+<div class="wrap about">
+  <header class="mast sub">
+    <p class="backlink"><a href="./" id="back">← 判定ページに戻る</a></p>
+    <h1>収録範囲・仕組み</h1>
+    <p class="lead">「公選法を逆から引く」で、どの条文をどこまでルールにしたか、アプリが決めたこと、使っている判例、プログラムの中身です。</p>
+  </header>
+
+  <div class="appendix">
+  <details class="box" id="scope-box" open>
+    <summary>収録範囲と、入っていないもの</summary>
+    <div class="scope" id="scope">
+      <p><b>収録しているのは公職選挙法の一部です。</b>「誰が・いつ・何をしたら違反か」を定める章（第2章 選挙権・被選挙権、第9章 公職の候補者、第13章 選挙運動、第14章 収入・支出・寄附、第14章の3 政党の政治活動、第16章 罰則）だけをルールにしています。</p>
+      <p>第1章 総則、第3章 選挙区域、第4章・第4章の2 選挙人名簿、第5章 選挙期日、第6章 投票、第7章 開票、第8章 選挙会、第10章 当選人、第11章 特別選挙、第12章 同時選挙の特例、第14章の2 参議院選挙区の特例、第15章 争訟、第17章 補則は入っていません（<a href="#cover-box" id="scope-link">全条文の地図</a>）。</p>
+    </div>
+  </details>
+
+  <details class="box" id="cover-box">
+    <summary>公職選挙法のどこまでをルールにしたか（全条文の地図）</summary>
+    <p class="hint" style="margin-top:6px">公職選挙法の本則の全条文を章ごとに1マスずつ並べました。<span class="cell u1"></span> はプログラムのルールの中で使っている条、<span class="cell u0"></span> は使っていない条、<span class="cell u2"></span> は「削除」された条です。マスを押すと条の名前（使っている条は原文）が出ます。</p>
+    <div id="cover"></div>
+  </details>
+
+  <details class="box" id="yaku-box">
+    <summary>アプリの約束事（公職選挙法にないもの）</summary>
+    <p class="hint" style="margin-top:6px">判定のためにこのアプリが決めたことで、公職選挙法の条文そのものではありません。プログラムでは <code>yakusoku/</code> のファイルに、条文から来たルール（<code>rules/</code>）とは分けて書いています。論理の木では <span class="yk">アプリの約束事</span> の印が付きます。</p>
+    <ul class="hint" style="margin:8px 0 0;padding-left:1.2em">
+      <li>主体・時期・選挙・行為の選択肢と、その区切り方（例：時期を「平時」「告示前_半年以内」「告示前_90日以内」「選挙期間」「投票日当日」「選挙後」の6つに分けること）</li>
+      <li>条文が「選挙運動のため」などと書いていない行為を「選挙運動」として扱うこと（戸別訪問・選挙事務所の設置など。条文に書いてある行為は条文を根拠に示します）</li>
+      <li>判定の規則：禁止の規定に当たり、そのただし書等（「ただし…この限りでない」「…を除く」「…にかかわらず」）に当たらなければ違反、と読むこと</li>
+      <li>ありえない組み合わせの除外（例：届出の前には「候補者」はいない）。除外はもとにした条文を示します</li>
+      <li>条文にないまとめ方の集合（下の表）</li>
+    </ul>
+    <div class="tbl"><table id="yaku-sets"><thead><tr><th>集合</th><th>中身</th><th>なぜそうしたか</th></tr></thead><tbody></tbody></table></div>
+  </details>
+
+  <details class="box" id="hanrei-box">
+    <summary>使っている判例</summary>
+    <p class="hint" style="margin-top:6px">公職選挙法に定義のない言葉を、最高裁判所の判例の定義で読んでいます。条文でもアプリの約束事でもない、3つ目の根拠です。プログラムでは <code>hanrei/</code> のファイルに分けて書いています。論理の木では <span class="hr">最高裁判例</span> の印が付きます（押すと判決名と原文が出ます）。判例の要件を事例ごとに確かめる入力はないので、どの行為が要件を満たすかは、行為の種類ごとにアプリが決めています（<span class="yk">アプリの約束事</span>）。</p>
+    <div id="hanrei-list"></div>
+  </details>
+
+  <details class="box" id="src-box">
+    <summary>プログラムの中身（Prologのソース全部）</summary>
+    <p class="hint" style="margin-top:6px">このページで動いているPrologのプログラムそのものです。ファイルを開くと全文が出ます。</p>
+    <div id="src"></div>
+  </details>
+
+  <details class="box" id="core-box">
+    <summary>仕組みを見る（上級者向け）</summary>
+    <p class="hint" style="margin-top:6px">ルールは条文ごとに「禁止」「ただし書等（禁止を外す規定）」「罰則」を書いたPrologのファイルです。判定は「禁止の規定に当たり、そのただし書等に当たらなければ違反」という1つの規則で行っています（この規則はアプリの条文の読み方です）。</p>
+    <pre id="core"></pre>
+    <p class="hint" style="margin-top:10px">Prologに直接聞く（最初の30件まで）：</p>
+    <textarea id="q" spellcheck="false">judge(戸別訪問, ctx(A, T, 市議会), R).</textarea>
+    <button type="button" class="btn" id="run">実行</button>
+    <pre id="out"></pre>
+  </details>
+  </div>
+
+  <p class="foot techline"><span>公職選挙法 ／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中（約6MB）…</span></span></p>
+  <p class="foot">e-Gov法令検索の公職選挙法（昭和二十五年法律第百号）の原文から、行為を禁止する規定をルールにしたものです。判例は「選挙運動」の定義（最高裁判所 昭和53年1月26日判決）だけを使っています。それ以外の判例・法律の解釈・選挙管理委員会の運用は含みません。実際の判断は選挙管理委員会に確認してください。</p>
+</div>
+
+<script src="data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const Q = "？";
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+function all(q, max){
+  const it = pl.prolog.query(q), out = [];
+  for (let i = 0; i < max; i++){ const r = it.next(); if (r.value && r.value.$tag === "bindings") out.push(r.value); if (r.done) return { out, more: false }; }
+  try{ it.close?.(); }catch(e){}
+  return { out, more: true };
+}
+const actLabel = s => String(s).replace(/^'(.*)'$/, "$1").replace(/\\'/g, "'");
+
+// ---------- 条文と根拠の木 ----------
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  const m = String(a).match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(ただし書|括弧書)?(?:(\d+)号(の\d+)?)?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[5] ? m[5] + (m[6] ? m[6].replace("の", "_") : "") : null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para); else if (ps.length > 1 && r.item) ps = ps.slice(0, 1);
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const its = p.i.map(it => `<p class="it${r.item && it.n === r.item ? " hit" : ""}">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p${!r.item && r.para ? ' class="hit"' : ""}>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ng: "✗", fine: "◯", ok: "", no: "偽", info: "・", and: "かつ", or: "または", in: "一覧" };
+const LEGEND = `<p class="legend">読み方：下の行が、上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなく、このアプリの決め事（<a href="about.html#yaku-box">一覧</a>）。<span class="hr">最高裁判例</span>＝条文にない定義を判例から取ったもの（押すと原文）。</p>`;
+function treeHTML(lines){
+  // 深さつきの行の並びを入れ子にする
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  // 子が「かつ／または／一覧」の節1つだけなら折りたたむ
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and", "or", "in"].includes(n.c[0].l[1]) && !["and", "or", "in"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and", "or", "in"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, title = String(c[2]), tail = title.includes("—") ? " — " + title.split("—").pop().trim() : "";
+    const msg = c[1] === "in" ? title.replace("次の一覧", `下の${k}個の一覧`).replace("」の一覧", `」の一覧（下の${k}個）`)
+      : !title.startsWith("次の") ? title.replace("次のどれか", `下の${k}つのどれか`)
+      : c[1] === "and" ? `下の${k}つがすべて成り立つ必要がある` : `下の${k}つのうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg + tail)}</span>`;
+  };
+  return LEGEND + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0 === "in" ? (n.c.some(x => x.l[1] === "ok") ? "ok" : "no") : k0;
+    const tag = k0 === "in" ? `<span class="m in" style="margin-right:5px">一覧</span>` : "";
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${tag}${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : String(a).startsWith("@判例:") ? ` <button type="button" class="hr" data-hanrei="${esc(String(a).slice(4))}">最高裁判例</button>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+const kanjiArt = k => { const [a, ...r] = String(k).split("_"); return a + "条" + r.map(x => "の" + x).join(""); };
+
+// 判例：ID → {判決名, 原文, 補足, 集合, 要件}
+const HANREI = {};
+function hanreiHTML(id){
+  const h = HANREI[id];
+  if (!h) return `<div class="hrtext"><p class="hint">この判例は収録していません（${esc(id)}）。</p></div>`;
+  return `<div class="hrtext"><h4>${esc(h.n)}</h4><p>${esc(h.t)}</p><p class="hint">${esc(h.b)}</p></div>`;
+}
+
+// ---------- ここから別ページ（about.html）だけの処理 ----------
+// 戻り先：手元で file:// から開いたときだけ senkyo.html を指す
+if (location.protocol === "file:") $("back").href = "senkyo.html";
+// about.html#yaku-box のように来たら、その折りたたみを開く
+function openHash(){ const d = location.hash && document.getElementById(location.hash.slice(1)); if (d && d.tagName === "DETAILS") d.open = true; }
+openHash(); window.addEventListener("hashchange", openHash);
+document.addEventListener("click", e => { if (e.target.id === "scope-link"){ $("cover-box").open = true; } });
+
+function renderCover(){
+  let C = []; try{ C = JSON.parse(document.getElementById("cover-data").textContent); }catch(e){ return; }
+  const live = C.flatMap(c => c.a).filter(a => a.u !== 2), used = live.filter(a => a.u === 1).length;
+  $("cover").innerHTML = `<p class="cover-total">使っている条：${used} / ${live.length} 条（削除された条を除く）</p>` + C.map(c => {
+    const lv = c.a.filter(a => a.u !== 2), u = lv.filter(a => a.u === 1).length;
+    return `<div class="cover-ch"><h4>${esc(c.t)}<span>${u} / ${lv.length} 条</span></h4><div class="cells">${c.a.map(a => `<button type="button" class="cell u${a.u}" data-cover="${esc(a.k)}" title="${esc(a.t + a.c)}" aria-label="${esc(a.t + a.c)}"></button>`).join("")}</div></div>`;
+  }).join("") + `<div id="cover-pick"></div>`;
+  window.__COVER = Object.fromEntries(C.flatMap(c => c.a.map(a => [a.k, a])));
+}
+function renderSrc(){
+  const fs = [...document.querySelectorAll("script[type='text/prolog']")];
+  $("src").innerHTML = fs.map((f, i) => `<details class="srcfile" data-src="${i}"><summary>${esc(f.dataset.name.replace("_", "/"))}（${f.textContent.split("\n").length} 行）</summary><pre></pre></details>`).join("");
+  $("src").addEventListener("toggle", e => { const d = e.target; if (d.open && d.dataset.src){ const pre = d.querySelector("pre"); if (!pre.textContent) pre.textContent = fs[+d.dataset.src].textContent; } }, true);
+}
+function renderYakusoku(){
+  const L = once("yakusoku_sets(L)").L.map(T).map(t => t.args);
+  $("yaku-sets").querySelector("tbody").innerHTML = L.map(([n, w, es]) => `<tr><td>${esc(n)}</td><td style="white-space:normal">${esc(es.join("、"))}</td><td style="white-space:normal">${esc(w)}</td></tr>`).join("");
+}
+function renderHanrei(){
+  const L = once("hanrei_list(L)").L.map(T).map(t => t.args);
+  for (const [id, n, t, b, gs, qs] of L) HANREI[id] = { n, t, b, gs, qs };
+  $("hanrei-list").innerHTML = L.map(([id, n, t, b, gs, qs]) => `<div class="hrtext" style="margin-top:10px"><h4>${esc(n)}（「${esc(gs.join("」「"))}」の定義）</h4><p>${esc(t)}</p><p class="hint">要件：${qs.map((q, i) => `${i + 1}. ${esc(q)}`).join("　")}</p><p class="hint">${esc(b)}</p></div>`).join("");
+}
+
+// 地図・ソースはPrologなしで出せるので、読み込みを待たずに出す
+renderCover(); renderSrc();
+
+async function boot(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    if (!once("current_predicate(yakusoku_sets/1)")) throw new Error(`Prologの読み込みが不完全です（yakusoku_sets/1 がありません）。${errBuf.slice(-3).join(" ")}`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    renderYakusoku(); renderHanrei();
+    $("core").textContent = `violation(Act, C, Art, Why) :-\n    prohibited(Act, C, Art, Why),\n    \\+ excepted(Act, C, Art, _, _).`;
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+  }
+}
+
+function runQuery(){
+  const q = $("q").value.trim().replace(/\.\s*$/, "");
+  try{
+    const it = pl.prolog.query(`catch((${q}), Err__, true)`), out = [];
+    for (let i = 0; i < 30; i++){
+      const r = it.next(), v = r.value;
+      if (v && v.$tag === "bindings"){
+        if (v.Err__ && v.Err__.$t !== "v"){ out.push("エラー"); break; }
+        out.push(Object.entries(v).filter(([k]) => !["$tag","success","Err__"].includes(k)).map(([k, x]) => `${k} = ${fmt(x)}`).join(", ") || "true");
+      }
+      if (r.done) break;
+    }
+    $("out").textContent = out.join("\n") || (errBuf.length ? errBuf.join("\n") : "false.");
+  } catch(e){ $("out").textContent = "エラー：" + e.message; }
+}
+function fmt(v){
+  if (Array.isArray(v)) return "[" + v.map(fmt).join(", ") + "]";
+  const t = T(v); if (t && t.f) return `${t.f}(${t.args.map(fmt).join(", ")})`;
+  if (v && v.$t === "v") return "_";
+  return String(v);
+}
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.id === "run"){ if (pl) runQuery(); else $("out").textContent = "Prologを読み込み中です。少し待ってからもう一度押してください。"; }
+  else if (b.dataset.cover){
+    const a = window.__COVER[b.dataset.cover], art = kanjiArt(a.k);
+    $("cover-pick").innerHTML = a.u === 1 ? lawHTML(art) : `<div class="lawtext"><h4>${esc(a.t + a.c)}</h4><p class="hint">${a.u === 2 ? "この条は削除されています。" : "この条はルールにしていません。"}</p></div>`;
+  }
+  else if (b.dataset.art){   // 条文の原文を開く・閉じる
+    const host = b.closest(".tr") || b.closest("li") || b.closest("p") || b.parentElement, nx = host.nextElementSibling;
+    if (nx && nx.classList.contains("lawtext") && nx.dataset.for === b.dataset.art) nx.remove();
+    else { host.insertAdjacentHTML("afterend", lawHTML(b.dataset.art)); host.nextElementSibling.dataset.for = b.dataset.art; }
+  }
+  else if (b.dataset.hanrei){   // 判例の印を開く・閉じる
+    const host = b.closest(".tr") || b.parentElement, nx = host.nextElementSibling;
+    if (nx && nx.classList.contains("hrtext") && nx.dataset.for === b.dataset.hanrei) nx.remove();
+    else { host.insertAdjacentHTML("afterend", hanreiHTML(b.dataset.hanrei)); host.nextElementSibling.dataset.for = b.dataset.hanrei; }
+  }
+});
+
+if (typeof SWIPL === "function") boot();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。ページを再読み込みしてください。"; }
+</script>
