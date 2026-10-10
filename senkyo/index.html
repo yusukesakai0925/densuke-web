@@ -153,6 +153,7 @@ button.law:hover{border-color:var(--blue)}
 .hrtext{background:var(--bg);border-top:1px solid var(--hr);border-bottom:1px solid var(--hr);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
 .hrtext h4{margin:0 0 4px;font-size:.9rem}
 .hrtext p{margin:0 0 4px}
+.hrtext.act-def{margin:12px 0 4px}
 .why-btn{font:inherit;font-size:.76rem;cursor:pointer;border:0;border-bottom:1px solid currentColor;background:transparent;color:var(--blue);padding:0;margin-left:10px}
 .rows .tree-box{grid-column:1 / -1}
 .rows{list-style:none;margin:0;padding:0;display:grid}
@@ -225,7 +226,7 @@ pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border-le
       <div class="slot act-slot" id="s-act">
         <label for="act">何をする<span class="hint" id="act-n"></span></label>
         <div class="act-find">
-          <span class="field"><select id="act-ch" aria-label="章で絞り込む"></select></span>
+          <span class="field"><select id="act-ch" aria-label="種類で絞り込む"></select></span>
           <span class="field-q"><input id="act-q" type="search" placeholder="言葉で絞り込む（例：ポスター、寄附、戸別）" aria-label="言葉で絞り込む"></span>
         </div>
         <span class="field"><select id="act"></select></span>
@@ -347,33 +348,29 @@ let actors = [], times = [], elecs = [], acts = [], want = "違反", limit = 60,
 const ELABEL = {};
 const elabel = e => ELABEL[e] || e;
 
-// ---------- 全条文の地図 ----------
-const ACTCAT = {}; let ARTINFO = {}, CHAPS = [];
+// ---------- 行為の種類（何をするかで分ける。条での並びではない） ----------
+const ACTKINDS = {}; let KINDS = [];   // ACTKINDS：行為 → 種類の名前のリスト（ふつうは1つ）、KINDS：種類の名前（並べる順）
+const NOKIND = "種類が付いていない行為";
 function initActMenu(){
-  let C = []; try{ C = JSON.parse(document.getElementById("cover-data").textContent); }catch(e){}
-  C.forEach((ch, ci) => ch.a.forEach((a, ai) => { ARTINFO[a.k] = { ch: ci, cap: a.c, ord: ci * 10000 + ai }; }));
-  const used = new Set(Object.values(ACTCAT).filter(k => ARTINFO[k]).map(k => ARTINFO[k].ch));
-  CHAPS = C.map((ch, ci) => ({ ci, t: ch.t })).filter(c => used.has(c.ci));
-  $("act-ch").innerHTML = `<option value="">すべての章</option>` + CHAPS.map(c => `<option value="${c.ci}">${esc(c.t)}</option>`).join("") + `<option value="none">どの条にも名指しされていない行為</option>`;
+  $("act-ch").innerHTML = `<option value="">すべての種類</option>` + KINDS.map((k, i) => `<option value="${i}">${esc(k)}</option>`).join("");
 }
 function renderActs(){
   const sel = $("act"), cur = sel.value || Q, ch = $("act-ch").value, q = $("act-q").value.trim();
-  const opt = (v, l, t) => `<option value="${esc(v)}"${t ? ` title="${esc(t)}"` : ""}>${esc(l)}</option>`;
+  const opt = (v, l, t) => `<option value="${esc(v)}"${t ? ` title="${esc(t)}"` : ""}${ACTKINDS[v] ? ` data-kinds="${ACTKINDS[v].length}"` : ""}>${esc(l)}</option>`;   // data-kinds：その行為に付いている種類の数（1のはず）
   const groups = new Map();
   let n = 0;
   for (const [s, d] of acts){
-    const k = ACTCAT[s] || "", info = ARTINFO[k];
-    if (ch === "none" ? info : ch !== "" && (!info || String(info.ch) !== ch)) continue;
+    const g = KINDS.indexOf((ACTKINDS[s] || [])[0]);   // 種類が付いていなければ -1
+    if (ch !== "" && String(g) !== ch) continue;
     if (q && !(actLabel(s) + d).includes(q) && s !== cur) continue;
-    const g = info ? k : "";
     if (!groups.has(g)) groups.set(g, []);
     groups.get(g).push([s, d]); n++;
   }
-  const keys = [...groups.keys()].sort((a, b) => (ARTINFO[a]?.ord ?? 1e9) - (ARTINFO[b]?.ord ?? 1e9));
-  sel.innerHTML = opt(Q, "？（何なら）") + keys.map(k => `<optgroup label="${esc(k ? `${kanjiArt(k)}${ARTINFO[k].cap}` : "どの条にも名指しされていない行為")}">` +
+  const keys = [...groups.keys()].sort((a, b) => (a < 0 ? 1e9 : a) - (b < 0 ? 1e9 : b));
+  sel.innerHTML = opt(Q, "？（何なら）") + keys.map(k => `<optgroup label="${esc(k < 0 ? NOKIND : KINDS[k])}">` +
     groups.get(k).map(([s, d]) => opt(s, `${actLabel(s)} — ${d}`, d)).join("") + `</optgroup>`).join("");
   sel.value = [...sel.options].some(o => o.value === cur) ? cur : Q;
-  $("act-n").textContent = (ch !== "" || q) ? `${n} 件` : `${acts.length} 件（章や言葉で絞り込めます）`;
+  $("act-n").textContent = (ch !== "" || q) ? `${n} 件` : `${acts.length} 件（種類や言葉で絞り込めます）`;
 }
 document.addEventListener("input", e => { if (e.target.id === "act-q") renderActs(); });
 document.addEventListener("change", e => { if (e.target.id === "act-ch") renderActs(); });
@@ -384,6 +381,15 @@ function explainLines(S, A, Tm, E){
 }
 let lastRows = [], lastV = null;
 
+// 選んだ行為が、判例で意味を読む集合（今は「選挙運動」）に入るとき、判定結果のすぐ下に出す定義の箱
+//   判決名と定義文は Prolog（hanrei/ の 判例/4・判例の定義文/2）から引く。入らない行為・「？」のときは何も出さない
+function actDefHTML(act){
+  if (act === Q) return "";
+  const r = once(`act_hanrei_def(${atom(act)}, GN, ID, N, D)`);
+  if (!r) return "";
+  return `<div class="hrtext act-def"><h4>${esc(r.GN)}とは（${esc(r.N)}）</h4><p>${esc(r.D)}</p><p class="hint">公職選挙法に「${esc(r.GN)}」の定義はなく、最高裁判所の判例が定義しています。このアプリは、選んだ行為を「${esc(r.GN)}」に当たるものとして扱っています（事例ごとに判例の要件を確かめてはいません）。</p></div>`;
+}
+
 async function boot(){
   try{
     pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
@@ -391,7 +397,7 @@ async function boot(){
     for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
     for (const f of files) once(`consult('/${f.dataset.name}')`);
     // 読み込みが途中で止まっていないか（必要な述語がそろっているか）を確かめる
-    const need = ["judge/3", "impossible/4", "explain/5", "judge_row/7"].filter(p => !once(`current_predicate(${p})`));
+    const need = ["judge/3", "impossible/4", "explain/5", "judge_row/7", "act_hanrei_def/5"].filter(p => !once(`current_predicate(${p})`));
     if (need.length) throw new Error(`Prologの読み込みが不完全です（${need.join("・")} がありません）。${errBuf.slice(-3).join(" ")}`);
     actors = once("findall(A-D, actor(A, D), L)").L.map(T).map(t => t.args);
     times  = once("findall(A-D, period(A, D), L)").L.map(T).map(t => t.args);
@@ -406,7 +412,8 @@ async function boot(){
     $("actor").innerHTML = opt(Q, "？（誰なら）") + actors.map(([a, d]) => opt(a, a, d)).join("");
     $("time").innerHTML  = opt(Q, "？（いつなら）") + times.map(([a, d]) => opt(a, `${a}（${d}）`)).join("");
     $("elec").innerHTML  = opt(Q, "？（どの選挙なら）") + elecs.map(e => opt(e, elabel(e))).join("");
-    once("act_cats(L)").L.map(T).forEach(t => { ACTCAT[t.args[0]] = t.args[1]; });
+    KINDS = once("kind_names(L)").L;
+    once("act_kinds(L)").L.map(T).forEach(t => { ACTKINDS[t.args[0]] = t.args[1]; });
     initActMenu(); renderActs();
     // 判例を HANREI に読み込む（about.html に移した renderHanrei の代わり）
     once("hanrei_list(L)").L.map(T).map(t => t.args).forEach(([id, n, t, b, gs, qs]) => { HANREI[id] = { n, t, b, gs, qs }; });
@@ -459,11 +466,12 @@ function ask(){
   const kindFilter = (holes.length ? `, K == ${atom(want)}` : "") + (actFilter && v.act === Q ? `, sub_atom(S, _, _, _, ${atom(actFilter)})` : "");
   const goal = `judge_row(${actP}, ${P.actor}, ${P.time}, ${P.elec}, K, Art, Why)${kindFilter}`;
   try{
+    const actDef = actDefHTML(v.act);
     if (!holes.length){
       const imp = once(`term_to_atom(Act__, ${actP}), impossible(Act__, ctx(${P.actor}, ${P.time}, ${P.elec}), W, Arts)`);
       if (imp){
         const arts = imp.Arts || [];
-        $("answer").innerHTML = `<div class="verdict"><div class="vhead"><div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div><div class="big">この組み合わせはありません <span class="yk">アプリの約束事</span></div></div>
+        $("answer").innerHTML = `<div class="verdict"><div class="vhead"><div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div><div class="big">この組み合わせはありません <span class="yk">アプリの約束事</span></div></div>${actDef}
           <p class="sec">なぜそうなるか（論理の木）</p>${treeHTML(explainLines(v.act, v.actor, v.time, v.elec))}
           ${arts.length ? `<p class="sec">もとにした条文</p>` + arts.map(lawHTML).join("") : ""}<p class="disclaimer-inline">この判定は、条文をルールにして論理的にそのまま演算した結果です。選挙管理委員会・警察の判断や裁判所の判断とは異なる場合があります。実際の扱いは選挙管理委員会・弁護士等にご確認ください。</p></div>`;
         return;
@@ -473,7 +481,7 @@ function ask(){
       const lines = explainLines(v.act, v.actor, v.time, v.elec);
       const arts = [...new Set(lines.filter(l => l[0] <= 1 && l[3] && !String(l[3]).startsWith("@") && l[1] !== "no").map(l => l[3]))];
       const pens = ng.flatMap(b => once(`penalty_for(${atom(b.Art)}, P)`).P.map(T).map(t => t.args));
-      $("answer").innerHTML = `<div class="verdict ${ng.length ? "ng" : "ok"}"><div class="vhead"><div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div><div class="big">${ng.length ? "違反になります" : "違反になる規定は見つかりません"}</div></div>
+      $("answer").innerHTML = `<div class="verdict ${ng.length ? "ng" : "ok"}"><div class="vhead"><div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div><div class="big">${ng.length ? "違反になります" : "違反になる規定は見つかりません"}</div></div>${actDef}
         <p class="sec">なぜそうなるか（論理の木）</p>${treeHTML(lines)}
         ${pens.length ? `<p class="sec">罰則</p>` + pens.map(([pa, tx]) => `<p class="pen"><button type="button" class="law" data-art="${esc(pa)}">${esc(pa)}</button> ${esc(tx)}</p>`).join("") : ""}
         ${arts.length ? `<p class="sec">根拠条文</p>` + arts.map(lawHTML).join("") : ""}
@@ -488,7 +496,7 @@ function ask(){
     lastRows = rows; lastV = v;
     const hole = h => holes.includes(h);
     const label = b => [hole("act") ? `<span class="v">${esc(actLabel(b.S))}</span>` : "", hole("actor") ? `<span class="v">${esc(b.A)}</span>が` : "", hole("time") ? `<span class="v">${esc(b.T)}</span>に` : "", hole("elec") ? `<span class="v">${esc(elabel(b.E))}</span>で` : ""].filter(Boolean).join(" ");
-    $("answer").innerHTML = `<div class="results"><div class="vhead"><div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div><p class="count">${want === "違反" ? "違反になる" : "やっていい"}組み合わせ：${rows.length}件${more ? "以上" : "（全部）"}</p></div>
+    $("answer").innerHTML = `<div class="results"><div class="vhead"><div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div><p class="count">${want === "違反" ? "違反になる" : "やっていい"}組み合わせ：${rows.length}件${more ? "以上" : "（全部）"}</p></div>${actDef}
       <ul class="rows">${rows.map((b, i) => `<li><span class="k ${b.K === "違反" ? "ng" : "ok"}">${b.K === "違反" ? "違反" : "可"}</span><span class="what">${label(b)}<button type="button" class="why-btn" data-row="${i}">根拠を見る</button></span><span class="why">${b.Art ? `<button type="button" class="law" data-art="${esc(b.Art)}">${esc(b.Art)}</button> ` : ""}${esc(b.Why)}</span></li>`).join("") || `<li><span class="k ok">—</span><span class="what">該当なし</span><span class="why"></span></li>`}</ul>
       ${more ? `<button type="button" class="more" id="more">さらに表示</button>` : ""}<p class="disclaimer-inline">この判定は、条文をルールにして論理的にそのまま演算した結果です。選挙管理委員会・警察の判断や裁判所の判断とは異なる場合があります。実際の扱いは選挙管理委員会・弁護士等にご確認ください。</p></div>`;
   } catch(e){ $("answer").innerHTML = `<p class="hint">エラー：${esc(e.message)}</p>`; }

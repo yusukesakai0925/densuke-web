@@ -153,6 +153,7 @@ button.law:hover{border-color:var(--blue)}
 .hrtext{background:var(--bg);border-top:1px solid var(--hr);border-bottom:1px solid var(--hr);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
 .hrtext h4{margin:0 0 4px;font-size:.9rem}
 .hrtext p{margin:0 0 4px}
+.hrtext.act-def{margin:12px 0 4px}
 .why-btn{font:inherit;font-size:.76rem;cursor:pointer;border:0;border-bottom:1px solid currentColor;background:transparent;color:var(--blue);padding:0;margin-left:10px}
 .rows .tree-box{grid-column:1 / -1}
 .rows{list-style:none;margin:0;padding:0;display:grid}
@@ -236,7 +237,7 @@ pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border-le
     <p class="hint" style="margin-top:6px">判定のためにこのアプリが決めたことで、公職選挙法の条文そのものではありません。プログラムでは <code>yakusoku/</code> のファイルに、条文から来たルール（<code>rules/</code>）とは分けて書いています。論理の木では <span class="yk">アプリの約束事</span> の印が付きます。</p>
     <ul class="hint" style="margin:8px 0 0;padding-left:1.2em">
       <li>主体・時期・選挙・行為の選択肢と、その区切り方（例：時期を「平時」「告示前_半年以内」「告示前_90日以内」「選挙期間」「投票日当日」「選挙後」の6つに分けること）</li>
-      <li>条文が「選挙運動のため」などと書いていない行為を「選挙運動」として扱うこと（戸別訪問・選挙事務所の設置など。条文に書いてある行為は条文を根拠に示します）</li>
+      <li>条文が「選挙運動のため」などと書いていない行為を「選挙運動」として扱うこと（戸別訪問・選挙事務所の設置など。条文に書いてある行為は、その条を理由として示します。「選挙運動」という言葉の意味そのものは、下の判例の定義によります）</li>
       <li>判定の規則：禁止の規定に当たり、そのただし書等（「ただし…この限りでない」「…を除く」「…にかかわらず」）に当たらなければ違反、と読むこと</li>
       <li>ありえない組み合わせの除外（例：届出の前には「候補者」はいない）。除外はもとにした条文を示します</li>
       <li>条文にないまとめ方の集合（下の表）</li>
@@ -246,7 +247,7 @@ pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border-le
 
   <details class="box" id="hanrei-box">
     <summary>使っている判例</summary>
-    <p class="hint" style="margin-top:6px">公職選挙法に定義のない言葉を、最高裁判所の判例の定義で読んでいます。条文でもアプリの約束事でもない、3つ目の根拠です。プログラムでは <code>hanrei/</code> のファイルに分けて書いています。論理の木では <span class="hr">最高裁判例</span> の印が付きます（押すと判決名と原文が出ます）。判例の要件を事例ごとに確かめる入力はないので、どの行為が要件を満たすかは、行為の種類ごとにアプリが決めています（<span class="yk">アプリの約束事</span>）。</p>
+    <p class="hint" style="margin-top:6px">公職選挙法に定義のない言葉を、最高裁判所の判例の定義で読んでいます。条文でもアプリの約束事でもない、3つ目の根拠です。プログラムでは <code>hanrei/</code> のファイルに分けて書いています。論理の木では、「◯◯は『選挙運動』に入る」の行に <span class="hr">最高裁判例</span> の印が付きます（押すと判決名と原文が出ます）。判定ページでは、選挙運動に当たる行為を選ぶと、判定のすぐ下にこの定義が出ます。判例の要件を事例ごとに確かめる入力はないので、どの行為が要件を満たすかは、行為ごとにアプリが決めています（<span class="yk">アプリの約束事</span>）。そう扱う理由は木に出します。条文がその行為を選挙運動の行為として書いていればその条、書いていなければアプリの扱いです。</p>
     <div id="hanrei-list"></div>
   </details>
 
