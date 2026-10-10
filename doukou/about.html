@@ -1,16 +1,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="道路交通法の条文をPrologのルールにして、自転車の違反・青切符か赤切符か・反則金を、でんすけが条文の原文つきで判定します。">
-<meta property="og:title" content="自転車の青切符">
-<meta property="og:description" content="道路交通法の条文をPrologのルールにして、自転車の違反・青切符か赤切符か・反則金を、でんすけが条文の原文つきで判定します。">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://densuke.yusukesakai.jp/doukou/">
-<meta property="og:image" content="https://densuke.yusukesakai.jp/doukou/og_card.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://densuke.yusukesakai.jp/doukou/og_card.png">
-<title>自転車の青切符</title>
+<meta name="description" content="「自転車の青切符」の収録範囲、ルールにした条文の地図、アプリの約束事、Prologのソース全部。">
+<title>収録範囲・仕組み｜自転車の青切符</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -231,43 +222,66 @@ pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border-le
 .backlink a{text-decoration:none;border-bottom:1px solid currentColor}
 </style>
 
-<div class="wrap">
-  <header class="mast">
-    <h1>自転車の<span class="ao">青切符</span></h1>
-    <div class="judge-plate"><span class="jp-k">判定</span><img src="densuke_icon.svg" width="64" height="64" alt="でんすけのアイコン"><span class="jp-v">でんすけ<small>秘書AI</small></span></div>
-    <p class="lead">状況を選ぶと、でんすけが条文から判定します。「？」にした欄は答えを全部探します。</p>
-    <p class="caution" role="note"><b>注意</b><span>条文をルールにして、論理的にそのまま演算した結果です。警察の取り締まりや裁判所の判断とは異なる場合があります。<a class="aboutlink" href="about.html">収録範囲・仕組み →</a></span></p>
+<div class="wrap about">
+  <header class="mast sub">
+    <p class="backlink"><a href="./" id="back">← 判定ページに戻る</a></p>
+    <h1>収録範囲・仕組み</h1>
+    <p class="lead">「自転車の<span class="ao">青切符</span>」で、どの条文をどこまでルールにしたか、アプリが決めたこと、プログラムの中身です。</p>
   </header>
 
-  <section class="ask">
-    <div class="slots">
-      <div class="slot" id="s-age"><label for="age">誰が（年齢）</label><span class="field"><select id="age"></select></span><span class="desc" id="age-desc"></span></div>
-      <div class="slot" id="s-time"><label for="time">いつ</label><span class="field"><select id="time"></select></span><span class="desc" id="time-desc"></span></div>
-      <div class="slot" id="s-place"><label for="place">どこで</label><span class="field"><select id="place"></select></span><span class="desc" id="place-desc"></span></div>
-      <div class="slot" id="s-veh"><label for="veh">何に乗って</label><span class="field"><select id="veh"></select></span><span class="desc" id="veh-desc"></span></div>
-      <div class="slot" id="s-state"><label for="state">そのとき</label><span class="field"><select id="state"></select></span><span class="desc" id="state-desc"></span></div>
-      <div class="slot act-slot" id="s-act"><label for="act">何をする<span class="hint" id="act-n"></span></label><span class="field"><select id="act"></select></span><span class="desc" id="act-desc"></span></div>
+  <div class="appendix">
+  <details class="box" id="scope-box" open>
+    <summary>収録範囲と、入っていないもの</summary>
+    <div class="scope" id="scope">
+      <p><b>収録しているのは道路交通法の一部です。</b>自転車の通行のきまりのうち、反則行為（125条1項・別表第二）になる主なもの（信号・通行区分・歩道・路側帯・自転車道・並進・踏切・横断歩道・一時停止・灯火・ブレーキ・ベル・携帯電話）と、酒気帯び運転、反則者（125条2項）、反則金（施行令45条・施行令別表第六）を入れています。</p>
+      <p>都道府県の公安委員会が定める事項（傘差し・イヤホン・二人乗りなど。71条6号・57条2項）は、京都府道路交通規則の原文を確かめられていないので入っていません（<a href="#cover-box" id="scope-link">全条文の地図</a>）。</p>
+      <p>警察の運用（例：原則は指導警告とすること）は条文ではないので、判定には入れていません。「赤切符」は、青切符（反則金の手続）の対象にならないことを指す呼び名で、法律の言葉ではありません。その後の手続（刑事手続・少年の手続など）はこのアプリに入っていません。</p>
+      <p>実際の扱いは警察・弁護士等にご確認ください。</p>
     </div>
-    <div class="want" id="want"><span class="hint">「？」に出すもの</span>
-      <span class="seg"><button type="button" data-want="違反" aria-pressed="true">違反になる組み合わせ</button><button type="button" data-want="適法" aria-pressed="false">違反にならない組み合わせ</button></span>
-    </div>
-    <div>
-      <p class="sec-h">例から選ぶ</p>
-      <div class="presets" id="presets"></div>
-    </div>
-    <div class="qline" id="qline"></div>
-  </section>
+  </details>
 
-  <section id="answer" aria-live="polite"><p class="loading">でんすけが条文のルール（Prolog・約6MB）を読み込んでいます…</p></section>
+  <details class="box" id="cover-box">
+    <summary>道路交通法のどこまでをルールにしたか（全条文の地図）</summary>
+    <p class="hint" style="margin-top:6px">道路交通法の本則の全条文を章ごとに1マスずつ並べました。<span class="cell u1"></span> はプログラムのルールの中で使っている条、<span class="cell u0"></span> は使っていない条、<span class="cell u2"></span> は「削除」された条です。マスを押すと条の名前（使っている条は原文）が出ます。施行令の条と表は、判定ページの論理の木の条のボタンから原文を開けます。</p>
+    <div id="cover"></div>
+  </details>
+
+  <details class="box" id="yaku-box">
+    <summary>アプリの約束事（道路交通法にないもの）</summary>
+    <p class="hint" style="margin-top:6px">判定のためにこのアプリが決めたことで、道路交通法の条文そのものではありません。プログラムでは <code>yakusoku/</code> のファイルに、条文から来たルール（<code>rules/</code>）とは分けて書いています。論理の木では <span class="yk">アプリの約束事</span> の印が付きます。</p>
+    <ul class="hint" style="margin:8px 0 0;padding-left:1.2em">
+      <li>年齢・いつ・どこで・何に乗って・そのとき・何をするの選択肢と、その区切り方</li>
+      <li>判定の規則：禁止の規定に当たり、そのただし書等（「この限りでない」「にかかわらず」など）に当たらなければ違反、と読むこと</li>
+      <li>「〜しなければならない」の規定を、それをしない行為の禁止として書くこと（例：52条1項の灯火をつける義務 → ライトをつけずに走ることの禁止）</li>
+      <li>条文にないまとめ方の集合（下の表）</li>
+    </ul>
+    <div class="tbl"><table id="yaku-sets"><thead><tr><th>集合</th><th>中身</th><th>なぜそうしたか</th></tr></thead><tbody></tbody></table></div>
+  </details>
+
+  <details class="box" id="src-box">
+    <summary>プログラムの中身（Prologのソース全部）</summary>
+    <p class="hint" style="margin-top:6px">判定ページで動いているPrologのプログラムそのものです。ファイルを開くと全文が出ます。</p>
+    <div id="src"></div>
+  </details>
+
+  <details class="box" id="core-box">
+    <summary>仕組みを見る（上級者向け）</summary>
+    <p class="hint" style="margin-top:6px">ルールは条文ごとに「禁止」「ただし書等（禁止を外す規定）」「罰則」「反則金の種別」を書いたPrologのファイルです。違反は「禁止の規定に当たり、そのただし書等に当たらなければ違反」という1つの規則で、青切符は「反則行為（罪が別表第二の上欄にある）をした反則者（125条2項の各号に当たらない）」で判定しています。</p>
+    <pre id="core"></pre>
+    <p class="hint" style="margin-top:10px">Prologに直接聞く（最初の30件まで）：</p>
+    <textarea id="q" spellcheck="false">judge('赤信号で止まらずに進む', ctx(A, 昼間, 車道, 普通自転車, 特になし), R), kippu('赤信号で止まらずに進む', ctx(A, 昼間, 車道, 普通自転車, 特になし), K).</textarea>
+    <button type="button" class="btn" id="run">実行</button>
+    <pre id="out"></pre>
+  </details>
+  </div>
 
   <p class="foot techline"><span>道路交通法 ／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中（約6MB）…</span></span></p>
-  <p class="foot" id="foot">e-Gov法令検索の道路交通法（昭和三十五年法律第百五号）と道路交通法施行令（昭和三十五年政令第二百七十号）の原文から、自転車の反則行為に当たる規定をルールにしたものです。法律の解釈・判例・警察の運用は含みません。</p>
+  <p class="foot">e-Gov法令検索の道路交通法（昭和三十五年法律第百五号）と道路交通法施行令（昭和三十五年政令第二百七十号）の原文から、自転車の反則行為に当たる規定をルールにしたものです。法律の解釈・判例・警察の運用は含みません。</p>
 </div>
 
 <script src="data.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
 <script>
-// ==== 共有ここから（別ページでも同じ部品を使う） ====
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const Q = "？";
@@ -319,93 +333,36 @@ function lawHTML(a){
   }).join("");
   return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
 }
-// ==== 共有ここまで ====
-const MARK = { ng: "✗", fine: "◯", blue: "青", red: "赤", ok: "", info: "・", and: "", or: "" };
-const LEGEND = `<p class="legend">読み方：下の行が、上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなく、このアプリの決め事（<a href="about.html#yaku-box">一覧</a>）。</p>`;
-function treeHTML(lines, legend = true){
-  if (!lines.length) return "";
-  // 深さつきの行の並びを入れ子にする
-  const root = [], st = [{ d: -1, c: root }];
-  for (const l of lines){
-    while (st[st.length - 1].d >= l[0]) st.pop();
-    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
-  }
-  // 子が「かつ／または」の節1つだけなら、その節を親の行に入れて1段浅くする。子が1行だけなら「かつ」の1つ分として青い線でつなぐ
-  const fold = ns => ns.map(n => {
-    if (n.c.length === 1 && ["and", "or"].includes(n.c[0].l[1]) && !["and", "or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
-    else if (["and", "or"].includes(n.l[1])) n.op = n.l[1];
-    else if (n.c.length === 1) n.op = "and";
-    n.c = fold(n.c); return n;
-  });
-  const rows = [];
-  const walk = (ns, rails, op) => ns.forEach((n, i) => {
-    const last = i === ns.length - 1;
-    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
-    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
-  });
-  walk(fold(root), [], null);
-  const conn = (c, n) => {
-    if (!c) return "";
-    const k = n.c.length, title = String(c[2]), tail = title.includes("—") ? " — " + title.split("—").pop().trim() : "";
-    const msg = !title.startsWith("次の") ? title.replace("次のどれか", `下の${k}つのどれか`).replace("次のすべて", `下の${k}つすべて`)
-      : c[1] === "and" ? `下の${k}つがすべて成り立つ必要がある` : `下の${k}つのうちどれか1つが成り立てばよい`;
-    return `<span class="conn c-${c[1]}">${esc(msg + tail)}</span>`;
-  };
-  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
-    const [d, k, t, a] = n.l;
-    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
-  }).join("") + `</div></div>`;
-}
-const ctxArgs = v => SLOTS.map(([id]) => atom(v[id])).join(", ");
-function linesOf(pred, S, v){
-  const r = once(`${pred}(${atom(S)}, ${ctxArgs(v)}, L)`);
-  return r ? r.L.map(T).map(t => t.args) : [];
-}
-let lastRows = [], lastV = null;
 
-// ---------- 行為の選択肢（全条文の地図・ソース・約束事の表・Prologに直接聞く は about.html 側） ----------
-// 行為の選択肢：場面別にまとめる（条文を知らない人が探せるように。判定ロジックは変えない）
-const ACTCAT = {}; let ARTINFO = {};
-function initActMenu(){
-  let C = []; try{ C = JSON.parse(document.getElementById("cover-data").textContent); }catch(e){}
-  C.forEach((ch, ci) => ch.a.forEach((a, ai) => { ARTINFO[a.k] = { ch: ci, cap: a.c, ord: ci * 10000 + ai }; }));
+// ---------- ここから別ページだけの処理 ----------
+// 戻り先：公開版は public/doukou/index.html なので "./"。手元で file:// から開いたときだけ doukou.html を指す
+if (location.protocol === "file:") $("back").href = "doukou.html";
+// about.html#cover-box のように来たら、その折りたたみを開く
+function openHash(){ const d = location.hash && document.getElementById(location.hash.slice(1)); if (d && d.tagName === "DETAILS") d.open = true; }
+openHash(); window.addEventListener("hashchange", openHash);
+
+const kanjiArt = k => { const [a, ...r] = String(k).split("_"); return a + "条" + r.map(x => "の" + x).join(""); };
+function renderCover(){
+  let C = []; try{ C = JSON.parse(document.getElementById("cover-data").textContent); }catch(e){ return; }
+  const live = C.flatMap(c => c.a).filter(a => a.u !== 2), used = live.filter(a => a.u === 1).length;
+  $("cover").innerHTML = `<p class="cover-total">使っている条：${used} / ${live.length} 条（削除された条を除く）</p>` + C.map(c => {
+    const lv = c.a.filter(a => a.u !== 2), u = lv.filter(a => a.u === 1).length;
+    return `<div class="cover-ch"><h4>${esc(c.t)}<span>${u} / ${lv.length} 条</span></h4><div class="cells">${c.a.map(a => `<button type="button" class="cell u${a.u}" data-cover="${esc(a.k)}" title="${esc(a.t + a.c)}" aria-label="${esc(a.t + a.c)}"></button>`).join("")}</div></div>`;
+  }).join("") + `<div id="cover-pick"></div>`;
+  window.__COVER = Object.fromEntries(C.flatMap(c => c.a.map(a => [a.k, a])));
 }
-const SCENE_ORDER = ["信号・交差点・踏切", "走る場所（左側・右側）", "スマホ・ライト・ブレーキ", "歩行者のそば", "並んで走る", "ベル"];
-const SCENE_MAP = {
-  "赤信号で止まらずに進む": "信号・交差点・踏切",
-  "「止まれ」の標識がある所で一時停止しない": "信号・交差点・踏切",
-  "遮断機が下りている踏切に入る": "信号・交差点・踏切",
-  "道路の左側を走る": "走る場所（左側・右側）",
-  "道路の右側を走る": "走る場所（左側・右側）",
-  "道路の右側にはみ出して走る（一方通行・左側が狭い・工事など）": "走る場所（左側・右側）",
-  "スマートフォンを手に持って通話・画面を見ながら走る": "スマホ・ライト・ブレーキ",
-  "ライトをつけずに走る": "スマホ・ライト・ブレーキ",
-  "ブレーキが基準に合わない自転車に乗る": "スマホ・ライト・ブレーキ",
-  "横断歩道を渡ろうとする歩行者がいるのに一時停止しない": "歩行者のそば",
-  "徐行しないで走る": "歩行者のそば",
-  "歩行者の通行を妨げるのに止まらずに進む": "歩行者のそば",
-  "ほかの自転車と2台で並んで走る": "並んで走る",
-  "ほかの自転車と3台以上で並んで走る": "並んで走る",
-  "ベルを鳴らす（危険を防ぐためではない）": "ベル",
-  "ベルを鳴らす（危険を防ぐためやむを得ず）": "ベル",
-};
-function renderActs(){
-  const sel = $("act"), cur = sel.value || Q;
-  const opt = (v, l, t) => `<option value="${esc(v)}"${t ? ` title="${esc(t)}"` : ""}>${esc(l)}</option>`;
-  const groups = new Map(SCENE_ORDER.map(s => [s, []]));
-  const other = [];
-  for (const [s, d] of acts){
-    const scene = SCENE_MAP[actLabel(s)];
-    if (scene && groups.has(scene)) groups.get(scene).push([s, d]);
-    else other.push([s, d]);
-  }
-  let html = opt(Q, "？（何なら）");
-  for (const [scene, list] of groups) if (list.length) html += `<optgroup label="${esc(scene)}">` + list.map(([s, d]) => opt(s, actLabel(s), d)).join("") + `</optgroup>`;
-  if (other.length) html += `<optgroup label="その他">` + other.map(([s, d]) => opt(s, actLabel(s), d)).join("") + `</optgroup>`;
-  sel.innerHTML = html;
-  sel.value = [...sel.options].some(o => o.value === cur) ? cur : Q;
-  $("act-n").textContent = `${acts.length} 件`;
+function renderYakusoku(){
+  const L = once("yakusoku_sets(L)").L.map(T).map(t => t.args);
+  $("yaku-sets").querySelector("tbody").innerHTML = L.map(([n, w, es]) => `<tr><td>${esc(n)}</td><td style="white-space:normal">${esc(es.join("、"))}</td><td style="white-space:normal">${esc(w)}</td></tr>`).join("");
 }
+function renderSrc(){
+  const fs = [...document.querySelectorAll("script[type='text/prolog']")];
+  $("src").innerHTML = fs.map((f, i) => `<details class="srcfile" data-src="${i}"><summary>${esc(f.dataset.name.replace("_", "/"))}（${f.textContent.split("\n").length} 行）</summary><pre></pre></details>`).join("");
+  $("src").addEventListener("toggle", e => { const d = e.target; if (d.open && d.dataset.src){ const pre = d.querySelector("pre"); if (!pre.textContent) pre.textContent = fs[+d.dataset.src].textContent; } }, true);
+}
+// 地図・ソース・仕組みの式は Prolog なしで出せるので、読み込みを待たずに出す（約束事の表と「直接聞く」だけ Prolog が要る）
+renderCover(); renderSrc();
+$("core").textContent = `violation(Act, C, Art, Why) :-\n    prohibited(Act, C, Art, Why),\n    \\+ excepted(Act, C, Art, _, _).\n\nhansoku_koui(Act, C, Art, Pen) :-\n    violation(Act, C, Art, _), 罰則(Art, C, Pen, _), in_group(Pen, 別表第二の上欄の罪).`;
 
 async function boot(){
   try{
@@ -413,135 +370,48 @@ async function boot(){
     const files = [...document.querySelectorAll("script[type='text/prolog']")];
     for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
     for (const f of files) once(`consult('/${f.dataset.name}')`);
-    const need = ["judge/3", "kippu/3", "impossible/4", "explain/7", "explain_kippu/7", "judge_row/10"].filter(p => !once(`current_predicate(${p})`));
-    if (need.length) throw new Error(`Prologの読み込みが不完全です（${need.join("・")} がありません）。${errBuf.slice(-3).join(" ")}`);
-    for (const [id, k] of SLOTS) choices[id] = once(`choice_list(${atom(k)}, L)`).L.map(T).map(t => t.args);
-    acts = once("act_list(L)").L.map(T).map(t => t.args);
-    const nRules = once("aggregate_all(count, prohibited(_,_,_,_), N)").N, nEx = once("aggregate_all(count, excepted(_,_,_,_,_), N)").N;
+    if (!once("current_predicate(yakusoku_sets/1)")) throw new Error(`Prologの読み込みが不完全です（yakusoku_sets/1 がありません）。${errBuf.slice(-3).join(" ")}`);
     const v = once("current_prolog_flag(version, V)").V;
     $("status").classList.add("ready");
-    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中 ・ 行為 ${acts.length} 種 ・ 禁止 ${nRules} 件 ・ ただし書等 ${nEx} 件`;
-    const opt = (v, l, t) => `<option value="${esc(v)}"${t ? ` title="${esc(t)}"` : ""}>${esc(l)}</option>`;
-    const qlabel = { age: "？（誰なら）", time: "？（いつなら）", place: "？（どこなら）", veh: "？（何なら）", state: "？（どんなときなら）" };
-    // 枠に出すのは値だけ（説明つきだと枠の幅で切れる）。説明は title と、枠の下の .desc（ask() で更新）に出す
-    for (const [id] of SLOTS) $(id).innerHTML = opt(Q, qlabel[id]) + choices[id].map(([a, d]) => opt(a, a, d)).join("");
-    once("act_cats(L)").L.map(T).forEach(t => { ACTCAT[t.args[0]] = t.args[1]; });
-    initActMenu(); renderActs();
-    renderPresets();
-    set(presetList()[0][1], "違反");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    renderYakusoku();
   } catch(e){
     $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
-    $("answer").innerHTML = `<p class="loading err">エラー：${esc(e.message)}</p>`;
   }
 }
 
-function set(v, w){
-  for (const k of [...SLOTS.map(([id]) => id), "act"]) if (v[k] !== undefined){ const sel = $(k); sel.value = [...sel.options].some(o => o.value === v[k]) ? v[k] : Q; }
-  if (w) want = w;
-  limit = 60; ask();
-}
-
-const BASE = { age: "16歳以上70歳未満", time: "昼間", place: "車道", veh: "普通自転車", state: "特になし" };
-function presetList(){
-  const findAct = s => (acts.find(([a]) => actLabel(a) === s) || acts.find(([a]) => actLabel(a).includes(s)) || [Q])[0];
-  return [
-    ["16歳がライトをつけずに夜走ったら？", { ...BASE, time: "夜間", act: findAct("ライトをつけずに走る") }],
-    ["15歳なら？（16歳未満）", { ...BASE, age: "14歳以上16歳未満", time: "夜間", act: findAct("ライトをつけずに走る") }],
-    ["スマホを見ながら走ると反則金はいくら？", { ...BASE, act: findAct("スマートフォン") }],
-    ["歩道を走っていいのは誰？", { ...BASE, age: Q, place: "歩道", act: findAct("道路の左側を走る") }, "適法"],
-    ["お酒を飲んで走ったら？", { ...BASE, time: "夜間", state: Q, act: findAct("道路の左側を走る") }, "違反"],
-    ["昼の車道で、してはいけないことは？", { ...BASE, act: Q }, "違反"],
-    ["赤信号を無視して事故を起こしたら？", { ...BASE, state: "この行為で交通事故を起こした", act: findAct("赤信号") }],
-  ];
-}
-function renderPresets(){
-  $("presets").innerHTML = presetList().map(([l], i) => `<button type="button" data-preset="${i}">${esc(l)}</button>`).join("");
-}
-
-function ticketHTML(kp){
-  if (!kp) return "";
-  const c = kp.startsWith("青") ? "blue" : kp === "赤" ? "red" : "none";
-  return `<span class="kp ${c}">${esc(kp === "赤" ? "赤切符" : kp.startsWith("青") ? kp.replace("青 ", "青切符 ") : kp)}</span>`;
-}
-
-function ask(){
-  const v = Object.fromEntries([...SLOTS.map(([id]) => [id, $(id).value]), ["act", $("act").value]]);
-  for (const id of Object.keys(v)){
-    $("s-" + id).classList.toggle("q", v[id] === Q);
-    const o = $(id).options[$(id).selectedIndex];
-    $(id + "-desc").textContent = v[id] === Q ? "「？」の欄は、当てはまるものを全部探します" : (o && o.title) || "";
-  }
-  const holes = Object.keys(v).filter(k => v[k] === Q);
-  $("want").hidden = holes.length === 0;
-  for (const b of $("want").querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.want === want));
-  const P = Object.fromEntries(SLOTS.map(([id]) => [id, v[id] === Q ? VARS[id] : atom(v[id])]));
-  const actP = v.act === Q ? "Act" : atom(v.act);
-  const shown = id => v[id] === Q ? VARS[id] : v[id];
-  $("qline").textContent = `?- judge(${v.act === Q ? "Act" : actLabel(v.act)}, ctx(${SLOTS.map(([id]) => shown(id)).join(", ")}), R), kippu(…, K).`;
-  if (!pl) return;
-  const goal = `judge_row(${actP}, ${SLOTS.map(([id]) => P[id]).join(", ")}, K, Art, Why, Kp)` + (holes.length ? `, K == ${atom(want)}` : "");
+function runQuery(){
+  const q = $("q").value.trim().replace(/\.\s*$/, "");
   try{
-    if (!holes.length){
-      const imp = once(`term_to_atom(Act__, ${atom(v.act)}), impossible(Act__, ctx(${ctxArgs(v)}), W, Arts)`);
-      if (imp){
-        const arts = imp.Arts || [];
-        $("answer").innerHTML = `<div class="verdict"><div class="vhead"><div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div><div class="big">この組み合わせはありません <span class="yk">アプリの約束事</span></div></div>
-          <p class="sec">なぜそうなるか（論理の木）</p>${treeHTML(linesOf("explain", v.act, v))}
-          ${arts.length ? `<p class="sec">もとにした条文</p>` + arts.map(lawHTML).join("") : ""}<p class="disclaimer-inline">この判定は、条文をルールにして論理的にそのまま演算した結果です。警察の取り締まりや裁判所の判断とは異なる場合があります。実際の扱いは警察・弁護士等にご確認ください。</p></div>`;
-        return;
+    const it = pl.prolog.query(`catch((${q}), Err__, true)`), out = [];
+    for (let i = 0; i < 30; i++){
+      const r = it.next(), v = r.value;
+      if (v && v.$tag === "bindings"){
+        if (v.Err__ && v.Err__.$t !== "v"){ out.push("エラー"); break; }
+        out.push(Object.entries(v).filter(([k]) => !["$tag","success","Err__"].includes(k)).map(([k, x]) => `${k} = ${fmt(x)}`).join(", ") || "true");
       }
-      const { out } = all(goal, 10);
-      const ng = out.filter(b => b.K === "違反");
-      const kp = out.length ? out[0].Kp : "";
-      const lines = explainLines(v), klines = linesOf("explain_kippu", v.act, v);
-      const arts = [...new Set([...lines, ...klines].filter(l => l[0] <= 1 && l[3] && !String(l[3]).startsWith("@")).map(l => l[3]))];
-      const pens = once(`penalty_rows(${atom(v.act)}, ${ctxArgs(v)}, L)`).L.map(T).map(t => t.args).map(x => [T(x[0]).args?.[0] ?? x[0], T(x[0]).args?.[1], x[1]]);
-      $("answer").innerHTML = `<div class="verdict ${ng.length ? "ng" : "ok"}"><div class="vhead"><div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div><div class="big">${ng.length ? "違反になります" : "違反になる規定は見つかりません"}${ng.length ? ticketHTML(kp).replace('class="kp', 'class="ticket') : ""}</div></div>
-        <p class="sec">違反になるか（論理の木）</p>${treeHTML(lines)}
-        ${klines.length ? `<p class="sec">青切符か赤切符か（論理の木）</p>${treeHTML(klines, false)}` : ""}
-        ${pens.length ? `<p class="sec">罰則</p>` + pens.map(([a, pa, tx]) => `<p class="pen">${esc(a)} の違反 → <button type="button" class="law" data-art="${esc(pa)}">${esc(pa)}</button> ${esc(tx)}</p>`).join("") : ""}
-        ${arts.length ? `<p class="sec">根拠条文</p>` + arts.map(lawHTML).join("") : ""}
-        ${ng.length ? "" : `<p class="hint">ここにあるルールの範囲での判定です。公安委員会の定めなど、ここにない規定で違反になる場合があります。</p>`}<p class="disclaimer-inline">この判定は、条文をルールにして論理的にそのまま演算した結果です。警察の取り締まりや裁判所の判断とは異なる場合があります。実際の扱いは警察・弁護士等にご確認ください。</p></div>`;
-      return;
+      if (r.done) break;
     }
-    const { out, more } = all(goal, limit);
-    const seen = new Set(), rows = [];
-    for (const b of out){
-      const key = [b.Act, b.A, b.T, b.P, b.V, b.S, b.Art].join("|"); if (seen.has(key)) continue; seen.add(key); rows.push(b);
-    }
-    lastRows = rows; lastV = v;
-    const hole = h => holes.includes(h);
-    const label = b => [hole("act") ? `<span class="v">${esc(actLabel(b.Act))}</span>` : "", ...SLOTS.filter(([id]) => hole(id)).map(([id]) => `<span class="v">${esc(b[VARS[id]])}</span>`)].filter(Boolean).join(" ・ ");
-    $("answer").innerHTML = `<div class="results"><div class="vhead"><div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div><p class="count">${want === "違反" ? "違反になる" : "違反にならない"}組み合わせ：${rows.length}件${more ? "以上" : "（全部）"}</p></div>
-      <ul class="rows">${rows.map((b, i) => `<li><span class="k ${b.K === "違反" ? "ng" : "ok"}">${b.K === "違反" ? "違反" : "可"}</span><span class="what">${label(b)}${b.K === "違反" ? ticketHTML(b.Kp) : ""}<button type="button" class="why-btn" data-row="${i}">根拠を見る</button></span><span class="why">${b.Art ? `<button type="button" class="law" data-art="${esc(b.Art)}">${esc(b.Art)}</button> ` : ""}${esc(b.Why)}</span></li>`).join("") || `<li><span class="k ok">—</span><span class="what">該当なし</span><span class="why"></span></li>`}</ul>
-      ${more ? `<button type="button" class="more" id="more">さらに表示</button>` : ""}<p class="disclaimer-inline">この判定は、条文をルールにして論理的にそのまま演算した結果です。警察の取り締まりや裁判所の判断とは異なる場合があります。実際の扱いは警察・弁護士等にご確認ください。</p></div>`;
-  } catch(e){ $("answer").innerHTML = `<p class="hint">エラー：${esc(e.message)}</p>`; }
+    $("out").textContent = out.join("\n") || (errBuf.length ? errBuf.join("\n") : "false.");
+  } catch(e){ $("out").textContent = "エラー：" + e.message; }
 }
-const explainLines = v => linesOf("explain", v.act, v);
+function fmt(v){
+  if (Array.isArray(v)) return "[" + v.map(fmt).join(", ") + "]";
+  const t = T(v); if (t && t.f) return `${t.f}(${t.args.map(fmt).join(", ")})`;
+  if (v && v.$t === "v") return "_";
+  return String(v);
+}
 
-document.addEventListener("change", e => { if ([...SLOTS.map(([id]) => id), "act"].includes(e.target.id)){ limit = 60; ask(); } });
 document.addEventListener("click", e => {
-  const b = e.target.closest("button"); if (!b || !pl) return;
-  if (b.dataset.preset){ const p = presetList()[+b.dataset.preset]; set(p[1], p[2]); }
-  else if (b.dataset.want){ want = b.dataset.want; limit = 60; ask(); }
-  else if (b.id === "more"){ limit += 120; ask(); }
-  else if (b.dataset.art){   // 条文の原文を開く・閉じる
-    const host = b.closest(".tr") || b.closest("li") || b.closest("p") || b.parentElement, nx = host.nextElementSibling;
-    if (nx && nx.classList.contains("lawtext") && nx.dataset.for === b.dataset.art) nx.remove();
-    else { host.insertAdjacentHTML("afterend", lawHTML(b.dataset.art)); host.nextElementSibling.dataset.for = b.dataset.art; }
-  }
-  else if (b.dataset.row){   // 一覧の1行の根拠の木
-    const li = b.closest("li"), old = li.querySelector(".tree-box");
-    if (old){ old.remove(); b.textContent = "根拠を見る"; return; }
-    const r = lastRows[+b.dataset.row], v = { ...lastV };
-    if (v.act === Q) v.act = r.Act;
-    for (const [id] of SLOTS) if (v[id] === Q) v[id] = r[VARS[id]];
-    const kl = linesOf("explain_kippu", v.act, v);
-    li.insertAdjacentHTML("beforeend", `<div class="tree-box">${treeHTML(explainLines(v))}${kl.length ? treeHTML(kl, false) : ""}</div>`);
-    b.textContent = "閉じる";
+  if (e.target.id === "scope-link"){ $("cover-box").open = true; }
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.id === "run"){ if (pl) runQuery(); else $("out").textContent = "Prologを読み込み中です。少し待ってからもう一度押してください。"; }
+  else if (b.dataset.cover){
+    const a = window.__COVER[b.dataset.cover], art = kanjiArt(a.k);
+    $("cover-pick").innerHTML = a.u === 1 ? lawHTML(art) : `<div class="lawtext"><h4>${esc(a.t + a.c)}</h4><p class="hint">${a.u === 2 ? "この条は削除されています。" : "この条はルールにしていません。"}</p></div>`;
   }
 });
 
 if (typeof SWIPL === "function") boot();
-else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。ページを再読み込みしてください。"; $("answer").innerHTML = `<p class="loading err">Prolog（swipl-wasm）を読み込めませんでした。ページを再読み込みしてください。</p>`; }
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。ページを再読み込みしてください。"; }
 </script>
