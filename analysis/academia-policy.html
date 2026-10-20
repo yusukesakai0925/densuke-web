@@ -3,349 +3,707 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>アカデミア向け政策課題 整理 v2</title>
+<title>大学の研究を支える仕組みの3つの課題と施策</title>
 <style>
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #1a1a2e; color: #eee; }
+body { font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Noto Sans JP', sans-serif; background: #1a1a2e; color: #eee; }
 .slide {
   min-height: 100vh; display: flex; flex-direction: column;
   justify-content: center; padding: 60px 80px 50px;
   border-bottom: 2px solid #16213e;
   position: relative;
 }
-.slide-num {
-  position: absolute; top: 20px; right: 30px;
-  font-size: 12px; color: #555; letter-spacing: 1px;
-}
-.tag {
-  font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
-  color: #4cc9f0; margin-bottom: 16px;
-}
-h1 { font-size: 42px; font-weight: 700; line-height: 1.2; margin-bottom: 20px; color: #fff; }
-h2 { font-size: 28px; font-weight: 600; margin-bottom: 24px; color: #f0f0f0; }
-.subtitle { font-size: 18px; color: #888; margin-bottom: 10px; }
-ul { list-style: none; }
-ul li { padding: 10px 0; border-bottom: 1px solid #2a2a4a; font-size: 16px; line-height: 1.6; }
-ul li:last-child { border-bottom: none; }
-ul li::before { content: "▶ "; color: #4cc9f0; font-size: 12px; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 10px; }
-.card {
-  background: #16213e; border: 1px solid #2a2a5e;
-  border-radius: 12px; padding: 20px;
-}
-.card h3 { font-size: 16px; color: #4cc9f0; margin-bottom: 10px; }
-.card p  { font-size: 14px; color: #aaa; line-height: 1.6; }
-.text-body { font-size: 16px; line-height: 1.8; color: #ccc; white-space: pre-wrap; }
-.highlight { color: #4cc9f0; font-weight: 700; }
-.slide-cover { background: linear-gradient(135deg, #16213e 0%, #0f3460 100%); }
-.slide-summary { background: #0d0d1f; }
-.disclaimer {
-  margin-top: 28px; padding-top: 10px;
-  border-top: 1px solid rgba(255,100,100,0.25);
-  color: #ff9999; font-size: 11px; letter-spacing: 1px;
-}
-.pcard {
-  background: #16213e; border: 1px solid #2a2a5e;
-  border-radius: 10px; padding: 14px 18px; margin-bottom: 12px;
-}
-.pcard h4 { font-size: 15px; color: #fff; margin: 6px 0 7px; line-height: 1.4; }
-.pcard p  { font-size: 13.5px; color: #bbb; line-height: 1.65; }
-.ibadge {
-  display: inline-block; font-size: 11px; font-weight: 700;
-  padding: 2px 9px; border-radius: 4px; letter-spacing: 1px;
-}
-.b1 { background: rgba(76,201,240,.14);  color: #4cc9f0; border: 1px solid rgba(76,201,240,.45); }
-.b2 { background: rgba(240,166,76,.14);  color: #f0a64c; border: 1px solid rgba(240,166,76,.45); }
-.b3 { background: rgba(196,108,240,.14); color: #c46cf0; border: 1px solid rgba(196,108,240,.45); }
-.b4 { background: rgba(120,200,140,.14); color: #78c88c; border: 1px solid rgba(120,200,140,.45); }
-.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; font-size: 12px; }
+.slide > *:not(.slide-num) { max-width: 980px; width: 100%; }
+.slide-num { position: absolute; top: 20px; right: 30px; font-size: 12px; color: #555; letter-spacing: 1px; }
 .slide::before {
   content: "DISCUSSION PAPER";
   position: absolute; top: 20px; left: 30px;
   font-size: 10px; font-weight: 700; letter-spacing: 2px;
   color: #ffd166; border: 1px solid rgba(255,209,102,.5);
-  background: rgba(255,209,102,.08);
-  padding: 3px 10px; border-radius: 4px;
+  background: rgba(255,209,102,.08); padding: 3px 10px; border-radius: 4px;
+}
+.tag { font-size: 13px; letter-spacing: 2px; color: #4cc9f0; margin-bottom: 12px; }
+h1 { font-size: 42px; font-weight: 700; line-height: 1.25; margin-bottom: 20px; color: #fff; }
+h2 { font-size: 23px; font-weight: 700; line-height: 1.5; margin-bottom: 22px; color: #fff; }
+.subtitle { font-size: 18px; color: #888; margin-bottom: 10px; }
+.slide-cover { background: linear-gradient(135deg, #16213e 0%, #0f3460 100%); }
+.slide-key { background: #0d0d1f; }
+.disclaimer { margin-top: 28px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.15); color: #999; font-size: 12px; letter-spacing: 1px; }
+.src { margin-top: 20px; padding-top: 8px; border-top: 1px solid #2a2a4a; font-size: 11.5px; color: #777; line-height: 1.6; }
+.note { font-size: 13px; color: #999; line-height: 1.6; margin-top: 10px; }
+.note b { color: #ddd; }
+
+/* 課題ごとの色 */
+.c1 { --c: #4cc9f0; --bg: rgba(76,201,240,.12); }
+.c2 { --c: #f0a64c; --bg: rgba(240,166,76,.12); }
+.c3 { --c: #c46cf0; --bg: rgba(196,108,240,.12); }
+.c4 { --c: #78c88c; --bg: rgba(120,200,140,.12); }
+.cm { --c: #ffd166; --bg: rgba(255,209,102,.12); }
+.ibadge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 4px; letter-spacing: 1px; color: var(--c); background: var(--bg); border: 1px solid var(--c); white-space: nowrap; }
+.ibadge.solid { background: var(--c); color: #1a1a2e; }
+
+/* 2枚目：課題3列 */
+.icols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.icol { background: #16213e; border-top: 4px solid var(--c); border-radius: 10px; padding: 14px 16px 16px; display: flex; flex-direction: column; }
+.icol .ttl { font-size: 15px; font-weight: 700; color: var(--c); margin-bottom: 6px; }
+.icol .stat { font-size: 34px; font-weight: 800; color: #fff; line-height: 1.15; }
+.icol .stat small { font-size: 15px; color: #aaa; margin-left: 3px; }
+.icol .scap { font-size: 12px; color: #999; margin-bottom: 10px; }
+.icol .prob { font-size: 13.5px; color: #ccc; line-height: 1.6; flex: 1; }
+.tri { width: 34px; height: 12px; margin: 10px auto; background: var(--c, #4cc9f0); clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.icol .sol { background: var(--bg); border: 1px solid var(--c); border-radius: 8px; padding: 10px 12px; font-size: 13.5px; line-height: 1.6; color: #fff; }
+.icol .sol .sl { display: block; font-size: 11px; color: var(--c); font-weight: 700; letter-spacing: 1px; margin-bottom: 2px; }
+
+/* 3枚目：因果の図 */
+.cause { max-width: 760px; }
+.cbox { background: #16213e; border: 1px solid #2a2a5e; border-left: 5px solid var(--c, #888); border-radius: 8px; padding: 11px 14px; font-size: 14.5px; line-height: 1.55; color: #ddd; }
+.cbox b { color: #fff; }
+.cbox .num { font-size: 22px; color: #ff7b7b; margin: 0 4px; }
+.conn { display: flex; align-items: center; gap: 12px; padding-left: 40px; }
+.conn .tri { margin: 6px 0; flex: none; }
+.conn .clab { font-size: 12.5px; color: #999; }
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* 矢羽根 */
+.chevs { display: flex; gap: 4px; margin: 4px 0 18px; }
+.chev { flex: 1; background: #0f3460; padding: 12px 28px 12px 30px; font-size: 14px; line-height: 1.5; color: #ddd;
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%, 18px 50%); }
+.chev:first-child { clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%); padding-left: 16px; }
+.chev b { display: block; color: #fff; font-size: 15px; }
+.chev .n { color: #4cc9f0; font-weight: 800; margin-right: 4px; }
+
+/* お金の流れ */
+.mflow { display: grid; grid-template-columns: 1fr 1.1fr 1fr 1.1fr 1fr; align-items: center; gap: 0; max-width: 820px; }
+.node { background: #16213e; border: 2px solid #4a4a7e; border-radius: 10px; padding: 16px 10px; text-align: center; font-size: 16px; font-weight: 700; color: #fff; }
+.node small { display: block; font-size: 12px; color: #999; font-weight: 400; margin-top: 3px; }
+.node.pub { border-color: #ff7b7b; }
+.arr { text-align: center; padding: 0 6px; }
+.arr b { display: block; font-size: 15px; color: #ffd166; }
+.arr small { display: block; font-size: 11.5px; color: #999; }
+.arr .line { display: block; height: 3px; background: #ffd166; margin: 6px 0; position: relative; }
+.arr.r .line::after, .arr.l .line::after { content: ""; position: absolute; top: -6px; border: 7.5px solid transparent; }
+.arr.r .line::after { right: -4px; border-left: 11px solid #ffd166; border-right: 0; }
+.arr.l .line::after { left: -4px; border-right: 11px solid #ffd166; border-left: 0; }
+
+/* 用語カード */
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.card { background: #16213e; border: 1px solid #2a2a5e; border-top: 3px solid var(--c, #2a2a5e); border-radius: 10px; padding: 12px 15px; }
+.card h3 { font-size: 15px; color: var(--c, #4cc9f0); margin-bottom: 5px; }
+.card p  { font-size: 13px; color: #bbb; line-height: 1.6; }
+
+/* 帯グラフ・棒 */
+.stack { display: flex; height: 54px; border-radius: 8px; overflow: hidden; margin: 8px 0 6px; max-width: 820px; }
+.stack div { display: flex; flex-direction: column; justify-content: center; padding: 0 12px; font-size: 13px; color: #1a1a2e; font-weight: 700; line-height: 1.25; }
+.stack div b { font-size: 20px; }
+.stack-leg { display: flex; justify-content: space-between; max-width: 820px; font-size: 12.5px; color: #999; }
+.bignum { font-size: 60px; font-weight: 800; color: #fff; line-height: 1.05; }
+.bignum small { font-size: 20px; color: #aaa; margin-left: 4px; font-weight: 600; }
+.bars { margin: 8px 0 12px; max-width: 680px; }
+.bars .cap { font-size: 13px; color: #999; margin-bottom: 4px; }
+.bar-row { display: flex; align-items: center; gap: 10px; margin: 7px 0; font-size: 14px; }
+.bar-row .lab { width: 110px; flex: none; color: #ccc; }
+.bar-row .track { flex: 1; background: #16213e; border-radius: 4px; height: 22px; position: relative; }
+.bar-row .fill { background: var(--c, #4cc9f0); height: 100%; border-radius: 4px; display: block; }
+.bar-row .fill.dim { opacity: .45; }
+.bar-row .val { width: 84px; flex: none; text-align: right; color: #fff; font-weight: 700; }
+.bar-row .mark { position: absolute; top: -4px; bottom: -4px; border-left: 2px dashed #ff7b7b; }
+.bar-row.hl .lab, .bar-row.hl .val { color: #ff7b7b; }
+.bar-row.hl .fill { background: #ff7b7b; }
+.marklab { font-size: 12px; color: #ff7b7b; margin: 2px 0 0 120px; }
+
+.meter { max-width: 680px; margin-top: 14px; }
+.meter .mcap { font-size: 13px; color: #999; margin-bottom: 4px; }
+.meter .mtrack { height: 26px; background: #16213e; border: 1px solid #2a2a5e; border-radius: 6px; position: relative; overflow: hidden; }
+.meter .mfill { height: 100%; background: var(--c, #4cc9f0); }
+.meter .mtxt { position: absolute; left: 10px; top: 0; line-height: 26px; font-size: 13px; font-weight: 700; color: #fff; text-shadow: 0 0 3px #000, 0 0 3px #000; }
+.meter .mgoal { position: absolute; right: 10px; top: 0; line-height: 26px; font-size: 12.5px; color: #ffd166; font-weight: 700; }
+
+.cols2 { display: grid; grid-template-columns: 1.15fr 1fr; gap: 24px; align-items: start; }
+.tiles { display: grid; gap: 10px; }
+.tile { background: #16213e; border: 1px solid #2a2a5e; border-radius: 10px; padding: 12px 15px; }
+.tile .tn { font-size: 32px; font-weight: 800; color: #fff; line-height: 1.1; }
+.tile .tn small { font-size: 14px; color: #aaa; margin-left: 3px; }
+.tile .tc { font-size: 12.5px; color: #aaa; line-height: 1.55; margin-top: 3px; }
+
+/* 評価のしくみ */
+.judge { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+.jcell { background: #16213e; border: 1px solid #2a2a5e; border-radius: 10px; padding: 14px 12px; text-align: center; }
+.jcell .jt { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+.jcell .jv { display: inline-block; font-size: 12.5px; font-weight: 700; padding: 3px 10px; border-radius: 12px; background: rgba(240,166,76,.18); color: #f0a64c; border: 1px solid #f0a64c; }
+.jcell .jd { font-size: 12px; color: #999; margin-top: 8px; line-height: 1.5; }
+.jcell.off { border-style: dashed; }
+.jcell.off .jv { background: transparent; color: #888; border-color: #666; }
+.loops { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.loop { border-radius: 10px; padding: 12px 14px; font-size: 13.5px; line-height: 1.7; }
+.loop.up { background: rgba(240,166,76,.10); border: 1px solid rgba(240,166,76,.5); }
+.loop.down { background: rgba(255,123,123,.08); border: 1px solid rgba(255,123,123,.45); }
+.loop .lt { font-weight: 700; color: #fff; margin-bottom: 4px; }
+.loop .st { color: #ccc; }
+.loop .st i { font-style: normal; color: #888; margin: 0 4px; }
+
+/* 解決策のカード */
+.ba { display: grid; grid-template-columns: 1fr 40px 1fr; align-items: stretch; gap: 8px; margin-bottom: 14px; }
+.panel { background: #16213e; border: 1px solid #2a2a5e; border-radius: 10px; padding: 12px 14px; }
+.panel.after { border: 2px solid var(--c); background: var(--bg); }
+.panel .ph { font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #999; margin-bottom: 8px; }
+.panel.after .ph { color: var(--c); }
+.mini { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.mini .mn { width: 100%; background: #1a1a2e; border: 1px solid #4a4a7e; border-radius: 6px; padding: 7px 8px; text-align: center; font-size: 13.5px; color: #fff; font-weight: 700; }
+.mini .mn small { display: block; font-size: 11.5px; font-weight: 400; color: #aaa; }
+.mini .mn.hl { border-color: var(--c); color: var(--c); }
+.mini .ma { font-size: 12px; color: #ffd166; padding: 3px 0; text-align: center; }
+.mini .ma.bad { color: #ff7b7b; }
+.ba-arrow { align-self: center; height: 44px; background: var(--c); clip-path: polygon(0 20%, 55% 20%, 55% 0, 100% 50%, 55% 100%, 55% 80%, 0 80%); }
+.w5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.w5 > div { background: #16213e; border: 1px solid #2a2a5e; border-radius: 8px; padding: 10px 11px; font-size: 12.5px; line-height: 1.6; color: #ccc; }
+.w5 > div .wl { display: block; font-size: 11.5px; font-weight: 700; color: var(--c); letter-spacing: 1px; margin-bottom: 3px; }
+.w5 > div.goal { border-color: #ffd166; background: rgba(255,209,102,.07); }
+.w5 > div.goal .wl { color: #ffd166; }
+.prec { margin-top: 12px; font-size: 13px; color: #aaa; line-height: 1.6; padding-left: 10px; border-left: 3px solid #555; }
+.prec b { color: #ccc; }
+
+/* 時間の流れ */
+.steps { display: flex; gap: 0; margin-bottom: 14px; }
+.steps .sp { flex: 1; position: relative; padding: 22px 8px 0; text-align: center; font-size: 12.5px; color: #ccc; line-height: 1.5; }
+.steps .sp::before { content: ""; position: absolute; top: 7px; left: 0; right: 0; height: 2px; background: var(--c); }
+.steps .sp:first-child::before { left: 50%; }
+.steps .sp:last-child::before { right: 50%; }
+.steps .sp::after { content: ""; position: absolute; top: 1px; left: 50%; margin-left: -7px; width: 14px; height: 14px; border-radius: 50%; background: var(--c); }
+.steps .sp b { display: block; color: var(--c); font-size: 12.5px; letter-spacing: 1px; }
+.steps .sp.ng::after { background: #ff7b7b; }
+.steps .sp.ng b { color: #ff7b7b; }
+
+/* 運営の仕組みの年表 */
+.ytl { position: relative; height: 100px; margin: 10px 10px 8px; }
+.ytl .axis { position: absolute; left: 0; right: 0; top: 40px; height: 3px; background: #444; }
+.ytl .pt { position: absolute; top: 33px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: #c46cf0; }
+.ytl .pt.ng { background: #ff7b7b; }
+.ytl .yl { position: absolute; font-size: 12.5px; color: #c46cf0; font-weight: 700; transform: translateX(-50%); white-space: nowrap; }
+.ytl .yl.top { top: 6px; }
+.ytl .yl.bot { top: 58px; }
+.ytl .yl.ng { color: #ff7b7b; }
+.ytl .yr { position: absolute; top: 58px; font-size: 11px; color: #777; transform: translateX(-50%); }
+.ev { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.ev > div { background: #16213e; border: 1px solid #2a2a5e; border-top: 3px solid #c46cf0; border-radius: 8px; padding: 10px 12px; font-size: 13px; line-height: 1.6; color: #ccc; }
+.ev > div b { color: #fff; }
+.ev .when { display: block; font-size: 12px; color: #c46cf0; font-weight: 700; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; align-items: center; font-size: 12.5px; color: #999; }
+.chips span.ch { background: rgba(196,108,240,.14); border: 1px solid rgba(196,108,240,.5); color: #ddd; border-radius: 12px; padding: 2px 10px; }
+.nocheck { margin-top: 12px; background: rgba(255,123,123,.08); border: 1px solid rgba(255,123,123,.45); border-radius: 8px; padding: 10px 14px; font-size: 14px; color: #ddd; line-height: 1.6; }
+.nocheck b { color: #ff7b7b; }
+
+/* 研究時間 */
+.pair { max-width: 520px; }
+.pair .prow { display: grid; grid-template-columns: 90px 1fr; gap: 8px; align-items: center; margin: 6px 0; font-size: 13px; color: #ccc; }
+.pair .pb { display: flex; flex-direction: column; gap: 3px; }
+.pair .pb span { display: block; height: 14px; border-radius: 3px; font-size: 11px; line-height: 14px; color: #1a1a2e; font-weight: 700; padding-left: 5px; white-space: nowrap; }
+.pair .old { background: #666; }
+.pair .new { background: #c46cf0; }
+.pair .leg { font-size: 12px; color: #999; margin-bottom: 4px; }
+.pair .leg i { display: inline-block; width: 12px; height: 10px; border-radius: 2px; margin: 0 4px 0 10px; vertical-align: middle; }
+.fig svg { width: 100%; max-width: 440px; height: auto; display: block; }
+.figcap { font-size: 13px; color: #999; margin-bottom: 2px; }
+
+/* 施策の一覧 */
+.mx { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.mx .mh { font-size: 14px; font-weight: 700; color: var(--c); padding-bottom: 6px; border-bottom: 2px solid var(--c); margin-bottom: 8px; }
+.pol { background: #16213e; border: 1px solid #2a2a5e; border-radius: 8px; padding: 9px 11px; margin-bottom: 8px; font-size: 12.5px; line-height: 1.55; color: #bbb; }
+.pol b { display: block; color: #fff; font-size: 13.5px; margin-bottom: 2px; }
+.pol.main { border: 2px solid #ffd166; background: rgba(255,209,102,.07); }
+.pol .ibadge { margin-bottom: 4px; }
+.legend { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; font-size: 12px; color: #999; align-items: center; }
+.mx4 { grid-template-columns: 1.4fr 1fr 1fr 1fr; }
+.mx4 .mh { color: #ddd; border-color: #555; }
+
+/* 次の一手（工程表） */
+.gantt { display: grid; grid-template-columns: 120px repeat(4, 1fr); gap: 6px; }
+.gantt .gh { font-size: 12.5px; color: #999; text-align: center; padding-bottom: 4px; border-bottom: 1px solid #444; }
+.gantt .gl { font-size: 13px; font-weight: 700; color: var(--c); align-self: center; }
+.gantt .gc { min-height: 54px; border-radius: 6px; background: #12122a; }
+.gantt .gc.on { background: var(--bg); border: 1px solid var(--c); padding: 7px 9px; font-size: 12.5px; color: #eee; line-height: 1.5; }
+.gantt .gc .gy { display: none; }
+.gantt .gnote { grid-column: 2 / -1; font-size: 12.5px; color: #aaa; margin: -2px 0 6px; }
+
+@media (max-width: 600px) {
+  .slide { padding: 56px 18px 36px; }
+  .slide::before { left: 14px; top: 14px; }
+  .slide-num { right: 14px; top: 16px; }
+  h1 { font-size: 28px; }
+  h2 { font-size: 18px; margin-bottom: 16px; }
+  .subtitle { font-size: 15px; }
+  .icols, .grid, .split, .cols2, .loops, .ev, .mx, .mx4 { grid-template-columns: 1fr; }
+  .judge { grid-template-columns: 1fr 1fr; }
+  .chevs { flex-direction: column; gap: 3px; }
+  .chev, .chev:first-child { padding: 10px 14px 18px; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), 50% 100%, 0 calc(100% - 10px)); }
+  .mflow { grid-template-columns: 1fr; gap: 0; }
+  .arr { padding: 6px 0; }
+  .arr .line { width: 3px; height: 26px; margin: 4px auto; }
+  .arr.r .line::after { right: auto; left: -6px; top: auto; bottom: -6px; border: 7.5px solid transparent; border-top: 11px solid #ffd166; border-bottom: 0; }
+  .arr.l .line::after { left: -6px; top: -6px; border: 7.5px solid transparent; border-bottom: 11px solid #ffd166; border-top: 0; }
+  .bignum { font-size: 46px; }
+  .stack div { padding: 0 6px; font-size: 11.5px; }
+  .stack div b { font-size: 16px; }
+  .bar-row { font-size: 12.5px; gap: 6px; }
+  .bar-row .lab { width: 78px; }
+  .bar-row .val { width: 66px; }
+  .marklab { margin-left: 84px; }
+  .ba { grid-template-columns: 1fr; }
+  .ba-arrow { width: 40px; height: 30px; justify-self: center; clip-path: polygon(20% 0, 80% 0, 80% 50%, 100% 50%, 50% 100%, 0 50%, 20% 50%); }
+  .w5 { grid-template-columns: 1fr; }
+  .steps { flex-direction: column; }
+  .steps .sp { text-align: left; padding: 0 0 12px 26px; }
+  .steps .sp::before { top: 0; bottom: 0; left: 6px; right: auto; width: 2px; height: auto; }
+  .steps .sp:first-child::before { left: 6px; top: 8px; }
+  .steps .sp:last-child::before { right: auto; bottom: auto; height: 8px; }
+  .steps .sp::after { top: 2px; left: 0; margin-left: 0; }
+  .ytl { display: none; }
+  .gantt { grid-template-columns: 1fr; gap: 6px; }
+  .gantt .gh, .gantt .gc:not(.on) { display: none; }
+  .gantt .gl { margin-top: 10px; }
+  .gantt .gc .gy { display: block; font-size: 11px; color: var(--c); font-weight: 700; }
+  .gantt .gnote { grid-column: auto; margin: 0; }
 }
 
 </style>
 </head>
 <body>
 
+<!-- 1 -->
 <div class="slide slide-cover">
-  <div class="slide-num">1 / 13</div>
+  <div class="slide-num">1 / 19</div>
   <div class="tag">Policy Brief</div>
-  <h1>アカデミア向け政策課題 整理 v2</h1>
-  <div class="subtitle">用語解説つき・学術出版／研究評価／大学ガバナンスの論点整理</div>
-  <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  <h1>大学の研究を支える仕組みの<br>3つの課題と施策</h1>
+  <div class="subtitle">学術出版のお金／論文の質／大学の運営 ・ 用語の説明つき ／ 2026年10月</div>
+  <div class="disclaimer">AIで作成しています。数字は各スライド下の出典の原文から取っています</div>
 </div>
 
-
-<div class="slide">
-  <div class="slide-num">2 / 13</div>
-  <div class="tag">MAP</div>
-  <h2>全体像：3つの課題は連鎖している</h2>
-  <ul><li>課題①【出版経済の歪み】論文掲載料(APC)が高騰し、研究費が出版社に流出している</li>
-<li>課題②【品質保証の崩壊】ハゲタカジャーナル・AI生成偽論文が業績数稼ぎに利用されている</li>
-<li>課題③【学内ガバナンス】学長選考での意向投票無視や運営費交付金経由の圧力が起きている</li>
-<li>この3つは独立ではない:『業績数で評価される → 数稼ぎのため粗悪誌に投稿 + APC流出』『大学財政が圧迫される → 国の運営費交付金依存が増す → ガバナンス介入を受けやすくなる』という連鎖構造</li>
-<li>つまり、どれか1つだけ叩いても効かない。政策パッケージとして組み立てる必要がある</li></ul>
-  <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+<!-- 2 -->
+<div class="slide slide-key">
+  <div class="slide-num">2 / 19</div>
+  <div class="tag">この資料で言いたいこと</div>
+  <h2>研究のためのお金と時間が、研究の外に流れている。3つの課題に1つずつ解決策を当てる</h2>
+  <div class="icols">
+    <div class="icol c1">
+      <div class="ttl">課題① 学術出版のお金</div>
+      <div class="stat">約519<small>億円/年</small></div>
+      <div class="scap">大学と研究者が出版社に払う額</div>
+      <div class="prob">論文を読む料金と載せる料金を、多くの出版社に別々に払っている</div>
+      <div class="tri"></div>
+      <div class="sol"><span class="sl">解決策①</span>大学図書館の連合が全大学を代表し、出版社ごとに2つの料金を1本の契約にまとめる</div>
+    </div>
+    <div class="icol c2">
+      <div class="ttl">課題② 論文の質</div>
+      <div class="stat">5,000<small>本超</small></div>
+      <div class="scap">粗悪な学術誌に載った日本からの論文（15年弱）</div>
+      <div class="prob">論文の本数で人を評価する仕組みのもとで、粗悪な学術誌とAIで書いた論文が増えている</div>
+      <div class="tri"></div>
+      <div class="sol"><span class="sl">解決策②</span>2026年度内に見直す国の研究評価の指針に「本数で評価しない」「査読を業績に数える」と書く</div>
+    </div>
+    <div class="icol c3">
+      <div class="ttl">課題③ 大学の運営</div>
+      <div class="stat">46.5→32.2<small>%</small></div>
+      <div class="scap">教員の勤務時間のうち研究の割合</div>
+      <div class="prob">運営の仕組みは20年で3回変わったが、研究にどう効いたかを確かめる決まりが無い</div>
+      <div class="tri"></div>
+      <div class="sol"><span class="sl">解決策③</span>国立大学法人法に5年ごとの検証と国会への報告を書き、委員の選任理由を公表させる</div>
+    </div>
+  </div>
+  <div class="note">施策の一覧は、国政11本を17枚目、地方議会7本を18枚目に載せています</div>
 </div>
 
-
+<!-- 3 -->
 <div class="slide">
-  <div class="slide-num">3 / 13</div>
-  <div class="tag">PREREQUISITE</div>
-  <h2>前提知識：学術出版はどう回っているか</h2>
-  <div class="text-body">外部ジャーナル(査読つき学術雑誌)への投稿プロセスを前提知識として整理します。
-
-● 学術論文の流れ
-  研究者が論文を書く → ジャーナル（学術雑誌）に投稿 → 編集者が査読者(同じ分野の他の研究者)2〜3名に依頼 → 査読者が無償で内容をチェック・修正要求 → 採択されると掲載される
-
-● 査読(peer review)
-  論文の質を担保する仕組み。査読者は同分野の研究者で、報酬なし(無償労働)で行うのが伝統。
-  問題点: 査読数が増えすぎて研究者の負担が爆増しているが、業績にカウントされない
-
-● ジャーナルのビジネスモデル(2つ)
-  ① 購読モデル(伝統型): 大学図書館が出版社に高額な購読料を払う。読者側課金
-  ② オープンアクセス(OA)モデル: 投稿者がAPCを払う代わりに誰でも無料で読める。著者側課金
-
-● 大きな出版社
-  Elsevier(エルゼビア)、Springer Nature、Wiley、Taylor &amp; Francisの4社で世界の論文の半分以上を握る寡占構造
-
-この上で『お金は誰が払い、どこに流れているか』を考えるのが課題①の話になります。</div>
-  <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  <div class="slide-num">3 / 19</div>
+  <div class="tag">全体像 — 3つの課題のつながり</div>
+  <h2>基盤のお金が減り、研究費を本数で取り合う形になったことが、3つの課題の共通の根にある。1つだけ直しても他が残る</h2>
+  <div class="cause">
+    <div class="cbox c3"><span class="ibadge c3">課題③</span> 大学の運営の仕組み：20年で3回変わったが、結果を誰も確かめていない</div>
+    <div class="conn c3"><div class="tri"></div><span class="clab">基盤のお金の使い道を決める</span></div>
+    <div class="cbox">国から大学に毎年渡る基盤のお金（運営費交付金）<b class="num">−11.6%</b>2004→2026年度</div>
+    <div class="conn"><div class="tri" style="--c:#888"></div><span class="clab">減った分を、競争で取る研究費で補う</span></div>
+    <div class="cbox">採用・任期の更新・研究費の審査で<b>論文の本数</b>が見られる</div>
+    <div class="conn"><div class="tri" style="--c:#888"></div></div>
+    <div class="split">
+      <div class="cbox c2"><span class="ibadge c2">課題②</span> 本数を稼ぐ投稿が増える：粗悪な学術誌、AIで書いた論文</div>
+      <div class="cbox c1"><span class="ibadge c1">課題①</span> 載せる本数が増えるほど、掲載料が出版社へ出ていく</div>
+    </div>
+  </div>
+  <div class="src">出典: 国立大学協会「12-1．予算（国立大学運営費交付金等）の推移」（12,415億円→10,971億円。元の数字は文部科学省「国立大学法人運営費交付金予定額の概要」）</div>
 </div>
 
-
+<!-- 4 -->
 <div class="slide">
-  <div class="slide-num">4 / 13</div>
-  <div class="tag">GLOSSARY-1</div>
-  <h2>用語辞書① 出版経済まわり</h2>
-  <div class="grid"><div class="card"><h3>APC (Article Processing Charge)</h3><p>論文掲載料。オープンアクセス誌で著者側が払う費用。1本あたり1,500〜5,000ドル(約20〜75万円)が相場、トップ誌(Nature系列)では1万ドル超。研究費から出るが、要は出版社の主収入源にスライドしている。</p></div>
-<div class="card"><h3>オープンアクセス (OA)</h3><p>論文を誰でも無料で読める形で公開する仕組み。理念は『税金で研究した成果は公共財』。ただし無料化のコストは著者(=研究者の研究費)が負担する構造になり、後述の問題を生んでいる。</p></div>
-<div class="card"><h3>ハイブリッド誌</h3><p>1つのジャーナル内に『購読型(無料で読めない)記事』と『OA記事(APCで読める)』が混在する形式。大学は購読料も払い、研究者はAPCも払う。二重課金(double dipping)と批判されている。</p></div>
-<div class="card"><h3>転換契約 / Read &amp; Publish</h3><p>大学・国コンソーシアムが出版社と結ぶ新型契約。購読料とAPCをまとめて一括払いし、所属研究者が無償で投稿できるようにする。ドイツのProjekt DEAL(Elsevierと2023年合意)が有名な成功例。日本はJUSTICE(国大協系)が進めるが規模で見劣り。</p></div></div>
-  <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  <div class="slide-num">4 / 19</div>
+  <div class="tag">前提 — 論文が世に出るまで</div>
+  <h2>論文は、同じ分野の研究者が無報酬で中身を確かめてから載る。お金は「読む側」と「載せる側」の両方から出版社に入る</h2>
+  <div class="chevs">
+    <div class="chev"><b><span class="n">1</span>投稿</b>研究者が論文を書き、学術誌に送る</div>
+    <div class="chev"><b><span class="n">2</span>査読</b>同じ分野の研究者が中身を審査する。無報酬が普通</div>
+    <div class="chev"><b><span class="n">3</span>掲載</b>直しを経て採択され、学術誌に載る</div>
+  </div>
+  <div class="mflow">
+    <div class="node">大学図書館<small>所属の人が読めるようにする</small></div>
+    <div class="arr r"><b>購読料</b><span class="line"></span><small>読むために払う</small></div>
+    <div class="node pub">出版社</div>
+    <div class="arr l"><b>掲載料</b><span class="line"></span><small>誰でも読めるように載せるために払う</small></div>
+    <div class="node">研究者（著者）<small>研究費から払う</small></div>
+  </div>
 </div>
 
-
+<!-- 5 -->
 <div class="slide">
-  <div class="slide-num">5 / 13</div>
-  <div class="tag">ISSUE-1</div>
-  <h2>課題① 出版経済の歪み — 何が起きているか</h2>
-  <div class="text-body">● 構造的に何が起きているか
-  1. 大学図書館は依然として高額な購読料を払い続けている(年間1機関で億単位)
-  2. オープンアクセス化の波で、研究者個人も論文投稿のたびにAPCを払う(1本20〜75万円)
-  3. ハイブリッド誌の存在で、購読料とAPCの『二重課金』が常態化
-  4. 査読は無償労働。研究者が出版社のために実質的にタダ働きしている
-
-● 国際比較
-  EU: Plan S (2018) で公的助成研究は完全OA義務化。ドイツDEAL等のコンソーシアム契約で出版社に対抗
-  日本: 国大協のJUSTICEがあるが、契約交渉力は弱い。文科省も『学術論文等のオープンアクセス実現に向けた基本方針』(2024)を出したが実効性は限定的
-
-● 日本の現状(※数字は要確認)
-  ・国立大学全体の図書館購読料: 推定100億円規模/年
-  ・科研費から支払われるAPC総額: 推定数十億円規模/年(研究費の数%が出版社へ流出)
-  ・トップジャーナルへの日本人投稿は減少傾向(APC負担で躊躇するケースが増)
-
-● なぜこれが政策課題か
-  税金(科研費・運営費交付金)で生まれた研究成果と研究費が、海外大手出版社に吸い上げられる構造になっている。経済安全保障の観点でも、知的成果の流通コントロールが日本の手を離れている。</div>
-  <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  <div class="slide-num">5 / 19</div>
+  <div class="tag">用語① 学術出版のお金</div>
+  <h2>課題①で使う6つの言葉</h2>
+  <div class="grid c1">
+    <div class="card"><h3>購読料</h3><p>大学図書館が出版社に払う、学術誌を読むための料金。いまは電子ジャーナル（ネットで読む学術誌）が中心</p></div>
+    <div class="card"><h3>掲載料（APC）</h3><p>論文を誰でも読める形で載せるために、著者が出版社に払う料金。Article Processing Charge の略</p></div>
+    <div class="card"><h3>オープンアクセス（OA）</h3><p>論文を誰でも無料で読めるように公開すること。税金で行った研究の成果は誰でも読めるべき、という考え方が背景にある</p></div>
+    <div class="card"><h3>ハイブリッド誌</h3><p>購読料で読む論文と、掲載料を払って誰でも読める論文が1冊に混ざった学術誌。大学は購読料と掲載料を二重に払う</p></div>
+    <div class="card"><h3>転換契約</h3><p>購読料と掲載料を1本の契約にまとめ、所属の研究者が追加の掲載料なしで論文を載せられるようにする契約</p></div>
+    <div class="card"><h3>JUSTICE</h3><p>国立と公私立の大学図書館の連合（2011年発足・561館）。大学をまとめて出版社と契約の条件を話し合う</p></div>
+  </div>
+  <div class="src">出典: JUSTICE「JUSTICEの活動について」2024年6月28日（発足 2011年4月1日・561館は2024年5月末）</div>
 </div>
 
-
+<!-- 6 -->
 <div class="slide">
-  <div class="slide-num">6 / 13</div>
-  <div class="tag">GLOSSARY-2</div>
-  <h2>用語辞書② 品質保証まわり</h2>
-  <div class="grid"><div class="card"><h3>ハゲタカジャーナル (Predatory Journal)</h3><p>査読を実際にはほぼ行わず、APCだけ取って何でも載せる粗悪な学術誌。研究者の業績数稼ぎ需要と、出版コストの低下(Web完結)で2010年代に急増。被害は途上国・若手研究者・分野外の論文が多い。</p></div>
-<div class="card"><h3>Beall's List</h3><p>米コロラド大の図書館員ジェフリー・ビールが2010年に始めたハゲタカ誌のブラックリスト。一時は1,000誌以上を掲載していたが、出版社からの圧力等で2017年に閉鎖。後継として複数民間サービスが存在するが公的判定機関は不在。</p></div>
-<div class="card"><h3>ペーパーミル (Paper Mill / 論文工場)</h3><p>金銭の対価で偽造論文を製造・販売する業者。中国・東欧などで産業化されている。著者名を売る、データを捏造する、引用ネットワークを偽装するなど。AI生成論文の台頭で更に検出が難しくなっている。</p></div>
-<div class="card"><h3>インパクトファクター (IF) / h-index</h3><p>研究者・ジャーナルの『業績』を数値化する指標。IFはジャーナルの平均被引用数、h-indexは研究者個人の引用実績の合算指標。シンプルゆえに人事評価で多用されるが、分野差・自己引用・短期視点などの問題が指摘されている。</p></div>
-<div class="card"><h3>DORA宣言 (2012年・サンフランシスコ研究評価宣言)</h3><p>『IFを個人評価に使うな』『多様な業績(査読・データ公開・社会実装)を評価せよ』と呼びかける国際宣言。米国国立衛生研究所(NIH)・英Wellcome Trustなど主要助成機関が署名。日本では一部大学が署名しているが、文科省・JSTレベルでの公式採用には至っていない。</p></div>
-<div class="card"><h3>AI偽論文</h3><p>ChatGPT等で本文の大半が生成された論文。文章だけでなく図表・データまで生成するケースが2023年以降急増。Nature誌の調査(2024)では、論文要旨の1%以上にAI生成痕跡が検出されたとの報告もある。査読者の負担増と検出ツール開発が追いつかない状況。※数字要確認</p></div></div>
-  <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  <div class="slide-num">6 / 19</div>
+  <div class="tag">課題① 学術出版のお金 — 金額</div>
+  <h2>日本の大学と研究者は、出版社に年約519億円を払っている。購読料は1年で36億円増え、研究に回せるお金が出版社へ流れ続けている</h2>
+  <div class="bignum">約519<small>億円 / 年</small></div>
+  <div class="stack">
+    <div style="width:75.1%;background:#4cc9f0"><span>購読料（令和5年度・816大学）</span><b>390億円</b></div>
+    <div style="width:24.9%;background:#f0a64c"><span>掲載料（2023年推計）</span><b>約129億円</b></div>
+  </div>
+  <div class="stack-leg"><span>購読料は前年度から <b style="color:#ff7b7b">+36億円</b></span><span>掲載料は国内の責任著者分を、出版社の価格表から推計</span></div>
+  <div class="src">出典: 文部科学省「学術情報基盤実態調査」令和6年度調査（令和5年度実績）2025年3月25日／JUSTICE「論文公表実態調査報告 2024年度」2025年3月31日（12,936,770,119円）</div>
 </div>
 
-
+<!-- 7 -->
 <div class="slide">
-  <div class="slide-num">7 / 13</div>
-  <div class="tag">ISSUE-2</div>
-  <h2>課題② ハゲタカ・AI偽論文 — 何が起きているか</h2>
-  <div class="text-body">● 構造的に何が起きているか
-  研究者は『年間〇本以上の論文』というノルマを大学・助成機関から課されている(任期制ポストは特に)。これが業績主義(productivism)。
-  → 数を稼ぐためにハゲタカ誌に投稿する研究者が一定数いる(知らずに引っかかるケースもある)
-  → AIで論文の下書き・図表・データまで生成して投稿数を水増しするケースが出ている
-  → 査読者の負担が増え、本物の論文の質チェックも甘くなる
-
-● 日本の現状(※数字は要確認)
-  ・日本人著者によるハゲタカ誌投稿は年間数千本規模との推計(NISTEP/2023年頃の調査)
-  ・大学・公的助成機関でハゲタカ判定基準・ガイドラインは整備が進行中だが拘束力は弱い
-  ・国際科学院連合(IAP)による『ハゲタカ実務チェックリスト』日本語版が2024年1月にNISTEPから公開済み
-
-● AIの脅威
-  生成AIで論文を量産する『AIペーパーミル』が技術的に可能になった。検出ツール(GPTZero、Turnitin等)も精度は60〜80%程度で、誤検出も多い。査読プロセスがAI攻撃に対して脆弱になっている。
-
-● なぜこれが政策課題か
-  ・税金で動く研究評価システムが、業績稼ぎゲームに歪められている
-  ・若手研究者が『真面目に研究するより、ハゲタカで数を稼ぐ』選択を迫られる状況は人材育成の崩壊
-  ・AI偽論文が政策の根拠(エビデンス)として引用されれば、政治判断にも影響する</div>
-  <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  <div class="slide-num">7 / 19</div>
+  <div class="tag">課題① 学術出版のお金 — 払い先と契約</div>
+  <h2>掲載料の払い先は1社に集まっておらず、年10億円を超える相手が4社ある。2つの料金をまとめる契約を結んだ図書館は3割にとどまる</h2>
+  <div class="bars c1">
+    <div class="cap">日本からの掲載料の推計（2023年・出版社別）</div>
+    <div class="bar-row"><span class="lab">MDPI</span><span class="track"><span class="fill" style="width:100%"></span><span class="mark" style="left:41%"></span></span><span class="val">24.4億円</span></div>
+    <div class="bar-row"><span class="lab">Elsevier</span><span class="track"><span class="fill" style="width:63.9%"></span><span class="mark" style="left:41%"></span></span><span class="val">15.6億円</span></div>
+    <div class="bar-row"><span class="lab">Wiley</span><span class="track"><span class="fill" style="width:63.1%"></span><span class="mark" style="left:41%"></span></span><span class="val">15.4億円</span></div>
+    <div class="bar-row"><span class="lab">Nature(NPG)</span><span class="track"><span class="fill" style="width:42.4%"></span><span class="mark" style="left:41%"></span></span><span class="val">10.3億円</span></div>
+    <div class="bar-row"><span class="lab">Springer</span><span class="track"><span class="fill dim" style="width:37.1%"></span><span class="mark" style="left:41%"></span></span><span class="val">9.0億円</span></div>
+    <div class="marklab">┆ 赤の点線 ＝ 10億円</div>
+  </div>
+  <div class="meter c1">
+    <div class="mcap">転換契約を結んでいる図書館（2025年度調査・回答420館）</div>
+    <div class="mtrack"><div class="mfill" style="width:29.5%"></div><span class="mtxt">124館（29.5%）</span><span class="mgoal">残り296館</span></div>
+  </div>
+  <div class="src">出典: JUSTICE「論文公表実態調査報告 2024年度」2025年3月31日 印刷p.8／JUSTICE「転換契約に関するアンケート調査（2025年度・公開版）」2025年8月28日</div>
 </div>
 
-
+<!-- 8 -->
 <div class="slide">
-  <div class="slide-num">8 / 13</div>
-  <div class="tag">ISSUE-2-CAUSE</div>
-  <h2>課題② 背景: なぜ業績主義が止まらないか</h2>
-  <div class="text-body">業績主義は単なる『悪い慣習』ではなく、構造的に強化される仕組みがあります。
-
-● 業績数が評価に直結する経路
-  1. 大学のポスト(教授・准教授・助教)応募 → 採用評価で論文数とIFが重視される
-  2. 任期制ポスト(任期5年など)からの任期延長判定で論文数が要求される
-  3. 科研費等の競争的資金の採択 → 申請書に過去業績の本数を書く
-  4. 大学の機関評価(運営費交付金の配分にも影響) → 教員1人あたりの論文数が指標になる
-
-● 査読の不可視性
-  査読は無償・匿名で行う伝統。査読を年に何本やったかは履歴書に書きづらく、評価されない。
-  → 査読負担は増える一方なのに評価されない → 査読の質が下がる/引き受け手が減る
-
-● DORA宣言の理念
-  『本数で評価するな、多様な業績(査読・データ公開・社会実装・教育・査読奉仕)を評価せよ』というのがDORA宣言の核心。米英の助成機関は徐々に評価書式を改めているが、日本は遅れている。
-
-● 政策的レバー
-  ・科研費の評価項目に査読本数を加える(査読を可視化)
-  ・任期制ポストの本数評価をDORA準拠ガイドラインで縛る
-  ・大学評価(機関別評価)から論文本数指標を外す/弱める</div>
-  <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  <div class="slide-num">8 / 19</div>
+  <div class="tag">解決策① 学術出版のお金</div>
+  <h2>大学図書館の連合が全大学を代表し、出版社ごとに購読料と掲載料を1本の契約にまとめる。国は交渉の予算と人を付ける</h2>
+  <div class="ba c1">
+    <div class="panel">
+      <div class="ph">いま</div>
+      <div class="mini">
+        <div class="mn">大学・研究者がそれぞれ<small>3割の図書館だけが転換契約</small></div>
+        <div class="ma bad">▼ 購読料 ＋ ▼ 掲載料（別々に払う）</div>
+        <div class="mn">出版社ごと<small>ハイブリッド誌では二重払い</small></div>
+      </div>
+    </div>
+    <div class="ba-arrow"></div>
+    <div class="panel after">
+      <div class="ph">解決策①</div>
+      <div class="mini">
+        <div class="mn">全大学<small>国：交渉の予算と専任の人</small></div>
+        <div class="ma">▼</div>
+        <div class="mn hl">JUSTICE が代表して交渉</div>
+        <div class="ma">▼ 購読料＋掲載料を1本の契約に</div>
+        <div class="mn">出版社ごと<small>掲載料だけの出版社（MDPIなど）とも全大学分の割引</small></div>
+      </div>
+    </div>
+  </div>
+  <div class="w5 c1">
+    <div><span class="wl">誰が</span>JUSTICE が交渉、文部科学省が予算と人。公立大学は設立した都道府県・市が中期目標に書く</div>
+    <div><span class="wl">何を</span>全大学分の合計額と、追加の掲載料なしで載せられる論文の本数</div>
+    <div><span class="wl">いつ</span>2027年度予算で体制を付け、契約の期限が来た出版社から順に（Elsevierは2026年まで）</div>
+    <div class="goal"><span class="wl">目標</span>転換契約を3割→全館に。ハイブリッド誌への別払い（上位3社で約22億円）をなくす</div>
+    <div><span class="wl">測り方</span>文科省の購読料の調査と、JUSTICE の掲載料の推計・転換契約の調査を毎年並べる</div>
+  </div>
+  <div class="prec"><b>前例：</b>ドイツの大学・研究機関の連合（DEAL）は2023年9月、Elsevierと参加機関全体で1本の5年契約を結んだ。日本政府も2026年7月、大学などによる集団交渉の体制づくりを支援すると決めている</div>
+  <div class="src">出典: JUSTICE「論文公表実態調査報告 2024年度」印刷p.9（ハイブリッドOAの上位3社 8.48億・7.13億・6.75億円）／JUSTICE・Elsevier 転換契約提案の合意 2023年10月12日（期間2024〜2026年）／DEAL–Elsevier 契約書（2023年9月1日付）／内閣府「統合イノベーション戦略2026」2026年7月14日 印刷p.17</div>
 </div>
 
-
+<!-- 9 -->
 <div class="slide">
-  <div class="slide-num">9 / 13</div>
-  <div class="tag">GLOSSARY-3</div>
-  <h2>用語辞書③ 大学ガバナンスまわり</h2>
-  <div class="grid"><div class="card"><h3>国立大学法人化 (2004年)</h3><p>国立大学が『国の機関』から独立行政法人(国立大学法人)に変わった改革。狙いは経営自由化・効率化。結果として国の運営費交付金は毎年1%削減ルールが課され、外部資金獲得圧力が強まった。20年経って『法人化前と180度違う運用』との指摘(Business Insider Japan等)あり。</p></div>
-<div class="card"><h3>運営費交付金</h3><p>国が国立大学法人に渡す基盤的経費。給料・光熱費・基礎研究費の原資。法人化(2004)後20年で実質1割減少。減った分は競争的資金(科研費等)で補う想定だったが、結果として中堅・若手研究者の研究時間が削られ、大学経営は外部資金頼みに。</p></div>
-<div class="card"><h3>学長選考会議 / 学長選考・監察会議</h3><p>国立大学の学長を選ぶ法定機関。学内委員(教員代表)と学外委員(経営者・有識者)の半々で構成。学外委員は文科大臣の同意で選ばれる。2021年法改正で『監察』機能が追加され、学長の業務適正性をチェックする役割も持つようになった。</p></div>
-<div class="card"><h3>意向投票</h3><p>国立大学の学長候補について、全教職員(または教員のみ)が投票して意思を示す手続き。法定ではなく各大学の内規。学長選考会議は意向投票結果に拘束されない建前だが、近年は投票結果を無視した選考(旭川医大・北大・筑波・東大の一部学部等)が複数発生し、ガバナンス紛争化している。※個別事例は要再確認</p></div>
-<div class="card"><h3>中期目標・中期計画</h3><p>国立大学法人/公立大学法人が6年ごとに国(または地方議会)に提出する経営計画。研究目標・教育目標・財務目標を含む。地方議会は公立大学法人の中期目標を議決する権限を持つため、OA推進・学長選考の透明化などを中期目標に盛り込ませることが制度上可能。</p></div>
-<div class="card"><h3>国立大学法人法</h3><p>国立大学法人の根拠法。2003年制定、2021年・2023年に大規模改正。2023年改正では『運営方針会議』が一定規模以上の大学(指定国立大学)に設置義務化され、学外委員の権限がさらに強化された。これが学内の反発(東大・京大等)を呼んでいる。</p></div></div>
-  <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  <div class="slide-num">9 / 19</div>
+  <div class="tag">用語② 論文の質</div>
+  <h2>課題②で使う6つの言葉</h2>
+  <div class="grid c2">
+    <div class="card"><h3>粗悪な学術誌（ハゲタカジャーナル）</h3><p>査読をほとんどせず、掲載料を取って何でも載せる学術誌。英語では predatory journal</p></div>
+    <div class="card"><h3>論文工場（ペーパーミル）</h3><p>お金と引き換えに、偽の論文や著者の枠を売る業者</p></div>
+    <div class="card"><h3>インパクトファクター</h3><p>学術誌の論文が平均で何回引用されたかを表す数字。本来は学術誌の指標だが、個人の評価にも使われている</p></div>
+    <div class="card"><h3>責任著者</h3><p>論文の連絡窓口になる著者。掲載料を払う人とみなして、掲載料の推計や国別の集計に使われる</p></div>
+    <div class="card"><h3>DORA</h3><p>「掲載誌の格で研究者を評価しない」と呼びかける国際宣言（2012年）。大学や助成機関が署名する</p></div>
+    <div class="card"><h3>大綱的指針</h3><p>国の研究開発の評価のやり方を定めた国の指針（2016年決定）。2026年度内に見直される</p></div>
+  </div>
+  <div class="src">出典: 内閣府「統合イノベーション戦略2026」2026年7月14日 PDF p.20（大綱的指針 平成28年12月21日決定を2026年度内を目途に見直す）</div>
 </div>
 
-
+<!-- 10 -->
 <div class="slide">
-  <div class="slide-num">10 / 13</div>
-  <div class="tag">ISSUE-3</div>
-  <h2>課題③ 学長選考・学内ガバナンス — 何が起きているか</h2>
-  <div class="text-body">● 構造的に何が起きているか
-  1. 2004法人化で大学が独立行政法人化、運営費交付金は毎年削減ルール
-  2. 大学は外部資金(科研費・受託研究・寄付金)依存度が高まる → 経営の不安定化
-  3. 学長選考会議で学外委員(経営者・財界・政治家系)の影響力が増大
-  4. 学内の意向投票結果と異なる学長が選ばれるケースが複数発生
-  5. 2023年改正で『運営方針会議』が指定国立大学に設置義務化 → 学外委員の権限がさらに強化
-  6. こうした学外委員の権限強化(特に運営方針会議の設置)に対し、教員・院生が『大学の自治・学問の自由が損なわれる』と反発。東大・京大等で教職員組合・学生組織が抗議声明や反対運動を展開
-
-● 具体的に問題視されている事例(※すべて一次資料で要再確認)
-  ・旭川医科大学: 2020年頃の学長解任・選考紛争
-  ・北海道大学: 学長選考プロセスの不透明性
-  ・筑波大学: 任期延長判定をめぐる学内紛争
-  ・東京大学: 2023年改正後の運営方針会議設置をめぐる反対運動(2024-2025)
-  ・東北大学: 国際卓越研究大学第1号認定をめぐる選考プロセス
-
-● なぜこれが政策課題か
-  ・学問の自由(憲法23条)の制度的担保が揺らいでいる
-  ・大学経営の効率化と学問の自治のバランスが20年経って明らかに後者に不利
-  ・文科省・財務省主導の指標(国際卓越研究大学・10兆円ファンド等)が大学運営に過度に介入する構図
-  ・国会で議論される機会が少ない(技術的・専門的すぎて世論化しづらい)</div>
-  <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  <div class="slide-num">10 / 19</div>
+  <div class="tag">課題② 論文の質 — 何が起きているか</div>
+  <h2>日本の研究者の論文も粗悪な学術誌に載っており、AIで書いた論文も急に増えている。本数だけ見ていると、質の低い論文を見分けられない</h2>
+  <div class="cols2">
+    <div class="bars c2">
+      <div class="cap">粗悪な学術誌と見られる論文 約1,900本の、責任著者の国（Nature誌・2017年）</div>
+      <div class="bar-row"><span class="lab">インド</span><span class="track"><span class="fill dim" style="width:100%"></span></span><span class="val">27%</span></div>
+      <div class="bar-row"><span class="lab">米国</span><span class="track"><span class="fill dim" style="width:55.6%"></span></span><span class="val">15%</span></div>
+      <div class="bar-row"><span class="lab">ナイジェリア</span><span class="track"><span class="fill dim" style="width:18.5%"></span></span><span class="val">5%</span></div>
+      <div class="bar-row"><span class="lab">イラン</span><span class="track"><span class="fill dim" style="width:14.8%"></span></span><span class="val">4%</span></div>
+      <div class="bar-row hl"><span class="lab">日本</span><span class="track"><span class="fill" style="width:14.8%"></span></span><span class="val">4%</span></div>
+    </div>
+    <div class="tiles">
+      <div class="tile"><div class="tn">5,000<small>本超</small></div><div class="tc">粗悪な学術誌に載った日本からの論文。過去15年弱（毎日新聞の調査・2018年）</div></div>
+      <div class="tile"><div class="tn">13.5<small>%以上</small></div><div class="tc">2024年の医学・生命科学の論文要旨のうち、AIで文章を作った跡があるもの（Kobakら・2025年）</div></div>
+    </div>
+  </div>
+  <div class="note">国の研究所（NISTEP）は2023年、粗悪な学術誌の見分け方をまとめた国際報告書の日本語版を公開した</div>
+  <div class="src">出典: 千葉浩之「カレントアウェアネス」341号 2019年9月20日（毎日新聞 2018年9月3日朝刊の紹介）／Moher ほか「Stop this waste of people, animals and money」Nature 549巻23ページ（1,907本）／Kobak ほか arXiv:2406.07016 v5 2025年7月4日／NISTEP「粗悪な学術誌・学術集会を拡げないために」（doi:10.15108/IAP_CPAJC2023JP）</div>
 </div>
 
-
+<!-- 11 -->
 <div class="slide">
-  <div class="slide-num">11 / 13</div>
-  <div class="tag">POLICY-NATIONAL</div>
-  <h2>国政レベルの政策案</h2>
-  <div class="subtitle">各案がどの課題を解くかをバッジで明示</div>
-  <div class="legend"><span class="ibadge b1">課題① 出版経済</span><span class="ibadge b2">課題② 品質保証</span><span class="ibadge b3">課題③ ガバナンス</span></div>
-
-  <div class="pcard"><span class="ibadge b1">課題①</span><h4>全国一括OA転換契約の制度化</h4><p>現在JUSTICE(国大協)が個別に行う出版社との転換契約交渉を、文科省・JSTが旗振り役となり国家レベルで一本化する。ドイツのProjekt DEAL方式を参考に購読料とAPCを束ねて一括交渉し、寡占4社への価格交渉力を高めて研究費のAPC流出を抑える。</p></div>
-
-  <div class="pcard"><span class="ibadge b1">課題①</span><h4>研究成果公開促進費の拡充・国産OA基盤強化</h4><p>科研費の「研究成果公開促進費」を増額し、J-STAGE等の国産オープンアクセス基盤への投資を強化する。海外大手のAPCに依存せず国内で論文を公開できる受け皿を整え、長期的に出版社への支払い構造そのものを国内に取り戻す。</p></div>
-
-  <div class="pcard"><span class="ibadge b2">課題②</span><h4>査読実績の業績評価化</h4><p>researchmap等の研究者DBに「査読件数」フィールドを設け、科研費審査や人事評価で査読実績を正式な業績として参照できるようにする。無償・不可視だった査読労働を可視化し、本数主義に偏った評価を是正して査読の質低下を食い止める。</p></div>
-
-  <div class="pcard"><span class="ibadge b2">課題②</span><h4>査読労働の有償化</h4><p>科研費申請書に「査読時間バッファ」を計上可能とし、査読を研究活動の一部として時間・費用面で認める。タダ働き前提の査読モデルを改め、引き受け手の減少と質の劣化に歯止めをかける。</p></div>
-
-  <div class="pcard"><span class="ibadge b2">課題②</span><h4>DORA準拠の評価指針策定</h4><p>文科省・JSTがDORA宣言(IFで個人を評価しない)に準拠した評価ガイドラインを策定し、任期制ポストの判定や大学機関評価から論文本数指標を弱める。数稼ぎのためハゲタカ誌へ投稿する誘因そのものを断つ。</p></div>
-
-  <div class="pcard"><span class="ibadge b2">課題②</span><h4>ハゲタカ判定リスト(日本版)の公的運営</h4><p>NISTEP/JSTが公的なハゲタカジャーナル判定リストを運営し、誤判定への不服申立制度も併設する。Beall's List閉鎖後に不在となった公的判定機関を国が担い、若手・分野外の研究者が知らずに被害を受ける構造を防ぐ。</p></div>
-
-  <div class="pcard"><span class="ibadge b3">課題③</span><h4>意向投票の取扱いを法に明文化</h4><p>学長選考会議が学内意向投票結果を扱う際の手続きを国立大学法人法に明記し、結果と異なる選考を行う場合は説明責任と記録公開を義務付ける。旭川医大・北大等で頻発した不透明な選考紛争を制度的に抑止する。</p></div>
-
-  <div class="pcard"><span class="ibadge b3">課題③</span><h4>学外委員の選任プロセス透明化</h4><p>学長選考会議・運営方針会議の学外委員について、選任プロセスと利益相反の開示を法定化し、文科大臣同意の理由も公開させる。財界・政治系委員の影響力が不可視のまま増大する構造に透明性を入れる。</p></div>
-
-  <div class="pcard"><span class="ibadge b3">課題③</span><h4>運営費交付金KPIの見直し</h4><p>運営費交付金の重点配分に用いる指標に、教職員満足度・若手研究者比率・離職率などのガバナンスKPIを追加する。論文数偏重の配分が大学経営を外部資金頼みに追い込み研究時間を削ってきた構造を是正する。</p></div>
-
-  <div class="pcard"><span class="ibadge b3">課題③</span><h4>運営方針会議のサンセット条項</h4><p>2023年改正で指定国立大学に義務化された運営方針会議に、設置後3年の効果検証義務(サンセット条項)を入れる。学外委員権限の強化が学問の自治に与える影響を、検証なしに固定化させない。</p></div>
-  <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  <div class="slide-num">11 / 19</div>
+  <div class="tag">課題② 論文の質 — なぜ止まらないか</div>
+  <h2>研究者は節目ごとに論文の本数を見られる一方、査読はどこにも数えられない。数を増やすほど得をし、質を守る仕事は報われない</h2>
+  <div class="judge">
+    <div class="jcell"><div class="jt">採用</div><span class="jv">本数を見る</span><div class="jd">教員の公募で、論文の本数と掲載誌</div></div>
+    <div class="jcell"><div class="jt">任期の更新</div><span class="jv">本数を見る</span><div class="jd">任期つきのポストの更新の判定</div></div>
+    <div class="jcell"><div class="jt">研究費</div><span class="jv">本数を見る</span><div class="jd">科研費などの申請書に論文を並べる</div></div>
+    <div class="jcell off"><div class="jt">査読</div><span class="jv">数えられにくい</span><div class="jd">無報酬で引き受けても業績になりにくい</div></div>
+  </div>
+  <div class="loops">
+    <div class="loop up"><div class="lt">本数を増やす人</div><div class="st">本数が増える<i>▶</i>採用・研究費で有利<i>▶</i>粗悪な学術誌にも出す</div></div>
+    <div class="loop down"><div class="lt">査読を引き受ける人</div><div class="st">時間を使う<i>▶</i>業績にならない<i>▶</i>引き受け手が減り、粗悪な論文が通りやすくなる</div></div>
+  </div>
 </div>
 
-
+<!-- 12 -->
 <div class="slide">
-  <div class="slide-num">12 / 13</div>
-  <div class="tag">POLICY-LOCAL</div>
-  <h2>地方議会レベルの政策案</h2>
-  <div class="subtitle">地方議会の権限が直接届く範囲（公立大学・自治体助成・高校教育）に絞り、各案がどの課題を解くか明示</div>
-  <div class="legend"><span class="ibadge b1">課題① 出版経済</span><span class="ibadge b2">課題② 品質保証</span><span class="ibadge b3">課題③ ガバナンス</span><span class="ibadge b4">地域接続</span></div>
-
-  <div class="pcard"><span class="ibadge b1">課題①</span> <span class="ibadge b2">課題②</span><h4>公立大学① 中期目標へのOA・査読評価の明記</h4><p>地方独立行政法人法に基づき、公立大学法人の中期目標は設立団体(都道府県・市)が策定し地方議会が議決する。この議決プロセスを活用し「OA出版の推進」「APC費用の学内支援制度の整備」「教員の査読実績の業務評価への組み込み」を中期目標の文言に明記させる。中期目標に記載されれば大学は中期計画・年度計画に反映する法的義務を負うため、掛け声に終わらない実効性が生まれる。</p></div>
-
-  <div class="pcard"><span class="ibadge b3">課題③</span><h4>公立大学② 学長選考プロセスの透明化</h4><p>2014年の学校教育法改正以降、公立大学でも学長権限が強化された一方、選考プロセスの不透明さが全国で問題化している。地方議会は条例制定、または大学法人は定款変更により「学内意向投票の実施・結果の公表」「選考委員会の構成と議事要旨の開示」を義務付ける。選考の正統性が担保されることで学長の改革推進力が高まり、研究環境改善にかかる内部決定が機能しやすくなる。</p></div>
-
-  <div class="pcard"><span class="ibadge b2">課題②</span><h4>公立大学③ 研究時間確保とDORA準拠評価の中期計画化</h4><p>DORA(サンフランシスコ宣言、2012年策定・世界2万超の研究者/機関が署名、国内も東大等が署名)は「インパクトファクター等の誌面指標で個人を評価しない」原則を定める。中期目標に「DORA準拠の評価指針の採用」「査読業務の業務量認定」「研究時間の一定割合確保」を盛り込み、大学が中期計画に数値目標付きで落とし込む。研究時間は過去20年で顕著に減少しており(文科省 科学技術白書)、制度的記載なしには自然回復しない。</p></div>
-
-  <div class="pcard"><span class="ibadge b1">課題①</span> <span class="ibadge b2">課題②</span><h4>自治体助成 研究助成の交付条件にOA・査読要件</h4><p>都道府県・市町村が独自に設ける研究助成の補助金交付規則に「成果のオープンアクセス公開」と「査読付き誌への発表」を交付条件として明記する。英国UKRIは2022年から全公的助成研究にOAを義務付けており、国内でも規則改正のみで実施可能だ。公金による研究成果を公共財として開くとともに、査読要件がハゲタカジャーナル掲載への抑止力として働く。</p></div>
-
-  <div class="pcard"><span class="ibadge b2">課題②</span><h4>高校教育接続 「情報Ⅰ」への査読・AI情報リテラシー組込み</h4><p>2022年度から高校必履修となった「情報Ⅰ」に「論文の査読とは何か」「AI生成情報の評価方法」「ハゲタカジャーナルの見分け方」を補足指導資料として加えるよう、都道府県教育委員会が教員研修と指導計画の見直しを通じて推進する。研修に大学司書や研究者を招くことで現場教員が具体例を持って教えられる体制を整える。高校段階での定着は大学での研究倫理教育の前提となり、社会全体のアカデミックインテグリティの底上げにつながる。</p></div>
-
-  <div class="pcard"><span class="ibadge b4">地域接続</span><h4>地域連携 議会主導の地域政策研究プラットフォーム</h4><p>地方議会が設置条例と予算化によって「地域政策研究プラットフォーム」を組成し、公立大・地元私立大・自治体職員が共同で政策課題の調査・提言を行う場を制度化する。京都の大学コンソーシアム型の運営モデルを参照しつつ、議会側が政策アジェンダを設定し大学側がエビデンスを提供する役割分担を明確にする。自治体単独では政策調査能力に限界があり大学は地域政策へのアクセス経路が乏しい——このミスマッチを議会主導の需給接合構造で解消する。</p></div>
-
-  <div class="pcard"><span class="ibadge b3">課題③</span><h4>意見書 国へのルート（権限外の補完）</h4><p>国立大学への直接介入は地方議会の権限外。代替案として「国立大学法人法改正を求める意見書」を議会で採択し国に届ける制度がある。地方自治法に基づく意見書提出は、地方議会が国政課題に対して意思表示を行う正規の手続きである。</p></div>
-  <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+  <div class="slide-num">12 / 19</div>
+  <div class="tag">解決策② 論文の質</div>
+  <h2>2026年度内に見直す国の研究評価の指針に「本数や掲載誌の格で人を評価しない」「査読を業績に数える」を書き、研究費の審査に入れる</h2>
+  <div class="steps c2">
+    <div class="sp"><b>2026年7月</b>指針の見直しのワーキンググループが開催</div>
+    <div class="sp"><b>2026年度内</b>大綱的指針に①②を書く</div>
+    <div class="sp"><b>2027年度の公募</b>科研費・JSTの審査の手引きに反映</div>
+    <div class="sp"><b>毎年</b>公募要領の文言と研究者調査で確かめる</div>
+  </div>
+  <div class="w5 c2">
+    <div><span class="wl">誰が</span>内閣府の評価専門調査会が指針に書き、日本学術振興会（科研費）とJSTが審査の手引きを直す。公立大学は中期目標に書く</div>
+    <div><span class="wl">何を</span>①本数やインパクトファクターで個人を評価しない ②査読の件数を申請書に書けるようにし、審査で数える</div>
+    <div><span class="wl">いつ</span>2026年度内の指針の見直しに入れ、2027年度の公募から審査に反映</div>
+    <div class="goal"><span class="wl">目標</span>2027年度公募の手引きに①②を明記。日本学術振興会とJSTがDORAに署名する</div>
+    <div><span class="wl">測り方</span>公募要領・審査の手引きの文言。NISTEPの研究者調査で「本数で評価されている」と答える割合</div>
+  </div>
+  <div class="prec"><b>前例：</b>東京大学は2023年12月1日、日本の大学で初めてDORAに署名した</div>
+  <div class="src">出典: 内閣府「統合イノベーション戦略2026」2026年7月14日 PDF p.20／評価専門調査会「大綱的指針ワーキンググループの設置について」2026年7月16日／NISTEP 調査資料-354「論文のオープンアクセスとプレプリントに関する実態調査2024：APCと業績評価」／東京大学「研究評価に関するサンフランシスコ宣言（DORA）への署名について」</div>
 </div>
 
-
+<!-- 13 -->
 <div class="slide">
-  <div class="slide-num">13 / 13</div>
-  <div class="tag">DISCLAIMER</div>
-  <h2>事実確認のお願い</h2>
-  <div class="text-body">本資料はAIで作成しています。一次資料での再確認が必須です。特に以下:
+  <div class="slide-num">13 / 19</div>
+  <div class="tag">用語③ 大学の運営</div>
+  <h2>課題③で使う6つの言葉</h2>
+  <div class="grid c3">
+    <div class="card"><h3>国立大学法人</h3><p>2004年に国の機関から切り離された国立大学の運営主体。根拠は国立大学法人法（2003年制定）</p></div>
+    <div class="card"><h3>運営費交付金</h3><p>国が国立大学法人に毎年渡す基盤のお金。給料・光熱費・基礎的な研究費のもとになる</p></div>
+    <div class="card"><h3>学長選考・監察会議</h3><p>学長を選び、学長の仕事を監督する会議。学外の委員と学内の委員を同じ数で組む（2022年4月に今の名前）</p></div>
+    <div class="card"><h3>意向投票</h3><p>学長の候補について教職員が投票する手続き。各大学の決まりで、法律には定めが無い</p></div>
+    <div class="card"><h3>運営方針会議</h3><p>中期計画・予算・決算を決める会議（2024年10月から）。委員は文部科学大臣の承認を得て学長が任命する</p></div>
+    <div class="card"><h3>中期目標</h3><p>大学が数年で達成する目標。公立大学では設立した都道府県・市が定め、議会の議決が要る</p></div>
+  </div>
+  <div class="src">出典: 国立大学法人法 第12条第2項・第21条の4第2項・第21条の5（e-Gov 法令データ）／地方独立行政法人法 第25条第3項／文部科学省「国立大学法人ガバナンス・コードの改訂について」（改正法の施行 令和4年4月1日）</div>
+</div>
 
-● 数字の裏取り
-  ・国立大学全体の図書館購読料・APC総額の推計値
-  ・日本人著者によるハゲタカ誌投稿件数の推計値
-  ・Nature誌の『論文要旨1%以上にAI生成痕跡』の出典
+<!-- 14 -->
+<div class="slide">
+  <div class="slide-num">14 / 19</div>
+  <div class="tag">課題③ 大学の運営 — お金と時間</div>
+  <h2>基盤のお金は2004年度から11.6%減り、教員の勤務時間に占める研究の割合は46.5%から32.2%に下がった。代わりに増えたのは教育と診療</h2>
+  <div class="cols2">
+    <div>
+      <div class="figcap">研究の割合（教員の勤務時間のうち）</div>
+      <div class="fig">
+      <svg viewBox="0 0 380 205" role="img" aria-label="教員の研究時間の割合の推移（折れ線）">
+        <line x1="40" y1="20" x2="345" y2="20" stroke="#2a2a4a"/>
+        <line x1="40" y1="95" x2="345" y2="95" stroke="#2a2a4a"/>
+        <line x1="40" y1="170" x2="345" y2="170" stroke="#555"/>
+        <text x="34" y="24" text-anchor="end" fill="#888" font-size="10">50%</text>
+        <text x="34" y="99" text-anchor="end" fill="#888" font-size="10">40%</text>
+        <text x="34" y="174" text-anchor="end" fill="#888" font-size="10">30%</text>
+        <polyline points="40,46.3 125.7,123.5 197.1,132.5 268.6,148.3 340,153.5" fill="none" stroke="#c46cf0" stroke-width="3"/>
+        <g fill="#c46cf0">
+          <circle cx="40" cy="46.3" r="4"/><circle cx="125.7" cy="123.5" r="4"/><circle cx="197.1" cy="132.5" r="4"/><circle cx="268.6" cy="148.3" r="4"/><circle cx="340" cy="153.5" r="4"/>
+        </g>
+        <g fill="#fff" font-size="11" font-weight="700" text-anchor="middle">
+          <text x="52" y="38">46.5</text><text x="125.7" y="114">36.2</text><text x="197.1" y="123">35.0</text><text x="268.6" y="139">32.9</text><text x="340" y="144">32.2</text>
+        </g>
+        <g fill="#aaa" font-size="10.5" text-anchor="middle">
+          <text x="40" y="188">2002</text><text x="125.7" y="188">2008</text><text x="197.1" y="188">2013</text><text x="268.6" y="188">2018</text><text x="340" y="188">2023年度</text>
+        </g>
+      </svg>
+      </div>
+    </div>
+    <div>
+      <div class="tile" style="margin-bottom:12px"><div class="tn" style="color:#ff7b7b">−11.6<small>%</small></div><div class="tc">運営費交付金 2004年度 1兆2,415億円 → 2026年度 1兆971億円。2026年度は前年度より188億円増えたが、2004年度の水準には戻っていない</div></div>
+      <div class="pair">
+        <div class="leg">勤務時間の内訳<i class="old"></i>2002年度<i class="new"></i>2023年度</div>
+        <div class="prow"><span>研究</span><div class="pb"><span class="old" style="width:93%">46.5%</span><span class="new" style="width:64.4%">32.2%</span></div></div>
+        <div class="prow"><span>教育</span><div class="pb"><span class="old" style="width:47.4%">23.7%</span><span class="new" style="width:60.8%">30.4%</span></div></div>
+        <div class="prow"><span>学内事務など</span><div class="pb"><span class="old" style="width:39.8%">19.9%</span><span class="new" style="width:39.4%">19.7%</span></div></div>
+        <div class="prow"><span>診療など</span><div class="pb"><span class="old" style="width:7.2%;min-width:34px">3.6%</span><span class="new" style="width:18%">9.0%</span></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="src">出典: 国立大学協会「12-1．予算（国立大学運営費交付金等）の推移」／文部科学省「国立大学法人運営費交付金等についての文部科学省の基本的考え方」（令和8年度予算案 1兆971億円・188億円増額）／文部科学省「令和5年度 大学等におけるフルタイム換算データに関する調査（概要）」2025年1月31日 図表３・図表17（2008年度は分野の人数で重みづけした値）</div>
+</div>
 
-● 個別事例の事実関係
-  ・旭川医科大学・北海道大学・筑波大学・東京大学の学長選考紛争の詳細・時系列
-  ・2023年改正国立大学法人法の運営方針会議に関する大学側の対応
+<!-- 15 -->
+<div class="slide">
+  <div class="slide-num">15 / 19</div>
+  <div class="tag">課題③ 大学の運営 — 決め方の変化</div>
+  <h2>その間に大学の運営を決める仕組みは3回変わったが、2023年の改正法には、施行後に効果を確かめる規定が無い</h2>
+  <div class="ytl">
+    <div class="axis"></div>
+    <div class="pt" style="left:0%"></div><div class="yl top" style="left:4%">法人化</div><div class="yr" style="left:0%;transform:none">2004</div>
+    <div class="pt" style="left:81.8%"></div><div class="yl top" style="left:76%">監察会議</div><div class="yr" style="left:81.8%">2022</div>
+    <div class="pt" style="left:90.9%"></div><div class="yl bot" style="left:90.9%;top:74px">運営方針会議</div><div class="yr" style="left:90.9%">2024</div>
+    <div class="pt ng" style="left:100%"></div><div class="yl top ng" style="left:96%">検証は？</div><div class="yr" style="left:100%;transform:translateX(-100%)">2026</div>
+  </div>
+  <div class="ev">
+    <div><span class="when">2004年4月</span>国立大学が国の機関から<b>国立大学法人</b>になる</div>
+    <div><span class="when">2022年4月（2021年5月公布）</span>学長を選ぶ会議を<b>学長選考・監察会議</b>に改め、学長の仕事を監督させる</div>
+    <div><span class="when">2024年10月（2023年12月公布）</span>規模の大きい法人に<b>運営方針会議</b>を置き、中期計画・予算・決算をここで決める</div>
+  </div>
+  <div class="chips"><span>運営方針会議を置く8法人（2025年12月時点）：</span><span class="ch">東北</span><span class="ch">筑波</span><span class="ch">東京</span><span class="ch">東京科学</span><span class="ch">東海国立大学機構</span><span class="ch">京都</span><span class="ch">大阪</span><span class="ch">九州</span></div>
+  <div class="nocheck"><b>施行後の検証：規定なし。</b>2023年の改正法に、効果を確かめて報告する条文は無い</div>
+  <div class="src">出典: 国立大学法人法（平成15年法律第112号）第21条の5・第21条の6（e-Gov 法令データ）／国立大学法人法の一部を改正する法律（令和5年法律第88号・衆議院 制定法律情報）／文部科学省「国立大学法人ガバナンス・コードの改訂について」／文部科学省「運営方針会議を置く国立大学法人一覧」令和7年12月1日時点</div>
+</div>
 
-● 制度改正の最新状況
-  ・国立大学法人法の2023年改正条文と運用通知
-  ・文科省『学術論文等のオープンアクセス実現に向けた基本方針』(2024)の最新版
-  ・NISTEP/JSTのハゲタカ対応ガイドラインの最新版
+<!-- 16 -->
+<div class="slide">
+  <div class="slide-num">16 / 19</div>
+  <div class="tag">解決策③ 大学の運営</div>
+  <h2>国立大学法人法に、運営の仕組みを5年ごとに検証して国会に報告する規定を足し、運営方針会議の委員の選任理由と議事の要旨を公表させる</h2>
+  <div class="steps c3">
+    <div class="sp"><b>2024年10月</b>運営方針会議の施行</div>
+    <div class="sp"><b>次の法改正</b>検証と公表の規定を足す</div>
+    <div class="sp"><b>2028年度</b>教員の勤務時間の調査（5年ごと）</div>
+    <div class="sp"><b>2029年度</b>1回目の検証を国会に報告</div>
+  </div>
+  <div class="w5 c3">
+    <div><span class="wl">誰が</span>国会が法を改正し、文部科学省が検証する。公立大学は、議会が中期目標を議決するときに同じ検証を求める</div>
+    <div><span class="wl">何を</span>①運営方針会議・学長選考・監察会議が研究と教育にどう効いたかを5年ごとに検証し報告 ②委員の選任理由と議事の要旨を公表</div>
+    <div><span class="wl">いつ</span>施行（2024年10月）から5年となる2029年度に1回目の報告</div>
+    <div class="goal"><span class="wl">目標</span>8法人すべてで選任理由と議事の要旨を公表。報告に研究の割合と運営費交付金の額を載せる</div>
+    <div><span class="wl">測り方</span>文部科学省が5年ごとに行う教員の勤務時間の調査（次は2028年度）と、運営費交付金の額</div>
+  </div>
+  <div class="prec"><b>前例：</b>学長選考では、選考の結果と選考の基準の公表がすでに法律で義務になっている（国立大学法人法 第12条第7項）</div>
+  <div class="src">出典: 国立大学法人法 第12条第7項（e-Gov 法令データ）／文部科学省「大学等におけるフルタイム換算データに関する調査 結果の再公表について」2025年1月31日（5年毎に実施する調査）</div>
+</div>
 
-参考にした主な情報源(v1からの調査):
-  ・文科省NISTEP / JST
-  ・各大学図書館サイト(JUSTICE等)
-  ・Business Insider Japan(法人化20年関連報道)
-  ・国際科学院連合(IAP)ハゲタカ実務チェックリスト日本語版(2024)</div>
-  <div class="disclaimer">AIで作成しているため事実確認が必要です</div>
+<!-- 17 -->
+<div class="slide">
+  <div class="slide-num">17 / 19</div>
+  <div class="tag">施策の一覧① 国政</div>
+  <h2>国政で打てる施策は11本。本編の3本のほかは、本編が動いた後に足す候補</h2>
+  <div class="legend"><span class="ibadge cm solid">本編</span>＝8・12・16枚目の解決策</div>
+  <div class="mx">
+    <div class="c1">
+      <div class="mh">① 学術出版のお金（2本）</div>
+      <div class="pol main"><span class="ibadge cm solid">本編①</span><b>全大学分の転換契約</b>出版社ごとに購読料と掲載料を1本に。国が交渉の予算と人を付ける</div>
+      <div class="pol"><b>国内の公開基盤</b>J-STAGE など国内の公開基盤に予算を足し、海外の掲載料に頼る分を減らす</div>
+    </div>
+    <div class="c2">
+      <div class="mh">② 論文の質（4本）</div>
+      <div class="pol main"><span class="ibadge cm solid">本編②</span><b>本数で評価しない指針</b>大綱的指針と科研費・JSTの審査に書く</div>
+      <div class="pol"><b>査読を業績に</b>researchmap に査読の件数を載せ、審査で参照する</div>
+      <div class="pol"><b>査読の時間を認める</b>科研費の中で、査読にかける時間と費用を計上できるようにする</div>
+      <div class="pol"><b>粗悪誌の判定を公的に</b>NISTEP・JSTが判定一覧を持ち、不服の申し立ても受ける</div>
+    </div>
+    <div class="c3">
+      <div class="mh">③ 大学の運営（5本）</div>
+      <div class="pol main"><span class="ibadge cm solid">本編③</span><b>運営の仕組みの検証</b>5年ごとの検証と国会報告、選任理由と議事の要旨の公表</div>
+      <div class="pol"><b>意向投票の扱いを法に</b>投票と違う結論を出すときは、理由と記録の公表を義務にする</div>
+      <div class="pol"><b>委員の選び方を公開</b>学長選考・監察会議の学外委員の選び方と利害関係を公表</div>
+      <div class="pol"><b>運営費交付金の配分指標</b>若手研究者の比率や研究の時間の割合を入れる</div>
+      <div class="pol"><b>授業と診療の専任教員</b>国の予算で置き、研究の時間を戻す</div>
+    </div>
+  </div>
+</div>
+
+<!-- 18 -->
+<div class="slide">
+  <div class="slide-num">18 / 19</div>
+  <div class="tag">施策の一覧② 地方議会</div>
+  <h2>地方議会の権限が届くのは公立大学・自治体の助成・高校。中期目標の議決と意見書で、国政の施策を地方から後押しできる</h2>
+  <div class="legend"><span class="ibadge c1">①お金</span><span class="ibadge c2">②論文の質</span><span class="ibadge c3">③大学の運営</span><span class="ibadge c4">地域</span></div>
+  <div class="mx mx4">
+    <div>
+      <div class="mh">公立大学（3本）</div>
+      <div class="pol"><span class="ibadge c1">①</span> <span class="ibadge c2">②</span><b>中期目標に書いて議決</b>転換契約への参加と、査読を教員の業績に数えること</div>
+      <div class="pol"><span class="ibadge c2">②</span><b>研究の時間と評価</b>研究の時間の割合の目標と、本数で評価しない方針を中期目標に</div>
+      <div class="pol"><span class="ibadge c3">③</span><b>学長選考の公表</b>意向投票の実施と結果、選考の議事の要旨の公表を定款や条例で</div>
+    </div>
+    <div>
+      <div class="mh">自治体の研究助成</div>
+      <div class="pol"><span class="ibadge c1">①</span> <span class="ibadge c2">②</span><b>成果の公開を条件に</b>交付の条件に、成果を誰でも読める形で公開することを入れる</div>
+    </div>
+    <div>
+      <div class="mh">高校</div>
+      <div class="pol"><span class="ibadge c2">②</span><b>「情報Ⅰ」の教員研修</b>査読とは何か、AIが作った情報や粗悪な学術誌の見分け方を扱う</div>
+    </div>
+    <div>
+      <div class="mh">議会そのもの（2本）</div>
+      <div class="pol"><span class="ibadge c4">地域</span><b>政策研究の場</b>公立大学・地元の大学・自治体職員が地域の課題を一緒に調べる場を、条例と予算で</div>
+      <div class="pol"><span class="ibadge c3">③</span><b>国への意見書</b>国立大学法人法の改正（解決策③）を求める意見書を採択（地方自治法 第99条）</div>
+    </div>
+  </div>
+  <div class="src">出典: 地方独立行政法人法 第25条第3項・第78条／地方自治法 第99条（e-Gov 法令データ）</div>
+</div>
+
+<!-- 19 -->
+<div class="slide slide-key">
+  <div class="slide-num">19 / 19</div>
+  <div class="tag">次に何をするか</div>
+  <h2>3つの解決策は、どれも2026〜2029年度に決まる場がある</h2>
+  <div class="gantt">
+    <div></div><div class="gh">2026年度</div><div class="gh">2027年度</div><div class="gh">2028年度</div><div class="gh">2029年度</div>
+
+    <div class="gl c1">解決策① お金</div>
+    <div class="gc on c1"><span class="gy">2026年度</span>Elsevierとの今の契約が2026年で終わる</div>
+    <div class="gc on c1"><span class="gy">2027年度</span>予算で交渉の体制。次の契約から全大学分を1本に</div>
+    <div class="gc"></div><div class="gc"></div>
+
+    <div class="gl c2">解決策② 論文の質</div>
+    <div class="gc on c2"><span class="gy">2026年度</span>大綱的指針の見直しに「本数で評価しない」「査読を数える」</div>
+    <div class="gc on c2"><span class="gy">2027年度</span>科研費・JSTの公募から審査に反映</div>
+    <div class="gc"></div><div class="gc"></div>
+
+    <div class="gl c3">解決策③ 大学の運営</div>
+    <div class="gc"></div><div class="gc"></div>
+    <div class="gc on c3"><span class="gy">2028年度</span>教員の勤務時間の調査</div>
+    <div class="gc on c3"><span class="gy">2029年度</span>1回目の検証を国会に報告</div>
+    <div class="gnote">国立大学法人法の次の改正で検証と公表の規定を足す。地方議会からは意見書で後押しする</div>
+  </div>
 </div>
 
 </body>
