@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>文京区クイズ</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+       background: #f5f5f5; color: #333; }
+.wrap { max-width: 640px; margin: 0 auto; padding: 16px 16px 32px; }
+h1 { font-size: 1.4em; margin-bottom: 8px; }
+.sub { color: #666; font-size: 0.9em; margin-bottom: 20px; line-height: 1.5; }
+.hidden { display: none !important; }
+
+/* ボタン共通 */
+button { cursor: pointer; border: none; font-size: 1em; font-family: inherit; }
+.btn-primary { background: #2563eb; color: #fff; width: 100%; margin-top: 16px;
+               padding: 14px; border-radius: 8px; font-size: 1.05em; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-ghost { background: #fff; border: 1px solid #ccc; color: #555;
+             width: 100%; margin-top: 8px; padding: 10px; border-radius: 8px; }
+.btn-ghost:hover { background: #f9fafb; }
+
+/* 出題数セレクタ */
+.field { margin-bottom: 12px; }
+.field .lbl { font-size: 0.9em; color: #555; display: block; margin-bottom: 6px; }
+.opts { display: flex; gap: 8px; flex-wrap: wrap; }
+.opt-btn { padding: 6px 14px; border-radius: 6px; background: #fff;
+           border: 1px solid #d1d5db; font-size: 0.95em; }
+.opt-btn.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+
+/* プログレス */
+.qhead { font-size: 0.88em; color: #666; margin-bottom: 6px;
+         display: flex; justify-content: space-between; align-items: center; }
+.pbar { height: 4px; background: #e5e7eb; border-radius: 2px; margin-bottom: 18px; }
+.pbar i { display: block; height: 4px; background: #2563eb; border-radius: 2px;
+          transition: width .3s; }
+.qtext { font-size: 1.1em; line-height: 1.7; margin-bottom: 20px; }
+
+/* 4択 */
+.choices { display: flex; flex-direction: column; gap: 8px; }
+.choice-btn { background: #fff; border: 1px solid #d1d5db; text-align: left;
+              padding: 12px 16px; border-radius: 8px; font-size: 1em; line-height: 1.5; }
+.choice-btn:hover:not([disabled]) { background: #f0f9ff; border-color: #93c5fd; }
+
+/* ○× */
+.maru-row { display: flex; gap: 12px; }
+.maru-btn { flex: 1; font-size: 1.8em; padding: 18px 8px; border-radius: 10px;
+            background: #fff; border: 2px solid #d1d5db; }
+.maru-btn:hover:not([disabled]) { background: #f0f9ff; }
+
+/* 正解・不正解ハイライト */
+.btn-correct { background: #d1fae5 !important; border-color: #059669 !important;
+               color: #065f46 !important; }
+.btn-wrong   { background: #fee2e2 !important; border-color: #dc2626 !important;
+               color: #991b1b !important; }
+
+/* 判定パネル */
+.verdict { margin-top: 16px; padding: 12px 14px; border-radius: 8px;
+           font-size: 0.95em; line-height: 1.6; }
+.verdict.ok { background: #d1fae5; border: 1px solid #059669; color: #065f46; }
+.verdict.ng { background: #fee2e2; border: 1px solid #dc2626; color: #991b1b; }
+.verdict-label { font-weight: bold; font-size: 1.1em; display: block; margin-bottom: 4px; }
+.correct-ans { margin-bottom: 6px; }
+.quote-box { background: rgba(255,255,255,.55); border-left: 3px solid currentColor;
+             padding: 6px 10px; font-size: 0.88em; margin: 6px 0; line-height: 1.5;
+             white-space: pre-wrap; word-break: break-all; }
+.cite-row a { color: inherit; font-weight: bold; }
+
+/* 結果 */
+.score-big { font-size: 3em; font-weight: bold; text-align: center; margin: 24px 0 4px; }
+.score-rate { text-align: center; color: #666; font-size: 1.1em; margin-bottom: 20px; }
+.miss-sect h2 { font-size: 1em; color: #555; margin: 20px 0 8px; }
+.miss-item { background: #fff; border: 1px solid #e5e7eb; padding: 10px 12px;
+             border-radius: 8px; margin-bottom: 8px; font-size: 0.9em; line-height: 1.5; }
+.miss-item .ans { color: #059669; font-weight: bold; }
+
+/* 多答 */
+.multi-choices { display: flex; flex-direction: column; gap: 8px; }
+.multi-btn { background: #fff; border: 2px solid #d1d5db; text-align: left;
+             padding: 12px 16px; border-radius: 8px; font-size: 1em; line-height: 1.5;
+             cursor: pointer; font-family: inherit; }
+.multi-btn.selected { background: #dbeafe; border-color: #2563eb; color: #1e40af; }
+.multi-btn:hover:not([disabled]) { background: #f0f9ff; border-color: #93c5fd; }
+.multi-btn.m-correct { background: #d1fae5 !important; border-color: #059669 !important;
+                       color: #065f46 !important; }
+.multi-btn.m-wrong   { background: #fee2e2 !important; border-color: #dc2626 !important;
+                       color: #991b1b !important; }
+.multi-btn.m-missed  { background: #fef3c7 !important; border-color: #d97706 !important;
+                       color: #92400e !important; }
+.why-text { margin-bottom: 6px; white-space: pre-line; }
+.cite-row { font-size: 0.85em; margin-top: 6px; white-space: pre-line; overflow-wrap: anywhere; }
+
+/* エラー */
+.err-box { background: #fee2e2; border: 1px solid #dc2626; padding: 14px;
+           border-radius: 8px; color: #991b1b; margin-bottom: 12px; }
+
+footer { margin-top: 32px; font-size: 0.8em; color: #9ca3af;
+         border-top: 1px solid #e5e7eb; padding-top: 10px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ── 読み込み中 ── -->
+<div id="sc-load">
+  <h1>文京区クイズ</h1>
+  <p class="sub">問題データを読み込んでいます…</p>
+</div>
+
+<!-- ── エラー ── -->
+<div id="sc-error" class="hidden">
+  <h1>文京区クイズ</h1>
+  <div class="err-box" id="err-msg">問題データを読み込めませんでした。</div>
+  <button class="btn-ghost" id="btn-reload">再読み込み</button>
+</div>
+
+<!-- ── 開始画面 ── -->
+<div id="sc-start" class="hidden">
+  <h1>文京区クイズ</h1>
+  <p class="sub">4択・○×・多答を混ぜた全21問。問題と正解は必ず出典の引用とセットで表示されます。</p>
+
+  <div class="field">
+    <span class="lbl">出題数</span>
+    <div class="opts" id="f-num"></div>
+  </div>
+
+  <button class="btn-primary" id="btn-start">開始する</button>
+</div>
+
+<!-- ── 出題画面 ── -->
+<div id="sc-quiz" class="hidden">
+  <div class="qhead">
+    <span id="q-no">1/18問目</span>
+    <span id="q-type-label"></span>
+  </div>
+  <div class="pbar"><i id="q-bar" style="width:0%"></i></div>
+
+  <p class="qtext" id="q-text"></p>
+  <div id="q-choices"></div>
+  <button class="btn-primary hidden" id="btn-submit-multi">答える</button>
+
+  <div id="q-verdict" class="hidden"></div>
+  <button class="btn-primary hidden" id="btn-next">次へ</button>
+  <p style="font-size:.8em;color:#aaa;margin-top:8px" id="q-keyhint"></p>
+</div>
+
+<!-- ── 結果画面 ── -->
+<div id="sc-result" class="hidden">
+  <h1>結果</h1>
+  <div class="score-big" id="r-score"></div>
+  <div class="score-rate" id="r-rate"></div>
+  <div id="r-missbox" class="miss-sect hidden">
+    <h2>間違えた問題</h2>
+    <div id="r-misses"></div>
+  </div>
+  <button class="btn-primary hidden" id="btn-again">もう一度（同じ問題）</button>
+  <button class="btn-ghost" id="btn-home">最初に戻る</button>
+</div>
+
+<footer>記録はこの端末のブラウザには保存されません（シンプル版）。<br>
+答えたあとに出る引用（quote）と「出典を開く」で正誤を照合できます。<br>
+問題・出典: <code>questions.json</code>（文京区などの公式資料から原文ママ引用・でんすけ照合済み）</footer>
+
+</div><!-- /.wrap -->
+
+<script>
+(function(){
+'use strict';
+
+var ALL_Q = [];
+var selected = [];
+var current = 0;
+var score = 0;
+var misses = [];
+var answered = false;
+var numSel = 18;
+
+function $(id){ return document.getElementById(id); }
+function show(id){ $(id).classList.remove('hidden'); }
+function hide(id){ $(id).classList.add('hidden'); }
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function shuffle(a){
+  var b = a.slice();
+  for(var i = b.length - 1; i > 0; i--){
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = b[i]; b[i] = b[j]; b[j] = t;
+  }
+  return b;
+}
+function getSrcUrl(q){
+  var m = (q.cite || '').match(/https?:\/\/\S+/);
+  return m ? m[0] : null;
+}
+
+/* ── 読み込み ── */
+function load(){
+  show('sc-load'); hide('sc-error'); hide('sc-start');
+  fetch('./questions.json?_=' + Date.now())
+    .then(function(r){
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function(data){
+      ALL_Q = data.questions || [];
+      if(ALL_Q.length === 0){ throw new Error('問題が0件です'); }
+      buildNumSel(ALL_Q.length);
+      hide('sc-load');
+      show('sc-start');
+    })
+    .catch(function(e){
+      hide('sc-load');
+      $('err-msg').textContent = '問題データを読み込めませんでした: ' + e.message;
+      show('sc-error');
+    });
+}
+
+$('btn-reload').addEventListener('click', load);
+
+/* ── 出題数ボタン ── */
+function buildNumSel(total){
+  var box = $('f-num');
+  box.innerHTML = '';
+  var opts = [];
+  [5, 10, 15].forEach(function(n){ if(n < total) opts.push(n); });
+  opts.push(total);
+  numSel = total;
+  opts.forEach(function(n){
+    var btn = document.createElement('button');
+    btn.className = 'opt-btn' + (n === numSel ? ' active' : '');
+    btn.textContent = n === total ? '全問（' + total + '問）' : n + '問';
+    btn.dataset.n = n;
+    btn.addEventListener('click', function(){
+      numSel = n;
+      Array.from(box.querySelectorAll('.opt-btn')).forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+    });
+    box.appendChild(btn);
+  });
+}
+
+/* ── 開始 ── */
+$('btn-start').addEventListener('click', function(){
+  selected = shuffle(ALL_Q).slice(0, numSel);
+  current = 0; score = 0; misses = []; answered = false;
+  hide('sc-start');
+  show('sc-quiz');
+  showQuestion();
+});
+
+/* ── 問題表示 ── */
+function showQuestion(){
+  answered = false;
+  hide('btn-next');
+  hide('btn-submit-multi');
+  $('q-verdict').classList.add('hidden');
+
+  var q = selected[current];
+  $('q-no').textContent = (current + 1) + '/' + selected.length + '問目';
+  $('q-bar').style.width = (current / selected.length * 100) + '%';
+  $('q-type-label').textContent = q.type === 'maru' ? '○×' : (q.type === 'multi' ? '多答' : '4択');
+  $('q-text').textContent = q.q;
+  $('q-keyhint').textContent = q.type === 'maru'
+    ? 'キーボード: O か 1 ＝ ○ ／ X か 2 ＝ × ／ 解答後は Enter で次へ'
+    : (q.type === 'multi' ? 'すべての正解を選んで「答える」をタップ（Enter でも送信）' : '解答後は Enter か Space で次へ');
+
+  var box = $('q-choices');
+  box.innerHTML = '';
+
+  if(q.type === 'maru'){
+    box.className = 'maru-row';
+    ['○', '×'].forEach(function(ch){
+      var btn = document.createElement('button');
+      btn.className = 'maru-btn';
+      btn.textContent = ch;
+      btn.dataset.val = ch;
+      btn.addEventListener('click', answer);
+      box.appendChild(btn);
+    });
+  } else if(q.type === 'multi'){
+    box.className = 'multi-choices';
+    q.choices.forEach(function(ch){
+      var btn = document.createElement('button');
+      btn.className = 'multi-btn';
+      btn.textContent = ch;
+      btn.dataset.val = ch;
+      btn.addEventListener('click', function(){
+        if(!answered) btn.classList.toggle('selected');
+      });
+      box.appendChild(btn);
+    });
+    show('btn-submit-multi');
+  } else {
+    box.className = 'choices';
+    shuffle(q.choices).forEach(function(ch){
+      var btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.textContent = ch;
+      btn.dataset.val = ch;
+      btn.addEventListener('click', answer);
+      box.appendChild(btn);
+    });
+  }
+}
+
+/* ── 解答 ── */
+function answer(e){
+  if(answered) return;
+  answered = true;
+  var q = selected[current];
+  var val = e.currentTarget.dataset.val;
+  var ok = val === q.a;
+  if(ok) score++; else misses.push(q);
+
+  /* ボタン色付け */
+  Array.from($('q-choices').querySelectorAll('button')).forEach(function(btn){
+    if(btn.dataset.val === q.a) btn.classList.add('btn-correct');
+    else if(btn.dataset.val === val && !ok) btn.classList.add('btn-wrong');
+    btn.disabled = true;
+  });
+
+  /* 判定パネル */
+  var url = getSrcUrl(q);
+  var linkHtml = url
+    ? ' <a href="' + esc(url) + '" target="_blank" rel="noopener">出典を開く</a>'
+    : '';
+  var vd = $('q-verdict');
+  vd.className = 'verdict ' + (ok ? 'ok' : 'ng');
+  vd.innerHTML =
+    '<span class="verdict-label">' + (ok ? '◎ 正解' : '✕ 不正解') + '</span>' +
+    (!ok ? '<div class="correct-ans">正解: <b>' + esc(q.a) + '</b></div>' : '') +
+    (q.why ? '<div class="why-text">' + esc(q.why) + '</div>' : '') +
+    '<div class="quote-box">' + esc(q.quote) + '</div>' +
+    '<div class="cite-row">出典: ' + esc(q.cite) + linkHtml + '</div>';
+  vd.classList.remove('hidden');
+  show('btn-next');
+}
+
+/* ── 多答 解答 ── */
+function answerMulti(){
+  if(answered) return;
+  answered = true;
+  hide('btn-submit-multi');
+  var q = selected[current];
+  var btns = Array.from($('q-choices').querySelectorAll('.multi-btn'));
+  var selectedVals = btns
+    .filter(function(b){ return b.classList.contains('selected'); })
+    .map(function(b){ return b.dataset.val; });
+  var correctVals = q.a; // 配列
+  var ok = selectedVals.length === correctVals.length &&
+    correctVals.every(function(v){ return selectedVals.indexOf(v) !== -1; });
+
+  if(ok) score++; else misses.push(q);
+
+  /* ボタン色付け */
+  btns.forEach(function(btn){
+    btn.disabled = true;
+    var val = btn.dataset.val;
+    var isCorrect = correctVals.indexOf(val) !== -1;
+    var isSelected = btn.classList.contains('selected');
+    if(isCorrect && isSelected)       btn.classList.add('m-correct'); /* 緑: 正解かつ選んだ */
+    else if(!isCorrect && isSelected) btn.classList.add('m-wrong');   /* 赤: 正解でないのに選んだ */
+    else if(isCorrect && !isSelected) btn.classList.add('m-missed');  /* 黄: 正解なのに選ばなかった */
+  });
+
+  /* 判定パネル */
+  var url = getSrcUrl(q);
+  var linkHtml = url
+    ? ' <a href="' + esc(url) + '" target="_blank" rel="noopener">出典を開く</a>'
+    : '';
+  var vd = $('q-verdict');
+  vd.className = 'verdict ' + (ok ? 'ok' : 'ng');
+  var legendHtml = '<div style="font-size:.85em;margin:.4em 0 .5em">' +
+    '<span style="color:#065f46">■緑</span>=正解 ' +
+    '<span style="color:#92400e">■黄</span>=選び漏れ ' +
+    '<span style="color:#991b1b">■赤</span>=選び過ぎ</div>';
+  vd.innerHTML =
+    '<span class="verdict-label">' + (ok ? '◎ 正解' : '✕ 不正解') + '</span>' +
+    legendHtml +
+    (!ok ? '<div class="correct-ans">正解: <b>' + correctVals.map(esc).join('・') + '</b></div>' : '') +
+    (q.why ? '<div class="why-text">' + esc(q.why) + '</div>' : '') +
+    '<div class="quote-box">' + esc(q.quote) + '</div>' +
+    '<div class="cite-row">出典: ' + esc(q.cite) + linkHtml + '</div>';
+  vd.classList.remove('hidden');
+  show('btn-next');
+}
+
+$('btn-submit-multi').addEventListener('click', answerMulti);
+
+/* ── 次へ ── */
+$('btn-next').addEventListener('click', function(){
+  current++;
+  if(current >= selected.length) showResult();
+  else showQuestion();
+});
+
+/* ── 結果 ── */
+function showResult(){
+  hide('sc-quiz');
+  $('r-score').textContent = score + '/' + selected.length;
+  $('r-rate').textContent = Math.round(score / selected.length * 100) + '%';
+  if(misses.length > 0){
+    var ml = $('r-misses');
+    ml.innerHTML = '';
+    misses.forEach(function(q){
+      var d = document.createElement('div');
+      d.className = 'miss-item';
+      var ansText = Array.isArray(q.a) ? q.a.join('・') : q.a;
+      d.innerHTML = '<div>' + esc(q.q) + '</div>' +
+        '<div class="ans">正解: ' + esc(ansText) + '</div>';
+      ml.appendChild(d);
+    });
+    show('r-missbox');
+    show('btn-again');
+  }
+  show('sc-result');
+}
+
+$('btn-again').addEventListener('click', function(){
+  selected = shuffle(misses.slice());
+  current = 0; score = 0; misses = []; answered = false;
+  hide('sc-result');
+  $('r-missbox').classList.add('hidden');
+  $('btn-again').classList.add('hidden');
+  show('sc-quiz');
+  showQuestion();
+});
+
+$('btn-home').addEventListener('click', function(){
+  hide('sc-result');
+  $('r-missbox').classList.add('hidden');
+  $('btn-again').classList.add('hidden');
+  show('sc-start');
+});
+
+/* ── キーボード ── */
+document.addEventListener('keydown', function(e){
+  if($('sc-quiz').classList.contains('hidden')) return;
+  if(!answered){
+    var q = selected[current];
+    if(!q) return;
+    if(q.type === 'maru'){
+      var btns = $('q-choices').querySelectorAll('button');
+      if(e.key === 'o' || e.key === 'O' || e.key === '1'){ btns[0] && btns[0].click(); }
+      else if(e.key === 'x' || e.key === 'X' || e.key === '2'){ btns[1] && btns[1].click(); }
+    } else if(q.type === 'multi'){
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        if(!$('btn-submit-multi').classList.contains('hidden')) $('btn-submit-multi').click();
+      }
+    }
+  } else {
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      if(!$('btn-next').classList.contains('hidden')) $('btn-next').click();
+    }
+  }
+});
+
+/* ── 起動 ── */
+load();
+
+})();
+</script>
+</body>
+</html>
