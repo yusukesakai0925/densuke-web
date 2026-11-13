@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>公衆トイレ・ベンチマップ（私用）</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- ベンチの層だけ近い点をまとめる（#168）。読めなかったときは今までどおり1本ずつ出す -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
+  font-size: 15px;
+  color: #1a1a1a;
+}
+/* 地図は画面いっぱい。ボタンは地図の上に重ねる */
+#map { position: fixed; inset: 0; }
+
+/* 上の操作列（左上はLeafletのズームがあるので、その右から置く） */
+#bar {
+  position: fixed;
+  top: 10px;
+  left: 56px;
+  right: 10px;
+  z-index: 1000;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  pointer-events: none;
+}
+#bar button {
+  pointer-events: auto;
+  border: 1px solid #888;
+  background: #fff;
+  color: #1a1a1a;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 15px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.25);
+  cursor: pointer;
+}
+#bar button.on { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+#bar .sp { flex: 1; }
+
+/* ピン */
+.pin-toilet {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: #1565c0;
+  border: 2px solid #fff;
+  box-shadow: 0 0 2px rgba(0,0,0,.6);
+  color: #fff;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+  font-weight: bold;
+}
+/* OpenStreetMap のトイレ（区・市の公表分と見分ける）: 白地に青字 */
+.pin-toilet.osm {
+  background: #fff;
+  color: #1565c0;
+  border-color: #1565c0;
+}
+.legend {
+  background: #fff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.25);
+  font-size: 12px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+.legend .pin-toilet { display: inline-block; width: 18px; height: 18px; line-height: 14px; font-size: 9px; vertical-align: middle; }
+.pin-bench {
+  width: 22px; height: 22px;
+  border-radius: 4px;
+  background: #2e7d32;
+  border: 2px solid #fff;
+  box-shadow: 0 0 2px rgba(0,0,0,.6);
+  color: #fff;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+  font-weight: bold;
+}
+/* まとめた丸（markercluster）。トイレは青い丸・ベンチは緑の角丸で、今のピンと形・色をそろえる。
+   件数の大小では色を変えない（どちらの層かが分かればよい） */
+.cl-toilet, .cl-bench {
+  width: 38px; height: 38px;
+  box-sizing: border-box;
+  border: 2px solid #fff;
+  box-shadow: 0 0 3px rgba(0,0,0,.6);
+  color: #fff;
+  text-align: center;
+  font-weight: bold;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  line-height: 1;
+}
+.cl-toilet { border-radius: 50%; background: #1565c0; }
+.cl-bench  { border-radius: 6px; background: #2e7d32; }
+.cl-mark { font-size: 9px; opacity: .85; margin-bottom: 1px; }
+.cl-num  { font-size: 12px; }
+.me-dot {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #d32f2f;
+  border: 3px solid #fff;
+  box-shadow: 0 0 3px rgba(0,0,0,.6);
+}
+
+.popup-name { font-weight: bold; font-size: 15px; margin-bottom: 2px; }
+.popup-addr { margin-bottom: 4px; }
+.popup table { border-collapse: collapse; font-size: 13px; }
+.popup td { padding: 1px 8px 1px 0; }
+.popup-near { margin-top: 2px; font-size: 12px; color: #333; }
+.popup-src { margin-top: 4px; font-size: 11px; color: #666; }
+
+/* 現在地から近い順の一覧（画面の下。高さは画面の1/3まで、はみ出す分はスクロール） */
+#near {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 1001;
+  max-height: 33vh;
+  overflow-y: auto;
+  background: #fff;
+  border-top: 1px solid #888;
+  box-shadow: 0 -1px 4px rgba(0,0,0,.25);
+  padding: 6px 10px 8px;
+}
+#near[hidden] { display: none; }
+#private { pointer-events: auto; align-self: center; background: #fff; border: 1px solid #888; border-radius: 6px; padding: 4px 8px; font-size: 12px; color: #444; }
+#near-close {
+  position: sticky; top: 0; float: right;
+  border: 1px solid #888; background: #fff; color: #1a1a1a;
+  border-radius: 6px; padding: 4px 10px; font-size: 14px; cursor: pointer;
+}
+#near h2 { font-size: 14px; margin: 4px 0 2px; }
+#near h2 small { font-weight: normal; font-size: 11px; color: #666; margin-left: 6px; }
+#near ul { list-style: none; margin: 0; padding: 0; }
+#near li button {
+  display: flex; width: 100%; gap: 8px; align-items: baseline;
+  border: 0; border-bottom: 1px solid #eee; background: none; color: #1a1a1a;
+  padding: 6px 2px; font-size: 14px; text-align: left; cursor: pointer;
+}
+#near .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#near .nm .lm { font-size: 11px; color: #666; margin-left: 6px; }
+#near .ds { white-space: nowrap; font-weight: bold; }
+#near .dr { white-space: nowrap; color: #666; font-size: 12px; min-width: 2.5em; }
+#near .none { font-size: 13px; color: #666; padding: 4px 2px; }
+
+/* 出典（右下のattributionを折り返せるようにする） */
+.leaflet-control-attribution { max-width: 70vw; line-height: 1.4; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="bar">
+  <button type="button" data-area="bunkyo" class="on">文京区</button>
+  <button type="button" data-area="kyoto">京都市</button>
+  <span class="sp"></span>
+  <span id="private">私用（個人で使うための地図です）</span>
+  <button type="button" id="locate">現在地</button>
+</div>
+<div id="near" hidden>
+  <button type="button" id="near-close">閉じる</button>
+  <div id="near-body"></div>
+</div>
+
+<script>
+// ===== 範囲（初期表示は文京区）。データが読めたら点の範囲で上書きする =====
+const AREAS = {
+  bunkyo: { srcPrefix: '文京区', center: [35.7188, 139.7527], zoom: 14, bounds: null },
+  // 京都市は点の範囲で開くと北の山（広河原・緯度35.27）まで引いてしまい、市の中心で丸が重なるので、
+  // 中心にズーム14で寄る（useBounds: false）。北の点は地図を動かせば見える
+  kyoto:  { srcPrefix: '京都市', center: [35.0116, 135.7681], zoom: 14, bounds: null, useBounds: false },
+};
+
+// ===== 点の種類（kind）ごとの層。#168 座れるところは bench を足す =====
+const KINDS = {
+  toilet: { label: '公衆トイレ', mark: 'WC', cls: 'pin-toilet' },
+  bench:  { label: '座れるところ', mark: '座', cls: 'pin-bench' },
+};
+// bench の type（OSM のタグ）の表示名
+const TYPE_LABEL = { bench: 'ベンチ', shelter: '東屋・休憩所', picnic_table: 'ピクニックテーブル' };
+
+// ===== 地図初期化 =====
+const map = L.map('map', { zoomControl: true }).setView(AREAS.bunkyo.center, AREAS.bunkyo.zoom);
+L.tileLayer('https://maps.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
+  attribution: '© <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>',
+  maxZoom: 18
+}).addTo(map);
+map.attributionControl.addAttribution('文京区オープンデータ 区内公衆便所（CC BY 4.0）');
+map.attributionControl.addAttribution('京都市オープンデータ 公衆トイレ一覧（CC BY 4.0）');
+map.attributionControl.addAttribution('© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>（ODbL）');
+
+const layers = {};
+const layerCtl = L.control.layers(null, null, { position: 'bottomleft' });
+
+// まとめる層とその強さ。トイレは OSM 分で京都市が数百本に増えるのでまとめるが、
+// 探す人がすぐ見たいので半径を小さく・早めの拡大で分かれるようにする
+const CLUSTER_KINDS = {
+  bench:  { maxClusterRadius: 50, disableClusteringAtZoom: 18 },
+  toilet: { maxClusterRadius: 30, disableClusteringAtZoom: 16 },
+};
+const SRC_OSM_PREFIX = '© OpenStreetMap';
+
+// まとめた丸の見た目。既定の緑・黄・橙の丸だとトイレかベンチか押すまで分からないので、
+// 層ごとにピンと同じ色・印（WC／座）に件数を添える
+function clusterIconFor(kind) {
+  const k = KINDS[kind] || { mark: '?' };
+  const cls = kind === 'bench' ? 'cl-bench' : 'cl-toilet';
+  return cluster => L.divIcon({
+    className: '',
+    html: '<div class="' + cls + '"><span class="cl-mark">' + k.mark + '</span>'
+      + '<span class="cl-num">' + cluster.getChildCount() + '</span></div>',
+    iconSize: [38, 38],
+    iconAnchor: [19, 19]
+  });
+}
+
+function getLayer(kind) {
+  if (!layers[kind]) {
+    const opt = CLUSTER_KINDS[kind];
+    const useCluster = opt && typeof L.markerClusterGroup === 'function';
+    layers[kind] = (useCluster
+      ? L.markerClusterGroup(Object.assign({ chunkedLoading: true, showCoverageOnHover: false,
+          iconCreateFunction: clusterIconFor(kind) }, opt))
+      : L.layerGroup()).addTo(map);
+    const k = KINDS[kind];
+    layerCtl.addOverlay(layers[kind], k ? k.label : kind);
+  }
+  return layers[kind];
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+const ROWS = [
+  ['wheelchair', '車椅子'],
+  ['baby', '乳幼児'],
+  ['ostomate', 'オストメイト'],
+  ['hours', '開放時間'],
+  ['type', '種類'],
+  ['backrest', '背もたれ'],
+  ['covered', '屋根'],
+];
+
+function popupHtml(p) {
+  let rows = '';
+  for (const [key, label] of ROWS) {
+    if (p[key] !== undefined && p[key] !== null && p[key] !== '') {
+      const v = key === 'type' ? (TYPE_LABEL[p[key]] || p[key]) : p[key];
+      rows += '<tr><td>' + label + '</td><td>' + esc(v) + '</td></tr>';
+    }
+  }
+  return '<div class="popup">'
+    + '<div class="popup-name">' + esc(p.name || '') + '</div>'
+    + '<div class="popup-addr">' + esc(p.addr || '') + '</div>'
+    + (p.near ? '<div class="popup-near">' + esc(nearText(p.near, true)) + '</div>' : '')
+    + (rows ? '<table>' + rows + '</table>' : '')
+    + '<div class="popup-src">出典: ' + esc(p.src || '') + '</div>'
+    + '</div>';
+}
+
+// 名前の無い OSM の点に build_data.py が付けた目印（公表トイレ・公園・駅・寺社、500m 以内）の文。
+// full=true はポップアップ用「目印: 富坂上（区の公衆トイレ）から北東へ120m」、
+// false は一覧用「富坂上から北東120m」。距離は fmtDist に合わせる
+const NEAR_SRC_LABEL = { bunkyo: '区の公衆トイレ', kyoto: '市の公衆トイレ', park: '公園', station: '駅', worship: '寺社' };
+function nearText(n, full) {
+  // OSM の駅の name は「後楽園」のように駅が付かないことが多いので足す
+  const name = n.src === 'station' && !n.name.endsWith('駅') ? n.name + '駅' : n.name;
+  if (!full) return name + 'から' + n.dir + fmtDist(n.m);
+  const of = NEAR_SRC_LABEL[n.src];
+  // 括弧の種別を付けるのは、名前がその語で終わっていないときだけ
+  const label = (of && !name.endsWith(of)) ? '（' + of + '）' : '';
+  return '目印: ' + name + label + 'から' + n.dir + 'へ' + fmtDist(n.m);
+}
+
+function iconFor(kind, src) {
+  const k = KINDS[kind] || { mark: '?', cls: 'pin-toilet' };
+  // トイレは出典で塗りを変える（青地＝区・市の公表分、白地＝OpenStreetMap）
+  const osm = kind === 'toilet' && (src || '').startsWith(SRC_OSM_PREFIX);
+  return L.divIcon({
+    className: '',
+    html: '<div class="' + k.cls + (osm ? ' osm' : '') + '">' + k.mark + '</div>',
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+    popupAnchor: [0, -12]
+  });
+}
+
+// ===== 範囲の切り替え =====
+let current = 'bunkyo';
+function goArea(key) {
+  current = key;
+  const a = AREAS[key];
+  if (a.bounds && a.useBounds !== false) map.fitBounds(a.bounds, { padding: [30, 30] });
+  else map.setView(a.center, a.zoom);
+  document.querySelectorAll('#bar button[data-area]').forEach(b => {
+    b.classList.toggle('on', b.dataset.area === key);
+  });
+}
+document.querySelectorAll('#bar button[data-area]').forEach(b => {
+  b.addEventListener('click', () => goArea(b.dataset.area));
+});
+
+// ===== 現在地（拒否・失敗のときは何もしない） =====
+let meMarker = null;
+document.getElementById('locate').addEventListener('click', () => {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(pos => {
+    const ll = [pos.coords.latitude, pos.coords.longitude];
+    const icon = L.divIcon({ className: '', html: '<div class="me-dot"></div>', iconSize: [16, 16], iconAnchor: [8, 8] });
+    if (meMarker) meMarker.setLatLng(ll);
+    else meMarker = L.marker(ll, { icon, zIndexOffset: 1000 }).addTo(map);
+    map.setView(ll, Math.max(map.getZoom(), 16));
+    meLL = ll;
+    showNear();
+  }, () => {}, { enableHighAccuracy: true, timeout: 10000 });
+});
+
+// ===== 現在地から近い順の一覧（#167・#168 5回目） =====
+// 点は読み込み時に kind ごとに { p, marker } で貯める
+const allPts = {};
+let meLL = null;
+const NEAR_N = 3;
+const NEAR_TITLE = { toilet: '近いトイレ', bench: '近い座れる所' };
+
+// 2点の直線距離（m）。build_data.py の meters()（haversine）を写したもの
+function meters(lat1, lon1, lat2, lon2) {
+  const r = 6371000.0, rad = Math.PI / 180;
+  const p1 = lat1 * rad, p2 = lat2 * rad;
+  const dp = p2 - p1, dl = (lon2 - lon1) * rad;
+  const a = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+  return 2 * r * Math.asin(Math.sqrt(a));
+}
+
+// 距離の書き方: 100m 未満は10m単位、100m〜1km 未満は1m単位、1km 以上は 0.1km 単位
+function fmtDist(m) {
+  if (m < 10) return '10m未満';
+  if (m < 100) return Math.round(m / 10) * 10 + 'm';
+  const r = Math.round(m);
+  if (r < 1000) return r + 'm';
+  return (m / 1000).toFixed(1) + 'km';
+}
+
+// a から見た b の方角（8方位）。a・b は [lat, lon]
+function bearing8(a, b) {
+  const rad = Math.PI / 180;
+  const p1 = a[0] * rad, p2 = b[0] * rad, dl = (b[1] - a[1]) * rad;
+  const y = Math.sin(dl) * Math.cos(p2);
+  const x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl);
+  const deg = (Math.atan2(y, x) / rad + 360) % 360;
+  return ['北', '北東', '東', '南東', '南', '南西', '西', '北西'][Math.round(deg / 45) % 8];
+}
+
+// ll から近い順に n 件。戻り値は [{ item, m }]
+function nearest(items, ll, n) {
+  return items
+    .map(item => ({ item, m: meters(ll[0], ll[1], item.p.lat, item.p.lon) }))
+    .sort((x, y) => x.m - y.m)
+    .slice(0, n);
+}
+
+// 押した点に寄ってポップアップを開く。まとめた丸の中にあるときは分かれるまで寄る
+function openPoint(kind, item) {
+  const lay = layers[kind];
+  if (lay && typeof lay.zoomToShowLayer === 'function') {
+    lay.zoomToShowLayer(item.marker, () => item.marker.openPopup());
+  } else {
+    map.setView(item.marker.getLatLng(), Math.max(map.getZoom(), 17));
+    item.marker.openPopup();
+  }
+}
+
+function showNear() {
+  const box = document.getElementById('near');
+  const body = document.getElementById('near-body');
+  if (!meLL) { box.hidden = true; return; }
+  body.innerHTML = '';
+  let shown = 0;
+  for (const kind of ['toilet', 'bench']) {
+    // 層を切り替えで消しているときは、その一覧も出さない
+    if (!layers[kind] || !map.hasLayer(layers[kind]) || !(allPts[kind] || []).length) continue;
+    shown++;
+    const h = document.createElement('h2');
+    h.innerHTML = esc(NEAR_TITLE[kind]) + ' ' + NEAR_N + '件<small>直線距離</small>';
+    body.appendChild(h);
+    const ul = document.createElement('ul');
+    for (const { item, m } of nearest(allPts[kind], meLL, NEAR_N)) {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      const name = item.p.name || (KINDS[kind] ? KINDS[kind].label : '');
+      btn.innerHTML = '<span class="nm">' + esc(name)
+        + (item.p.near ? '<small class="lm">' + esc(nearText(item.p.near, false)) + '</small>' : '') + '</span>'
+        + '<span class="ds">' + fmtDist(m) + '</span>'
+        + '<span class="dr">' + bearing8(meLL, [item.p.lat, item.p.lon]) + '</span>';
+      btn.addEventListener('click', () => openPoint(kind, item));
+      li.appendChild(btn);
+      ul.appendChild(li);
+    }
+    body.appendChild(ul);
+  }
+  box.hidden = shown === 0;
+  liftControls();
+}
+
+// 一覧が出ている間は、下隅の層切り替え・凡例・出典を一覧の上へ逃がす（一覧の下に隠れて押せなくなるため）
+function liftControls() {
+  const box = document.getElementById('near');
+  const h = box.hidden ? 0 : box.offsetHeight;
+  document.querySelectorAll('.leaflet-bottom').forEach(el => { el.style.bottom = h + 'px'; });
+}
+
+document.getElementById('near-close').addEventListener('click', () => {
+  document.getElementById('near').hidden = true;
+  meLL = null;  // 閉じたら、層の切り替えで勝手に開き直さない（もう一度「現在地」で出す）
+  liftControls();
+});
+map.on('overlayadd overlayremove', showNear);
+
+// ===== データ読み込み =====
+// 片方のファイルが無い・壊れていても、もう片方は出す
+const loadJson = url => fetch(url).then(r => r.ok ? r.json() : []).catch(() => []);
+Promise.all([loadJson('data/toilets.json'), loadJson('data/benches.json')])
+  .then(([toilets, benches]) => {
+    // 範囲（bounds）はトイレの点だけで決める（kind が toilet かつ src が 文京区…／京都市…）
+    const points = toilets.concat(benches);
+    const pts = { bunkyo: [], kyoto: [] };
+    for (const p of points) {
+      if (typeof p.lat !== 'number' || typeof p.lon !== 'number') continue;
+      const kind = p.kind || 'toilet';
+      const marker = L.marker([p.lat, p.lon], { icon: iconFor(kind, p.src) })
+        .bindPopup(popupHtml(p))
+        .addTo(getLayer(kind));
+      (allPts[kind] = allPts[kind] || []).push({ p, marker });
+      if (kind !== 'toilet') continue;
+      for (const key in AREAS) {
+        if ((p.src || '').startsWith(AREAS[key].srcPrefix)) pts[key].push([p.lat, p.lon]);
+      }
+    }
+    for (const key in AREAS) {
+      if (pts[key].length) AREAS[key].bounds = L.latLngBounds(pts[key]);
+    }
+    // 層が2種類以上になったら切り替えを出す（benches.json が空なら toilet だけなので出さない）
+    if (Object.keys(layers).length > 1) layerCtl.addTo(map);
+    // 凡例1行（トイレの出典の見分け）。OSM のトイレが入っているときだけ出す
+    if (toilets.some(p => (p.src || '').startsWith(SRC_OSM_PREFIX))) {
+      const legend = L.control({ position: 'bottomleft' });
+      legend.onAdd = () => {
+        const d = L.DomUtil.create('div', 'legend');
+        d.innerHTML = '<span class="pin-toilet">WC</span> 区・市の公表分　'
+          + '<span class="pin-toilet osm">WC</span> OpenStreetMap';
+        return d;
+      };
+      legend.addTo(map);
+    }
+    goArea(current);
+    // データより先に現在地が取れていたら、ここで一覧を出し直す
+    showNear();
+  })
+  .catch(() => {});
+</script>
+</body>
+</html>
