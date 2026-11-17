@@ -32,7 +32,6 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .ph h2.msg{margin-bottom:4px}
 .pg{position:absolute;right:28px;bottom:18px;font-size:16px;color:var(--sub)}
 .time{display:none}
-.slide::after{content:"作成中資料";position:absolute;top:14px;right:20px;background:#d64545;color:#fff;font-size:15px;font-weight:700;padding:3px 12px;border-radius:999px;letter-spacing:.05em}
 .center{display:flex;flex-direction:column;justify-content:center;height:100%}
 .big{font-size:44px;font-weight:800;line-height:1.45}
 .q{font-size:48px;font-weight:800;line-height:1.5}
@@ -70,7 +69,7 @@ body.present .slide.on{display:block}
   .help{display:none!important}
   @page{size:1280px 720px;margin:0}
 }
-/* 16枚目の詳細（7つの段階・くわしく） */
+/* 17枚目の詳細（7つの段階・くわしく） */
 
 .strip{display:flex;gap:6px;margin:-2px 0 12px}
 .chip{font-size:15px;font-weight:700;padding:4px 10px;border-radius:999px;background:#eef1f4;color:#7b8794}
@@ -116,7 +115,7 @@ pre.code .cm{color:#9aa5b1}
 .kpi{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .kpi div{background:#f5f7fa;border-radius:6px;padding:8px 10px;font-size:15px;color:var(--sub)}
 .kpi b{display:block;font-size:26px;color:var(--ink)}
-.case{background:var(--paper);border-radius:10px;padding:16px 22px;font-size:24px;line-height:1.6;margin-bottom:22px}
+.case{background:var(--paper);border-radius:10px;padding:16px 22px;font-size:24px;line-height:1.6;margin-bottom:26px}
 .ov{display:flex;gap:8px}
 .ovc{flex:1;text-align:center}
 .ovh{background:var(--c);color:#fff;font-weight:800;font-size:21px;padding:12px 4px;border-radius:8px;line-height:1.3}
@@ -173,6 +172,27 @@ table.sum td.pn{font-weight:800;color:#fff;background:var(--c);white-space:nowra
 .tocc li:last-child{border-bottom:none}
 .tocc li b{color:var(--tc);white-space:nowrap}
 .tocf{display:flex;gap:40px;margin-top:16px;font-size:19px;color:var(--sub);font-weight:700}
+.kz-sec{display:flex;align-items:center;gap:12px;font-size:21px;font-weight:700;margin:0 0 8px}
+.kz-pill{color:#fff;font-size:18px;font-weight:800;padding:2px 16px;border-radius:999px}
+.kz-flow{display:grid;grid-template-columns:72px repeat(7,1fr);gap:5px 3px;align-items:center;margin-bottom:12px}
+.kz-who{font-size:21px;font-weight:800}
+.kz-ch{color:#fff;font-size:19px;font-weight:800;text-align:center;line-height:42px;height:42px;clip-path:polygon(0 0,calc(100% - 13px) 0,100% 50%,calc(100% - 13px) 100%,0 100%,13px 50%)}
+.kz-c{background:var(--b)} .kz-i{background:var(--a)}
+.kz-diff{display:grid;grid-template-columns:72px repeat(3,1fr);gap:6px 10px;align-items:stretch}
+.kz-h{font-size:21px;font-weight:800;text-align:center;padding-bottom:2px}
+.kz-cell{display:flex;align-items:center;gap:12px;border-radius:8px;padding:8px 12px;font-size:21px;font-weight:700;line-height:1.3;min-height:72px}
+.kz-cell svg{flex:0 0 58px;width:58px;height:58px}
+.kz-cell.c{background:var(--b2)} .kz-cell.i{background:var(--a2)}
+.kz-so{margin-top:14px;background:var(--ink);color:#fff;font-size:27px;font-weight:800;text-align:center;padding:9px 16px;border-radius:8px}
+.kz-same{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px}
+.kz-card{display:flex;align-items:center;gap:14px;background:#e8f5ee;border:2px solid #2f9e6e;border-radius:10px;padding:12px 16px}
+.kz-card svg{flex:0 0 60px;width:60px;height:60px}
+.kz-ct{font-size:26px;font-weight:800;color:#1f6e4b;margin-bottom:2px}
+.kz-cd{font-size:19px;font-weight:700;line-height:1.35}
+.kz-big{color:var(--ink);padding:18px 4px 0;font-size:25px;font-weight:700;line-height:1.55;white-space:nowrap}
+.kz-big b{display:block;font-size:30px;font-weight:800;margin-top:10px;line-height:1.35}
+.kz-but{margin-right:4px}
+.kz-src{font-size:14px;color:var(--sub);margin-top:6px}
 </style>
 </head>
 <body>
@@ -264,10 +284,23 @@ table.sum td.pn{font-weight:800;color:#fff;background:var(--c);white-space:nowra
 </section>
 
 <section class="slide">
+  <div class="ttl"><span class="pt">はじめに</span><span class="tt">建設プロジェクトとの比較</span></div>
+  <h2 class="msg" style="font-size:30px;line-height:1.3;margin-bottom:10px">「作る」点では建設プロジェクトと似ているが、<br>どんな作業が行われているかはあまり知られていない</h2>
+  <div class="kz-sec"><span class="kz-pill" style="background:#2f9e6e">同じ</span>建設もITも、次の3つをする</div>
+  <div class="kz-same">
+    <div class="kz-card"><svg viewBox="0 0 64 64" aria-hidden="true" fill="none" stroke="#2f9e6e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="12" y="8" width="40" height="50" rx="3"/><path d="M20 22h24M20 31h24M20 40h14"/><path d="M36 48l5 5 10-12" stroke-width="4"/></svg><div><div class="kz-ct">入札する</div><div class="kz-cd">議会が予算を通した後、<br>役所が入札で業者を決める</div></div></div>
+    <div class="kz-card"><svg viewBox="0 0 64 64" aria-hidden="true" fill="none" stroke="#2f9e6e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 54h44"/><path d="M16 54V30l16-14 16 14v24"/><path d="M27 54V40h10v14"/></svg><div><div class="kz-ct">作る</div><div class="kz-cd">業者が設計してから作り、<br>役所が確かめて受け取る</div></div></div>
+    <div class="kz-card"><svg viewBox="0 0 64 64" aria-hidden="true" fill="none" stroke="#2f9e6e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M50 30a18 18 0 1 1-6-13"/><path d="M46 8v10H36"/><path d="M26 32l5 5 9-10" stroke-width="4"/></svg><div><div class="kz-ct">運用する</div><div class="kz-cd">役所はできた後も、<br>直しながら使い続ける</div></div></div>
+  </div>
+  <div class="take" style="margin-top:28px;font-size:32px">建設プロジェクトは、<br>外から見ればできていく様子が見えるので、イメージが湧く。<br>しかし、ITプロジェクトが何をどう作るのかは、あまり知られていない。</div>
+  <div class="kz-src">出典（入札）：地方自治法 第96条・第234条</div>
+  <div class="pg"></div>
+</section>
+<section class="slide">
   <div class="kicker">今日の流れ</div>
   <h2>目次</h2>
-  <div class="toc"><div class="tocc" style="--tc:var(--a);--tb:var(--a2)"><div class="toch">① 何を作るのか<small>アプリのしくみ・5〜11枚目</small></div><ol><li><span>お店のたとえ</span><b>6</b></li><li><span>Web3層構造</span><b>7</b></li><li><span>クライアントサーバ</span><b>8</b></li><li><span>サーバとの役割分担</span><b>9</b></li><li><span>3層に分ける理由</span><b>10</b></li><li><span>演習：カートに入れる</span><b>11</b></li></ol></div><div class="tocc" style="--tc:var(--b);--tb:var(--b2)"><div class="toch">② どう作るのか<small>プロジェクトの進め方・12〜31枚目</small></div><ol><li><span>ITプロジェクトの型</span><b>13</b></li><li><span>進め方と契約</span><b>14</b></li><li><span>7段階（ウォーターフォール）</span><b>15</b></li><li><span>段階ごとの詳細</span><b>16〜22</b></li><li><span>段階のまとめ表</span><b>23</b></li><li><span>PMの仕事（5W1H）</span><b>24</b></li><li><span>組織・会議・日程</span><b>25〜27</b></li><li><span>開発費・QCD</span><b>28・29</b></li><li><span>業者の選び方（入札）</span><b>30</b></li><li><span>演習：3社の見積書</span><b>31</b></li></ol></div><div class="tocc" style="--tc:var(--c);--tb:var(--c2)"><div class="toch">③ AI時代のITプロジェクト<small>AIとクラウド・32〜41枚目</small></div><ol><li><span>生成AIとは</span><b>33</b></li><li><span>AIエージェント</span><b>34</b></li><li><span>AIを使ったアプリの例</span><b>35</b></li><li><span>AI導入の課題</span><b>36</b></li><li><span>クラウドとは</span><b>37</b></li><li><span>借り方の3段階</span><b>38</b></li><li><span>クラウドに移る理由</span><b>39</b></li><li><span>クラウドの課題</span><b>40</b></li><li><span>標準化とガバメントクラウド</span><b>41</b></li></ol></div></div>
-  <div class="tocf"><span>用語クイズ 41〜44枚目</span></div>
+  <div class="toc"><div class="tocc" style="--tc:var(--a);--tb:var(--a2)"><div class="toch">① 何を作るのか<small>アプリのしくみ・6〜12枚目</small></div><ol><li><span>お店のたとえ</span><b>7</b></li><li><span>Web3層構造</span><b>8</b></li><li><span>クライアントサーバ</span><b>9</b></li><li><span>サーバとの役割分担</span><b>10</b></li><li><span>3層に分ける理由</span><b>11</b></li><li><span>演習：カートに入れる</span><b>12</b></li></ol></div><div class="tocc" style="--tc:var(--b);--tb:var(--b2)"><div class="toch">② どう作るのか<small>プロジェクトの進め方・13〜32枚目</small></div><ol><li><span>ITプロジェクトの型</span><b>14</b></li><li><span>進め方と契約</span><b>15</b></li><li><span>7段階（ウォーターフォール）</span><b>16</b></li><li><span>段階ごとの詳細</span><b>17〜23</b></li><li><span>段階のまとめ表</span><b>24</b></li><li><span>PMの仕事（5W1H）</span><b>25</b></li><li><span>組織・会議・日程</span><b>26〜28</b></li><li><span>開発費・QCD</span><b>29・30</b></li><li><span>業者の選び方（入札）</span><b>31</b></li><li><span>演習：3社の見積書</span><b>32</b></li></ol></div><div class="tocc" style="--tc:var(--c);--tb:var(--c2)"><div class="toch">③ AI時代のITプロジェクト<small>AIとクラウド・33〜42枚目</small></div><ol><li><span>生成AIとは</span><b>34</b></li><li><span>AIエージェント</span><b>35</b></li><li><span>AIを使ったアプリの例</span><b>36</b></li><li><span>AI導入の課題</span><b>37</b></li><li><span>クラウドとは</span><b>38</b></li><li><span>借り方の3段階</span><b>39</b></li><li><span>クラウドに移る理由</span><b>40</b></li><li><span>クラウドの課題</span><b>41</b></li><li><span>標準化とガバメントクラウド</span><b>42</b></li></ol></div></div>
+  <div class="tocf"><span>用語クイズ 43〜46枚目</span></div>
   <div class="pg"></div>
 </section>
 
@@ -290,31 +323,31 @@ table.sum td.pn{font-weight:800;color:#fff;background:var(--c);white-space:nowra
     <text x="65" y="380" font-size="20" text-anchor="middle" fill="#52606d">注文する</text>
     <line x1="140" y1="225" x2="196" y2="225" stroke="#1f2933" stroke-width="4" marker-end="url(#w3)"/>
     <g>
-      <rect x="205" y="40" width="290" height="330" rx="16" fill="#dbe7fb" stroke="#2f6fdf" stroke-width="3"/>
-      <text x="350" y="120" font-size="36" font-weight="800" text-anchor="middle">ホール係</text>
-      <text x="350" y="190" font-size="22" text-anchor="middle">注文を聞く</text>
-      <text x="350" y="226" font-size="22" text-anchor="middle">メニューを見せる</text>
-      <text x="350" y="262" font-size="22" text-anchor="middle">料理を運ぶ</text>
-      <text x="350" y="335" font-size="19" text-anchor="middle" fill="#52606d">お客さんと話すのはここだけ</text>
+      <rect x="205" y="40" width="263" height="330" rx="16" fill="#dbe7fb" stroke="#2f6fdf" stroke-width="3"/>
+      <text x="336.5" y="120" font-size="36" font-weight="800" text-anchor="middle">ホール係</text>
+      <text x="336.5" y="190" font-size="22" text-anchor="middle">注文を聞く</text>
+      <text x="336.5" y="226" font-size="22" text-anchor="middle">メニューを見せる</text>
+      <text x="336.5" y="262" font-size="22" text-anchor="middle">料理を運ぶ</text>
+      <text x="336.5" y="335" font-size="19" text-anchor="middle" fill="#52606d">お客さんと話すのはここだけ</text>
     </g>
-    <line x1="500" y1="225" x2="556" y2="225" stroke="#1f2933" stroke-width="4" marker-end="url(#w3)"/>
+    <line x1="473" y1="225" x2="529" y2="225" stroke="#1f2933" stroke-width="4" marker-end="url(#w3)"/>
     <g>
-      <rect x="565" y="40" width="270" height="330" rx="16" fill="#fbe6d6" stroke="#e07a2e" stroke-width="3"/>
-      <text x="700" y="120" font-size="36" font-weight="800" text-anchor="middle">厨房</text>
-      <text x="700" y="190" font-size="22" text-anchor="middle">レシピどおりに作る</text>
-      <text x="700" y="226" font-size="22" text-anchor="middle">お会計を計算する</text>
-      <text x="700" y="262" font-size="22" text-anchor="middle">品切れを判断する</text>
-      <text x="700" y="335" font-size="19" text-anchor="middle" fill="#52606d">お客さんからは見えない</text>
+      <rect x="538" y="40" width="263" height="330" rx="16" fill="#fbe6d6" stroke="#e07a2e" stroke-width="3"/>
+      <text x="669.5" y="120" font-size="36" font-weight="800" text-anchor="middle">厨房</text>
+      <text x="669.5" y="190" font-size="22" text-anchor="middle">レシピどおりに作る</text>
+      <text x="669.5" y="226" font-size="22" text-anchor="middle">お会計を計算する</text>
+      <text x="669.5" y="262" font-size="22" text-anchor="middle">品切れを判断する</text>
+      <text x="669.5" y="335" font-size="19" text-anchor="middle" fill="#52606d">お客さんからは見えない</text>
     </g>
-    <line x1="840" y1="225" x2="896" y2="225" stroke="#1f2933" stroke-width="4" marker-end="url(#w3)"/>
+    <line x1="806" y1="225" x2="862" y2="225" stroke="#1f2933" stroke-width="4" marker-end="url(#w3)"/>
     <g>
-      <rect x="905" y="40" width="231" height="330" rx="16" fill="#d7f0e4" stroke="#2f9e6e" stroke-width="3"/>
-      <text x="1020" y="105" font-size="32" font-weight="800" text-anchor="middle">冷蔵庫</text>
-      <text x="1020" y="143" font-size="32" font-weight="800" text-anchor="middle">と台帳</text>
-      <text x="1020" y="190" font-size="22" text-anchor="middle">材料をしまう</text>
-      <text x="1020" y="226" font-size="22" text-anchor="middle">予約・常連さん</text>
-      <text x="1020" y="262" font-size="22" text-anchor="middle">売上を書き残す</text>
-      <text x="1020" y="335" font-size="19" text-anchor="middle" fill="#52606d">一番奥にある</text>
+      <rect x="871" y="40" width="263" height="330" rx="16" fill="#d7f0e4" stroke="#2f9e6e" stroke-width="3"/>
+      <text x="1002.5" y="105" font-size="32" font-weight="800" text-anchor="middle">冷蔵庫</text>
+      <text x="1002.5" y="143" font-size="32" font-weight="800" text-anchor="middle">と台帳</text>
+      <text x="1002.5" y="190" font-size="22" text-anchor="middle">材料をしまう</text>
+      <text x="1002.5" y="226" font-size="22" text-anchor="middle">予約・常連さん</text>
+      <text x="1002.5" y="262" font-size="22" text-anchor="middle">売上を書き残す</text>
+      <text x="1002.5" y="335" font-size="19" text-anchor="middle" fill="#52606d">一番奥にある</text>
     </g>
     <text x="568" y="438" font-size="26" font-weight="700" text-anchor="middle">受け付ける → 作る・計算する → 覚えておく</text>
   </svg>
@@ -331,30 +364,31 @@ table.sum td.pn{font-weight:800;color:#fff;background:var(--c);white-space:nowra
       <rect x="834" y="0" width="300" height="52" rx="10" fill="#2f9e6e"/><text x="984" y="25" fill="#fff">DBサーバ</text><text x="984" y="45" fill="#fff" font-size="15" font-weight="400">覚えておく＝冷蔵庫と台帳</text>
     </g>
     <g font-size="19">
-      <rect x="0" y="62" width="204" height="54" rx="8" fill="#323f4b"/><text x="102" y="97" fill="#fff" font-weight="800" text-anchor="middle">ネットスーパー</text>
-      <rect x="214" y="62" width="300" height="54" rx="8" fill="#dbe7fb"/><text x="364" y="97" text-anchor="middle">商品一覧・カート</text>
-      <rect x="524" y="62" width="300" height="54" rx="8" fill="#fbe6d6"/><text x="674" y="97" text-anchor="middle">合計・送料・在庫の確認</text>
-      <rect x="834" y="62" width="300" height="54" rx="8" fill="#d7f0e4"/><text x="984" y="97" text-anchor="middle">商品・在庫・注文履歴</text>
-      <rect x="0" y="124" width="204" height="54" rx="8" fill="#323f4b"/><text x="102" y="159" fill="#fff" font-weight="800" text-anchor="middle">銀行アプリ</text>
-      <rect x="214" y="124" width="300" height="54" rx="8" fill="#dbe7fb"/><text x="364" y="159" text-anchor="middle">残高・振込の画面</text>
-      <rect x="524" y="124" width="300" height="54" rx="8" fill="#fbe6d6"/><text x="674" y="159" text-anchor="middle">残高は足りるか・手数料</text>
-      <rect x="834" y="124" width="300" height="54" rx="8" fill="#d7f0e4"/><text x="984" y="159" text-anchor="middle">口座・取引の記録</text>
-      <rect x="0" y="186" width="204" height="54" rx="8" fill="#323f4b"/><text x="102" y="221" fill="#fff" font-weight="800" text-anchor="middle">乗換アプリ</text>
-      <rect x="214" y="186" width="300" height="54" rx="8" fill="#dbe7fb"/><text x="364" y="221" text-anchor="middle">出発・到着の入力</text>
-      <rect x="524" y="186" width="300" height="54" rx="8" fill="#fbe6d6"/><text x="674" y="221" text-anchor="middle">経路を探す計算</text>
-      <rect x="834" y="186" width="300" height="54" rx="8" fill="#d7f0e4"/><text x="984" y="221" text-anchor="middle">時刻表・運行情報</text>
-      <rect x="0" y="248" width="204" height="54" rx="8" fill="#323f4b"/><text x="102" y="283" fill="#fff" font-weight="800" text-anchor="middle">役所の電子申請</text>
-      <rect x="214" y="248" width="300" height="54" rx="8" fill="#dbe7fb"/><text x="364" y="283" text-anchor="middle">申請フォーム</text>
-      <rect x="524" y="248" width="300" height="54" rx="8" fill="#fbe6d6"/><text x="674" y="283" text-anchor="middle">記入漏れの確認・受付番号</text>
-      <rect x="834" y="248" width="300" height="54" rx="8" fill="#d7f0e4"/><text x="984" y="283" text-anchor="middle">申請の中身・受付の記録</text>
-      <rect x="0" y="310" width="204" height="54" rx="8" fill="#323f4b"/><text x="102" y="345" fill="#fff" font-weight="800" text-anchor="middle">Gmail</text>
-      <rect x="214" y="310" width="300" height="54" rx="8" fill="#dbe7fb"/><text x="364" y="345" text-anchor="middle">受信箱・作成画面</text>
-      <rect x="524" y="310" width="300" height="54" rx="8" fill="#fbe6d6"/><text x="674" y="345" text-anchor="middle">送信・迷惑メールの判定</text>
-      <rect x="834" y="310" width="300" height="54" rx="8" fill="#d7f0e4"/><text x="984" y="345" text-anchor="middle">メール・連絡先</text>
+      <rect x="0" y="62" width="204" height="50" rx="8" fill="#323f4b"/><text x="102" y="94" fill="#fff" font-weight="800" text-anchor="middle">ネットスーパー</text>
+      <rect x="214" y="62" width="300" height="50" rx="8" fill="#dbe7fb"/><text x="364" y="94" text-anchor="middle">商品一覧・カート</text>
+      <rect x="524" y="62" width="300" height="50" rx="8" fill="#fbe6d6"/><text x="674" y="94" text-anchor="middle">合計・送料・在庫の確認</text>
+      <rect x="834" y="62" width="300" height="50" rx="8" fill="#d7f0e4"/><text x="984" y="94" text-anchor="middle">商品・在庫・注文履歴</text>
+      <rect x="0" y="118" width="204" height="50" rx="8" fill="#323f4b"/><text x="102" y="150" fill="#fff" font-weight="800" text-anchor="middle">銀行アプリ</text>
+      <rect x="214" y="118" width="300" height="50" rx="8" fill="#dbe7fb"/><text x="364" y="150" text-anchor="middle">残高・振込の画面</text>
+      <rect x="524" y="118" width="300" height="50" rx="8" fill="#fbe6d6"/><text x="674" y="150" text-anchor="middle">残高は足りるか・手数料</text>
+      <rect x="834" y="118" width="300" height="50" rx="8" fill="#d7f0e4"/><text x="984" y="150" text-anchor="middle">口座・取引の記録</text>
+      <rect x="0" y="174" width="204" height="50" rx="8" fill="#323f4b"/><text x="102" y="206" fill="#fff" font-weight="800" text-anchor="middle">乗換アプリ</text>
+      <rect x="214" y="174" width="300" height="50" rx="8" fill="#dbe7fb"/><text x="364" y="206" text-anchor="middle">出発・到着の入力</text>
+      <rect x="524" y="174" width="300" height="50" rx="8" fill="#fbe6d6"/><text x="674" y="206" text-anchor="middle">経路を探す計算</text>
+      <rect x="834" y="174" width="300" height="50" rx="8" fill="#d7f0e4"/><text x="984" y="206" text-anchor="middle">時刻表・運行情報</text>
+      <rect x="0" y="230" width="204" height="50" rx="8" fill="#323f4b"/><text x="102" y="262" fill="#fff" font-weight="800" text-anchor="middle">役所の電子申請</text>
+      <rect x="214" y="230" width="300" height="50" rx="8" fill="#dbe7fb"/><text x="364" y="262" text-anchor="middle">申請フォーム</text>
+      <rect x="524" y="230" width="300" height="50" rx="8" fill="#fbe6d6"/><text x="674" y="262" text-anchor="middle">記入漏れの確認・受付番号</text>
+      <rect x="834" y="230" width="300" height="50" rx="8" fill="#d7f0e4"/><text x="984" y="262" text-anchor="middle">申請の中身・受付の記録</text>
+      <rect x="0" y="286" width="204" height="50" rx="8" fill="#323f4b"/><text x="102" y="318" fill="#fff" font-weight="800" text-anchor="middle">Gmail</text>
+      <rect x="214" y="286" width="300" height="50" rx="8" fill="#dbe7fb"/><text x="364" y="318" text-anchor="middle">受信箱・作成画面</text>
+      <rect x="524" y="286" width="300" height="50" rx="8" fill="#fbe6d6"/><text x="674" y="318" text-anchor="middle">送信・迷惑メールの判定</text>
+      <rect x="834" y="286" width="300" height="50" rx="8" fill="#d7f0e4"/><text x="984" y="318" text-anchor="middle">メール・連絡先</text>
     </g>
-    <rect x="0" y="378" width="1136" height="92" rx="12" fill="#f5f7fa" stroke="#1f2933" stroke-width="3"/>
-    <text x="568" y="416" font-size="27" font-weight="800" text-anchor="middle">この3段の形を、ITの言葉で <tspan fill="#2f6fdf">Web3層構造</tspan> と呼ぶ</text>
-    <text x="568" y="452" font-size="21" text-anchor="middle" fill="#52606d">上の列見出しの3つのサーバで仕事を分ける　→　身の回りのアプリは、ほとんどこの形</text>
+    <rect x="0" y="350" width="1136" height="120" rx="12" fill="#f5f7fa" stroke="#1f2933" stroke-width="3"/>
+    <text x="568" y="388" font-size="27" font-weight="800" text-anchor="middle">この3段の形を、ITの言葉で <tspan fill="#2f6fdf">Web3層構造</tspan> と呼ぶ</text>
+    <text x="568" y="421" font-size="21" text-anchor="middle" fill="#52606d">上の列見出しの3つのサーバで仕事を分ける　→　身の回りのアプリは、ほとんどこの形</text>
+    <text x="568" y="454" font-size="21" font-weight="700" text-anchor="middle">サーバ＝頼まれた仕事に応える、24時間動きっぱなしのコンピュータ</text>
   </svg>
   <div class="pg"></div>
 </section>
@@ -1382,8 +1416,8 @@ table.sum td.pn{font-weight:800;color:#fff;background:var(--c);white-space:nowra
       <text x="610" y="275">AIのような最新の機能は、</text><text x="610" y="307">まずクラウドで提供される。</text><text x="610" y="339">自前で同じ設備はそろえにくい。</text>
     </g>
     <rect x="0" y="380" width="1136" height="80" rx="12" fill="#fff" stroke="#2f9e6e" stroke-width="3"/>
-    <text x="24" y="415" font-size="21"><tspan font-weight="800">国も同じ方針</tspan>：政府の情報システムは「クラウド・バイ・デフォルト原則」</text>
-    <text x="24" y="445" font-size="18" fill="#52606d">（まずクラウドを検討する。出典：デジタル庁「標準ガイドライン群」）</text>
+    <text x="24" y="415" font-size="21"><tspan font-weight="800">国も同じ方針</tspan>：政府の情報システムは「クラウド・バイ・デフォルト原則」で、まずクラウドを検討する。</text>
+    <text x="24" y="445" font-size="18" fill="#52606d">（出典：デジタル庁「標準ガイドライン群」）</text>
   </svg>
   <div class="pg"></div>
 </section>
@@ -1502,14 +1536,14 @@ table.sum td.pn{font-weight:800;color:#fff;background:var(--c);white-space:nowra
 <section class="slide">
   <div class="ttl"><span class="pt">おまけ</span><span class="tt">用語クイズの答え（1/2）</span></div>
   <h2 class="msg">答え（1〜7）と、出てきたスライド</h2>
-  <table class="t ans"><tr><th>問</th><th>答え</th><th>出てきたスライド</th></tr><tr><td class="n">1</td><td class="a">Web3層構造</td><td class="s">7枚目</td></tr><tr><td class="n">2</td><td class="a">クライアントサーバ</td><td class="s">8枚目</td></tr><tr><td class="n">3</td><td class="a">データセンター</td><td class="s">8枚目</td></tr><tr><td class="n">4</td><td class="a">スクラッチ開発</td><td class="s">13枚目</td></tr><tr><td class="n">5</td><td class="a">要件定義</td><td class="s">15枚目</td></tr><tr><td class="n">6</td><td class="a">受け入れテスト</td><td class="s">20枚目</td></tr><tr><td class="n">7</td><td class="a">PMO</td><td class="s">25枚目</td></tr></table>
+  <table class="t ans"><tr><th>問</th><th>答え</th><th>出てきたスライド</th></tr><tr><td class="n">1</td><td class="a">Web3層構造</td><td class="s">8枚目</td></tr><tr><td class="n">2</td><td class="a">クライアントサーバ</td><td class="s">9枚目</td></tr><tr><td class="n">3</td><td class="a">データセンター</td><td class="s">9枚目</td></tr><tr><td class="n">4</td><td class="a">スクラッチ開発</td><td class="s">14枚目</td></tr><tr><td class="n">5</td><td class="a">要件定義</td><td class="s">16枚目</td></tr><tr><td class="n">6</td><td class="a">受け入れテスト</td><td class="s">21枚目</td></tr><tr><td class="n">7</td><td class="a">PMO</td><td class="s">26枚目</td></tr></table>
   <div class="pg"></div>
 </section>
 
 <section class="slide">
   <div class="ttl"><span class="pt">おまけ</span><span class="tt">用語クイズの答え（2/2）</span></div>
   <h2 class="msg">答え（8〜15）と、出てきたスライド</h2>
-  <table class="t ans"><tr><th>問</th><th>答え</th><th>出てきたスライド</th></tr><tr><td class="n">8</td><td class="a">人月</td><td class="s">28枚目</td></tr><tr><td class="n">9</td><td class="a">QCD</td><td class="s">29枚目</td></tr><tr><td class="n">10</td><td class="a">ウォーターフォール</td><td class="s">14枚目</td></tr><tr><td class="n">11</td><td class="a">アジャイル</td><td class="s">14枚目</td></tr><tr><td class="n">12</td><td class="a">生成AI</td><td class="s">33枚目</td></tr><tr><td class="n">13</td><td class="a">AIエージェント</td><td class="s">34枚目</td></tr><tr><td class="n">14</td><td class="a">クラウド</td><td class="s">37枚目</td></tr><tr><td class="n">15</td><td class="a">SaaS</td><td class="s">38枚目</td></tr></table>
+  <table class="t ans"><tr><th>問</th><th>答え</th><th>出てきたスライド</th></tr><tr><td class="n">8</td><td class="a">人月</td><td class="s">29枚目</td></tr><tr><td class="n">9</td><td class="a">QCD</td><td class="s">30枚目</td></tr><tr><td class="n">10</td><td class="a">ウォーターフォール</td><td class="s">15枚目</td></tr><tr><td class="n">11</td><td class="a">アジャイル</td><td class="s">15枚目</td></tr><tr><td class="n">12</td><td class="a">生成AI</td><td class="s">34枚目</td></tr><tr><td class="n">13</td><td class="a">AIエージェント</td><td class="s">35枚目</td></tr><tr><td class="n">14</td><td class="a">クラウド</td><td class="s">38枚目</td></tr><tr><td class="n">15</td><td class="a">SaaS</td><td class="s">39枚目</td></tr></table>
   <div class="pg"></div>
 </section>
 
