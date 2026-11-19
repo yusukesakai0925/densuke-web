@@ -1,0 +1,994 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="「この請求、まだ間に合う？ 民法の消滅時効を条文から引く」の収録範囲、全条文の地図、アプリの約束事、Prologのソース全部。">
+<title>収録範囲・仕組み｜この請求、まだ間に合う？ 民法の消滅時効を条文から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一（saimu-prolog の template.html を写した）。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。
+   答えは ①判定日に完成しているか（論理の木） ②完成する日とその計算（論理の木） ③根拠条文。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;counter-reset:slot}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper)}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+/* 日付の欄（fufuku-prolog と同じ形） */
+.input{display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.input input{font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 10px;min-width:0;width:100%}
+.input input:focus-visible{outline:none}
+.input:hover{border-color:var(--blue)}
+.input:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.sub{margin-top:6px}
+.sub .mid{font-weight:700;margin-top:6px}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ng,.tree .m.done{color:var(--ng)} .tree .m.fine,.tree .m.alive,.tree .m.ok{color:var(--ok)} .tree .m.wait,.tree .m.day{color:var(--blue)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree .t.fine,.tree .t.ng{font-weight:700}
+.tree .t.ng{color:var(--ng)}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border-left:2px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+
+/* 日付の欄を「◯ヶ月前」で入れる（rd-。8本で同じ文字列） */
+.rd{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;min-width:0}
+.rd.rd-m{margin:4px 10px 6px}
+.rd input,.rd select{font:inherit;font-size:1rem;color:var(--ink);background:var(--field,var(--bg));border:1px solid var(--line);border-radius:0;padding:6px 8px;min-width:0}
+.rd input:disabled,.rd select:disabled{opacity:.45}
+.rd select option{background:var(--paper);color:var(--ink)}
+.rd .rd-n{flex:0 0 4.6em;width:4.6em}
+.rd .rd-u{flex:0 1 auto;width:auto}
+.rd-to{font-size:.8rem;color:var(--muted);white-space:nowrap}
+.rd-hide{display:none!important}
+.rd-other{min-width:0}
+.rd-other summary{cursor:pointer;font-size:.84rem;font-weight:400;color:var(--muted)}
+.rd-other label{display:block}
+.rd-other.rd-m > summary{padding:6px 10px}
+.rd-note{font-size:.76rem;color:var(--muted)}
+.rd-other.rd-m .rd-note{padding:0 10px 6px}
+.rd-when{font-size:.84rem;font-weight:700;color:var(--muted);margin:0 0 6px}
+</style>
+
+<div class="wrap about">
+  <header class="mast sub">
+    <p class="backlink"><a href="./" id="back">← 判定ページに戻る</a></p>
+    <h1>収録範囲・仕組み</h1>
+    <p class="lead">「この請求、まだ間に合う？ 民法の消滅時効を条文から引く」で、どの条文をどこまでルールにしたか、アプリが決めたこと、プログラムの中身です。</p>
+  </header>
+
+  <div class="appendix">
+  <details class="box" id="scope-box" open>
+    <summary>収録範囲と、入っていないもの</summary>
+    <div class="scope" id="scope">
+      <p><b>収録しているのは民法の一部です。</b>債権の消滅時効の期間（166条1項・167条・724条・724条の2）、裁判上の請求（147条）・催告（150条）・協議を行う旨の合意（151条）・承認（152条）による完成猶予と更新、判決で確定した権利の時効期間（169条1項）、援用（145条）、期間の計算（140条〜143条）を入れています（<a href="#cover-box">全条文の地図</a>）。</p>
+      <p>入力の欄は、起きた事実を聞く14個で、いつも全部を使えます。出来事の日を空けたときの「その行為は承認に当たるか」「裁判の結果」「合意の形」「合意で決めた協議の期間」は、答えに使いません。事実として成り立たない組（最初の催告日が無いのに再度の催告日がある、裁判上の請求をしていないのに裁判が終わった日がある、裁判が続いているのに終わった日がある など）は「この組み合わせはありません」と出します。</p>
+      <p>入っていないもの：強制執行・仮差押え（148条・149条）、天災など（158条〜161条）、定期金（168条）。判例・学説・実務の運用も入れていません。</p>
+      <p><b>判定について：</b></p>
+      <ul id="hantei-notes" style="margin:0;padding-left:1.2em">
+        <li id="note-shonin">一部弁済などが「承認」に当たるかはプログラムでは判定しません。条文だけでは決まらないので、入力の「その行為は承認に当たるか」に従います。</li>
+        <li id="note-engyo">時効は、当事者が援用しなければ、裁判所がこれによって裁判をすることができません（145条）。完成していても、援用されるまでは請求そのものが消えるわけではありません。このアプリは援用したかを入力に取っていません。</li>
+        <li id="note-kyozetsu">協議の続行を拒絶する旨の書面の通知があれば、その時から6箇月を経過した時に猶予が終わります（151条1項3号）。このアプリはその通知を入力に取っていません。</li>
+        <li id="note-kyujitsu">期間の末日が日曜日・休日に当たるとき、その日に取引をしない慣習がある場合に限り翌日に満了します（142条）。このアプリは休日を見ていません。</li>
+        <li id="note-hairanai">強制執行・仮差押え・未成年者の法定代理人がいない場合・天災などによる完成猶予や更新（148条・149条・158条〜161条）は入れていません。</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="box" id="cover-box">
+    <summary>民法のどこまでをルールにしたか（全条文の地図）</summary>
+    <p class="hint" style="margin-top:6px">民法の「期間の計算」「時効」「不法行為」の条文を1マスずつ並べました。<span class="cell u1"></span> は判定（ルール）で使っている条、<span class="cell u0"></span> は使っていない条、<span class="cell u2"></span> は「削除」された条です。マスを押すと条の名前（使っている条は原文）が出ます。</p>
+    <div id="cover"></div>
+  </details>
+
+  <details class="box" id="yaku-box">
+    <summary>アプリの約束事（法律にないもの）</summary>
+    <p class="hint" style="margin-top:6px">判定のためにこのアプリが決めたことで、条文そのものではありません。プログラムでは <code>yakusoku/</code> のファイルと、ルールの中の「約束」の行に書いています。論理の木では <span class="yk">アプリの約束事</span> の印が付きます。</p>
+    <ul class="hint" style="margin:8px 0 0;padding-left:1.2em">
+      <li>欄の選択肢。出来事は1種類につき1回（催告だけは2回まで）。協議の続行を拒絶する通知（151条1項3号）と、再度の協議の合意（151条2項）は扱わない</li>
+      <li>日付で入れた日（知った日・行使できる日・出来事の日）は、その日の途中のこととして初日を数えない（140条本文）。午前零時から始まると見るなら、期間は1日早く満了する</li>
+      <li>完成猶予・更新は、時効が完成する前の出来事にだけ働くものとして扱う（完成した後の承認などの扱いは条文だけでは決まらない）</li>
+      <li>一部弁済・支払の猶予の申出などが承認に当たるかは条文だけでは決まらない。入力の「承認に当たるか」に従う</li>
+      <li>承認・権利の確定で更新した後は、最初の2つの期間をどちらも更新の時から数え直すと読む（「新たにその進行を始める」期間の長さは条文に書かれていない）。承認なら短いほうの期間、権利の確定なら169条1項で10年</li>
+      <li>催告の日から6箇月を経過するまでを「催告によって時効の完成が猶予されている間」と読む（150条2項・151条3項）</li>
+      <li>合意で定めた協議を行う期間は、合意の日から数える</li>
+      <li>同じ日の出来事は、承認 → 裁判上の請求 → 催告 → 再度の催告 → 協議の合意 → 権利の確定 の順に当てはめる</li>
+    </ul>
+  </details>
+
+  <details class="box" id="src-box">
+    <summary>プログラムの中身（Prologのソース全部）</summary>
+    <p class="hint" style="margin-top:6px">このページで動いているPrologのプログラムそのものです。ファイルを開くと全文が出ます。</p>
+    <div id="src"></div>
+  </details>
+
+  <details class="box" id="core-box">
+    <summary>仕組みを見る（上級者向け）</summary>
+    <p class="hint" style="margin-top:6px">まず債権の種類から2つの時効期間を数え、早いほうを「いまの完成日」にします。次に出来事を日付の順に1つずつ当てはめます。完成猶予（147条1項・150条1項・151条1項）は「その日まで完成しない」窓を足し、更新（147条2項・152条1項）は完成日を数え直します。最後に完成日と判定日を比べます。</p>
+    <pre id="core"></pre>
+    <p class="hint" style="margin-top:10px">Prologに直接聞く（最初の30件まで）：</p>
+    <textarea id="q" spellcheck="false">judge(ctx(一般の債権, '2021-04-30', '2021-04-30', '2026-03-01', なし, なし, はい, なし, 確定した, なし, なし, 書面, 定めなし, '2026-09-02'), R).</textarea>
+    <button type="button" class="btn" id="run">実行</button>
+    <pre id="out"></pre>
+  </details>
+  </div>
+
+  <p class="foot techline"><span>民法 第140条〜第169条の一部・第724条・第724条の2／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot">e-Gov法令検索の民法（明治二十九年法律第八十九号）の原文から、債権の消滅時効に当たる規定をルールにしたものです。法律の解釈・判例・行政の運用は含みません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 民法の消滅時効Prolog（この請求、まだ間に合う？）の共通の型・日付・木の部品
+%
+% 文脈 ctx(債権の種類, 行使できる日, 知った日, 催告日, 再度の催告日, 承認日, 承認に当たるか,
+%          請求日, 請求の結果, 請求の終了日, 合意日, 合意の形, 協議の期間, 判定日) のもとで
+%   ① 判定日に時効が完成しているか（結論/3）
+%   ② 時効が完成する日はいつか。完成猶予・更新を出来事の日付の順に当てはめる（完成日/3）
+% を判定する。どちらも、結論と一緒に「なぜそうなるか」の木を返す。
+%
+% 借地借家法Prolog（shakuchi-prolog）との違い：
+%   ・条文はすべて民法なので、条番号に「民法」をつけない（'166条1項1号'）。build.py は law/minpo.xml だけから引く。
+%   ・出来事（催告・承認・裁判上の請求・協議の合意）を日付の順に1つずつ当てはめ、「いまの完成日」を動かしていく。
+%     状態 s(満了日, その根拠条, 完成猶予の窓のリスト) を持ち回る（rules/a_kansei.pl）。
+%
+% rules/*.pl が書くもの（民法の条文から来たものだけ）：
+%   完成日(ctx(...), 日 | 裁判中, 木).   a_kansei.pl
+%   結論(ctx(...), 結論, 木).            b_kekka.pl
+%   期間を経過する日(日, 月数, 表示, 末日, 木).  c_kikan.pl（140条・141条・143条）
+% yakusoku/*.pl が書くもの（法律にないアプリの約束事）：
+%   選択肢(欄, 値, 説明).  協議の月数(値, 月数).  no_such(ctx(...), 理由, 根拠条のリスト).
+%
+% 結論の形（日付は '2026-04-30' の形の原子）：
+%   完成(日)      判定日の時点で、時効は 日 の終了時に完成している
+%   未完成(日)    判定日の時点では完成していない。このままなら 日 の終了時に完成する
+%   裁判中        裁判上の請求が続いているので、終わるまで完成しない（147条1項）
+%
+% 書き方のきまり：
+%   ・条番号は '166条1項1号' '147条1項括弧書' '724条の2' のような原子。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = done（完成）| alive（未完成）| wait（裁判中）| day（完成日）
+%     | fine（効いた出来事）| ng（効かなかった出来事）| ok（成り立つ文）| info（ありえない組み合わせ）| and | or。
+%     規定を当てはめる行は (A, A→B) ⊢ B の形：「規定：…」の行（A→B）と、条件の行（A）を and で並べる。
+%   ・アプリの約束事の行は 条 を '@約束事' にする（画面で印がつく）。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+:- use_module(library(aggregate)).
+:- discontiguous 結論/3, 完成日/3, no_such/3, 選択肢/3, 協議の月数/2, 期間の定め/2.
+:- multifile 結論/3, 完成日/3, no_such/3, 選択肢/3, 協議の月数/2, 期間の定め/2.
+:- dynamic 結論/3, 完成日/3, no_such/3, 選択肢/3, 協議の月数/2, 期間の定め/2.
+
+%% ---------- 欄 ----------
+ctx_kinds([債権の種類, 行使できる日, 知った日, 催告日, 再度の催告日, 承認日, 承認に当たるか,
+           請求日, 請求の結果, 請求の終了日, 合意日, 合意の形, 協議の期間, 判定日]).
+
+% 欄(C, 欄の名前, 値)
+欄(C, K, V) :- ctx_kinds(Ks), nth1(I, Ks, K), arg(I, C, V).
+
+% 必ず日付を入れる欄
+日付の欄(行使できる日).
+日付の欄(知った日).
+日付の欄(判定日).
+% 日付か「なし」の欄（その出来事がなければ なし）
+空けられる日付の欄(催告日).
+空けられる日付の欄(再度の催告日).
+空けられる日付の欄(承認日).
+空けられる日付の欄(請求日).
+空けられる日付の欄(請求の終了日).
+空けられる日付の欄(合意日).
+
+ctx(C) :-
+    ctx_kinds(Ks), length(Ks, N), functor(C, ctx, N),
+    forall(( nth1(I, Ks, K), \+ 日付の欄(K), \+ 空けられる日付の欄(K) ), ( arg(I, C, V), 選択肢(K, V, _) )),
+    forall(( nth1(I, Ks, K), 日付の欄(K) ), ( arg(I, C, V), 日付(V, _) )),
+    forall(( nth1(I, Ks, K), 空けられる日付の欄(K) ), ( arg(I, C, V), ( V == なし -> true ; 日付(V, _) ) )).
+
+%% ---------- 日付（暦の計算。期間の数え方そのものは rules/c_kikan.pl） ----------
+% '2026-08-31' ⇔ date(2026, 8, 31)
+日付(A, date(Y, M, D)) :-
+    atom(A), atomic_list_concat([Ys, Ms, Ds], '-', A),
+    atom_number(Ys, Y), atom_number(Ms, M), atom_number(Ds, D),
+    integer(Y), integer(M), integer(D), M >= 1, M =< 12, D >= 1,
+    月の日数(Y, M, L), D =< L.
+
+日付の原子(date(Y, M, D), A) :-
+    二桁(M, MA), 二桁(D, DA), format(atom(A), '~d-~w-~w', [Y, MA, DA]).
+二桁(N, A) :- N < 10, !, format(atom(A), '0~d', [N]).
+二桁(N, A) :- format(atom(A), '~d', [N]).
+
+% 画面に出す形：'2026-08-31' → '2026年8月31日'
+日付の表示(A, S) :- 日付(A, date(Y, M, D)), !, format(atom(S), '~d年~d月~d日', [Y, M, D]).
+日付の表示(date(Y, M, D), S) :- !, format(atom(S), '~d年~d月~d日', [Y, M, D]).
+日付の表示(X, X).
+
+うるう年(Y) :- ( Y mod 400 =:= 0 -> true ; Y mod 100 =:= 0 -> fail ; Y mod 4 =:= 0 ).
+
+月の日数(Y, 2, 29) :- うるう年(Y), !.
+月の日数(_, 2, 28) :- !.
+月の日数(_, M, 30) :- memberchk(M, [4, 6, 9, 11]), !.
+月の日数(_, _, 31).
+
+翌日(date(Y, M, D), date(Y, M, D1)) :- 月の日数(Y, M, L), D < L, !, D1 is D + 1.
+翌日(date(Y, 12, 31), date(Y1, 1, 1)) :- !, Y1 is Y + 1.
+翌日(date(Y, M, _), date(Y, M1, 1)) :- M1 is M + 1.
+
+% N か月後の年と月
+月を足す(Y, M, N, Y2, M2) :- T is Y * 12 + (M - 1) + N, Y2 is T // 12, M2 is T mod 12 + 1.
+
+% 通し日数（大小を比べ、並べるためだけに使う）
+通日(date(Y, M, D), N) :-
+    ( M =< 2 -> Y1 is Y - 1, M1 is M + 12 ; Y1 = Y, M1 = M ),
+    N is 365 * Y1 + Y1 // 4 - Y1 // 100 + Y1 // 400 + (153 * (M1 - 3) + 2) // 5 + D.
+日数(A, N) :- 日付(A, X), 通日(X, N).
+
+% 原子の日付どうしを比べる
+日が前(A, B)       :- 日数(A, NA), 日数(B, NB), NA < NB.
+日が同じか前(A, B) :- 日数(A, NA), 日数(B, NB), NA =< NB.
+% D が窓 [S, E] の中（両端の日を含む。E は日付か 無期限）
+窓の中(D, S, E) :- 日が同じか前(S, D), ( E == 無期限 -> true ; 日が同じか前(D, E) ).
+
+%% ---------- 推論の入口 ----------
+act_ctx(C) :- ctx(C), \+ no_such(C, _, _).
+
+impossible(C, Why, Arts) :- no_such(C, Why, Arts), !.
+
+%% ---------- 木の部品 ----------
+% 子が2つ以上のときだけ「かつ」「または」の節をはさむ
+ex_and(_, [], []) :- !.
+ex_and(_, [X], [X]) :- !.
+ex_and(Title, Xs, [t(and, Title, '', Xs)]).
+ex_or(_, [], []) :- !.
+ex_or(_, [X], [X]) :- !.
+ex_or(Title, Xs, [t(or, Title, '', Xs)]).
+
+% 規定の行（A→B にあたる前提）
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+% 成り立つ文（入力の値など）
+文(X, t(ok, X, '', [])).
+% アプリの約束事の行
+約束(X, t(ok, X, '@約束事', [])).
+% 上の行 H（種類 K・条 Ar）を、子 Cs のすべてから導く
+導く(K, H, Ar, Cs, t(K, H, Ar, Cs1)) :- ex_and('次のすべてが成り立つ', Cs, Cs1).
+
+% 文の中に入れる日付の表示
+d(A, S) :- 日付の表示(A, S).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（法律にないもの）：欄の選択肢・ありえない組み合わせ
+%
+% ここに書くのは、このアプリが判定のために決めた約束事。民法の条文そのものではない。
+%   ・欄の選択肢（どう区切るか）。日付の欄は選択肢を持たない
+%   ・出来事は1種類につき1回だけ（催告だけは2回まで）。協議の合意は1回だけで、続行を拒絶する通知（151条1項3号）は扱わない
+%   ・ありえない組み合わせの除外（組み合わせなし/4。欄の番号と根拠条つき。no_such/3 はここから作る）
+
+%% ---------- 債権の種類 ----------
+選択肢(債権の種類, 一般の債権, '家賃・立替金・退去時の精算金・売買代金・貸したお金など（166条1項）').
+選択肢(債権の種類, '生命・身体の侵害の損害賠償', '人の生命・身体の侵害による損害賠償請求権（167条）。不法行為として請求するものは下の2つを選ぶ').
+選択肢(債権の種類, '不法行為の損害賠償', '不法行為による損害賠償請求権（724条）。上の「行使できる日」には不法行為の日、「知った日」には損害と加害者を知った日を入れる').
+選択肢(債権の種類, '生命・身体を害する不法行為の損害賠償', '人の生命・身体を害する不法行為による損害賠償請求権（724条・724条の2）').
+
+%% ---------- 承認（152条） ----------
+選択肢(承認に当たるか, はい, '債務者が権利を認めた（承認に当たるとする）').
+選択肢(承認に当たるか, いいえ, '債務者の行為はあったが、承認に当たらないとする。一部弁済などが承認に当たるかは条文だけでは決まらない').
+
+%% ---------- 裁判上の請求（147条） ----------
+選択肢(請求の結果, 確定した, '確定判決または確定判決と同一の効力を有するもの（和解など）で権利が確定して終わった').
+選択肢(請求の結果, 確定せずに終わった, '取下げなどで、権利が確定することなく終わった').
+選択肢(請求の結果, 続いている, '判定日の時点で、まだ終わっていない').
+
+%% ---------- 協議を行う旨の合意（151条） ----------
+選択肢(合意の形, 書面, '書面（電磁的記録を含む）で合意した').
+選択肢(合意の形, 書面でない, '口頭などで、書面にしていない').
+選択肢(協議の期間, 定めなし, '協議を行う期間を定めていない').
+選択肢(協議の期間, '3か月', '協議を行う期間を3か月と定めた').
+選択肢(協議の期間, '6か月', '協議を行う期間を6か月と定めた').
+協議の月数('3か月', 3).
+協議の月数('6か月', 6).
+
+%% ---------- ありえない組み合わせ ----------
+出来事の欄(催告日).
+出来事の欄(再度の催告日).
+出来事の欄(承認日).
+出来事の欄(請求日).
+出来事の欄(請求の終了日).
+出来事の欄(合意日).
+
+% 欄の番号＝画面（web/template.html）の欄に振ってある番号。ctx の引数の順ではない（画面では判定日が4番目）
+欄の番号(債権の種類, 1).
+欄の番号(行使できる日, 2).
+欄の番号(知った日, 3).
+欄の番号(判定日, 4).
+欄の番号(催告日, 5).
+欄の番号(再度の催告日, 6).
+欄の番号(承認日, 7).
+欄の番号(承認に当たるか, 8).
+欄の番号(請求日, 9).
+欄の番号(請求の結果, 10).
+欄の番号(請求の終了日, 11).
+欄の番号(合意日, 12).
+欄の番号(合意の形, 13).
+欄の番号(協議の期間, 14).
+
+% 組み合わせなし(C, ぶつかった欄の番号のリスト, 理由の文, 根拠条のリスト)（REVIEW_RULES C3。saimu-prolog の schema.pl と同じ形）
+% 根拠条は、条文が除外の理由になるものだけ書く。日付の前後だけの除外は条を付けず、欄の番号だけを出す（2026-11-19）
+%   ・150条2項：「再度の催告」は、催告で完成が猶予されている間にされる催告。最初の催告が無ければ再度の催告はない
+%   ・147条1項：裁判の終了日は、裁判上の請求という事由が「終了する」時。請求が無い・続いている・終わったのに日が無い、は成り立たない
+% 並びは前の no_such の並びのまま（最初に当たった1つを画面に出す。schema.pl の impossible/3 も最初の1つ）
+組み合わせなし(C, [2, 3], '知った日は、権利を行使できる日（不法行為の日）より前にはならない', []) :-
+    欄(C, 行使できる日, A), 欄(C, 知った日, S), 日が前(S, A).
+組み合わせなし(C, [2, 4], '判定日は、権利を行使できる日（不法行為の日）以後の日にする', []) :-
+    欄(C, 行使できる日, A), 欄(C, 判定日, J), 日が前(J, A).
+% 出来事が行使できる日より前の除外は、アプリの扱う範囲の決め事なので条を付けない（2026-11-19。169条2項は確定判決で10年になる規定の除外で、この除外の理由にならない）
+組み合わせなし(C, [2, N], '出来事は、権利を行使できる日（不法行為の日）以後のものだけを扱う', []) :-
+    欄(C, 行使できる日, A), 出来事の欄(K), 欄(C, K, D), D \== なし, 日が前(D, A), 欄の番号(K, N).
+組み合わせなし(C, [4, N], '出来事は、判定日までのものを入れる', []) :-
+    欄(C, 判定日, J), 出来事の欄(K), 欄(C, K, D), D \== なし, 日が前(J, D), 欄の番号(K, N).
+組み合わせなし(C, [5, 6], '再度の催告日は、最初の催告日を入れてから入れる', ['150条2項']) :-
+    欄(C, 催告日, なし), 欄(C, 再度の催告日, D), D \== なし.
+組み合わせなし(C, [5, 6], '再度の催告日は、最初の催告日より後の日にする', []) :-
+    欄(C, 催告日, D1), D1 \== なし, 欄(C, 再度の催告日, D2), D2 \== なし, 日が同じか前(D2, D1).
+組み合わせなし(C, [9, 11], '裁判上の請求をしていなければ、裁判の終了日はない', ['147条1項']) :-
+    欄(C, 請求日, なし), 欄(C, 請求の終了日, E), E \== なし.
+組み合わせなし(C, [10, 11], '裁判が続いているなら、終了日はない', ['147条1項']) :-
+    欄(C, 請求日, D), D \== なし, 欄(C, 請求の結果, 続いている), 欄(C, 請求の終了日, E), E \== なし.
+組み合わせなし(C, [10, 11], '裁判が終わったなら、終了日を入れる', ['147条1項']) :-
+    欄(C, 請求日, D), D \== なし, 欄(C, 請求の結果, R), R \== 続いている, 欄(C, 請求の終了日, なし).
+組み合わせなし(C, [9, 11], '裁判の終了日は、請求日以後の日にする', []) :-
+    欄(C, 請求日, D), D \== なし, 欄(C, 請求の終了日, E), E \== なし, 日が前(E, D).
+
+% schema.pl の no_such/3（判定の入口 act_ctx・impossible）へは、欄の番号を落として渡す
+no_such(C, W, As) :- 組み合わせなし(C, _, W, As).
+</script>
+<script type="text/prolog" data-name="rules_a_kansei.pl">% rules/a_kansei.pl — 時効が完成する日（166条1項・167条・724条・724条の2、147条・150条〜152条・169条1項）
+%
+%   完成日(C, X, 木)：X は日付（その日の終了時に完成）か 裁判中（裁判上の請求が続いていて完成しない）。
+%   1. 最初の時効期間：債権の種類ごとの2つの期間（知った時から／行使できる時から）のうち、早く満了するほう
+%   2. 出来事（催告・再度の催告・承認・裁判上の請求・権利の確定・協議の合意）を日付の順に1つずつ当てはめる。
+%      状態 s(B, BA, Ws)：B＝いま進んでいる時効期間の満了日、BA＝その根拠条、
+%                        Ws＝完成猶予の窓 w(始めの日, 終わりの日 | 無期限, 種類, 条) のリスト
+%      「いまの完成日」＝ B を、B を含む窓の終わりまで延ばしたもの（いまの完成日/3）。
+%      ・完成した後の出来事は効かない（約束事）
+%      ・猶予（147条1項・150条1項・151条1項）は窓を足す。150条2項・151条3項に当たれば足さない
+%      ・更新（147条2項・152条1項）は B を「更新の時から新たに数えた満了日」に置きかえる
+%   3. 最後の状態の「いまの完成日」が答え
+
+%% ---------- 最初の時効期間 ----------
+% 期間の定め(債権の種類, [p(条, 起算の欄, 年数, 規定の文), ...])
+期間の定め(一般の債権,
+    [ p('166条1項1号', 知った日, 5, '債権は、債権者が権利を行使することができることを知った時から5年間行使しないときは、時効によって消滅する'),
+      p('166条1項2号', 行使できる日, 10, '債権は、権利を行使することができる時から10年間行使しないときは、時効によって消滅する') ]).
+期間の定め('生命・身体の侵害の損害賠償',
+    [ p('166条1項1号', 知った日, 5, '債権は、債権者が権利を行使することができることを知った時から5年間行使しないときは、時効によって消滅する'),
+      p('167条', 行使できる日, 20, '人の生命又は身体の侵害による損害賠償請求権は、166条1項2号の「10年間」を「20年間」とする（権利を行使することができる時から20年間）') ]).
+期間の定め('不法行為の損害賠償',
+    [ p('724条1号', 知った日, 3, '不法行為による損害賠償の請求権は、被害者又はその法定代理人が損害及び加害者を知った時から3年間行使しないときは、時効によって消滅する'),
+      p('724条2号', 行使できる日, 20, '不法行為による損害賠償の請求権は、不法行為の時から20年間行使しないときは、時効によって消滅する') ]).
+期間の定め('生命・身体を害する不法行為の損害賠償',
+    [ p('724条の2', 知った日, 5, '人の生命又は身体を害する不法行為による損害賠償請求権は、724条1号の「3年間」を「5年間」とする（損害及び加害者を知った時から5年間）'),
+      p('724条2号', 行使できる日, 20, '不法行為による損害賠償の請求権は、不法行為の時から20年間行使しないときは、時効によって消滅する') ]).
+
+不法行為(K) :- memberchk(K, ['不法行為の損害賠償', '生命・身体を害する不法行為の損害賠償']).
+
+欄の呼び名(K, 知った日, '損害と加害者を知った日') :- 不法行為(K), !.
+欄の呼び名(_, 知った日, '権利を行使できることを知った日').
+欄の呼び名(K, 行使できる日, '不法行為の日') :- 不法行為(K), !.
+欄の呼び名(_, 行使できる日, '権利を行使できる日').
+
+最初の完成日(C, B, Art, t(ok, H, Art, Cs)) :-
+    欄(C, 債権の種類, K), 期間の定め(K, Ps),
+    maplist(期間の行(C, K), Ps, Rs),
+    最も早い(Rs, r(B, Art, _)),
+    findall(N, member(r(_, _, N), Rs), Ns),
+    d(B, SB),
+    format(atom(H), '最初の時効期間は ~w の終了時に満了する', [SB]),
+    format(atom(X), 'どちらの期間が満了しても時効によって消滅するので、早いほうの ~w をとる', [SB]), 文(X, F),
+    append(Ns, [F], Cs1),
+    ex_and('次のすべてが成り立つ', Cs1, Cs).
+
+期間の行(C, K, p(Art, Field, Y, Text), r(EA, Art, t(ok, H, Art, Cs))) :-
+    欄(C, Field, A), N is Y * 12, format(atom(L), '~d年', [Y]),
+    期間を経過する日(A, N, L, EA, TK),
+    規定(Art, Text, R), 欄の呼び名(K, Field, FN), d(A, SA),
+    format(atom(FX), '~w：~w（入力）', [FN, SA]), 文(FX, F),
+    d(EA, SE), format(atom(H), '~w から~wで、~w の終了時に満了', [FN, L, SE]),
+    ex_and('次のすべてが成り立つ', [R, F, TK], Cs).
+
+最も早い([R], R) :- !.
+最も早い([r(A, X, N) | Rs], R) :-
+    最も早い(Rs, r(B, Y, M)),
+    ( 日が同じか前(A, B) -> R = r(A, X, N) ; R = r(B, Y, M) ).
+
+%% ---------- 出来事を日付の順に並べる ----------
+% 同じ日の出来事は 承認 → 裁判上の請求 → 催告 → 再度の催告 → 合意 → 権利の確定 の順に当てはめる（約束事）
+出来事(C, Es) :-
+    findall(K-E, 出来事の一つ(C, K, E), KEs), keysort(KEs, S), findall(E, member(_-E, S), Es).
+
+出来事の一つ(C, k(N, 1), 承認(D, X)) :- 欄(C, 承認日, D), D \== なし, 欄(C, 承認に当たるか, X), 日数(D, N).
+出来事の一つ(C, k(N, 2), 請求(D, R, E)) :- 欄(C, 請求日, D), D \== なし, 欄(C, 請求の結果, R), 欄(C, 請求の終了日, E), 日数(D, N).
+出来事の一つ(C, k(N, 3), 催告(D, 1)) :- 欄(C, 催告日, D), D \== なし, 日数(D, N).
+出来事の一つ(C, k(N, 4), 催告(D, 2)) :- 欄(C, 再度の催告日, D), D \== なし, 日数(D, N).
+出来事の一つ(C, k(N, 5), 合意(D, F, P)) :- 欄(C, 合意日, D), D \== なし, 欄(C, 合意の形, F), 欄(C, 協議の期間, P), 日数(D, N).
+出来事の一つ(C, k(N, 6), 確定(E)) :-
+    欄(C, 請求日, D), D \== なし, 欄(C, 請求の結果, 確定した), 欄(C, 請求の終了日, E), E \== なし, 日数(E, N).
+
+出来事の日(承認(D, _), D).
+出来事の日(請求(D, _, _), D).
+出来事の日(催告(D, _), D).
+出来事の日(合意(D, _, _), D).
+出来事の日(確定(D), D).
+
+出来事の名前(承認(_, _), '承認').
+出来事の名前(請求(_, _, _), '裁判上の請求').
+出来事の名前(催告(_, 1), '催告').
+出来事の名前(催告(_, 2), '再度の催告').
+出来事の名前(合意(_, _, _), '協議を行う旨の合意').
+出来事の名前(確定(_), '裁判で権利が確定した').
+
+%% ---------- いまの完成日 ----------
+% B を、B を含む猶予の窓の終わりまで延ばす（延びた先を含む窓があれば、さらに延ばす）
+いまの完成日(s(B, BA, Ws), X, XA) :- 延ばす(B, BA, Ws, X, XA).
+
+延ばす(X, A, _, X, A) :- X == 無期限, !.
+延ばす(X0, _, Ws, X, A) :-
+    member(w(S, E, _, A1), Ws), 日が同じか前(S, X0), ( E == 無期限 ; 日が前(X0, E) ), !,
+    延ばす(E, A1, Ws, X, A).
+延ばす(X, A, _, X, A).
+
+%% ---------- 出来事を順に当てはめる ----------
+:- discontiguous 一歩/5.
+経過(_, [], S, S, []).
+経過(C, [E | Es], S0, S, [N | Ns]) :- 一歩(C, E, S0, S1, N), 経過(C, Es, S1, S, Ns).
+
+% (0) 時効が完成した後の出来事は効かない（どの出来事にも先にかける）
+一歩(_, E, S0, S0, N) :-
+    出来事の日(E, D), いまの完成日(S0, X, _), X \== 無期限, 日が前(X, D), !,
+    出来事の名前(E, EN), d(D, SD), d(X, SX),
+    format(atom(H), '~w（~w）：効かない（時効はその前に完成していた）', [EN, SD]),
+    format(atom(T), 'この時点の完成日は ~w の終了時で、~w はそれより後', [SX, SD]), 文(T, F),
+    約束('完成猶予・更新は、時効が完成する前の出来事にだけ働くものとして扱う（完成した後の承認などの扱いは、条文だけでは決まらない）', Y),
+    導く(ng, H, '', [F, Y], N).
+
+% (1) 催告（150条）
+一歩(_, 催告(D, I), S0, S, N) :-
+    S0 = s(B, BA, Ws),
+    出来事の名前(催告(D, I), EN), d(D, SD),
+    規定('150条1項', '催告があったときは、その時から6箇月を経過するまでの間は、時効は、完成しない', R1),
+    (   member(w(S1, E1, 催告, _), Ws), 窓の中(D, S1, E1)
+    ->  S = S0,
+        規定('150条2項', '催告によって時効の完成が猶予されている間にされた再度の催告は、前項の完成猶予の効力を有しない', R2),
+        d(S1, SS1), d(E1, SE1),
+        format(atom(T), '~w の催告による猶予（~w の終了まで）の間にされた', [SS1, SE1]), 文(T, F),
+        約束('催告の日から6箇月を経過するまでを「催告によって時効の完成が猶予されている間」と読む', Y),
+        format(atom(H), '~w（~w）：効かない（猶予の間の再度の催告）', [EN, SD]),
+        導く(ng, H, '150条2項', [R1, R2, F, Y], N)
+    ;   member(w(S1, E1, 合意, _), Ws), 窓の中(D, S1, E1)
+    ->  S = S0,
+        規定('151条3項', '協議を行う旨の合意によって時効の完成が猶予されている間にされた催告は、150条1項の完成猶予の効力を有しない', R3),
+        d(S1, SS1), d(E1, SE1),
+        format(atom(T), '~w の合意による猶予（~w の終了まで）の間にされた', [SS1, SE1]), 文(T, F),
+        format(atom(H), '~w（~w）：効かない（協議の合意による猶予の間の催告）', [EN, SD]),
+        導く(ng, H, '151条3項', [R1, R3, F], N)
+    ;   期間を経過する日(D, 6, '6箇月', L6, TL),
+        S = s(B, BA, [w(D, L6, 催告, '150条1項') | Ws]),
+        d(L6, S6),
+        format(atom(H), '~w（~w）：~w の終了までは完成しない（完成猶予）', [EN, SD, S6]),
+        導く(fine, H, '150条1項', [R1, TL], N) ).
+
+% (2) 承認（152条）：入力で「承認に当たらない」としたもの
+一歩(_, 承認(D, いいえ), S0, S0, N) :- !,
+    d(D, SD),
+    規定('152条1項', '時効は、権利の承認があったときは、その時から新たにその進行を始める', R),
+    文('入力で「承認に当たらない」とした', F),
+    約束('一部弁済・支払の猶予の申出などが承認に当たるかは条文だけでは決まらない。入力の「承認に当たるか」に従う', Y),
+    format(atom(H), '債務者の行為（~w）：承認に当たらないとしたので、時効は更新されない', [SD]),
+    導く(ng, H, '152条1項', [R, F, Y], N).
+% 承認に当たるとしたもの：更新
+一歩(C, 承認(D, はい), s(_, _, Ws), s(B1, '152条1項', Ws), N) :-
+    d(D, SD),
+    規定('152条1項', '時効は、権利の承認があったときは、その時から新たにその進行を始める', R),
+    文('入力で「承認に当たる」とした', F),
+    約束('一部弁済・支払の猶予の申出などが承認に当たるかは条文だけでは決まらない。入力の「承認に当たるか」に従う', Y),
+    更新後の年数(C, Yr, YN),
+    M is Yr * 12, format(atom(L), '~d年', [Yr]),
+    期間を経過する日(D, M, L, B1, TL), d(B1, SB1),
+    format(atom(H), '承認（~w）：時効が更新され、新たに~wの期間が進む。満了は ~w の終了時', [SD, L, SB1]),
+    導く(fine, H, '152条1項', [R, F, Y, YN, TL], N).
+
+% 承認で更新した後の期間：最初の2つの期間をどちらも更新の時から数え直し、短いほうで満了する（約束事）
+更新後の年数(C, Y, YN) :-
+    欄(C, 債権の種類, K), 期間の定め(K, Ps),
+    findall(Y1, member(p(_, _, Y1, _), Ps), Ys), min_list(Ys, Y),
+    findall(A1, member(p(A1, _, _, _), Ps), As), atomic_list_concat(As, '・', SA),
+    format(atom(T), '更新の後は、~w の期間をどちらも更新の時から数え直すと読む。そのため短いほうの~d年で満了する（「新たにその進行を始める」期間の長さは152条に書かれていない）', [SA, Y]),
+    約束(T, YN).
+
+% (3) 裁判上の請求（147条1項）：終わるまで（権利が確定せずに終わったら、終わってから6箇月を経過するまで）完成しない
+一歩(_, 請求(D, Res, E), s(B, BA, Ws), s(B, BA, [W | Ws]), N) :-
+    d(D, SD),
+    規定('147条1項', '裁判上の請求がある場合には、その事由が終了する（確定判決などによって権利が確定することなく終了した場合は、その終了の時から6箇月を経過する）までの間は、時効は、完成しない', R1),
+    (   Res == 確定した
+    ->  W = w(D, E, 請求, '147条1項'), d(E, SE),
+        format(atom(H), '裁判上の請求（~w）：裁判が終わる ~w までは完成しない（完成猶予）', [SD, SE]),
+        format(atom(T), '裁判は ~w に権利が確定して終わった（入力）', [SE]), 文(T, F), Cs = [R1, F]
+    ;   Res == 続いている
+    ->  W = w(D, 無期限, 請求, '147条1項'),
+        format(atom(H), '裁判上の請求（~w）：裁判が続いている間は完成しない（完成猶予）', [SD]),
+        文('判定日の時点で、裁判はまだ終わっていない（入力）', F), Cs = [R1, F]
+    ;   期間を経過する日(E, 6, '6箇月', L6, TL), W = w(D, L6, 請求, '147条1項括弧書'), d(E, SE), d(L6, S6),
+        format(atom(H), '裁判上の請求（~w）：権利が確定せずに ~w に終わったので、~w の終了までは完成しない（完成猶予）', [SD, SE, S6]),
+        format(atom(T), '裁判は ~w に、権利が確定することなく終わった（取下げなど。入力）', [SE]), 文(T, F), Cs = [R1, F, TL] ),
+    導く(fine, H, '147条1項', Cs, N).
+
+% (4) 権利の確定（147条2項・169条1項）：更新。確定の時から新たに10年
+一歩(_, 確定(E), s(_, _, Ws), s(B1, '169条1項', Ws), N) :-
+    d(E, SE),
+    規定('147条2項', '確定判決又は確定判決と同一の効力を有するものによって権利が確定したときは、時効は、裁判上の請求などの事由が終了した時から新たにその進行を始める', R2),
+    規定('169条1項', '確定判決又は確定判決と同一の効力を有するものによって確定した権利については、10年より短い時効期間の定めがあるものであっても、その時効期間は、10年とする', R169),
+    約束('更新の後は、最初の2つの期間をどちらも更新の時から数え直すと読む。10年より短い期間は169条1項で10年になり、もう一方は10年か20年なので、10年で満了する', Y),
+    期間を経過する日(E, 120, '10年', B1, TL), d(B1, SB1),
+    format(atom(H), '裁判で権利が確定した（~w）：時効が更新され、新たに10年の期間が進む。満了は ~w の終了時', [SE, SB1]),
+    導く(fine, H, '147条2項', [R2, R169, Y, TL], N).
+
+% (5) 協議を行う旨の合意（151条）
+一歩(_, 合意(D, 書面でない, _), S0, S0, N) :- !,
+    d(D, SD),
+    規定('151条1項', '権利についての協議を行う旨の合意が書面でされたときは、時効は、一定の時までの間は、完成しない', R1),
+    規定('151条4項', '合意がその内容を記録した電磁的記録によってされたときは、書面によってされたものとみなす', R4),
+    文('合意は書面（電磁的記録を含む）でされていない（入力）', F),
+    format(atom(H), '協議を行う旨の合意（~w）：効かない（書面でない）', [SD]),
+    導く(ng, H, '151条1項', [R1, R4, F], N).
+一歩(_, 合意(D, 書面, P), S0, S, N) :-
+    S0 = s(B, BA, Ws), d(D, SD),
+    規定('151条1項', '権利についての協議を行う旨の合意が書面でされたときは、次のいずれか早い時までの間は、時効は、完成しない（1号：合意の時から1年を経過した時。2号：当事者が協議を行う期間（1年に満たないもの）を定めたときは、その期間を経過した時）', R1),
+    (   member(w(S1, E1, 催告, _), Ws), 窓の中(D, S1, E1)
+    ->  S = S0,
+        規定('151条3項', '催告によって時効の完成が猶予されている間にされた協議を行う旨の合意は、151条1項の完成猶予の効力を有しない', R3),
+        d(S1, SS1), d(E1, SE1),
+        format(atom(T), '~w の催告による猶予（~w の終了まで）の間にされた', [SS1, SE1]), 文(T, F),
+        format(atom(H), '協議を行う旨の合意（~w）：効かない（催告による猶予の間の合意）', [SD]),
+        導く(ng, H, '151条3項', [R1, R3, F], N)
+    ;   期間を経過する日(D, 12, '1年', L12, T12),
+        (   P == 定めなし
+        ->  End = L12, Art = '151条1項1号',
+            文('協議を行う期間は定めていない（入力）', FP), Ts = [FP, T12]
+        ;   協議の月数(P, M), format(atom(LP), '~dか月', [M]),
+            期間を経過する日(D, M, LP, LM, TM),
+            約束('合意で定めた協議を行う期間は、合意の日から数えるものとする', YP),
+            (   日が前(LM, L12) -> End = LM, Art = '151条1項2号' ; End = L12, Art = '151条1項1号' ),
+            Ts = [YP, TM, T12] ),
+        S = s(B, BA, [w(D, End, 合意, Art) | Ws]),
+        d(End, SE),
+        format(atom(X), '早いほうの ~w をとる', [SE]), 文(X, FX),
+        append([R1 | Ts], [FX], Cs),
+        format(atom(H), '協議を行う旨の合意（~w）：~w の終了までは完成しない（完成猶予）', [SD, SE]),
+        導く(fine, H, Art, Cs, N) ).
+
+%% ---------- 完成日 ----------
+完成日(C, X, t(day, H, XA, Cs)) :-
+    act_ctx(C),
+    最初の完成日(C, B0, A0, T0),
+    出来事(C, Es),
+    経過(C, Es, s(B0, A0, []), S, Ns),
+    いまの完成日(S, X0, XA),
+    約束('日付で入れた日（知った日・行使できる日・出来事の日）は、その日の途中のこととして初日を数えない（140条本文）。午前零時から始まると見るなら、期間は1日早く満了する', Y),
+    (   X0 == 無期限
+    ->  X = 裁判中, H = '裁判上の請求が続いている間は、時効は完成しない'
+    ;   X = X0, d(X0, SX), format(atom(H), '~w の終了時に時効が完成する', [SX]) ),
+    (   Ns == [] -> Last = []
+    ;   ( X == 裁判中 -> SX2 = '裁判が終わるまで延びる' ; d(X, SX1), format(atom(SX2), '~w の終了時', [SX1]) ),
+        format(atom(LT), '出来事を日付の順に当てはめると、完成日は ~w', [SX2]), 文(LT, LN), Last = [LN] ),
+    append([Y, T0 | Ns], Last, Cs1),
+    ex_and('次のすべてが成り立つ', Cs1, Cs).
+</script>
+<script type="text/prolog" data-name="rules_b_kekka.pl">% rules/b_kekka.pl — 判定日に時効が完成しているか（完成日と判定日を比べる。完成していれば145条の援用の行をつける）
+%
+%   結論(C, R, 木)：R = 完成(日) | 未完成(日) | 裁判中
+%   完成は「日 の終了時」なので、判定日が 日 より後なら完成している。日 の当日はまだ完成していない。
+
+結論(C, R, t(Kind, H, Art, Cs)) :-
+    完成日(C, X, t(_, XH, XA, _)),
+    欄(C, 判定日, J), d(J, SJ),
+    format(atom(XT), '~w（② の計算）', [XH]), XN = t(ok, XT, XA, []),
+    (   X == 裁判中
+    ->  R = 裁判中, Kind = wait, Art = '147条1項',
+        format(atom(H), '~w の時点では、時効は完成していない（裁判上の請求が続いている間は完成しない）', [SJ]),
+        Cs0 = [XN]
+    ;   日が前(X, J)
+    ->  R = 完成(X), Kind = done, Art = XA, d(X, SX),
+        format(atom(H), '~w の時点で、時効は完成している（~w の終了時に完成した）', [SJ, SX]),
+        format(atom(T), '判定日 ~w は、完成日 ~w より後', [SJ, SX]), 文(T, F),
+        規定('145条', '時効は、当事者（消滅時効では保証人・物上保証人・第三取得者など、権利の消滅について正当な利益を有する者を含む）が援用しなければ、裁判所がこれによって裁判をすることができない', R145),
+        文('完成していても、債務者などが援用しなければ、裁判所は時効によって裁判をしない。援用したかどうかは、このアプリの入力にない', F145),
+        Cs0 = [XN, F, R145, F145]
+    ;   R = 未完成(X), Kind = alive, Art = XA, d(X, SX),
+        format(atom(H), '~w の時点では、時効はまだ完成していない（このままなら ~w の終了時に完成する）', [SJ, SX]),
+        format(atom(T), '判定日 ~w は、完成日 ~w と同じか、それより前', [SJ, SX]), 文(T, F),
+        Cs0 = [XN, F] ),
+    ex_and('次のすべてが成り立つ', Cs0, Cs).
+
+結論の種類(完成(_), done).
+結論の種類(未完成(_), alive).
+結論の種類(裁判中, wait).
+</script>
+<script type="text/prolog" data-name="rules_c_kikan.pl">% rules/c_kikan.pl — 期間の計算（民法138条〜143条）。shakuchi-prolog/rules/c_kikan.pl から写し、年でも数えられるようにした
+%   ・140条：初日は算入しない（ただし午前零時から始まるときは算入する）
+%   ・141条：末日の終了をもって満了する
+%   ・143条：週・月・年は暦に従う。最後の月・年の起算日に応当する日の前日に満了。応当する日がなければその月の末日
+%   ・142条（末日が休日）は入れていない：「その日に取引をしない慣習がある場合に限り」は条文だけでは決まらず、祝日の表も持たないため
+%   「知った日」「行使できる日」や出来事の日は、日の途中のこととして初日を数えない（約束事。木の先頭に1行出す：a_kansei.pl）。
+
+% 起算日から N か月の期間の末日（143条2項。本文か、ただし書か）
+期間の末日(date(Y, M, D), N, E, Which) :-
+    月を足す(Y, M, N, Y2, M2), 月の日数(Y2, M2, L),
+    ( D =< L -> 前日(date(Y2, M2, D), E), Which = 本文
+    ; E = date(Y2, M2, L), Which = ただし書 ).
+
+前日(date(Y, M, D), date(Y, M, D1)) :- D > 1, !, D1 is D - 1.
+前日(date(Y, 1, 1), date(Y1, 12, 31)) :- !, Y1 is Y - 1.
+前日(date(Y, M, 1), date(Y, M1, L)) :- M1 is M - 1, 月の日数(Y, M1, L).
+
+% 日 A（原子）から、N か月（表示 L：'5年' '6箇月' など）を経過する日（＝期間の末日。その日の終了で経過する）と、その木
+期間を経過する日(A, N, L, EA, t(ok, H, Art, Cs)) :-
+    日付(A, Dt), 翌日(Dt, K), 期間の末日(K, N, E, Which), 日付の原子(E, EA),
+    ( Which == 本文 -> Art = '143条2項' ; Art = '143条2項ただし書' ),
+    d(A, SA), 日付の表示(K, SK), 日付の表示(E, SE),
+    format(atom(H), '~w から ~w を経過するのは ~w の終了時', [SA, L, SE]),
+    規定('140条', '日・週・月・年で期間を定めたときは、期間の初日は算入しない', R140),
+    format(atom(T1), '初日（~w）は数えず、翌日の ~w から数える', [SA, SK]), 文(T1, F1),
+    規定('143条1項', '週・月・年で期間を定めたときは、暦に従って計算する', R143),
+    応当の行(K, N, L, E, Which, F2),
+    規定('141条', '期間は、その末日の終了をもって満了する', R141),
+    append([R140, F1, R143 | F2], [R141], Cs1),
+    ex_and('次のすべてが成り立つ', Cs1, Cs).
+
+応当の行(K, N, L, E, 本文, [R, F]) :-
+    規定('143条2項', '週・月・年の初めから起算しないときは、最後の週・月・年において起算日に応当する日の前日に満了する', R),
+    K = date(Y, M, D), 月を足す(Y, M, N, Y2, M2), 日付の表示(date(Y2, M2, D), SO), 日付の表示(E, SE), 日付の表示(K, SK),
+    format(atom(T), '~w の ~w 後の応当日は ~w。その前日は ~w（月の初めから数えるときも、暦に従えば同じ日になる）', [SK, L, SO, SE]),
+    文(T, F).
+応当の行(K, N, L, E, ただし書, [R, F]) :-
+    規定('143条2項ただし書', '月・年で期間を定めた場合に、最後の月に応当する日がないときは、その月の末日に満了する', R),
+    K = date(Y, M, D), 月を足す(Y, M, N, Y2, M2), 日付の表示(K, SK), 日付の表示(E, SE),
+    format(atom(T), '~w の ~w 後の月（~d年~d月）に ~d 日はない。その月の末日は ~w', [SK, L, Y2, M2, D, SE]),
+    文(T, F).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   借地借家法Prolog（shakuchi-prolog/web.pl）と同じく、木を n(深さ, 種類, 文, 条) の行に平らにして返す。
+
+% 欄の選択肢：値-説明 のリスト（書いた順）
+choice_list(K, L) :- findall(X-D, 選択肢(K, X, D), L).
+
+% 段1：判定日に完成しているか。Kind = done | alive | wait
+kekka_row(C, Kind, Head, Art) :- 結論(C, _, t(Kind, Head, Art, _)), !.
+
+% 段2：完成する日。Head = 「〜の終了時に時効が完成する」
+kansei_row(C, Head, Art) :- 完成日(C, _, t(_, Head, Art, _)), !.
+
+% 結論の項そのもの（「Prologに直接聞く」とテスト用）
+judge(C, R) :- 結論(C, R, _), !.
+kanseibi(C, X) :- 完成日(C, X, _), !.
+
+% 成り立たない組の結論の箱の文：「この組み合わせはありません（9と11の欄・147条1項）」
+% 条の無い組は「この組み合わせはありません（2と3の欄）」。saimu-prolog の 組み合わせなしの条 と同じ形（REVIEW_RULES C3）
+% 最初に当たった1つを出す（impossible/3 と同じ並び。yakusoku/kihon.pl の 組み合わせなし/4）
+impossible_head(C, H) :-
+    組み合わせなし(C, Ns, _, As), !,
+    atomic_list_concat(Ns, 'と', N),
+    (   As == []
+    ->  format(atom(H), 'この組み合わせはありません（~wの欄）', [N])
+    ;   atomic_list_concat(As, '・', A),
+        format(atom(H), 'この組み合わせはありません（~wの欄・~w）', [N, A]) ).
+
+% 根拠の木（段1）
+explain(C, Lines) :-
+    (   impossible(C, W, Arts)
+    ->  ( Arts = [Ar|_] -> true ; Ar = '' ),
+        Tree = t(info, 'この組み合わせはありません', '@約束事', [t(ok, W, Ar, [])])
+    ;   結論(C, _, Tree) ), !,
+    ex_flat(Tree, 0, Lines).
+
+% 根拠の木（段2）
+kansei_explain(C, Lines) :- 完成日(C, _, Tree), !, ex_flat(Tree, 0, Lines).
+
+% 木 t(種類, 文, 条, 子) を、深さつきの行に平らにする
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :- ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+
+% 画面の結論の下に出す注意書き（入力に取っていないこと）
+notes(C, L) :- findall(X, note(C, X), L).
+
+note(_, '時効は、当事者が援用しなければ、裁判所がこれによって裁判をすることができない（145条）。完成していても、援用されるまでは請求そのものが消えるわけではない。').
+note(C, '債務者の行為（一部弁済・支払の猶予の申出など）が「権利の承認」に当たるかは条文だけでは決まらない。このアプリは入力の「承認に当たるか」に従っている。') :-
+    欄(C, 承認日, D), D \== なし.
+note(C, '協議の続行を拒絶する旨の書面の通知があれば、その時から6箇月を経過した時に猶予が終わる（151条1項3号）。このアプリはその通知を入力に取っていない。') :-
+    欄(C, 合意日, D), D \== なし.
+note(_, '期間の末日が日曜日・休日に当たるとき、その日に取引をしない慣習がある場合に限り翌日に満了する（142条）。このアプリは休日を見ていない。').
+note(_, '強制執行・仮差押え・未成年者の法定代理人がいない場合・天災などによる完成猶予や更新（148条・149条・158条〜161条）は入れていない。').
+</script>
+<script type="application/json" id="law">{"140":{"t":"第百四十条","c":"","p":[{"n":"1","s":"日、週、月又は年によって期間を定めたときは、期間の初日は、算入しない。ただし、その期間が午前零時から始まるときは、この限りでない。","i":[]}]},"141":{"t":"第百四十一条","c":"（期間の満了）","p":[{"n":"1","s":"前条の場合には、期間は、その末日の終了をもって満了する。","i":[]}]},"142":{"t":"第百四十二条","c":"","p":[{"n":"1","s":"期間の末日が日曜日、国民の祝日に関する法律（昭和二十三年法律第百七十八号）に規定する休日その他の休日に当たるときは、その日に取引をしない慣習がある場合に限り、期間は、その翌日に満了する。","i":[]}]},"143":{"t":"第百四十三条","c":"（暦による期間の計算）","p":[{"n":"1","s":"週、月又は年によって期間を定めたときは、その期間は、暦に従って計算する。","i":[]},{"n":"2","s":"週、月又は年の初めから期間を起算しないときは、その期間は、最後の週、月又は年においてその起算日に応当する日の前日に満了する。ただし、月又は年によって期間を定めた場合において、最後の月に応当する日がないときは、その月の末日に満了する。","i":[]}]},"145":{"t":"第百四十五条","c":"（時効の援用）","p":[{"n":"1","s":"時効は、当事者（消滅時効にあっては、保証人、物上保証人、第三取得者その他権利の消滅について正当な利益を有する者を含む。）が援用しなければ、裁判所がこれによって裁判をすることができない。","i":[]}]},"147":{"t":"第百四十七条","c":"（裁判上の請求等による時効の完成猶予及び更新）","p":[{"n":"1","s":"次に掲げる事由がある場合には、その事由が終了する（確定判決又は確定判決と同一の効力を有するものによって権利が確定することなくその事由が終了した場合にあっては、その終了の時から六箇月を経過する）までの間は、時効は、完成しない。","i":[{"n":"1","t":"一","s":"裁判上の請求","sub":[]},{"n":"2","t":"二","s":"支払督促","sub":[]},{"n":"3","t":"三","s":"民事訴訟法第二百七十五条第一項の和解又は民事調停法（昭和二十六年法律第二百二十二号）若しくは家事事件手続法（平成二十三年法律第五十二号）による調停","sub":[]},{"n":"4","t":"四","s":"破産手続参加、再生手続参加又は更生手続参加","sub":[]}]},{"n":"2","s":"前項の場合において、確定判決又は確定判決と同一の効力を有するものによって権利が確定したときは、時効は、同項各号に掲げる事由が終了した時から新たにその進行を始める。","i":[]}]},"148":{"t":"第百四十八条","c":"（強制執行等による時効の完成猶予及び更新）","p":[{"n":"1","s":"次に掲げる事由がある場合には、その事由が終了する（申立ての取下げ又は法律の規定に従わないことによる取消しによってその事由が終了した場合にあっては、その終了の時から六箇月を経過する）までの間は、時効は、完成しない。","i":[{"n":"1","t":"一","s":"強制執行","sub":[]},{"n":"2","t":"二","s":"担保権の実行","sub":[]},{"n":"3","t":"三","s":"民事執行法（昭和五十四年法律第四号）第百九十五条に規定する担保権の実行としての競売の例による競売","sub":[]},{"n":"4","t":"四","s":"民事執行法第百九十六条に規定する財産開示手続又は同法第二百四条に規定する第三者からの情報取得手続","sub":[]}]},{"n":"2","s":"前項の場合には、時効は、同項各号に掲げる事由が終了した時から新たにその進行を始める。ただし、申立ての取下げ又は法律の規定に従わないことによる取消しによってその事由が終了した場合は、この限りでない。","i":[]}]},"149":{"t":"第百四十九条","c":"（仮差押え等による時効の完成猶予）","p":[{"n":"1","s":"次に掲げる事由がある場合には、その事由が終了した時から六箇月を経過するまでの間は、時効は、完成しない。","i":[{"n":"1","t":"一","s":"仮差押え","sub":[]},{"n":"2","t":"二","s":"仮処分","sub":[]}]}]},"150":{"t":"第百五十条","c":"（催告による時効の完成猶予）","p":[{"n":"1","s":"催告があったときは、その時から六箇月を経過するまでの間は、時効は、完成しない。","i":[]},{"n":"2","s":"催告によって時効の完成が猶予されている間にされた再度の催告は、前項の規定による時効の完成猶予の効力を有しない。","i":[]}]},"151":{"t":"第百五十一条","c":"（協議を行う旨の合意による時効の完成猶予）","p":[{"n":"1","s":"権利についての協議を行う旨の合意が書面でされたときは、次に掲げる時のいずれか早い時までの間は、時効は、完成しない。","i":[{"n":"1","t":"一","s":"その合意があった時から一年を経過した時","sub":[]},{"n":"2","t":"二","s":"その合意において当事者が協議を行う期間（一年に満たないものに限る。）を定めたときは、その期間を経過した時","sub":[]},{"n":"3","t":"三","s":"当事者の一方から相手方に対して協議の続行を拒絶する旨の通知が書面でされたときは、その通知の時から六箇月を経過した時","sub":[]}]},{"n":"2","s":"前項の規定により時効の完成が猶予されている間にされた再度の同項の合意は、同項の規定による時効の完成猶予の効力を有する。ただし、その効力は、時効の完成が猶予されなかったとすれば時効が完成すべき時から通じて五年を超えることができない。","i":[]},{"n":"3","s":"催告によって時効の完成が猶予されている間にされた第一項の合意は、同項の規定による時効の完成猶予の効力を有しない。同項の規定により時効の完成が猶予されている間にされた催告についても、同様とする。","i":[]},{"n":"4","s":"第一項の合意がその内容を記録した電磁的記録（電子的方式、磁気的方式その他人の知覚によっては認識することができない方式で作られる記録であって、電子計算機による情報処理の用に供されるものをいう。以下同じ。）によってされたときは、その合意は、書面によってされたものとみなして、前三項の規定を適用する。","i":[]},{"n":"5","s":"前項の規定は、第一項第三号の通知について準用する。","i":[]}]},"152":{"t":"第百五十二条","c":"（承認による時効の更新）","p":[{"n":"1","s":"時効は、権利の承認があったときは、その時から新たにその進行を始める。","i":[]},{"n":"2","s":"前項の承認をするには、相手方の権利についての処分につき行為能力の制限を受けていないこと又は権限があることを要しない。","i":[]}]},"158":{"t":"第百五十八条","c":"（未成年者又は成年被後見人と時効の完成猶予）","p":[{"n":"1","s":"時効の期間の満了前六箇月以内の間に未成年者又は成年被後見人に法定代理人がないときは、その未成年者若しくは成年被後見人が行為能力者となった時又は法定代理人が就職した時から六箇月を経過するまでの間は、その未成年者又は成年被後見人に対して、時効は、完成しない。","i":[]},{"n":"2","s":"未成年者又は成年被後見人がその財産を管理する父、母又は後見人に対して権利を有するときは、その未成年者若しくは成年被後見人が行為能力者となった時又は後任の法定代理人が就職した時から六箇月を経過するまでの間は、その権利について、時効は、完成しない。","i":[]}]},"161":{"t":"第百六十一条","c":"（天災等による時効の完成猶予）","p":[{"n":"1","s":"時効の期間の満了の時に当たり、天災その他避けることのできない事変のため第百四十七条第一項各号又は第百四十八条第一項各号に掲げる事由に係る手続を行うことができないときは、その障害が消滅した時から三箇月を経過するまでの間は、時効は、完成しない。","i":[]}]},"166":{"t":"第百六十六条","c":"（債権等の消滅時効）","p":[{"n":"1","s":"債権は、次に掲げる場合には、時効によって消滅する。","i":[{"n":"1","t":"一","s":"債権者が権利を行使することができることを知った時から五年間行使しないとき。","sub":[]},{"n":"2","t":"二","s":"権利を行使することができる時から十年間行使しないとき。","sub":[]}]},{"n":"2","s":"債権又は所有権以外の財産権は、権利を行使することができる時から二十年間行使しないときは、時効によって消滅する。","i":[]},{"n":"3","s":"前二項の規定は、始期付権利又は停止条件付権利の目的物を占有する第三者のために、その占有の開始の時から取得時効が進行することを妨げない。ただし、権利者は、その時効を更新するため、いつでも占有者の承認を求めることができる。","i":[]}]},"167":{"t":"第百六十七条","c":"（人の生命又は身体の侵害による損害賠償請求権の消滅時効）","p":[{"n":"1","s":"人の生命又は身体の侵害による損害賠償請求権の消滅時効についての前条第一項第二号の規定の適用については、同号中「十年間」とあるのは、「二十年間」とする。","i":[]}]},"169":{"t":"第百六十九条","c":"（判決で確定した権利の消滅時効）","p":[{"n":"1","s":"確定判決又は確定判決と同一の効力を有するものによって確定した権利については、十年より短い時効期間の定めがあるものであっても、その時効期間は、十年とする。","i":[]},{"n":"2","s":"前項の規定は、確定の時に弁済期の到来していない債権については、適用しない。","i":[]}]},"724":{"t":"第七百二十四条","c":"（不法行為による損害賠償請求権の消滅時効）","p":[{"n":"1","s":"不法行為による損害賠償の請求権は、次に掲げる場合には、時効によって消滅する。","i":[{"n":"1","t":"一","s":"被害者又はその法定代理人が損害及び加害者を知った時から三年間行使しないとき。","sub":[]},{"n":"2","t":"二","s":"不法行為の時から二十年間行使しないとき。","sub":[]}]}]},"724_2":{"t":"第七百二十四条の二","c":"（人の生命又は身体を害する不法行為による損害賠償請求権の消滅時効）","p":[{"n":"1","s":"人の生命又は身体を害する不法行為による損害賠償請求権の消滅時効についての前条第一号の規定の適用については、同号中「三年間」とあるのは、「五年間」とする。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"第一編 第六章　期間の計算","a":[{"k":"138","t":"第百三十八条","c":"（期間の計算の通則）","u":0},{"k":"139","t":"第百三十九条","c":"（期間の起算）","u":0},{"k":"140","t":"第百四十条","c":"","u":1},{"k":"141","t":"第百四十一条","c":"（期間の満了）","u":1},{"k":"142","t":"第百四十二条","c":"","u":0},{"k":"143","t":"第百四十三条","c":"（暦による期間の計算）","u":1}]},{"t":"第一編 第七章　時効 第一節　総則","a":[{"k":"144","t":"第百四十四条","c":"（時効の効力）","u":0},{"k":"145","t":"第百四十五条","c":"（時効の援用）","u":1},{"k":"146","t":"第百四十六条","c":"（時効の利益の放棄）","u":0},{"k":"147","t":"第百四十七条","c":"（裁判上の請求等による時効の完成猶予及び更新）","u":1},{"k":"148","t":"第百四十八条","c":"（強制執行等による時効の完成猶予及び更新）","u":0},{"k":"149","t":"第百四十九条","c":"（仮差押え等による時効の完成猶予）","u":0},{"k":"150","t":"第百五十条","c":"（催告による時効の完成猶予）","u":1},{"k":"151","t":"第百五十一条","c":"（協議を行う旨の合意による時効の完成猶予）","u":1},{"k":"152","t":"第百五十二条","c":"（承認による時効の更新）","u":1},{"k":"153","t":"第百五十三条","c":"（時効の完成猶予又は更新の効力が及ぶ者の範囲）","u":0},{"k":"154","t":"第百五十四条","c":"","u":0},{"k":"155:157","t":"第百五十五条から第百五十七条まで","c":"","u":2},{"k":"158","t":"第百五十八条","c":"（未成年者又は成年被後見人と時効の完成猶予）","u":0},{"k":"159","t":"第百五十九条","c":"（夫婦間の権利の時効の完成猶予）","u":0},{"k":"160","t":"第百六十条","c":"（相続財産に関する時効の完成猶予）","u":0},{"k":"161","t":"第百六十一条","c":"（天災等による時効の完成猶予）","u":0}]},{"t":"第一編 第七章　時効 第二節　取得時効","a":[{"k":"162","t":"第百六十二条","c":"（所有権の取得時効）","u":0},{"k":"163","t":"第百六十三条","c":"（所有権以外の財産権の取得時効）","u":0},{"k":"164","t":"第百六十四条","c":"（占有の中止等による取得時効の中断）","u":0},{"k":"165","t":"第百六十五条","c":"","u":0}]},{"t":"第一編 第七章　時効 第三節　消滅時効","a":[{"k":"166","t":"第百六十六条","c":"（債権等の消滅時効）","u":1},{"k":"167","t":"第百六十七条","c":"（人の生命又は身体の侵害による損害賠償請求権の消滅時効）","u":1},{"k":"168","t":"第百六十八条","c":"（定期金債権の消滅時効）","u":0},{"k":"169","t":"第百六十九条","c":"（判決で確定した権利の消滅時効）","u":1},{"k":"170:174","t":"第百七十条から第百七十四条まで","c":"","u":2}]},{"t":"第三編 第五章　不法行為","a":[{"k":"709","t":"第七百九条","c":"（不法行為による損害賠償）","u":0},{"k":"710","t":"第七百十条","c":"（財産以外の損害の賠償）","u":0},{"k":"711","t":"第七百十一条","c":"（近親者に対する損害の賠償）","u":0},{"k":"712","t":"第七百十二条","c":"（責任能力）","u":0},{"k":"713","t":"第七百十三条","c":"","u":0},{"k":"714","t":"第七百十四条","c":"（責任無能力者の監督義務者等の責任）","u":0},{"k":"715","t":"第七百十五条","c":"（使用者等の責任）","u":0},{"k":"716","t":"第七百十六条","c":"（注文者の責任）","u":0},{"k":"717","t":"第七百十七条","c":"（土地の工作物等の占有者及び所有者の責任）","u":0},{"k":"718","t":"第七百十八条","c":"（動物の占有者等の責任）","u":0},{"k":"719","t":"第七百十九条","c":"（共同不法行為者の責任）","u":0},{"k":"720","t":"第七百二十条","c":"（正当防衛及び緊急避難）","u":0},{"k":"721","t":"第七百二十一条","c":"（損害賠償請求権に関する胎児の権利能力）","u":0},{"k":"722","t":"第七百二十二条","c":"（損害賠償の方法、中間利息の控除及び過失相殺）","u":0},{"k":"723","t":"第七百二十三条","c":"（名誉毀損における原状回復）","u":0},{"k":"724","t":"第七百二十四条","c":"（不法行為による損害賠償請求権の消滅時効）","u":1},{"k":"724_2","t":"第七百二十四条の二","c":"（人の生命又は身体を害する不法行為による損害賠償請求権の消滅時効）","u":1}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+// '166条1項1号' → {key:'166', para:'1', item:'1'}、'724条の2' → {key:'724_2'}
+function parseArt(a){
+  a = String(a);
+  const m = a.match(/^(\d+)条((?:の\d+)*)(?:(\d+)項)?(本文|ただし書|前段|後段|括弧書)?(?:(\d+)号)?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[5] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para); else if (ps.length > 1 && r.item) ps = ps.slice(0, 1);
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const its = p.i.map(it => `<p class="it${r.item && it.n === r.item ? " hit" : ""}">${it.t ? esc(it.t) + "　" : ""}${esc(it.s)}${it.sub.map(x => `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p${!r.item && r.para ? ' class="hit"' : ""}>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { done: "■", alive: "◯", wait: "…", day: "▶", ng: "✗", fine: "◯", ok: "", info: "・", and: "", or: "" };
+const LEGEND = `<p class="legend">読み方：下の行が、上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。◯＝効いた出来事、✗＝効かなかった出来事。<span class="yk">アプリの約束事</span>＝条文ではなく、このアプリの決め事（一覧は「収録範囲・仕組み」のページ）。</p>`;
+function treeHTML(lines, legend = true){
+  if (!lines.length) return "";
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  // 子が「かつ／または」の節1つだけなら、その節を親の行に入れて1段浅くする。子が1行だけなら「かつ」の1つ分として青い線でつなぐ
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and", "or"].includes(n.c[0].l[1]) && !["and", "or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and", "or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k, t, a] = n.l;
+    const mk = ["fine", "ng"].includes(k) || !cells.length;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${mk ? `<span class="m ${k}">${MARK[k] ?? ""}</span>` : `<span class="m"></span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+const linesOf = (pred, ctx) => { const r = once(`${pred}(${ctx}, L)`); return r ? r.L.map(T).map(t => t.args) : []; };
+
+// ---------- ここから別ページ（about.html）だけの処理 ----------
+if (location.protocol === "file:") $("back").href = "jikou.html";
+function openHash(){ const d = location.hash && document.getElementById(location.hash.slice(1)); if (d && d.tagName === "DETAILS") d.open = true; }
+openHash(); window.addEventListener("hashchange", openHash);
+
+// ---------- 全条文の地図とソース（2026-11-19 判定ページから移した。中身は前の template.html の renderCover・renderSrc のまま） ----------
+const kanjiArt = k => { const [a, ...r] = String(k).split("_"); return a + "条" + r.map(x => "の" + x).join(""); };
+function renderCover(){
+  let C = []; try{ C = JSON.parse(document.getElementById("cover-data").textContent); }catch(e){ return; }
+  const live = C.flatMap(c => c.a).filter(a => a.u !== 2), used = live.filter(a => a.u === 1).length;
+  $("cover").innerHTML = `<p class="cover-total">使っている条：${used} / ${live.length} 条（削除された条を除く）</p>` + C.map(c => {
+    const lv = c.a.filter(a => a.u !== 2), u = lv.filter(a => a.u === 1).length;
+    return `<div class="cover-ch"><h4>${esc(c.t)}<span>${u} / ${lv.length} 条</span></h4><div class="cells">${c.a.map(a => `<button type="button" class="cell u${a.u}" data-cover="${esc(a.k)}" title="${esc(a.t + a.c)}" aria-label="${esc(a.t + a.c)}"></button>`).join("")}</div></div>`;
+  }).join("") + `<div id="cover-pick"></div>`;
+  window.__COVER = Object.fromEntries(C.flatMap(c => c.a.map(a => [a.k, a])));
+}
+function renderSrc(){
+  const fs = [...document.querySelectorAll("script[type='text/prolog']")];
+  $("src").innerHTML = fs.map((f, i) => `<details class="srcfile" data-src="${i}"><summary>${esc(f.dataset.name.replace("_", "/"))}（${f.textContent.split("\n").length} 行）</summary><pre></pre></details>`).join("");
+  $("src").addEventListener("toggle", e => { const d = e.target; if (d.open && d.dataset.src){ const pre = d.querySelector("pre"); if (!pre.textContent) pre.textContent = fs[+d.dataset.src].textContent; } }, true);
+}
+
+async function bootAbout(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    renderCover(); renderSrc();
+    $("core").textContent = `完成日(C, X, T) :-\n    act_ctx(C),\n    最初の完成日(C, B0, A0, T0),        % 166条1項・167条・724条\n    出来事(C, Es),                     % 日付の順\n    経過(C, Es, s(B0, A0, []), S, Ns),  % 一歩ずつ：猶予の窓を足す／更新で数え直す\n    いまの完成日(S, X0, XA),\n    …\n結論(C, R, T) :- 完成日(C, X, _), 欄(C, 判定日, J), （J が X より後なら 完成(X)、そうでなければ 未完成(X)）…`;
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+  }
+}
+
+// 直接クエリ実行（前の template.html の runQuery・fmt のまま）
+function runQuery(){
+  const q = $("q").value.trim().replace(/\.\s*$/, "");
+  try{
+    const it = pl.prolog.query(`catch((${q}), Err__, true)`), out = [];
+    for (let i = 0; i < 30; i++){
+      const r = it.next(), v = r.value;
+      if (v && v.$tag === "bindings"){
+        if (v.Err__ && v.Err__.$t !== "v"){ out.push("エラー"); break; }
+        out.push(Object.entries(v).filter(([k]) => !["$tag","success","Err__"].includes(k)).map(([k, x]) => `${k} = ${fmt(x)}`).join(", ") || "true");
+      }
+      if (r.done) break;
+    }
+    $("out").textContent = out.join("\n") || (errBuf.length ? errBuf.join("\n") : "false.");
+  } catch(e){ $("out").textContent = "エラー：" + e.message; }
+}
+function fmt(v){
+  if (Array.isArray(v)) return "[" + v.map(fmt).join(", ") + "]";
+  const t = T(v); if (t && t.f) return `${t.f}(${t.args.map(fmt).join(", ")})`;
+  if (v && v.$t === "v") return "_";
+  return String(v);
+}
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.id === "run"){ if (!pl){ $("out").textContent = "まだ読み込み中です。"; return; } runQuery(); }
+  else if (b.dataset.cover){
+    const a = window.__COVER[b.dataset.cover], art = kanjiArt(a.k);
+    $("cover-pick").innerHTML = a.u === 1 ? lawHTML(art) : `<div class="lawtext"><h4>${esc(a.t + a.c)}</h4><p class="hint">${a.u === 2 ? "この条は削除されています。" : "この条はルールにしていません。"}</p></div>`;
+  }
+});
+
+if (typeof SWIPL === "function") bootAbout();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; }
+</script>
