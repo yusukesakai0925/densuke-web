@@ -1,0 +1,1262 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="「保証の効力と求償を逆から引く」の収録範囲、全条文の地図、アプリの約束事、Prologのソース全部。">
+<title>収録範囲・仕組み｜保証の効力と求償を逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.step.off{color:var(--muted)}
+.flow{margin:0;padding-left:1.2em}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+.disclaimer-inline{margin-top:10px;font-size:.78rem;color:var(--muted);border-top:1px solid var(--hair);padding-top:8px;line-height:1.65}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border-left:2px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+</style>
+
+<div class="wrap about">
+  <header class="mast sub">
+    <p class="backlink"><a href="./" id="back">← 判定ページに戻る</a></p>
+    <h1>収録範囲・仕組み</h1>
+    <p class="lead">「保証の効力と求償を逆から引く」で、どの条文をどこまでルールにしたか、アプリが決めたこと、プログラムの中身です。</p>
+  </header>
+
+  <div class="appendix">
+  <details class="box" id="scope-box" open>
+    <summary>収録範囲と、入っていないもの</summary>
+    <div class="scope" id="scope">
+      <p><b>民法の本則のうち、第446条・第448条・第452〜455条・第457条・第458条の2・第458条の3・第459条・第459条の2・第460条・第462条・第463条・第465条の2・第465条の3・第465条の4・第465条の6・第465条の9・第465条の10をルールにしています。</b></p>
+      <p>入力の欄は、起きた事実を聞く32個で、いつも全部を出します。同じ入力でこれらの条を全部当てるので、例えば「頼まれた保証人が、弁済期前に払った」を選ぶと、どの限度で求償権を持つか（第459条の2第1項）と、いつ行使できるか（第459条の2第3項）の判定が並んで出ます。前の欄の答えで意味を持たない欄（例：根保証でないのに選んだ7の欄、まだ払っていないのに選んだ30〜32の欄）は、答えに使いません。事実として成り立たない組は「この組み合わせはありません」と、欄の番号と根拠条を出します（選択肢の言葉どうしでぶつかるだけの組は、条を付けず欄の番号だけを出します）。裁判所などでどうなるかを当てる道具ではなく、入力のとおりなら条文がどう定めているかを確かめるものです。個別のことは法律の専門家に聞いてください。</p>
+      <p>入っていないもの：下の<a href="#notes-box">載せなかったもの</a>をご覧ください。</p>
+      <p><b>判定について：</b></p>
+      <ul id="hantei-notes" style="margin:0;padding-left:1.2em">
+        <li id="note-hantei">当てはめは判定しません。「事業のために負担した」「資力」「執行が容易」「過失なく」「善意」「債権者が知ることができた」「誤認」に当たるかは、事情で決まり、条文だけでは決まりません。本人がそう考えているかを入力にしているだけです。根保証で債務の一部だけが事業の貸金等のときの範囲も、条文だけでは決まりません。</li>
+        <li id="note-jobun">条文だけを読んでいます。判例の読み方（催告の抗弁・検索の抗弁を放棄する特約、連帯保証人の求償の範囲 など）は載せません。</li>
+        <li id="note-tokuyaku">特約の効力は判定しません。保証契約に当事者の約束（特約）があっても、それが条文の定めを変えられるかは条文からだけでは決まらないので、答えは条文の定めのとおりに出します。特約が効かないと言うものではありません。</li>
+        <li id="note-betsu">債務を守らなかったときの賠償・解除は<a id="link-saimu" href="../saimu/">債務不履行と解除のページ</a>で引いてください。</li>
+        <li id="note-go">語の言い換え：主たる債務者＝保証してもらった債務を負う人。根保証＝一定の範囲に属する不特定の債務の保証。極度額＝根保証で保証人が負う上限の額。元本確定期日＝根保証で保証する元本が確定する日。債務の消滅行為＝主たる債務者に代わって弁済などをして債務を消滅させること。求償権＝払った保証人が主たる債務者に返してもらう権利。これらは条文の語をこのアプリが言い換えたものです。</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="box" id="cover-box">
+    <summary>民法のどこまでをルールにしたか（全条文の地図）</summary>
+    <p class="hint" style="margin-top:6px">本則の全条文を1マスずつ並べました。<span class="cell u1"></span> はプログラムのルールの中で使っている条、<span class="cell u0"></span> は使っていない条です。マスを押すと原文が出ます。</p>
+    <div id="cover"></div>
+  </details>
+
+  <details class="box" id="yaku-box">
+    <summary>アプリの約束事（民法の条文にないもの）</summary>
+    <p class="hint" style="margin-top:6px">判定のためにこのアプリが決めたことで、条文そのものではありません。下の規則は論理の木に <span class="yk">アプリの約束事</span> の印を付けて出ます。判定しないことは上の「判定について」にあります。</p>
+    <ul class="hint" style="margin:8px 0 0;padding-left:1.2em">
+      <li>条の要件に当たらないときは、欠けた要件が分かる起きた事実の文か「当たりません」とだけ出し、反対の結論（ほかの理由で効力を生じる・請求できる等）は出さない</li>
+    </ul>
+  </details>
+
+  <details class="box" id="notes-box">
+    <summary>載せなかったものと、条文だけで決まらなかった点</summary>
+    <div class="scope">
+      <p><b>載せなかったもの（理由）：</b></p>
+      <ul style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>判例の基準：条文だけを読むアプリのため</li>
+        <li>金額・日付の計算：条文は「その消滅した額」「三年を経過する日」までで、計算の語が無いため</li>
+        <li>特約の効力：どこまで変えられるかが範囲の条の語に無いため</li>
+        <li>第447条・第449〜451条・第456条・第458条・第461条・第464条・第465条・第465条の5・第465条の7・第465条の8の中身：今回の問いの外のため</li>
+        <li>第465条の6第2項の方式の中身：公正証書の作り方で、効力の入力に置かないため。項の文だけを残す</li>
+        <li>第427条・第436〜445条（連帯債務）の中身：引き先のため</li>
+        <li>貸金業法・借地借家法・消費者契約法との関係：別の法律のため</li>
+      </ul>
+      <p><b>条文だけで決まらなかった点（22点）：</b></p>
+      <ul id="kimaranai" style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>（a）保証契約が効力を生じない組（446条2項・465条の2第2項3項・465条の6第1項） → 元本確定期日（465条の3）・取消し（465条の10）・請求されたとき・払う前と払った後の条は、保証契約が効力を持つことが前提なので、答えを出さない</li>
+        <li>（b）462条1項は459条の2第1項を準用するが、459条の2の見出しは「弁済期前」で、準用の文に弁済期の限定が無い → 委託を受けず意思に反しない保証人は、弁済期の前後を問わず「その当時利益を受けた限度」と書かれたとおりに出す</li>
+        <li>（c）465条の2第2項は「極度額を定めなければ」と書き、446条2項は保証契約そのものの方式を書く。極度額だけ書面にないとき → 465条の2第3項の準用で効力を生じないと読む</li>
+        <li>（d）根保証で債務の一部だけが事業の貸金等のときの範囲は条文で決まらない → 6の欄で「事業のための貸金等債務が含まれる」を選んだときだけ465条の6を当てる</li>
+        <li>（e）453条の「催告をした後であっても」 → 催告の後も含めるという語で、催告の前を除く語は無いので、催告の前後を分けずに当てる（前の版は催告の後だけ当てていた）</li>
+        <li>（f）455条の「請求又は証明」がどちらか・「催告又は執行」がどちらか → 語は「又は」なので1つの欄で聞く</li>
+        <li>（g）454条は「前二条の権利を有しない」で、455条の語は無い → 連帯のときは455条の答えを出さない</li>
+        <li>（h）465条の2第3項の準用で、電磁的記録も書面と同じか → 446条3項も準用されているので、1つの欄で聞く</li>
+        <li>（i）465条の3第3項（変更）と第4項（元本確定期日の定めの方式） → 入力に置かず聞かない</li>
+        <li>（j）465条の3で、期日が締結の日から五年以内のとき → 語は第1項の「後の日と定められているとき」だけなので、それに当たらないと出す（定めが効力を持つとは言わない）</li>
+        <li>（k）「保証人」「保証人になろうとする者」「保証をする者」 → 関係の語が無いが、1つの欄で聞く。法人の根保証は、465条の2〜465条の4の「個人根保証契約」に当たらないと出す</li>
+        <li>（l）465条の9の「前三条」に465条の10は入らない → 語のとおり、9の欄の答えは465条の10の段に効かせない</li>
+        <li>（m）465条の6の「事業のために負担した貸金等債務」と465条の10の「事業のために負担する債務」 → 語が違うので、6の欄の選択肢で分ける</li>
+        <li>（n）465条の10第2項の「情報を提供せず」と「事実と異なる情報」が両方あるとき → 語が無いので、どれか1つを選ぶ欄にした</li>
+        <li>（o）465条の4の事由が複数あるとき → 18・25・26の欄で別に聞き、当たる号を全部出す。18の欄と26の欄の中では1つを選ぶ</li>
+        <li>（p）448条1項と2項の両方に当たるとき、457条2項と3項の両方に当たるとき → 順番の語が無いので、別の段で並べる</li>
+        <li>（q）458条の3の「二箇月以内に通知」で、過ぎてから通知したときと通知していないとき → 語は「期間内に通知をしなかったとき」で同じなので、1つの選択肢にする</li>
+        <li>（r）459条の2第1項・462条2項・463条1項の後ろの文（相殺）・460条第2号ただし書 → 入力に置かず聞かない。原文を開けば読める</li>
+        <li>（s）463条3項は「意思に反して保証をしたときのほか」 → 意思に反するときは通知の有無を見ない</li>
+        <li>（t）前の欄の答えで意味を持たない欄 → 答えに使わない（例：根保証でないのに選んだ7・8の欄、事業のための貸金等債務でないのに選んだ9・10の欄、まだ払っていないのに選んだ30〜32の欄、払った後に選んだ28・29の欄）。事実として成り立たない組（5と6、17と19と20、31と32の欄）は、この組み合わせはありませんと出す</li>
+        <li>（u）460条の「あらかじめ」 → 保証人がまだ債務の消滅行為をしていないときだけ読む。当たる号は全部出す</li>
+        <li>（v）条に当たらない文を出す場面 → 欄で起きたことを選んだが、条の別の要件が欠けるときだけ出す。何も起きていない欄（していない・ない）の条は出さない</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="box" id="src-box">
+    <summary>プログラムの中身（Prologのソース全部）</summary>
+    <p class="hint" style="margin-top:6px">このページで動いているPrologのプログラムそのものです。ファイルを開くと全文が出ます。</p>
+    <div id="src"></div>
+  </details>
+
+  <details class="box" id="core-box">
+    <summary>仕組みを見る（上級者向け）</summary>
+    <p class="hint" style="margin-top:6px">Prologに直接聞く（最初の20件まで）：</p>
+    <textarea id="q" spellcheck="false">result(ctx(書面,個人,反する,いいえ,含まない,なし,なし,なし,なし,なし,提供した,いいえ,知り得なかった,いいえ,いいえ,いいえ,いいえ,なし,なし,いいえ,なし,なし,いいえ,いいえ,なし,なし,前,いいえ,いいえ,した,怠っていない,いいえ), R).</textarea>
+    <button type="button" class="btn" id="run">実行</button>
+    <pre id="out"></pre>
+  </details>
+  </div>
+
+  <p class="foot techline"><span>民法 第446条〜第465条の10のうち保証の条／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot">e-Gov法令検索の民法（明治二十九年法律第八十九号）の本則の原文をルールにしたものです。判例・法律の解釈・裁判所の運用は含みません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 民法の保証のProlog 共通の型・欄の読み出し・前提・効力の判定・木の部品
+%
+% ctx(方式, 保証人, 委託, 根保証, 貸金等, 事業, 極度額, 期日, 各号, 公正証書, 情報, 誤認, 債権者,
+%     連帯, 重い, 加重, 請求, 主たる債務者, 証明, 怠り, 抗弁, 形成権, 情報請求, 喪失, 保証人に, 執行,
+%     消滅, 弁済期, 裁判, 事前通知, 通知怠り, 後)
+%   欄は起きた事実を聞く32個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-20 入口の「どの話か」と欄の出し消しをやめた）。
+%   引数の順は画面の欄の番号（1〜32）と同じ。同じ入力で 446条〜465条の10 の範囲の条を全部当てる。
+%   1 方式 : 書面 | 電磁的記録 | どちらでもない（446条2項3項）
+%   2 保証人 : 個人 | 法人（458条の3第3項・465条の2第1項・465条の6第3項・465条の10第3項）
+%   3 委託 : 受けた | 反しない | 反する（主たる債務者の委託を受けたか・意思に反するか。458条の2・459条・460条・462条・463条・465条の10）
+%   4 根保証 : いいえ | はい（一定の範囲に属する不特定の債務を主たる債務とするか。465条の2第1項）
+%   5 貸金等 : 含まない | 含む（主たる債務（の範囲）に貸金等債務が含まれるか。465条の3第1項）
+%   6 事業 : なし | 事業 | 事業貸金（主たる債務が事業のために負担するものか。事業貸金＝事業のための貸金等債務。465条の6第1項・465条の10第1項）
+%   7 極度額 : なし | 書面 | 書面でない（極度額を定めたか・定めは書面又は電磁的記録か。465条の2第2項3項）
+%   8 期日 : なし | 五年以内 | 五年より後（元本確定期日の定め。465条の3）
+%   9 各号 : なし | 第1号 | 第2号 | 第3号（保証人になろうとする者が465条の9の各号の者か）
+%  10 公正証書 : なし | 一箇月以内 | 一箇月より前（465条の6第1項）
+%  11 情報 : 提供した | 提供しない | 異なる（465条の10第2項）
+%  12 誤認 : いいえ | はい（465条の10第2項）
+%  13 債権者 : 知り得なかった | 知っていた | 知り得た（465条の10第2項）
+%  14 連帯 : いいえ | はい（454条）
+%  15 重い : いいえ | はい（448条1項）
+%  16 加重 : いいえ | はい（448条2項）
+%  17 請求 : いいえ | はい（債権者が保証人に債務の履行を請求したか。452条）
+%  18 主たる債務者 : なし | 破産加入しない | 破産加入 | 行方 | 死亡
+%       （452条ただし書・460条第1号・465条の4第1項第3号・第2項第2号。破産は債権者が破産財団の配当に加入したかで分ける）
+%  19 証明 : なし | 資力のみ | 両方（453条）
+%  20 怠り : いいえ | はい（455条）
+%  21 抗弁 : なし | ある（457条2項）
+%  22 形成権 : なし | ある（457条3項）
+%  23 情報請求 : いいえ | はい（458条の2）
+%  24 喪失 : いいえ | 通知した | 通知せず（458条の3）
+%  25 保証人に : なし | 破産 | 死亡（465条の4第1項第2号・第3号）
+%  26 執行 : なし | 保証人開始 | 保証人申立 | 主債務者開始 | 主債務者申立（465条の4第1項第1号・第2項第1号・ただし書）
+%  27 消滅 : しない | 以後 | 前（保証人が債務の消滅行為をしたか・弁済期の前か。459条・459条の2・462条・463条）
+%  28 弁済期 : いいえ | はい（主たる債務が弁済期にあるか。460条第2号）
+%  29 裁判 : いいえ | 過失なく | 過失（保証人が弁済をすべき旨の裁判の言渡しを受けたか。460条第3号）
+%  30 事前通知 : した | しない（463条1項）
+%  31 通知怠り : 怠っていない | 善意 | 悪意（主たる債務者が先に消滅行為をして通知を怠ったか。463条2項）
+%  32 後 : いいえ | 怠り善意 | それ以外（保証人の後に主たる債務者が消滅行為をしたか。463条3項）
+%
+%   欄どうしで成り立たない組は 組み合わせなし/4 が欄の番号・根拠条と一緒に返す（REVIEW_RULES C3）。
+%   前の欄の答えで意味を持たない欄（例 根保証でないのに選んだ7の欄、消滅行為をしていないのに選んだ30〜32の欄）は、
+%   組み合わせなしにせず、その欄の答えを出さない（about の (t)）。
+%   前は入口ごとに別の欄で聞いていた保証人・委託・貸金等を1つにまとめた（REVIEW_RULES C1。同じ事実を2つの欄で聞くと食い違う）。
+%
+% 書き方のきまり：
+%   ・条番号は '446条2項' '465条の2第1項' '465条の4第1項第3号' '460条第2号' のような原子。枝番と項の数字がつながらないよう「第」を入れる。
+%   ・ルールの中で範囲の外の条を、原子の先頭に条番号を置く形で書かない。書くと build.py が使う条に数え、画面に中身が埋まる。
+%   ・段は 段(状態, 文, 条のリスト)。結論ごとの段は s(画面のid, 見出し, 段)。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | and | or | info
+%   ・アプリの約束事の行は 条 を '@約束事' にする。
+%   ・「◯◯の効力(C, St)」は答えを未束縛の変数で受けて、決まってから比べる
+%     （段の側が値を入れて呼ぶので、値のまま下へ渡すと頭で前の節に合わず後ろの節で成功する。消費者契約法版の表18・表25 で起きた）。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか。組の成り立ちは 組み合わせなし/4 で見る）----
+ctx_valid(C) :-
+    functor(C, ctx, 32),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )).
+
+欄の値(1, [書面, 電磁的記録, どちらでもない]).
+欄の値(2, [個人, 法人]).
+欄の値(3, [受けた, 反しない, 反する]).
+欄の値(4, [いいえ, はい]).
+欄の値(5, [含まない, 含む]).
+欄の値(6, [なし, 事業, 事業貸金]).
+欄の値(7, [なし, 書面, 書面でない]).
+欄の値(8, [なし, 五年以内, 五年より後]).
+欄の値(9, [なし, 第1号, 第2号, 第3号]).
+欄の値(10, [なし, 一箇月以内, 一箇月より前]).
+欄の値(11, [提供した, 提供しない, 異なる]).
+欄の値(12, [いいえ, はい]).
+欄の値(13, [知り得なかった, 知っていた, 知り得た]).
+欄の値(14, [いいえ, はい]).
+欄の値(15, [いいえ, はい]).
+欄の値(16, [いいえ, はい]).
+欄の値(17, [いいえ, はい]).
+欄の値(18, [なし, 破産加入しない, 破産加入, 行方, 死亡]).
+欄の値(19, [なし, 資力のみ, 両方]).
+欄の値(20, [いいえ, はい]).
+欄の値(21, [なし, ある]).
+欄の値(22, [なし, ある]).
+欄の値(23, [いいえ, はい]).
+欄の値(24, [いいえ, 通知した, 通知せず]).
+欄の値(25, [なし, 破産, 死亡]).
+欄の値(26, [なし, 保証人開始, 保証人申立, 主債務者開始, 主債務者申立]).
+欄の値(27, [しない, 以後, 前]).
+欄の値(28, [いいえ, はい]).
+欄の値(29, [いいえ, 過失なく, 過失]).
+欄の値(30, [した, しない]).
+欄の値(31, [怠っていない, 善意, 悪意]).
+欄の値(32, [いいえ, 怠り善意, それ以外]).
+
+%% ---- 欄の読み出し ----
+% 入力の欄（番号は画面の欄の番号）
+欄の番号(方式, 1).
+欄の番号(保証人, 2).
+欄の番号(委託, 3).
+欄の番号(根保証, 4).
+欄の番号(貸金等, 5).
+欄の番号(事業, 6).
+欄の番号(極度額, 7).
+欄の番号(期日, 8).
+欄の番号(各号, 9).
+欄の番号(公正証書, 10).
+欄の番号(情報, 11).
+欄の番号(誤認, 12).
+欄の番号(債権者, 13).
+欄の番号(連帯, 14).
+欄の番号(重い, 15).
+欄の番号(加重, 16).
+欄の番号(請求, 17).
+欄の番号(主たる債務者, 18).
+欄の番号(証明, 19).
+欄の番号(怠り, 20).
+欄の番号(抗弁, 21).
+欄の番号(形成権, 22).
+欄の番号(情報請求, 23).
+欄の番号(喪失, 24).
+欄の番号(保証人に, 25).
+欄の番号(執行, 26).
+欄の番号(消滅, 27).
+欄の番号(弁済期, 28).
+欄の番号(裁判, 29).
+欄の番号(事前通知, 30).
+欄の番号(通知怠り, 31).
+欄の番号(後, 32).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+% 欄を分けて読む
+根保証(C) :- 欄(根保証, C, はい).
+個人根保証(C) :- 根保証(C), 欄(保証人, C, 個人).
+個人貸金等根保証(C) :- 個人根保証(C), 欄(貸金等, C, 含む).
+主債務者の破産(C) :- 欄(主たる債務者, C, Sd), memberchk(Sd, [破産加入しない, 破産加入]).
+消滅行為をした(C) :- \+ 欄(消滅, C, しない).
+
+%% ---- 成り立たない組（REVIEW_RULES C3）----
+% 組み合わせなし(C, 欄の番号のリスト, 理由の文, 根拠条のリスト)
+% 理由の文は論理の木の行に出す。欄の番号は画面の欄の番号。
+% 根拠条は、条文が除外の理由になるものだけ書く。選択肢の言葉どうしでぶつかるだけの除外は条を付けず、欄の番号だけを出す
+% （消滅時効で、除外の理由にならない条を付けて外し直した。2026-11-19）
+組み合わせなし(C, [5, 6], '主たる債務に事業のために負担する貸金等債務が含まれるなら、主たる債務に貸金等債務が含まれる', []) :-
+    欄(事業, C, 事業貸金), 欄(貸金等, C, 含まない).
+組み合わせなし(C, [17, 19, 20], '保証人の請求は債権者に債務の履行を請求されてするもので、弁済をする資力と執行が容易であることの証明も無いなら、保証人の請求又は証明があったことはない', ['455条']) :-
+    欄(怠り, C, はい), 欄(請求, C, いいえ), \+ 欄(証明, C, 両方).
+組み合わせなし(C, [31, 32], '主たる債務者が先に債務の消滅行為をしたなら、保証人の後に主たる債務者が債務の消滅行為をすることはない', []) :-
+    \+ 欄(通知怠り, C, 怠っていない), \+ 欄(後, C, いいえ).
+
+組み合わせなしがある(C) :- 組み合わせなし(C, _, _, _), !.
+
+%% ---- 効力（段どうしが同じ述語を見て、食い違わないようにする）----
+% 446条2項3項
+方式の効力(C, St) :- 欄(方式, C, Ho), 方式の答え(Ho, S0), !, St = S0.
+方式の答え(書面, 満たす).
+方式の答え(電磁的記録, みなす).
+方式の答え(どちらでもない, 生じない).
+
+% 465条の2（根保証のときだけ読む。法人は個人根保証契約に当たらない。about の (k)）
+極度額の効力(C, St) :-
+    根保証(C),
+    欄(保証人, C, Hs), 欄(極度額, C, Ky),
+    極度額の答え(Hs, Ky, S0), !,
+    St = S0.
+極度額の答え(法人, _, 当たらない).
+極度額の答え(個人, 書面, 責任).
+極度額の答え(個人, 書面でない, 生じない).
+極度額の答え(個人, なし, 生じない).
+
+% 465条の6・465条の9（主たる債務が事業のための貸金等債務のときだけ読む）
+公正証書の効力(C, St) :-
+    欄(事業, C, 事業貸金),
+    欄(保証人, C, Hs), 欄(各号, C, Go), 欄(公正証書, C, Ko),
+    公正証書の答え(Hs, Go, Ko, S0), !,
+    St = S0.
+公正証書の答え(法人, _, _, 適用しない).
+公正証書の答え(個人, Go, _, 適用しない) :- Go \== なし.
+公正証書の答え(個人, なし, 一箇月以内, 当たらない).
+公正証書の答え(個人, なし, _, 生じない).
+
+% 保証契約が効力を生じない組（446条2項・465条の2第2項3項・465条の6第1項）。
+% この組では、効力があることを前提にする条（元本確定期日・取消し・請求・求償）の答えを出さない（依頼書 8①・about の (a)）
+効力を生じない(C) :- 方式の効力(C, 生じない), !.
+効力を生じない(C) :- 極度額の効力(C, 生じない), !.
+効力を生じない(C) :- 公正証書の効力(C, 生じない).
+
+%% ---- 前提が立たないときの段 ----
+% 判定しない段は画面にも木にも出さない（文は テストで段を見分けるためだけに持つ）
+判定しない段(段(判定しない, '判定していません', [])).
+
+%% ---- 木の部品 ----
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+原文規定(Art, X) :- 原文(Art, W), 規定(Art, W, X).
+約束(X, t(ok, X, '@約束事', [])).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（民法の条文にないもの）
+%
+%   論理の木の葉には、結論を支える規則だけを置く（青切符版の「規則：…ならば違反になる」と同じ形）。
+%   「判定しない」の断り書き（「事業のために負担した」「資力」「執行が容易」「過失なく」「善意」「債権者が知ることができた」は判定しない）は
+%   木に置かず、about.html の「判定について」に置く（REVIEW_RULES A5。2026-11-20 木の葉の 評価の約束 を消した。代理・債務不履行と同じ）。
+%   ① 条の要件に当たらないときは「当たりません」とだけ出し、反対の結論は出さない。
+
+場面外の約束(X) :-
+    約束('規則：条の要件に当たらないときは、欠けた要件が分かる起きた事実の文か「当たりません」とだけ出し、反対の結論（ほかの理由で効力を生じる・請求できる等）は出さない', X).
+</script>
+<script type="text/prolog" data-name="rules_a_genbun.pl">% rules/a_genbun.pl — 判定に使う条文の原文（law/minpo.xml の本則のまま）
+%
+%   原文(条, 文)。test/page_test.mjs が XML を別に読み、全行が一字一句一致するかを確かめる。
+%   本文・ただし書は XML の Sentence Function="main"・"proviso" の1文ずつ。
+%   459条の2第1項・462条2項・463条1項は2文（後ろの文は相殺の話）を分けずに1行にする。460条第2号も本文とただし書を分けない。
+%   範囲の外の条は引き先で、中身を持たない。
+
+原文('446条2項', '保証契約は、書面でしなければ、その効力を生じない。').
+原文('446条3項', '保証契約がその内容を記録した電磁的記録によってされたときは、その保証契約は、書面によってされたものとみなして、前項の規定を適用する。').
+
+原文('448条1項', '保証人の負担が債務の目的又は態様において主たる債務より重いときは、これを主たる債務の限度に減縮する。').
+原文('448条2項', '主たる債務の目的又は態様が保証契約の締結後に加重されたときであっても、保証人の負担は加重されない。').
+
+原文('452条本文', '債権者が保証人に債務の履行を請求したときは、保証人は、まず主たる債務者に催告をすべき旨を請求することができる。').
+原文('452条ただし書', 'ただし、主たる債務者が破産手続開始の決定を受けたとき、又はその行方が知れないときは、この限りでない。').
+原文('453条', '債権者が前条の規定に従い主たる債務者に催告をした後であっても、保証人が主たる債務者に弁済をする資力があり、かつ、執行が容易であることを証明したときは、債権者は、まず主たる債務者の財産について執行をしなければならない。').
+原文('454条', '保証人は、主たる債務者と連帯して債務を負担したときは、前二条の権利を有しない。').
+原文('455条', '第四百五十二条又は第四百五十三条の規定により保証人の請求又は証明があったにもかかわらず、債権者が催告又は執行をすることを怠ったために主たる債務者から全部の弁済を得られなかったときは、保証人は、債権者が直ちに催告又は執行をすれば弁済を得ることができた限度において、その義務を免れる。').
+
+原文('457条2項', '保証人は、主たる債務者が主張することができる抗弁をもって債権者に対抗することができる。').
+原文('457条3項', '主たる債務者が債権者に対して相殺権、取消権又は解除権を有するときは、これらの権利の行使によって主たる債務者がその債務を免れるべき限度において、保証人は、債権者に対して債務の履行を拒むことができる。').
+
+原文('458条の2', '保証人が主たる債務者の委託を受けて保証をした場合において、保証人の請求があったときは、債権者は、保証人に対し、遅滞なく、主たる債務の元本及び主たる債務に関する利息、違約金、損害賠償その他その債務に従たる全てのものについての不履行の有無並びにこれらの残額及びそのうち弁済期が到来しているものの額に関する情報を提供しなければならない。').
+原文('458条の3第1項', '主たる債務者が期限の利益を有する場合において、その利益を喪失したときは、債権者は、保証人に対し、その利益の喪失を知った時から二箇月以内に、その旨を通知しなければならない。').
+原文('458条の3第2項', '前項の期間内に同項の通知をしなかったときは、債権者は、保証人に対し、主たる債務者が期限の利益を喪失した時から同項の通知を現にするまでに生じた遅延損害金（期限の利益を喪失しなかったとしても生ずべきものを除く。）に係る保証債務の履行を請求することができない。').
+原文('458条の3第3項', '前二項の規定は、保証人が法人である場合には、適用しない。').
+
+原文('459条1項', '保証人が主たる債務者の委託を受けて保証をした場合において、主たる債務者に代わって弁済その他自己の財産をもって債務を消滅させる行為（以下「債務の消滅行為」という。）をしたときは、その保証人は、主たる債務者に対し、そのために支出した財産の額（その財産の額がその債務の消滅行為によって消滅した主たる債務の額を超える場合にあっては、その消滅した額）の求償権を有する。').
+原文('459条の2第1項', '保証人が主たる債務者の委託を受けて保証をした場合において、主たる債務の弁済期前に債務の消滅行為をしたときは、その保証人は、主たる債務者に対し、主たる債務者がその当時利益を受けた限度において求償権を有する。この場合において、主たる債務者が債務の消滅行為の日以前に相殺の原因を有していたことを主張するときは、保証人は、債権者に対し、その相殺によって消滅すべきであった債務の履行を請求することができる。').
+原文('459条の2第3項', '第一項の求償権は、主たる債務の弁済期以後でなければ、これを行使することができない。').
+
+原文('460条', '保証人は、主たる債務者の委託を受けて保証をした場合において、次に掲げるときは、主たる債務者に対して、あらかじめ、求償権を行使することができる。').
+原文('460条第1号', '主たる債務者が破産手続開始の決定を受け、かつ、債権者がその破産財団の配当に加入しないとき。').
+原文('460条第2号', '債務が弁済期にあるとき。ただし、保証契約の後に債権者が主たる債務者に許与した期限は、保証人に対抗することができない。').
+原文('460条第3号', '保証人が過失なく債権者に弁済をすべき旨の裁判の言渡しを受けたとき。').
+
+原文('462条1項', '第四百五十九条の二第一項の規定は、主たる債務者の委託を受けないで保証をした者が債務の消滅行為をした場合について準用する。').
+原文('462条2項', '主たる債務者の意思に反して保証をした者は、主たる債務者が現に利益を受けている限度においてのみ求償権を有する。この場合において、主たる債務者が求償の日以前に相殺の原因を有していたことを主張するときは、保証人は、債権者に対し、その相殺によって消滅すべきであった債務の履行を請求することができる。').
+原文('462条3項', '第四百五十九条の二第三項の規定は、前二項に規定する保証人が主たる債務の弁済期前に債務の消滅行為をした場合における求償権の行使について準用する。').
+
+原文('463条1項', '保証人が主たる債務者の委託を受けて保証をした場合において、主たる債務者にあらかじめ通知しないで債務の消滅行為をしたときは、主たる債務者は、債権者に対抗することができた事由をもってその保証人に対抗することができる。この場合において、相殺をもってその保証人に対抗したときは、その保証人は、債権者に対し、相殺によって消滅すべきであった債務の履行を請求することができる。').
+原文('463条2項', '保証人が主たる債務者の委託を受けて保証をした場合において、主たる債務者が債務の消滅行為をしたことを保証人に通知することを怠ったため、その保証人が善意で債務の消滅行為をしたときは、その保証人は、その債務の消滅行為を有効であったものとみなすことができる。').
+原文('463条3項', '保証人が債務の消滅行為をした後に主たる債務者が債務の消滅行為をした場合においては、保証人が主たる債務者の意思に反して保証をしたときのほか、保証人が債務の消滅行為をしたことを主たる債務者に通知することを怠ったため、主たる債務者が善意で債務の消滅行為をしたときも、主たる債務者は、その債務の消滅行為を有効であったものとみなすことができる。').
+
+原文('465条の2第1項', '一定の範囲に属する不特定の債務を主たる債務とする保証契約（以下「根保証契約」という。）であって保証人が法人でないもの（以下「個人根保証契約」という。）の保証人は、主たる債務の元本、主たる債務に関する利息、違約金、損害賠償その他その債務に従たる全てのもの及びその保証債務について約定された違約金又は損害賠償の額について、その全部に係る極度額を限度として、その履行をする責任を負う。').
+原文('465条の2第2項', '個人根保証契約は、前項に規定する極度額を定めなければ、その効力を生じない。').
+原文('465条の2第3項', '第四百四十六条第二項及び第三項の規定は、個人根保証契約における第一項に規定する極度額の定めについて準用する。').
+
+原文('465条の3第1項', '個人根保証契約であってその主たる債務の範囲に金銭の貸渡し又は手形の割引を受けることによって負担する債務（以下「貸金等債務」という。）が含まれるもの（以下「個人貸金等根保証契約」という。）において主たる債務の元本の確定すべき期日（以下「元本確定期日」という。）の定めがある場合において、その元本確定期日がその個人貸金等根保証契約の締結の日から五年を経過する日より後の日と定められているときは、その元本確定期日の定めは、その効力を生じない。').
+原文('465条の3第2項', '個人貸金等根保証契約において元本確定期日の定めがない場合（前項の規定により元本確定期日の定めがその効力を生じない場合を含む。）には、その元本確定期日は、その個人貸金等根保証契約の締結の日から三年を経過する日とする。').
+
+原文('465条の4第1項本文', '次に掲げる場合には、個人根保証契約における主たる債務の元本は、確定する。').
+原文('465条の4第1項ただし書', 'ただし、第一号に掲げる場合にあっては、強制執行又は担保権の実行の手続の開始があったときに限る。').
+原文('465条の4第1項第1号', '債権者が、保証人の財産について、金銭の支払を目的とする債権についての強制執行又は担保権の実行を申し立てたとき。').
+原文('465条の4第1項第2号', '保証人が破産手続開始の決定を受けたとき。').
+原文('465条の4第1項第3号', '主たる債務者又は保証人が死亡したとき。').
+原文('465条の4第2項本文', '前項に規定する場合のほか、個人貸金等根保証契約における主たる債務の元本は、次に掲げる場合にも確定する。').
+原文('465条の4第2項ただし書', 'ただし、第一号に掲げる場合にあっては、強制執行又は担保権の実行の手続の開始があったときに限る。').
+原文('465条の4第2項第1号', '債権者が、主たる債務者の財産について、金銭の支払を目的とする債権についての強制執行又は担保権の実行を申し立てたとき。').
+原文('465条の4第2項第2号', '主たる債務者が破産手続開始の決定を受けたとき。').
+
+原文('465条の6第1項', '事業のために負担した貸金等債務を主たる債務とする保証契約又は主たる債務の範囲に事業のために負担する貸金等債務が含まれる根保証契約は、その契約の締結に先立ち、その締結の日前一箇月以内に作成された公正証書で保証人になろうとする者が保証債務を履行する意思を表示していなければ、その効力を生じない。').
+原文('465条の6第3項', '前二項の規定は、保証人になろうとする者が法人である場合には、適用しない。').
+
+原文('465条の9第1号', '主たる債務者が法人である場合のその理事、取締役、執行役又はこれらに準ずる者').
+原文('465条の9第2号', '主たる債務者が法人である場合の次に掲げる者').
+原文('465条の9第3号', '主たる債務者（法人であるものを除く。以下この号において同じ。）と共同して事業を行う者又は主たる債務者が行う事業に現に従事している主たる債務者の配偶者').
+
+原文('465条の10第1項', '主たる債務者は、事業のために負担する債務を主たる債務とする保証又は主たる債務の範囲に事業のために負担する債務が含まれる根保証の委託をするときは、委託を受ける者に対し、次に掲げる事項に関する情報を提供しなければならない。').
+原文('465条の10第2項', '主たる債務者が前項各号に掲げる事項に関して情報を提供せず、又は事実と異なる情報を提供したために委託を受けた者がその事項について誤認をし、それによって保証契約の申込み又はその承諾の意思表示をした場合において、主たる債務者がその事項に関して情報を提供せず又は事実と異なる情報を提供したことを債権者が知り又は知ることができたときは、保証人は、保証契約を取り消すことができる。').
+原文('465条の10第3項', '前二項の規定は、保証をする者が法人である場合には、適用しない。').
+</script>
+<script type="text/prolog" data-name="rules_b_koryoku.pl">% rules/b_koryoku.pl — 保証契約が効力を持つか（446条・465条の2・465条の3・465条の6・465条の9・465条の10）
+%
+%   同じ入力で全部の条を当てる（REVIEW_RULES C4・C5。2026-11-20 入口の「どの話か」をやめた）。
+%   元本確定期日は条文の形だけを出し、日付を計算しない。
+%   保証契約が効力を生じない組では、元本確定期日と取消しの段を出さない（schema.pl の 効力を生じない。about の (a)）。
+%   「当たりません」は、その条に当たらないと言うだけで、反対の結論を言わない。
+
+効力の段(C, [
+    s(hoshiki, '書面でしたか（446条2項3項）', S1),
+    s(kyokudo, '極度額（465条の2）', S2),
+    s(kosei, '公正証書が要るか（465条の6・465条の9）', S3),
+    s(kakutei, '元本確定期日（465条の3）', S4),
+    s(torikeshi, '保証契約を取り消せるか（465条の10）', S5)
+]) :-
+    段方式(C, S1), 段極度額(C, S2), 段公正証書(C, S3), 段期日(C, S4), 段取消(C, S5).
+
+%% ---- 446条2項3項 ----
+段方式(C, 段(St, M, As)) :- 方式の効力(C, St), 方式の文(St, M, As), !.
+
+% 段の文（論理の木の一番上の下に出る理由の文）。条文の語で書く
+方式の文(満たす, '保証契約を書面でした', ['446条2項']).
+方式の文(みなす, '保証契約がその内容を記録した電磁的記録によってされた', ['446条3項']).
+方式の文(生じない, '保証契約を書面でも電磁的記録でもしなかった', ['446条2項']).
+
+%% ---- 465条の2（根保証のときだけ）----
+段極度額(C, S) :- \+ 極度額の効力(C, _), !, 判定しない段(S).
+段極度額(C, 段(St, M, As)) :-
+    極度額の効力(C, St),
+    欄(極度額, C, Ky),
+    極度額の文(St, Ky, M, As), !.
+
+極度額の文(当たらない, _, '根保証契約の保証人が法人で、保証人が法人でないもの（個人根保証契約）に当たらない', ['465条の2第1項']).
+極度額の文(責任, _, '個人根保証契約で、極度額を書面又は電磁的記録で定めた', ['465条の2第1項']).
+極度額の文(生じない, 書面でない, '個人根保証契約で、極度額を定めたが、その定めを書面でも電磁的記録でもしなかった', ['465条の2第3項']).
+極度額の文(生じない, なし, '個人根保証契約で、極度額を定めなかった', ['465条の2第2項']).
+
+%% ---- 465条の6・465条の9（主たる債務が事業のための貸金等債務のときだけ）----
+段公正証書(C, S) :- \+ 公正証書の効力(C, _), !, 判定しない段(S).
+段公正証書(C, 段(St, M, As)) :-
+    公正証書の効力(C, St),
+    欄(保証人, C, Hs), 欄(各号, C, Go), 欄(公正証書, C, Ko),
+    公正証書の文(Hs, Go, Ko, M, As), !.
+
+公正証書の文(法人, _, _, '事業のために負担した貸金等債務の保証で、保証人になろうとする者が法人である', ['465条の6第3項']).
+公正証書の文(個人, Go, _, M, [A]) :- Go \== なし, 各号の語(Go, W, A),
+    format(atom(M), '事業のために負担した貸金等債務の保証で、保証人になろうとする者が~w', [W]).
+公正証書の文(個人, なし, 一箇月以内, '事業のために負担した貸金等債務の保証で、締結の日前一箇月以内に作成された公正証書で保証人になろうとする者が保証債務を履行する意思を表示した', ['465条の6第1項']).
+公正証書の文(個人, なし, 一箇月より前, '事業のために負担した貸金等債務の保証で、公正証書は締結の日前一箇月以内に作成されたものではない', ['465条の6第1項']).
+公正証書の文(個人, なし, なし, '事業のために負担した貸金等債務の保証で、公正証書で保証人になろうとする者が保証債務を履行する意思を表示していない', ['465条の6第1項']).
+
+各号の語(第1号, '主たる債務者である法人の理事、取締役、執行役又はこれらに準ずる者である', '465条の9第1号').
+各号の語(第2号, '主たる債務者である法人の総株主の議決権の過半数を有する者などである', '465条の9第2号').
+各号の語(第3号, '主たる債務者と共同して事業を行う者又は主たる債務者が行う事業に現に従事している主たる債務者の配偶者である', '465条の9第3号').
+
+%% ---- 465条の3（個人貸金等根保証契約で、保証契約が効力を生じる組だけ）----
+% 法人の根保証で期日を定めた組は「当たりません」と出す（個人と法人を分ける。依頼書 8④）
+段期日(C, S) :- 効力を生じない(C), !, 判定しない段(S).
+段期日(C, 段(当たらない, '根保証契約の保証人が法人で、個人貸金等根保証契約に当たらない', ['465条の3第1項'])) :-
+    根保証(C), 欄(保証人, C, 法人), 欄(貸金等, C, 含む), \+ 欄(期日, C, なし), !.
+段期日(C, S) :- \+ 個人貸金等根保証(C), !, 判定しない段(S).
+段期日(C, 段(三年, '個人貸金等根保証契約で、元本確定期日の定めがない', ['465条の3第2項'])) :-
+    欄(期日, C, なし), !.
+段期日(C, 段(三年, '個人貸金等根保証契約で、元本確定期日が締結の日から五年を経過する日より後の日と定められている', ['465条の3第1項', '465条の3第2項'])) :-
+    欄(期日, C, 五年より後), !.
+段期日(_, 段(当たらない, '個人貸金等根保証契約で、元本確定期日が締結の日から五年を経過する日より後の日ではない', ['465条の3第1項'])).
+
+%% ---- 465条の10（事業のための債務の保証を委託した組で、保証契約が効力を生じる組だけ）----
+段取消(C, S) :- 効力を生じない(C), !, 判定しない段(S).
+段取消(C, S) :- \+ 欄(委託, C, 受けた), !, 判定しない段(S).
+段取消(C, S) :- 欄(事業, C, なし), !, 判定しない段(S).
+段取消(C, 段(適用しない, '事業のために負担する債務の保証の委託を受けた者（保証をする者）が法人である', ['465条の10第3項'])) :-
+    欄(保証人, C, 法人), !.
+% 情報を提供し、事実と異なる情報でもないなら、何も起きていないので出さない（about の (v)）
+段取消(C, S) :- 欄(情報, C, 提供した), !, 判定しない段(S).
+段取消(C, 段(当たらない, M, ['465条の10第2項'])) :-
+    欄(誤認, C, いいえ), !, 欄(情報, C, Jo), 情報の語(Jo, W),
+    format(atom(M), '主たる債務者が~wが、委託を受けた者はその事項について誤認をしていない', [W]).
+段取消(C, 段(当たらない, M, ['465条の10第2項'])) :-
+    欄(債権者, C, 知り得なかった), !, 欄(情報, C, Jo), 情報の語(Jo, W),
+    format(atom(M), '主たる債務者が~wために委託を受けた者が誤認をし、保証契約の申込み又は承諾の意思表示をしたが、債権者はそのことを知らず、知ることもできなかった', [W]).
+段取消(C, 段(できる, M, ['465条の10第2項'])) :-
+    欄(情報, C, Jo), 情報の語(Jo, W), 欄(債権者, C, Sa), 債権者の語(Sa, W2),
+    format(atom(M), '主たる債務者が~wために委託を受けた者が誤認をし、保証契約の申込み又は承諾の意思表示をし、~w', [W, W2]).
+
+情報の語(提供しない, '情報を提供しなかった').
+情報の語(異なる, '事実と異なる情報を提供した').
+債権者の語(知っていた, '債権者はそのことを知っていた').
+債権者の語(知り得た, '債権者はそのことを知ることができた').
+</script>
+<script type="text/prolog" data-name="rules_c_seikyu.pl">% rules/c_seikyu.pl — 請求されたとき（448条・452〜455条・457条・458条の2・458条の3・465条の4）
+%
+%   同じ入力で全部の条を当てる（REVIEW_RULES C4・C5。2026-11-20 入口の「どの話か」をやめた）。
+%   保証契約が効力を生じない組では、どの段も出さない（schema.pl の 効力を生じない。about の (a)）。
+%   欄で何も起きていない（いいえ・なし）ときは段を出さない。起きたが条の別の要件が欠けるときだけ「当たりません」と出す（about の (v)）。
+
+請求の段(C, [
+    s(saikoku, '催告の抗弁を使えるか（452条・454条）', S1),
+    s(kensaku, '検索の抗弁を使えるか（453条）', S2),
+    s(menjo, '義務を免れる限度（455条）', S3),
+    s(genshuku, '負担が減縮されるか（448条1項）', S4),
+    s(kaju, '負担が加重されないか（448条2項）', S5),
+    s(kogo, '抗弁を対抗できるか（457条2項）', S6),
+    s(kyohi, '履行を拒めるか（457条3項）', S7),
+    s(joho, '債権者が情報を提供しなければならないか（458条の2）', S8),
+    s(chien, '遅延損害金を請求できないか（458条の3）', S9),
+    s(gankin, '元本が確定するか（465条の4）', S10)
+]) :-
+    効力を生じない(C), !,
+    maplist(判定しない段, [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10]).
+請求の段(C, [
+    s(saikoku, '催告の抗弁を使えるか（452条・454条）', S1),
+    s(kensaku, '検索の抗弁を使えるか（453条）', S2),
+    s(menjo, '義務を免れる限度（455条）', S3),
+    s(genshuku, '負担が減縮されるか（448条1項）', S4),
+    s(kaju, '負担が加重されないか（448条2項）', S5),
+    s(kogo, '抗弁を対抗できるか（457条2項）', S6),
+    s(kyohi, '履行を拒めるか（457条3項）', S7),
+    s(joho, '債権者が情報を提供しなければならないか（458条の2）', S8),
+    s(chien, '遅延損害金を請求できないか（458条の3）', S9),
+    s(gankin, '元本が確定するか（465条の4）', S10)
+]) :-
+    段催告(C, S1), 段検索(C, S2), 段免責(C, S3), 段減縮(C, S4), 段加重(C, S5),
+    段抗弁(C, S6), 段拒絶(C, S7), 段情報(C, S8), 段遅延(C, S9), 段元本(C, S10).
+
+%% ---- 452条・454条（連帯なら454条の1段だけ。452条・453条の段は出さない）----
+段催告(C, 段(有しない, '保証人が主たる債務者と連帯して債務を負担した', ['454条'])) :- 欄(連帯, C, はい), !.
+段催告(C, S) :- 欄(請求, C, いいえ), !, 判定しない段(S).
+段催告(C, 段(この限りでない, '債権者が保証人に債務の履行を請求したが、主たる債務者が破産手続開始の決定を受けた', ['452条ただし書'])) :-
+    主債務者の破産(C), !.
+段催告(C, 段(この限りでない, '債権者が保証人に債務の履行を請求したが、主たる債務者の行方が知れない', ['452条ただし書'])) :-
+    欄(主たる債務者, C, 行方), !.
+段催告(_, 段(できる, '債権者が保証人に債務の履行を請求した', ['452条本文'])).
+
+%% ---- 453条（「催告をした後であっても」は催告の前を除く語ではないので、催告の前後を分けない。about の (e)）----
+段検索(C, S) :- 欄(連帯, C, はい), !, 判定しない段(S).
+段検索(C, S) :- 欄(証明, C, なし), !, 判定しない段(S).
+段検索(C, 段(執行, '保証人が、主たる債務者に弁済をする資力があり、かつ、執行が容易であることを証明した', ['453条'])) :-
+    欄(証明, C, 両方), !.
+段検索(_, 段(当たらない, '保証人は、主たる債務者に弁済をする資力があることは証明したが、執行が容易であることを証明していない', ['453条'])).
+
+%% ---- 455条（連帯なら出さない。454条で452条・453条の権利を有しないため。about の (g)）----
+段免責(C, S) :- 欄(連帯, C, はい), !, 判定しない段(S).
+段免責(C, 段(免れる, '保証人の請求又は証明があったにもかかわらず、債権者が催告又は執行をすることを怠ったために主たる債務者から全部の弁済を得られなかった', ['455条'])) :-
+    欄(怠り, C, はい), !.
+段免責(_, S) :- 判定しない段(S).
+
+%% ---- 448条 ----
+段減縮(C, 段(減縮, '保証人の負担が債務の目的又は態様において主たる債務より重い', ['448条1項'])) :- 欄(重い, C, はい), !.
+段減縮(_, S) :- 判定しない段(S).
+
+段加重(C, 段(加重されない, '主たる債務の目的又は態様が保証契約の締結後に加重された', ['448条2項'])) :- 欄(加重, C, はい), !.
+段加重(_, S) :- 判定しない段(S).
+
+%% ---- 457条2項3項 ----
+段抗弁(C, 段(対抗できる, '主たる債務者が主張することができる抗弁がある', ['457条2項'])) :- 欄(抗弁, C, ある), !.
+段抗弁(_, S) :- 判定しない段(S).
+
+段拒絶(C, 段(拒める, '主たる債務者が債権者に対して相殺権、取消権又は解除権を有する', ['457条3項'])) :- 欄(形成権, C, ある), !.
+段拒絶(_, S) :- 判定しない段(S).
+
+%% ---- 458条の2（委託を受けた保証人だけ。委託の無い保証人の請求は「当たりません」）----
+段情報(C, S) :- 欄(情報請求, C, いいえ), !, 判定しない段(S).
+段情報(C, 段(提供, '保証人が主たる債務者の委託を受けて保証をし、保証人の請求があった', ['458条の2'])) :-
+    欄(委託, C, 受けた), !.
+段情報(_, 段(当たらない, '保証人の請求があったが、保証人は主たる債務者の委託を受けて保証をしていない', ['458条の2'])).
+
+%% ---- 458条の3（保証人が法人なら適用しない）----
+段遅延(C, S) :- 欄(喪失, C, いいえ), !, 判定しない段(S).
+段遅延(C, 段(適用しない, '主たる債務者が期限の利益を喪失したが、保証人が法人である', ['458条の3第3項'])) :-
+    欄(保証人, C, 法人), !.
+段遅延(C, 段(当たらない, '主たる債務者が期限の利益を喪失し、債権者はその利益の喪失を知った時から二箇月以内に保証人に通知した', ['458条の3第1項'])) :-
+    欄(喪失, C, 通知した), !.
+段遅延(_, 段(請求できない, '主たる債務者が期限の利益を喪失したが、債権者はその利益の喪失を知った時から二箇月以内に保証人に通知をしなかった', ['458条の3第2項'])).
+
+%% ---- 465条の4（根保証のときだけ。当たる号は全部出す。about の (o)）----
+段元本(C, S) :- \+ 根保証(C), !, 判定しない段(S).
+段元本(C, S) :- \+ 元本の事由がある(C), !, 判定しない段(S).
+段元本(C, 段(当たらない, '根保証契約の保証人が法人で、個人根保証契約に当たらない', ['465条の4第1項本文'])) :-
+    欄(保証人, C, 法人), !.
+段元本(C, 段(確定, M, As)) :-
+    findall(A, 確定の号(C, A), As), As \== [], !,
+    契約の語(C, K),
+    findall(W, ( 確定の号(C, A), 号の語(A, W) ), Ws), atomic_list_concat(Ws, '。', W1),
+    format(atom(M), '~wで、~w', [K, W1]).
+段元本(C, 段(確定しない, M, [A])) :-
+    確定しないただし書(C, A, W), !,
+    契約の語(C, K),
+    format(atom(M), '~wで、~wが、手続の開始はない', [K, W]).
+段元本(_, 段(当たらない, '個人貸金等根保証契約でない個人根保証契約で、主たる債務者の財産について強制執行若しくは担保権の実行を申し立て、又は主たる債務者が破産手続開始の決定を受けた', ['465条の4第2項本文'])).
+
+% 465条の4の欄（18・25・26）のどれかで、何か起きたか
+元本の事由がある(C) :- 欄(執行, C, Sk), Sk \== なし, !.
+元本の事由がある(C) :- 欄(保証人に, C, Hj), Hj \== なし, !.
+元本の事由がある(C) :- 主債務者の破産(C), !.
+元本の事由がある(C) :- 欄(主たる債務者, C, 死亡).
+
+確定の号(C, '465条の4第1項第1号') :- 欄(執行, C, 保証人開始).
+確定の号(C, '465条の4第1項第2号') :- 欄(保証人に, C, 破産).
+% 「!」を置くと findall の中で後ろの第2項の節まで切れるので、once で解を1つにする
+確定の号(C, '465条の4第1項第3号') :- once(( 欄(主たる債務者, C, 死亡) ; 欄(保証人に, C, 死亡) )).
+確定の号(C, '465条の4第2項第1号') :- 個人貸金等根保証(C), 欄(執行, C, 主債務者開始).
+確定の号(C, '465条の4第2項第2号') :- 個人貸金等根保証(C), 主債務者の破産(C).
+
+号の語('465条の4第1項第1号', '債権者が保証人の財産について強制執行又は担保権の実行を申し立て、手続の開始があった').
+号の語('465条の4第1項第2号', '保証人が破産手続開始の決定を受けた').
+号の語('465条の4第1項第3号', '主たる債務者又は保証人が死亡した').
+号の語('465条の4第2項第1号', '債権者が主たる債務者の財産について強制執行又は担保権の実行を申し立て、手続の開始があった').
+号の語('465条の4第2項第2号', '主たる債務者が破産手続開始の決定を受けた').
+
+確定しないただし書(C, '465条の4第1項ただし書', '債権者が保証人の財産について強制執行又は担保権の実行を申し立てた') :- 欄(執行, C, 保証人申立), !.
+確定しないただし書(C, '465条の4第2項ただし書', '債権者が主たる債務者の財産について強制執行又は担保権の実行を申し立てた') :-
+    個人貸金等根保証(C), 欄(執行, C, 主債務者申立).
+
+契約の語(C, '個人貸金等根保証契約') :- 個人貸金等根保証(C), !.
+契約の語(_, '個人根保証契約').
+</script>
+<script type="text/prolog" data-name="rules_d_kyusho.pl">% rules/d_kyusho.pl — 払う前・払った後の請求（459条・459条の2・460条・462条・463条）
+%
+%   同じ入力で全部の条を当てる（REVIEW_RULES C4・C5。2026-11-20 入口の「どの話か」をやめた）。
+%   求償の額は条文の形だけを出し、金額を計算しない。
+%   462条1項は459条の2第1項を準用するが、弁済期の限定の語が無いので、弁済期の前後を問わず「その当時利益を受けた限度」と出す（about の (b)）。
+%   保証契約が効力を生じない組では、どの段も出さない（schema.pl の 効力を生じない。about の (a)）。
+%   459条〜459条の2・462条・463条は、保証人が債務の消滅行為をしたとき（27の欄）だけ読む。460条は、まだしていないときだけ読む（about の (u)）。
+
+求償の段(C, [
+    s(kyusho, '求償権があるか・どの限度か（459条・459条の2・462条）', S1),
+    s(koshi, 'いつ行使できるか（459条の2第3項・462条3項）', S2),
+    s(jizen, 'あらかじめ行使できるか（460条）', S3),
+    s(taiko, '主たる債務者が対抗できるか（463条1項）', S4),
+    s(minashi1, '保証人が有効であったものとみなせるか（463条2項）', S5),
+    s(minashi2, '主たる債務者が有効であったものとみなせるか（463条3項）', S6)
+]) :-
+    効力を生じない(C), !,
+    maplist(判定しない段, [S1, S2, S3, S4, S5, S6]).
+求償の段(C, [
+    s(kyusho, '求償権があるか・どの限度か（459条・459条の2・462条）', S1),
+    s(koshi, 'いつ行使できるか（459条の2第3項・462条3項）', S2),
+    s(jizen, 'あらかじめ行使できるか（460条）', S3),
+    s(taiko, '主たる債務者が対抗できるか（463条1項）', S4),
+    s(minashi1, '保証人が有効であったものとみなせるか（463条2項）', S5),
+    s(minashi2, '主たる債務者が有効であったものとみなせるか（463条3項）', S6)
+]) :-
+    段求償権(C, S1), 段行使(C, S2), 段事前(C, S3), 段対抗(C, S4), 段保証人みなし(C, S5), 段主債務者みなし(C, S6).
+
+%% ---- 459条・459条の2第1項・462条1項2項 ----
+段求償権(C, S) :- \+ 消滅行為をした(C), !, 判定しない段(S).
+段求償権(C, 段(St, M, As)) :-
+    欄(委託, C, It), 欄(消滅, C, Sh), 求償権の文(It, Sh, St, M, As), !.
+
+求償権の文(受けた, 以後, 求償権, '委託を受けた保証人が、主たる債務の弁済期以後に、主たる債務者に代わって債務の消滅行為をした', ['459条1項']).
+求償権の文(受けた, 前, 利益の限度, '委託を受けた保証人が、主たる債務の弁済期前に債務の消滅行為をした', ['459条の2第1項']).
+求償権の文(反しない, _, 利益の限度, '主たる債務者の委託を受けないで、主たる債務者の意思に反せずに保証をした者が、債務の消滅行為をした', ['462条1項']).
+求償権の文(反する, _, 現の限度, '主たる債務者の意思に反して保証をした者が、債務の消滅行為をした', ['462条2項']).
+
+%% ---- 459条の2第3項・462条3項（弁済期前の消滅行為だけ）----
+段行使(C, S) :- \+ 欄(消滅, C, 前), !, 判定しない段(S).
+段行使(C, 段(弁済期以後, '委託を受けた保証人が、主たる債務の弁済期前に債務の消滅行為をした', ['459条の2第3項'])) :-
+    欄(委託, C, 受けた), !.
+段行使(_, 段(弁済期以後, '委託を受けないで保証をした者が、主たる債務の弁済期前に債務の消滅行為をした', ['462条3項'])).
+
+%% ---- 460条（まだ消滅行為をしていないときだけ。当たる号は全部出す）----
+段事前(C, S) :- 消滅行為をした(C), !, 判定しない段(S).
+段事前(C, S) :- findall(A-W, 事前の号(C, A, W, _), []), !, 判定しない段(S).
+段事前(C, 段(当たらない, M, ['460条'])) :-
+    \+ 欄(委託, C, 受けた), !,
+    findall(W, 事前の号(C, _, W, _), Ws), atomic_list_concat(Ws, '。', W1),
+    format(atom(M), '~w。しかし、保証人は主たる債務者の委託を受けて保証をしていない', [W1]).
+段事前(C, 段(できる, M, ['460条'|As])) :-
+    findall(A, 事前の号(C, A, _, できる), As), As \== [], !,
+    findall(W, 事前の号(C, _, W, できる), Ws), atomic_list_concat(Ws, '。', W1),
+    format(atom(M), '委託を受けた保証人が、まだ債務の消滅行為をしていない。~w', [W1]).
+段事前(C, 段(当たらない, M, ['460条'|As])) :-
+    findall(A, 事前の号(C, A, _, 当たらない), As),
+    findall(W, 事前の号(C, _, W, 当たらない), Ws), atomic_list_concat(Ws, '。', W1),
+    format(atom(M), '委託を受けた保証人が、まだ債務の消滅行為をしていない。~w', [W1]).
+
+% 事前の号(C, 条, 段の文, 号に当たるか)
+事前の号(C, '460条第1号', '主たる債務者が破産手続開始の決定を受け、かつ、債権者がその破産財団の配当に加入しない', できる) :-
+    欄(主たる債務者, C, 破産加入しない).
+事前の号(C, '460条第1号', '主たる債務者が破産手続開始の決定を受けたが、債権者はその破産財団の配当に加入した', 当たらない) :-
+    欄(主たる債務者, C, 破産加入).
+事前の号(C, '460条第2号', '債務が弁済期にある', できる) :-
+    欄(弁済期, C, はい).
+事前の号(C, '460条第3号', '保証人が過失なく債権者に弁済をすべき旨の裁判の言渡しを受けた', できる) :-
+    欄(裁判, C, 過失なく).
+事前の号(C, '460条第3号', '保証人は債権者に弁済をすべき旨の裁判の言渡しを受けたが、過失があった', 当たらない) :-
+    欄(裁判, C, 過失).
+
+%% ---- 463条1項（消滅行為をする前に通知しなかったときだけ。委託を受けた保証人の定め）----
+段対抗(C, S) :- \+ 消滅行為をした(C), !, 判定しない段(S).
+段対抗(C, S) :- 欄(事前通知, C, した), !, 判定しない段(S).
+段対抗(C, 段(対抗できる, '委託を受けた保証人が、主たる債務者にあらかじめ通知しないで債務の消滅行為をした', ['463条1項'])) :-
+    欄(委託, C, 受けた), !.
+段対抗(_, 段(当たらない, '保証人は主たる債務者にあらかじめ通知しないで債務の消滅行為をしたが、主たる債務者の委託を受けて保証をしていない', ['463条1項'])).
+
+%% ---- 463条2項（主たる債務者が先に消滅行為をし、通知を怠ったときだけ。委託を受けた保証人の定め）----
+段保証人みなし(C, S) :- \+ 消滅行為をした(C), !, 判定しない段(S).
+段保証人みなし(C, S) :- 欄(通知怠り, C, 怠っていない), !, 判定しない段(S).
+段保証人みなし(C, 段(当たらない, '主たる債務者が債務の消滅行為をしたことを保証人に通知することを怠ったが、保証人は主たる債務者の委託を受けて保証をしていない', ['463条2項'])) :-
+    \+ 欄(委託, C, 受けた), !.
+段保証人みなし(C, 段(みなせる, '主たる債務者が債務の消滅行為をしたことを保証人に通知することを怠ったため、委託を受けた保証人が善意で債務の消滅行為をした', ['463条2項'])) :-
+    欄(通知怠り, C, 善意), !.
+段保証人みなし(_, 段(当たらない, '主たる債務者が債務の消滅行為をしたことを保証人に通知することを怠ったが、保証人は善意で債務の消滅行為をしたのではない', ['463条2項'])).
+
+%% ---- 463条3項（保証人の後に主たる債務者が消滅行為をしたときだけ。意思に反して保証をしたときは通知を見ない。about の (s)）----
+段主債務者みなし(C, S) :- \+ 消滅行為をした(C), !, 判定しない段(S).
+段主債務者みなし(C, S) :- 欄(後, C, いいえ), !, 判定しない段(S).
+段主債務者みなし(C, 段(みなせる, '保証人が債務の消滅行為をした後に主たる債務者が債務の消滅行為をし、保証人は主たる債務者の意思に反して保証をした', ['463条3項'])) :-
+    欄(委託, C, 反する), !.
+段主債務者みなし(C, 段(みなせる, '保証人が債務の消滅行為をした後に、保証人が債務の消滅行為をしたことを主たる債務者に通知することを怠ったため、主たる債務者が善意で債務の消滅行為をした', ['463条3項'])) :-
+    欄(後, C, 怠り善意), !.
+段主債務者みなし(_, 段(当たらない, '保証人が債務の消滅行為をした後に主たる債務者が債務の消滅行為をしたが、保証人は主たる債務者の意思に反して保証をしておらず、通知を怠って主たる債務者が善意で消滅行為をしたのでもない', ['463条3項'])).
+</script>
+<script type="text/prolog" data-name="rules_e_hantei.pl">% rules/e_hantei.pl — 段をまとめ、見出し・根拠条文・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 条のリスト)　結論ごとの段 = s(画面のid, 見出し, 段)
+%   形は dairi-prolog の e_hantei.pl と同じ（2026-11-20。入口の「どの話か」をやめ、結論1つにつき木1本にした）
+
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 成り立たない組があれば、その組だけを段にする（REVIEW_RULES C3。ほかの段は出さない）。
+% 無ければ 446条〜465条の10 の範囲の条を同じ入力で全部当てる（REVIEW_RULES C4・C5）。
+% 同じ述語を別のファイルに分けて書くと後の読み込みで消えるので、まとめはここに1つだけ置く
+全部の段(C, Steps) :- 組み合わせなしがある(C), !, 組み合わせなしの段(C, Steps).
+全部の段(C, Steps) :-
+    効力の段(C, L1), 請求の段(C, L2), 求償の段(C, L3),
+    append([L1, L2, L3], Steps).
+
+組み合わせなしの段(C, Steps) :-
+    組み合わせなしの一覧(C, L),
+    findall(s(Id, 'この組み合わせはありません', 段(組み合わせなし, M, As)),
+            ( nth1(I, L, _-M-As), atom_concat(mujun, I, Id) ), Steps).
+
+組み合わせなしの一覧(C, L) :- findall(Ns-M-As, 組み合わせなし(C, Ns, M, As), L).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、答えだけを短く出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」を付けない）。
+% 段の文（長い文）は理由として論理の木にだけ出す。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(C, Steps, Ws) :-
+    結論の段(C, Steps, Ps),
+    findall(W, member(_-_-W, Ps), Ws).
+
+% 結論の箱に出す段を 段のid-段-答え の組で、箱の並びのまま返す（論理の木も同じ並びで結論1つにつき1本立てる。REVIEW_RULES B5）
+% 何も当たらない段（判定しない）は出さない（ishi-prolog と同じ）。判定しない を 組の番号 より先に外す（組の番号 は知らない状態で止まるため）
+結論の段(C, Steps, Ps) :-
+    見出しの順(Steps, Ids),
+    findall(Id-S-W, ( member(N, [1, 2]), member(Id, Ids), member(s(Id, _, S), Steps), S = 段(St, _, As), St \== 判定しない, 組の番号(St, N0), N0 =:= N, 問いの答え(C, Id, St, As, W) ), Ps),
+    Ps \== [].
+
+% 並びは ①条が定める効果 ②「当たりません」。①の中は、保証契約の効力 → 請求されたとき → 払う前・払った後
+見出しの順(Steps, Ids) :- Steps = [s(mujun1, _, _)|_], !, findall(Id, member(s(Id, _, _), Steps), Ids).
+見出しの順(_, [hoshiki, kyokudo, kosei, kakutei, torikeshi,
+              saikoku, kensaku, menjo, genshuku, kaju, kogo, kyohi, joho, chien, gankin,
+              kyusho, koshi, jizen, taiko, minashi1, minashi2]).
+
+% 番号は出してから比べる（頭で番号を合わせると、合わなかった節が最後の節に落ちる）。
+% 状態は全部名前で書き、書き忘れた状態は止める（最後の節を「_, 1」にすると、書き忘れた状態の見出しが findall で黙って消える。依頼書 3）
+組の番号(当たらない, 2) :- !.
+組の番号(St, 1) :-
+    memberchk(St, [満たす, みなす, 生じない, 責任, 適用しない, 三年, できる,
+                   有しない, この限りでない, 執行, 免れる, 減縮, 加重されない, 対抗できる, 拒める,
+                   提供, 請求できない, 確定, 確定しない,
+                   求償権, 利益の限度, 現の限度, 弁済期以後, みなせる, 組み合わせなし]), !.
+組の番号(St, _) :- throw(知らない状態(St)).
+
+% 根拠条の無い段（判定しない）は結論の箱に出さない。答え/4 の書き損じで立っても「（）」を画面に出さない
+% 「;」で書くと、根拠条の付いた組み合わせなしで両方の枝が成り立ち、同じ文が結論の箱に2回出た（dairi-prolog 2026-11-19 page_test NG 8件）。「->」で解を1つにする
+問いの答え(C, Id, St, As, W) :-
+    St \== 判定しない, ( St == 組み合わせなし -> true ; As \== [] ),
+    答え(C, Id, St, W0),
+    ( St == 組み合わせなし -> 組み合わせなしの条(C, Id, S) ; 条の表記(As, S) ),
+    format(atom(W), '~w（~w）', [W0, S]).
+
+% 成り立たない組は「この組み合わせはありません（17と19と20の欄・455条）」。
+% 根拠条の無い組（選択肢の言葉どうしでぶつかるだけ）は「この組み合わせはありません（5と6の欄）」（jikou-prolog の web.pl と同じ形）
+組み合わせなしの条(C, Id, S) :-
+    atom_concat(mujun, IA, Id), atom_number(IA, I),
+    組み合わせなしの一覧(C, L), nth1(I, L, Ns-_-As),
+    atomic_list_concat(Ns, 'と', N),
+    (   As == []
+    ->  format(atom(S), '~wの欄', [N])
+    ;   条の表記(As, A),
+        format(atom(S), '~wの欄・~w', [N, A]) ).
+
+% 節の文：答えがあればそれを、無い段は段の文をそのまま出す
+節の文(C, Id, 段(St, _, _), W) :- 答え(C, Id, St, W), !.
+節の文(_, _, 段(_, M, _), M).
+
+% 答え(C, 段のid, 状態, 答えの文)
+% 答えの文には、画面の上で指す先の無い指示語（その・この・同項・前条 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+% 「この限りでない」は「本文の定めが当てはまらない」の意味なので、そう書く。
+% 条文が「〜でなければ」「〜を除く」「〜限度において」と限定する答えは、限定を落として言い切らない（依頼書 8②）
+% 当たらない の答えは、条の要件を「〜ときに当たりません」と否定で写さず、入力で起きた事実を主語を立てて書き、欠けた要件が分かるようにする。
+% 反対の結論（効力を生じます・取り消せません 等）は書かない（dairi-prolog の b_koui.pl の段の文と同じ形。2026-11-20 fix2）。
+% 保証人が法人の3本（kyokudo・kakutei・gankin）は、どの契約に当たらないかを名指しした文なので「当たりません」のまま残す
+答え(_, _, 組み合わせなし, 'この組み合わせはありません') :- !.
+% 446条
+答え(_, hoshiki, 満たす, '保証契約は、書面でしなければならないという方式を満たします').
+答え(_, hoshiki, みなす, '保証契約は、書面によってされたものとみなされます').
+答え(_, hoshiki, 生じない, '保証契約は、効力を生じません').
+% 465条の2
+答え(_, kyokudo, 当たらない, '保証人が法人である根保証契約は、個人根保証契約に当たりません').
+答え(_, kyokudo, 責任, '保証人は、主たる債務の元本、利息、違約金、損害賠償その他の全部に係る極度額を限度として、履行をする責任を負います').
+答え(_, kyokudo, 生じない, '個人根保証契約は、効力を生じません').
+% 465条の6・465条の9
+答え(_, kosei, 適用しない, '公正証書で保証債務を履行する意思を表示していなければ保証契約は効力を生じないとする定め（465条の6第1項）は、適用されません').
+答え(_, kosei, 当たらない, '保証人になろうとする者は、締結の日前一箇月以内に作成された公正証書で、保証債務を履行する意思を表示していました').
+答え(C, kosei, 生じない, '保証契約は、締結の日前一箇月以内に作成された公正証書でなければ、保証債務を履行する意思を表示していても効力を生じません') :- 欄(公正証書, C, 一箇月より前), !.
+答え(_, kosei, 生じない, '保証契約は、締結の日前一箇月以内に作成された公正証書で保証人になろうとする者が保証債務を履行する意思を表示していなければ、効力を生じません').
+% 465条の3
+答え(C, kakutei, 三年, '元本確定期日の定めは効力を生じず、元本確定期日は、個人貸金等根保証契約の締結の日から三年を経過する日となります') :- 欄(期日, C, 五年より後), !.
+答え(_, kakutei, 三年, '元本確定期日は、個人貸金等根保証契約の締結の日から三年を経過する日となります').
+答え(C, kakutei, 当たらない, '保証人が法人である根保証契約は、個人貸金等根保証契約に当たりません') :- 欄(保証人, C, 法人), !.
+答え(_, kakutei, 当たらない, '元本確定期日は、個人貸金等根保証契約の締結の日から五年を経過する日までの日と定められています').
+% 465条の10
+答え(_, torikeshi, できる, '保証人は、保証契約を取り消すことができます').
+答え(_, torikeshi, 適用しない, '主たる債務者の情報の提供と、保証契約の取消しの定めは、保証をする者が法人であるときには適用されません').
+答え(C, torikeshi, 当たらない, W) :- 欄(誤認, C, いいえ), !, 欄(情報, C, Jo), 情報の語(Jo, J),
+    format(atom(W), '主たる債務者は~wが、委託を受けた者は、財産及び収支の状況などの事項について誤認をしていません', [J]).
+答え(C, torikeshi, 当たらない, W) :- 欄(情報, C, Jo), 情報の語(Jo, J),
+    format(atom(W), '債権者は、主たる債務者が~wことを知らず、知ることもできませんでした', [J]).
+% 452条・454条
+答え(_, saikoku, できる, '保証人は、まず主たる債務者に催告をすべき旨を債権者に請求することができます').
+答え(C, saikoku, この限りでない, '主たる債務者は破産手続開始の決定を受けたときに当たり、452条本文の定めは当てはまりません') :- 主債務者の破産(C), !.
+答え(_, saikoku, この限りでない, '主たる債務者は行方が知れないときに当たり、452条本文の定めは当てはまりません').
+答え(_, saikoku, 有しない, '主たる債務者と連帯して債務を負担した保証人は、452条の催告の請求と453条の執行の主張の権利を有しません').
+% 453条
+答え(_, kensaku, 執行, '債権者は、まず主たる債務者の財産について執行をしなければなりません').
+答え(_, kensaku, 当たらない, '保証人は、主たる債務者に弁済をする資力があることは証明しましたが、執行が容易であることは証明していません').
+% 455条
+答え(_, menjo, 免れる, '保証人は、債権者が直ちに催告又は執行をすれば弁済を得ることができた限度において、義務を免れます').
+% 448条
+答え(_, genshuku, 減縮, '保証人の負担は、主たる債務の限度に減縮されます').
+答え(_, kaju, 加重されない, '保証人の負担は、加重されません').
+% 457条
+答え(_, kogo, 対抗できる, '保証人は、主たる債務者が主張することができる抗弁をもって債権者に対抗することができます').
+答え(_, kyohi, 拒める, '保証人は、主たる債務者が相殺権、取消権又は解除権の行使によって債務を免れるべき限度において、債権者に対して債務の履行を拒むことができます').
+% 458条の2
+答え(_, joho, 提供, '債権者は、保証人に対し、遅滞なく、主たる債務の元本と利息、違約金、損害賠償その他の従たる全てのものについての不履行の有無、残額、弁済期が到来しているものの額に関する情報を提供しなければなりません').
+答え(_, joho, 当たらない, '保証人は、主たる債務者の委託を受けないで保証をしました').
+% 458条の3
+答え(_, chien, 請求できない, '債権者は、保証人に対し、主たる債務者が期限の利益を喪失した時から通知を現にするまでに生じた遅延損害金（期限の利益を喪失しなかったとしても生ずべきものを除く）に係る保証債務の履行を請求することができません').
+答え(_, chien, 適用しない, '期限の利益の喪失の通知と遅延損害金の定めは、保証人が法人であるときには適用されません').
+答え(_, chien, 当たらない, '債権者は、主たる債務者が期限の利益を喪失したことを知った時から二箇月以内に、保証人に通知しました').
+% 465条の4
+答え(C, gankin, 確定, W) :- 契約の語(C, K), format(atom(W), '~wの主たる債務の元本は、確定します', [K]).
+答え(C, gankin, 確定しない, W) :- 契約の語(C, K),
+    format(atom(W), '~wの主たる債務の元本は、強制執行又は担保権の実行の手続の開始があったときに限り確定し、申立てだけでは確定しません', [K]).
+答え(C, gankin, 当たらない, '保証人が法人である根保証契約は、個人根保証契約に当たりません') :- 欄(保証人, C, 法人), !.
+答え(_, gankin, 当たらない, '個人根保証契約の主たる債務の範囲には、貸金等債務が含まれていません').
+% 459条・459条の2・462条
+答え(_, kyusho, 求償権, '保証人は、主たる債務者に対し、債務の消滅行為のために支出した財産の額（その額が消滅した主たる債務の額を超えるときは、消滅した額）の求償権を有します').
+答え(_, kyusho, 利益の限度, '保証人は、主たる債務者に対し、主たる債務者が債務の消滅行為の当時利益を受けた限度において求償権を有します').
+答え(_, kyusho, 現の限度, '保証人は、主たる債務者が現に利益を受けている限度においてのみ求償権を有します').
+答え(_, koshi, 弁済期以後, '保証人の求償権は、主たる債務の弁済期以後でなければ、行使することができません').
+% 460条
+答え(_, jizen, できる, '保証人は、主たる債務者に対して、あらかじめ、求償権を行使することができます').
+答え(C, jizen, 当たらない, '保証人は、主たる債務者の委託を受けないで保証をしました') :- \+ 欄(委託, C, 受けた), !.
+答え(C, jizen, 当たらない, W) :- findall(W1, 事前の欠けた事実(C, W1), Ws), Ws \== [], atomic_list_concat(Ws, '。', W).
+% 463条
+答え(_, taiko, 対抗できる, '主たる債務者は、債権者に対抗することができた事由をもって保証人に対抗することができます').
+答え(_, taiko, 当たらない, '保証人は、主たる債務者の委託を受けないで保証をしました').
+答え(_, minashi1, みなせる, '保証人は、保証人がした債務の消滅行為を有効であったものとみなすことができます').
+答え(C, minashi1, 当たらない, '保証人は、主たる債務者の委託を受けないで保証をしました') :- \+ 欄(委託, C, 受けた), !.
+答え(_, minashi1, 当たらない, '保証人は、主たる債務者が債務の消滅行為をしたことを知って、債務の消滅行為をしました').
+答え(_, minashi2, みなせる, '主たる債務者は、主たる債務者がした債務の消滅行為を有効であったものとみなすことができます').
+% 463条3項の 当たらない は、委託が 受けた か 反しない のときだけ立つ（反する は みなせる。d_kyusho.pl の 段主債務者みなし）
+答え(C, minashi2, 当たらない, '保証人は、主たる債務者の委託を受けて保証をしました。主たる債務者は、保証人が通知を怠ったために善意で債務の消滅行為をしたのではありません') :-
+    欄(委託, C, 受けた), !.
+答え(_, minashi2, 当たらない, '保証人は、主たる債務者の委託を受けないで、主たる債務者の意思に反せずに保証をしました。主たる債務者は、保証人が通知を怠ったために善意で債務の消滅行為をしたのではありません').
+
+% 460条の 当たらない で、号ごとに欠けた事実（d_kyusho.pl の 事前の号 の 当たらない と同じ入力）
+事前の欠けた事実(C, '債権者は、主たる債務者の破産財団の配当に加入しました') :- 欄(主たる債務者, C, 破産加入).
+事前の欠けた事実(C, '保証人は、債権者に弁済をすべき旨の裁判の言渡しを受けましたが、言渡しを受けたことについて過失がありました') :- 欄(裁判, C, 過失).
+
+% 号のある項は号の条だけ書く（'460条' と '460条第2号' なら '460条第2号'）
+条の表記(As, S) :-
+    exclude(親の項(As), As, Bs),
+    atomic_list_concat(Bs, '・', S).
+
+親の項(As, A) :- member(B, As), B \== A, sub_atom(B, 0, _, _, A), !.
+
+%% ---- 根拠条文 ----
+% 段の順に並べ、重複は1つに
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As), Ss), member(A, As) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5。結論をつないだ行と「次のすべてが成り立つ」の節は置かない）。
+% 並びは結論の箱と同じ。一番上の行は結論の箱の文で、その下にその段の木を1つだけ置く。
+% 判定しなかった段は木に入れない
+木(C, Steps, Trees) :-
+    結論の段(C, Steps, Ps),
+    findall(t(K, W, '', [X]), ( member(_-S-W, Ps), 段の木(S, X), 印(S, K) ), Trees).
+
+% 当たらない、効力を生じない、本文の定めが当てはまらない、適用しない、権利を有しない、確定しない、請求できない、成り立たない組、のときだけ印を変える（木ごとに、その段で決める）
+印(S, K) :- ( 止まった段(S) -> K = info ; K = ok ).
+
+止まった段(段(St, _, _)) :-
+    memberchk(St, [当たらない, この限りでない, 生じない, 適用しない, 有しない, 確定しない, 請求できない, 組み合わせなし]).
+
+段の木(段(判定しない, _, _), _) :- !, fail.
+段の木(段(St, M, Arts), X) :-
+    list_to_set(Arts, As),
+    maplist(原文規定, As, Rs),
+    段の約束(St, Ys),
+    append(Rs, Ys, Kids),
+    すべて(M, '', Kids, X).
+
+% 葉に置くのは結論を支える規則だけ。「判定しない」の断り書き（評価の語の当てはめ）は about の「判定について」に置く（REVIEW_RULES A5）
+段の約束(当たらない, [Z]) :- !, 場面外の約束(Z).
+段の約束(_, []).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(C, Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+</script>
+<script type="application/json" id="law">{"446":{"t":"第四百四十六条","c":"（保証人の責任等）","p":[{"n":"1","s":"保証人は、主たる債務者がその債務を履行しないときに、その履行をする責任を負う。","i":[]},{"n":"2","s":"保証契約は、書面でしなければ、その効力を生じない。","i":[]},{"n":"3","s":"保証契約がその内容を記録した電磁的記録によってされたときは、その保証契約は、書面によってされたものとみなして、前項の規定を適用する。","i":[]}]},"448":{"t":"第四百四十八条","c":"（保証人の負担と主たる債務の目的又は態様）","p":[{"n":"1","s":"保証人の負担が債務の目的又は態様において主たる債務より重いときは、これを主たる債務の限度に減縮する。","i":[]},{"n":"2","s":"主たる債務の目的又は態様が保証契約の締結後に加重されたときであっても、保証人の負担は加重されない。","i":[]}]},"452":{"t":"第四百五十二条","c":"（催告の抗弁）","p":[{"n":"1","s":"債権者が保証人に債務の履行を請求したときは、保証人は、まず主たる債務者に催告をすべき旨を請求することができる。ただし、主たる債務者が破産手続開始の決定を受けたとき、又はその行方が知れないときは、この限りでない。","i":[]}]},"453":{"t":"第四百五十三条","c":"（検索の抗弁）","p":[{"n":"1","s":"債権者が前条の規定に従い主たる債務者に催告をした後であっても、保証人が主たる債務者に弁済をする資力があり、かつ、執行が容易であることを証明したときは、債権者は、まず主たる債務者の財産について執行をしなければならない。","i":[]}]},"454":{"t":"第四百五十四条","c":"（連帯保証の場合の特則）","p":[{"n":"1","s":"保証人は、主たる債務者と連帯して債務を負担したときは、前二条の権利を有しない。","i":[]}]},"455":{"t":"第四百五十五条","c":"（催告の抗弁及び検索の抗弁の効果）","p":[{"n":"1","s":"第四百五十二条又は第四百五十三条の規定により保証人の請求又は証明があったにもかかわらず、債権者が催告又は執行をすることを怠ったために主たる債務者から全部の弁済を得られなかったときは、保証人は、債権者が直ちに催告又は執行をすれば弁済を得ることができた限度において、その義務を免れる。","i":[]}]},"457":{"t":"第四百五十七条","c":"（主たる債務者について生じた事由の効力）","p":[{"n":"1","s":"主たる債務者に対する履行の請求その他の事由による時効の完成猶予及び更新は、保証人に対しても、その効力を生ずる。","i":[]},{"n":"2","s":"保証人は、主たる債務者が主張することができる抗弁をもって債権者に対抗することができる。","i":[]},{"n":"3","s":"主たる債務者が債権者に対して相殺権、取消権又は解除権を有するときは、これらの権利の行使によって主たる債務者がその債務を免れるべき限度において、保証人は、債権者に対して債務の履行を拒むことができる。","i":[]}]},"458_2":{"t":"第四百五十八条の二","c":"（主たる債務の履行状況に関する情報の提供義務）","p":[{"n":"1","s":"保証人が主たる債務者の委託を受けて保証をした場合において、保証人の請求があったときは、債権者は、保証人に対し、遅滞なく、主たる債務の元本及び主たる債務に関する利息、違約金、損害賠償その他その債務に従たる全てのものについての不履行の有無並びにこれらの残額及びそのうち弁済期が到来しているものの額に関する情報を提供しなければならない。","i":[]}]},"458_3":{"t":"第四百五十八条の三","c":"（主たる債務者が期限の利益を喪失した場合における情報の提供義務）","p":[{"n":"1","s":"主たる債務者が期限の利益を有する場合において、その利益を喪失したときは、債権者は、保証人に対し、その利益の喪失を知った時から二箇月以内に、その旨を通知しなければならない。","i":[]},{"n":"2","s":"前項の期間内に同項の通知をしなかったときは、債権者は、保証人に対し、主たる債務者が期限の利益を喪失した時から同項の通知を現にするまでに生じた遅延損害金（期限の利益を喪失しなかったとしても生ずべきものを除く。）に係る保証債務の履行を請求することができない。","i":[]},{"n":"3","s":"前二項の規定は、保証人が法人である場合には、適用しない。","i":[]}]},"459":{"t":"第四百五十九条","c":"（委託を受けた保証人の求償権）","p":[{"n":"1","s":"保証人が主たる債務者の委託を受けて保証をした場合において、主たる債務者に代わって弁済その他自己の財産をもって債務を消滅させる行為（以下「債務の消滅行為」という。）をしたときは、その保証人は、主たる債務者に対し、そのために支出した財産の額（その財産の額がその債務の消滅行為によって消滅した主たる債務の額を超える場合にあっては、その消滅した額）の求償権を有する。","i":[]},{"n":"2","s":"第四百四十二条第二項の規定は、前項の場合について準用する。","i":[]}]},"459_2":{"t":"第四百五十九条の二","c":"（委託を受けた保証人が弁済期前に弁済等をした場合の求償権）","p":[{"n":"1","s":"保証人が主たる債務者の委託を受けて保証をした場合において、主たる債務の弁済期前に債務の消滅行為をしたときは、その保証人は、主たる債務者に対し、主たる債務者がその当時利益を受けた限度において求償権を有する。この場合において、主たる債務者が債務の消滅行為の日以前に相殺の原因を有していたことを主張するときは、保証人は、債権者に対し、その相殺によって消滅すべきであった債務の履行を請求することができる。","i":[]},{"n":"2","s":"前項の規定による求償は、主たる債務の弁済期以後の法定利息及びその弁済期以後に債務の消滅行為をしたとしても避けることができなかった費用その他の損害の賠償を包含する。","i":[]},{"n":"3","s":"第一項の求償権は、主たる債務の弁済期以後でなければ、これを行使することができない。","i":[]}]},"460":{"t":"第四百六十条","c":"（委託を受けた保証人の事前の求償権）","p":[{"n":"1","s":"保証人は、主たる債務者の委託を受けて保証をした場合において、次に掲げるときは、主たる債務者に対して、あらかじめ、求償権を行使することができる。","i":[{"n":"1","t":"一","s":"主たる債務者が破産手続開始の決定を受け、かつ、債権者がその破産財団の配当に加入しないとき。","sub":[]},{"n":"2","t":"二","s":"債務が弁済期にあるとき。ただし、保証契約の後に債権者が主たる債務者に許与した期限は、保証人に対抗することができない。","sub":[]},{"n":"3","t":"三","s":"保証人が過失なく債権者に弁済をすべき旨の裁判の言渡しを受けたとき。","sub":[]}]}]},"462":{"t":"第四百六十二条","c":"（委託を受けない保証人の求償権）","p":[{"n":"1","s":"第四百五十九条の二第一項の規定は、主たる債務者の委託を受けないで保証をした者が債務の消滅行為をした場合について準用する。","i":[]},{"n":"2","s":"主たる債務者の意思に反して保証をした者は、主たる債務者が現に利益を受けている限度においてのみ求償権を有する。この場合において、主たる債務者が求償の日以前に相殺の原因を有していたことを主張するときは、保証人は、債権者に対し、その相殺によって消滅すべきであった債務の履行を請求することができる。","i":[]},{"n":"3","s":"第四百五十九条の二第三項の規定は、前二項に規定する保証人が主たる債務の弁済期前に債務の消滅行為をした場合における求償権の行使について準用する。","i":[]}]},"463":{"t":"第四百六十三条","c":"（通知を怠った保証人の求償の制限等）","p":[{"n":"1","s":"保証人が主たる債務者の委託を受けて保証をした場合において、主たる債務者にあらかじめ通知しないで債務の消滅行為をしたときは、主たる債務者は、債権者に対抗することができた事由をもってその保証人に対抗することができる。この場合において、相殺をもってその保証人に対抗したときは、その保証人は、債権者に対し、相殺によって消滅すべきであった債務の履行を請求することができる。","i":[]},{"n":"2","s":"保証人が主たる債務者の委託を受けて保証をした場合において、主たる債務者が債務の消滅行為をしたことを保証人に通知することを怠ったため、その保証人が善意で債務の消滅行為をしたときは、その保証人は、その債務の消滅行為を有効であったものとみなすことができる。","i":[]},{"n":"3","s":"保証人が債務の消滅行為をした後に主たる債務者が債務の消滅行為をした場合においては、保証人が主たる債務者の意思に反して保証をしたときのほか、保証人が債務の消滅行為をしたことを主たる債務者に通知することを怠ったため、主たる債務者が善意で債務の消滅行為をしたときも、主たる債務者は、その債務の消滅行為を有効であったものとみなすことができる。","i":[]}]},"465_2":{"t":"第四百六十五条の二","c":"（個人根保証契約の保証人の責任等）","p":[{"n":"1","s":"一定の範囲に属する不特定の債務を主たる債務とする保証契約（以下「根保証契約」という。）であって保証人が法人でないもの（以下「個人根保証契約」という。）の保証人は、主たる債務の元本、主たる債務に関する利息、違約金、損害賠償その他その債務に従たる全てのもの及びその保証債務について約定された違約金又は損害賠償の額について、その全部に係る極度額を限度として、その履行をする責任を負う。","i":[]},{"n":"2","s":"個人根保証契約は、前項に規定する極度額を定めなければ、その効力を生じない。","i":[]},{"n":"3","s":"第四百四十六条第二項及び第三項の規定は、個人根保証契約における第一項に規定する極度額の定めについて準用する。","i":[]}]},"465_3":{"t":"第四百六十五条の三","c":"（個人貸金等根保証契約の元本確定期日）","p":[{"n":"1","s":"個人根保証契約であってその主たる債務の範囲に金銭の貸渡し又は手形の割引を受けることによって負担する債務（以下「貸金等債務」という。）が含まれるもの（以下「個人貸金等根保証契約」という。）において主たる債務の元本の確定すべき期日（以下「元本確定期日」という。）の定めがある場合において、その元本確定期日がその個人貸金等根保証契約の締結の日から五年を経過する日より後の日と定められているときは、その元本確定期日の定めは、その効力を生じない。","i":[]},{"n":"2","s":"個人貸金等根保証契約において元本確定期日の定めがない場合（前項の規定により元本確定期日の定めがその効力を生じない場合を含む。）には、その元本確定期日は、その個人貸金等根保証契約の締結の日から三年を経過する日とする。","i":[]},{"n":"3","s":"個人貸金等根保証契約における元本確定期日の変更をする場合において、変更後の元本確定期日がその変更をした日から五年を経過する日より後の日となるときは、その元本確定期日の変更は、その効力を生じない。ただし、元本確定期日の前二箇月以内に元本確定期日の変更をする場合において、変更後の元本確定期日が変更前の元本確定期日から五年以内の日となるときは、この限りでない。","i":[]},{"n":"4","s":"第四百四十六条第二項及び第三項の規定は、個人貸金等根保証契約における元本確定期日の定め及びその変更（その個人貸金等根保証契約の締結の日から三年以内の日を元本確定期日とする旨の定め及び元本確定期日より前の日を変更後の元本確定期日とする変更を除く。）について準用する。","i":[]}]},"465_4":{"t":"第四百六十五条の四","c":"（個人根保証契約の元本の確定事由）","p":[{"n":"1","s":"次に掲げる場合には、個人根保証契約における主たる債務の元本は、確定する。ただし、第一号に掲げる場合にあっては、強制執行又は担保権の実行の手続の開始があったときに限る。","i":[{"n":"1","t":"一","s":"債権者が、保証人の財産について、金銭の支払を目的とする債権についての強制執行又は担保権の実行を申し立てたとき。","sub":[]},{"n":"2","t":"二","s":"保証人が破産手続開始の決定を受けたとき。","sub":[]},{"n":"3","t":"三","s":"主たる債務者又は保証人が死亡したとき。","sub":[]}]},{"n":"2","s":"前項に規定する場合のほか、個人貸金等根保証契約における主たる債務の元本は、次に掲げる場合にも確定する。ただし、第一号に掲げる場合にあっては、強制執行又は担保権の実行の手続の開始があったときに限る。","i":[{"n":"1","t":"一","s":"債権者が、主たる債務者の財産について、金銭の支払を目的とする債権についての強制執行又は担保権の実行を申し立てたとき。","sub":[]},{"n":"2","t":"二","s":"主たる債務者が破産手続開始の決定を受けたとき。","sub":[]}]}]},"465_6":{"t":"第四百六十五条の六","c":"（公正証書の作成と保証の効力）","p":[{"n":"1","s":"事業のために負担した貸金等債務を主たる債務とする保証契約又は主たる債務の範囲に事業のために負担する貸金等債務が含まれる根保証契約は、その契約の締結に先立ち、その締結の日前一箇月以内に作成された公正証書で保証人になろうとする者が保証債務を履行する意思を表示していなければ、その効力を生じない。","i":[]},{"n":"2","s":"前項の公正証書を作成するには、次に掲げる方式に従わなければならない。","i":[],"omit":true},{"n":"3","s":"前二項の規定は、保証人になろうとする者が法人である場合には、適用しない。","i":[]}]},"465_9":{"t":"第四百六十五条の九","c":"（公正証書の作成と保証の効力に関する規定の適用除外）","p":[{"n":"1","s":"前三条の規定は、保証人になろうとする者が次に掲げる者である保証契約については、適用しない。","i":[{"n":"1","t":"一","s":"主たる債務者が法人である場合のその理事、取締役、執行役又はこれらに準ずる者","sub":[]},{"n":"2","t":"二","s":"主たる債務者が法人である場合の次に掲げる者","sub":["イ 主たる債務者の総株主の議決権（株主総会において決議をすることができる事項の全部につき議決権を行使することができない株式についての議決権を除く。以下この号において同じ。）の過半数を有する者","ロ 主たる債務者の総株主の議決権の過半数を他の株式会社が有する場合における当該他の株式会社の総株主の議決権の過半数を有する者","ハ 主たる債務者の総株主の議決権の過半数を他の株式会社及び当該他の株式会社の総株主の議決権の過半数を有する者が有する場合における当該他の株式会社の総株主の議決権の過半数を有する者","ニ 株式会社以外の法人が主たる債務者である場合におけるイ、ロ又はハに掲げる者に準ずる者"]},{"n":"3","t":"三","s":"主たる債務者（法人であるものを除く。以下この号において同じ。）と共同して事業を行う者又は主たる債務者が行う事業に現に従事している主たる債務者の配偶者","sub":[]}]}]},"465_10":{"t":"第四百六十五条の十","c":"（契約締結時の情報の提供義務）","p":[{"n":"1","s":"主たる債務者は、事業のために負担する債務を主たる債務とする保証又は主たる債務の範囲に事業のために負担する債務が含まれる根保証の委託をするときは、委託を受ける者に対し、次に掲げる事項に関する情報を提供しなければならない。","i":[{"n":"1","t":"一","s":"財産及び収支の状況","sub":[]},{"n":"2","t":"二","s":"主たる債務以外に負担している債務の有無並びにその額及び履行状況","sub":[]},{"n":"3","t":"三","s":"主たる債務の担保として他に提供し、又は提供しようとするものがあるときは、その旨及びその内容","sub":[]}]},{"n":"2","s":"主たる債務者が前項各号に掲げる事項に関して情報を提供せず、又は事実と異なる情報を提供したために委託を受けた者がその事項について誤認をし、それによって保証契約の申込み又はその承諾の意思表示をした場合において、主たる債務者がその事項に関して情報を提供せず又は事実と異なる情報を提供したことを債権者が知り又は知ることができたときは、保証人は、保証契約を取り消すことができる。","i":[]},{"n":"3","s":"前二項の規定は、保証をする者が法人である場合には、適用しない。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"第一編　総則 第一章　通則","a":[{"k":"1","t":"第一条","c":"（基本原則）","u":0},{"k":"2","t":"第二条","c":"（解釈の基準）","u":0}]},{"t":"第一編　総則 第二章　人","a":[{"k":"3","t":"第三条","c":"","u":0},{"k":"3_2","t":"第三条の二","c":"","u":0},{"k":"4","t":"第四条","c":"（成年）","u":0},{"k":"5","t":"第五条","c":"（未成年者の法律行為）","u":0},{"k":"6","t":"第六条","c":"（未成年者の営業の許可）","u":0},{"k":"7","t":"第七条","c":"（後見開始の審判）","u":0},{"k":"8","t":"第八条","c":"（成年被後見人及び成年後見人）","u":0},{"k":"9","t":"第九条","c":"（成年被後見人の法律行為）","u":0},{"k":"10","t":"第十条","c":"（後見開始の審判の取消し）","u":0},{"k":"11","t":"第十一条","c":"（保佐開始の審判）","u":0},{"k":"12","t":"第十二条","c":"（被保佐人及び保佐人）","u":0},{"k":"13","t":"第十三条","c":"（保佐人の同意を要する行為等）","u":0},{"k":"14","t":"第十四条","c":"（保佐開始の審判等の取消し）","u":0},{"k":"15","t":"第十五条","c":"（補助開始の審判）","u":0},{"k":"16","t":"第十六条","c":"（被補助人及び補助人）","u":0},{"k":"17","t":"第十七条","c":"（補助人の同意を要する旨の審判等）","u":0},{"k":"18","t":"第十八条","c":"（補助開始の審判等の取消し）","u":0},{"k":"19","t":"第十九条","c":"（審判相互の関係）","u":0},{"k":"20","t":"第二十条","c":"（制限行為能力者の相手方の催告権）","u":0},{"k":"21","t":"第二十一条","c":"（制限行為能力者の詐術）","u":0},{"k":"22","t":"第二十二条","c":"（住所）","u":0},{"k":"23","t":"第二十三条","c":"（居所）","u":0},{"k":"24","t":"第二十四条","c":"（仮住所）","u":0},{"k":"25","t":"第二十五条","c":"（不在者の財産の管理）","u":0},{"k":"26","t":"第二十六条","c":"（管理人の改任）","u":0},{"k":"27","t":"第二十七条","c":"（管理人の職務）","u":0},{"k":"28","t":"第二十八条","c":"（管理人の権限）","u":0},{"k":"29","t":"第二十九条","c":"（管理人の担保提供及び報酬）","u":0},{"k":"30","t":"第三十条","c":"（失踪の宣告）","u":0},{"k":"31","t":"第三十一条","c":"（失踪の宣告の効力）","u":0},{"k":"32","t":"第三十二条","c":"（失踪の宣告の取消し）","u":0},{"k":"32_2","t":"第三十二条の二","c":"","u":0}]},{"t":"第一編　総則 第三章　法人","a":[{"k":"33","t":"第三十三条","c":"（法人の成立等）","u":0},{"k":"34","t":"第三十四条","c":"（法人の能力）","u":0},{"k":"35","t":"第三十五条","c":"（外国法人）","u":0},{"k":"36","t":"第三十六条","c":"（登記）","u":0},{"k":"37","t":"第三十七条","c":"（外国法人の登記）","u":0},{"k":"38:84","t":"第三十八条から第八十四条まで","c":"","u":2}]},{"t":"第一編　総則 第四章　物","a":[{"k":"85","t":"第八十五条","c":"（定義）","u":0},{"k":"86","t":"第八十六条","c":"（不動産及び動産）","u":0},{"k":"87","t":"第八十七条","c":"（主物及び従物）","u":0},{"k":"88","t":"第八十八条","c":"（天然果実及び法定果実）","u":0},{"k":"89","t":"第八十九条","c":"（果実の帰属）","u":0}]},{"t":"第一編　総則 第五章　法律行為","a":[{"k":"90","t":"第九十条","c":"（公序良俗）","u":0},{"k":"91","t":"第九十一条","c":"（任意規定と異なる意思表示）","u":0},{"k":"92","t":"第九十二条","c":"（任意規定と異なる慣習）","u":0},{"k":"93","t":"第九十三条","c":"（心裡留保）","u":0},{"k":"94","t":"第九十四条","c":"（虚偽表示）","u":0},{"k":"95","t":"第九十五条","c":"（錯誤）","u":0},{"k":"96","t":"第九十六条","c":"（詐欺又は強迫）","u":0},{"k":"97","t":"第九十七条","c":"（意思表示の効力発生時期等）","u":0},{"k":"98","t":"第九十八条","c":"（公示による意思表示）","u":0},{"k":"98_2","t":"第九十八条の二","c":"（意思表示の受領能力）","u":0},{"k":"99","t":"第九十九条","c":"（代理行為の要件及び効果）","u":0},{"k":"100","t":"第百条","c":"（本人のためにすることを示さない意思表示）","u":0},{"k":"101","t":"第百一条","c":"（代理行為の瑕疵）","u":0},{"k":"102","t":"第百二条","c":"（代理人の行為能力）","u":0},{"k":"103","t":"第百三条","c":"（権限の定めのない代理人の権限）","u":0},{"k":"104","t":"第百四条","c":"（任意代理人による復代理人の選任）","u":0},{"k":"105","t":"第百五条","c":"（法定代理人による復代理人の選任）","u":0},{"k":"106","t":"第百六条","c":"（復代理人の権限等）","u":0},{"k":"107","t":"第百七条","c":"（代理権の濫用）","u":0},{"k":"108","t":"第百八条","c":"（自己契約及び双方代理等）","u":0},{"k":"109","t":"第百九条","c":"（代理権授与の表示による表見代理等）","u":0},{"k":"110","t":"第百十条","c":"（権限外の行為の表見代理）","u":0},{"k":"111","t":"第百十一条","c":"（代理権の消滅事由）","u":0},{"k":"112","t":"第百十二条","c":"（代理権消滅後の表見代理等）","u":0},{"k":"113","t":"第百十三条","c":"（無権代理）","u":0},{"k":"114","t":"第百十四条","c":"（無権代理の相手方の催告権）","u":0},{"k":"115","t":"第百十五条","c":"（無権代理の相手方の取消権）","u":0},{"k":"116","t":"第百十六条","c":"（無権代理行為の追認）","u":0},{"k":"117","t":"第百十七条","c":"（無権代理人の責任）","u":0},{"k":"118","t":"第百十八条","c":"（単独行為の無権代理）","u":0},{"k":"119","t":"第百十九条","c":"（無効な行為の追認）","u":0},{"k":"120","t":"第百二十条","c":"（取消権者）","u":0},{"k":"121","t":"第百二十一条","c":"（取消しの効果）","u":0},{"k":"121_2","t":"第百二十一条の二","c":"（原状回復の義務）","u":0},{"k":"122","t":"第百二十二条","c":"（取り消すことができる行為の追認）","u":0},{"k":"123","t":"第百二十三条","c":"（取消し及び追認の方法）","u":0},{"k":"124","t":"第百二十四条","c":"（追認の要件）","u":0},{"k":"125","t":"第百二十五条","c":"（法定追認）","u":0},{"k":"126","t":"第百二十六条","c":"（取消権の期間の制限）","u":0},{"k":"127","t":"第百二十七条","c":"（条件が成就した場合の効果）","u":0},{"k":"128","t":"第百二十八条","c":"（条件の成否未定の間における相手方の利益の侵害の禁止）","u":0},{"k":"129","t":"第百二十九条","c":"（条件の成否未定の間における権利の処分等）","u":0},{"k":"130","t":"第百三十条","c":"（条件の成就の妨害等）","u":0},{"k":"131","t":"第百三十一条","c":"（既成条件）","u":0},{"k":"132","t":"第百三十二条","c":"（不法条件）","u":0},{"k":"133","t":"第百三十三条","c":"（不能条件）","u":0},{"k":"134","t":"第百三十四条","c":"（随意条件）","u":0},{"k":"135","t":"第百三十五条","c":"（期限の到来の効果）","u":0},{"k":"136","t":"第百三十六条","c":"（期限の利益及びその放棄）","u":0},{"k":"137","t":"第百三十七条","c":"（期限の利益の喪失）","u":0}]},{"t":"第一編　総則 第六章　期間の計算","a":[{"k":"138","t":"第百三十八条","c":"（期間の計算の通則）","u":0},{"k":"139","t":"第百三十九条","c":"（期間の起算）","u":0},{"k":"140","t":"第百四十条","c":"","u":0},{"k":"141","t":"第百四十一条","c":"（期間の満了）","u":0},{"k":"142","t":"第百四十二条","c":"","u":0},{"k":"143","t":"第百四十三条","c":"（暦による期間の計算）","u":0}]},{"t":"第一編　総則 第七章　時効","a":[{"k":"144","t":"第百四十四条","c":"（時効の効力）","u":0},{"k":"145","t":"第百四十五条","c":"（時効の援用）","u":0},{"k":"146","t":"第百四十六条","c":"（時効の利益の放棄）","u":0},{"k":"147","t":"第百四十七条","c":"（裁判上の請求等による時効の完成猶予及び更新）","u":0},{"k":"148","t":"第百四十八条","c":"（強制執行等による時効の完成猶予及び更新）","u":0},{"k":"149","t":"第百四十九条","c":"（仮差押え等による時効の完成猶予）","u":0},{"k":"150","t":"第百五十条","c":"（催告による時効の完成猶予）","u":0},{"k":"151","t":"第百五十一条","c":"（協議を行う旨の合意による時効の完成猶予）","u":0},{"k":"152","t":"第百五十二条","c":"（承認による時効の更新）","u":0},{"k":"153","t":"第百五十三条","c":"（時効の完成猶予又は更新の効力が及ぶ者の範囲）","u":0},{"k":"154","t":"第百五十四条","c":"","u":0},{"k":"155:157","t":"第百五十五条から第百五十七条まで","c":"","u":2},{"k":"158","t":"第百五十八条","c":"（未成年者又は成年被後見人と時効の完成猶予）","u":0},{"k":"159","t":"第百五十九条","c":"（夫婦間の権利の時効の完成猶予）","u":0},{"k":"160","t":"第百六十条","c":"（相続財産に関する時効の完成猶予）","u":0},{"k":"161","t":"第百六十一条","c":"（天災等による時効の完成猶予）","u":0},{"k":"162","t":"第百六十二条","c":"（所有権の取得時効）","u":0},{"k":"163","t":"第百六十三条","c":"（所有権以外の財産権の取得時効）","u":0},{"k":"164","t":"第百六十四条","c":"（占有の中止等による取得時効の中断）","u":0},{"k":"165","t":"第百六十五条","c":"","u":0},{"k":"166","t":"第百六十六条","c":"（債権等の消滅時効）","u":0},{"k":"167","t":"第百六十七条","c":"（人の生命又は身体の侵害による損害賠償請求権の消滅時効）","u":0},{"k":"168","t":"第百六十八条","c":"（定期金債権の消滅時効）","u":0},{"k":"169","t":"第百六十九条","c":"（判決で確定した権利の消滅時効）","u":0},{"k":"170:174","t":"第百七十条から第百七十四条まで","c":"","u":2}]},{"t":"第二編　物権 第一章　総則","a":[{"k":"175","t":"第百七十五条","c":"（物権の創設）","u":0},{"k":"176","t":"第百七十六条","c":"（物権の設定及び移転）","u":0},{"k":"177","t":"第百七十七条","c":"（不動産に関する物権の変動の対抗要件）","u":0},{"k":"178","t":"第百七十八条","c":"（動産に関する物権の譲渡の対抗要件）","u":0},{"k":"179","t":"第百七十九条","c":"（混同）","u":0}]},{"t":"第二編　物権 第二章　占有権","a":[{"k":"180","t":"第百八十条","c":"（占有権の取得）","u":0},{"k":"181","t":"第百八十一条","c":"（代理占有）","u":0},{"k":"182","t":"第百八十二条","c":"（現実の引渡し及び簡易の引渡し）","u":0},{"k":"183","t":"第百八十三条","c":"（占有改定）","u":0},{"k":"184","t":"第百八十四条","c":"（指図による占有移転）","u":0},{"k":"185","t":"第百八十五条","c":"（占有の性質の変更）","u":0},{"k":"186","t":"第百八十六条","c":"（占有の態様等に関する推定）","u":0},{"k":"187","t":"第百八十七条","c":"（占有の承継）","u":0},{"k":"188","t":"第百八十八条","c":"（占有物について行使する権利の適法の推定）","u":0},{"k":"189","t":"第百八十九条","c":"（善意の占有者による果実の取得等）","u":0},{"k":"190","t":"第百九十条","c":"（悪意の占有者による果実の返還等）","u":0},{"k":"191","t":"第百九十一条","c":"（占有者による損害賠償）","u":0},{"k":"192","t":"第百九十二条","c":"（即時取得）","u":0},{"k":"193","t":"第百九十三条","c":"（盗品又は遺失物の回復）","u":0},{"k":"194","t":"第百九十四条","c":"","u":0},{"k":"195","t":"第百九十五条","c":"（動物の占有による権利の取得）","u":0},{"k":"196","t":"第百九十六条","c":"（占有者による費用の償還請求）","u":0},{"k":"197","t":"第百九十七条","c":"（占有の訴え）","u":0},{"k":"198","t":"第百九十八条","c":"（占有保持の訴え）","u":0},{"k":"199","t":"第百九十九条","c":"（占有保全の訴え）","u":0},{"k":"200","t":"第二百条","c":"（占有回収の訴え）","u":0},{"k":"201","t":"第二百一条","c":"（占有の訴えの提起期間）","u":0},{"k":"202","t":"第二百二条","c":"（本権の訴えとの関係）","u":0},{"k":"203","t":"第二百三条","c":"（占有権の消滅事由）","u":0},{"k":"204","t":"第二百四条","c":"（代理占有権の消滅事由）","u":0},{"k":"205","t":"第二百五条","c":"","u":0}]},{"t":"第二編　物権 第三章　所有権","a":[{"k":"206","t":"第二百六条","c":"（所有権の内容）","u":0},{"k":"207","t":"第二百七条","c":"（土地所有権の範囲）","u":0},{"k":"208","t":"第二百八条","c":"","u":2},{"k":"209","t":"第二百九条","c":"（隣地の使用）","u":0},{"k":"210","t":"第二百十条","c":"（公道に至るための他の土地の通行権）","u":0},{"k":"211","t":"第二百十一条","c":"","u":0},{"k":"212","t":"第二百十二条","c":"","u":0},{"k":"213","t":"第二百十三条","c":"","u":0},{"k":"213_2","t":"第二百十三条の二","c":"（継続的給付を受けるための設備の設置権等）","u":0},{"k":"213_3","t":"第二百十三条の三","c":"","u":0},{"k":"214","t":"第二百十四条","c":"（自然水流に対する妨害の禁止）","u":0},{"k":"215","t":"第二百十五条","c":"（水流の障害の除去）","u":0},{"k":"216","t":"第二百十六条","c":"（水流に関する工作物の修繕等）","u":0},{"k":"217","t":"第二百十七条","c":"（費用の負担についての慣習）","u":0},{"k":"218","t":"第二百十八条","c":"（雨水を隣地に注ぐ工作物の設置の禁止）","u":0},{"k":"219","t":"第二百十九条","c":"（水流の変更）","u":0},{"k":"220","t":"第二百二十条","c":"（排水のための低地の通水）","u":0},{"k":"221","t":"第二百二十一条","c":"（通水用工作物の使用）","u":0},{"k":"222","t":"第二百二十二条","c":"（堰の設置及び使用）","u":0},{"k":"223","t":"第二百二十三条","c":"（境界標の設置）","u":0},{"k":"224","t":"第二百二十四条","c":"（境界標の設置及び保存の費用）","u":0},{"k":"225","t":"第二百二十五条","c":"（囲障の設置）","u":0},{"k":"226","t":"第二百二十六条","c":"（囲障の設置及び保存の費用）","u":0},{"k":"227","t":"第二百二十七条","c":"（相隣者の一人による囲障の設置）","u":0},{"k":"228","t":"第二百二十八条","c":"（囲障の設置等に関する慣習）","u":0},{"k":"229","t":"第二百二十九条","c":"（境界標等の共有の推定）","u":0},{"k":"230","t":"第二百三十条","c":"","u":0},{"k":"231","t":"第二百三十一条","c":"（共有の障壁の高さを増す工事）","u":0},{"k":"232","t":"第二百三十二条","c":"","u":0},{"k":"233","t":"第二百三十三条","c":"（竹木の枝の切除及び根の切取り）","u":0},{"k":"234","t":"第二百三十四条","c":"（境界線付近の建築の制限）","u":0},{"k":"235","t":"第二百三十五条","c":"","u":0},{"k":"236","t":"第二百三十六条","c":"（境界線付近の建築に関する慣習）","u":0},{"k":"237","t":"第二百三十七条","c":"（境界線付近の掘削の制限）","u":0},{"k":"238","t":"第二百三十八条","c":"（境界線付近の掘削に関する注意義務）","u":0},{"k":"239","t":"第二百三十九条","c":"（無主物の帰属）","u":0},{"k":"240","t":"第二百四十条","c":"（遺失物の拾得）","u":0},{"k":"241","t":"第二百四十一条","c":"（埋蔵物の発見）","u":0},{"k":"242","t":"第二百四十二条","c":"（不動産の付合）","u":0},{"k":"243","t":"第二百四十三条","c":"（動産の付合）","u":0},{"k":"244","t":"第二百四十四条","c":"","u":0},{"k":"245","t":"第二百四十五条","c":"（混和）","u":0},{"k":"246","t":"第二百四十六条","c":"（加工）","u":0},{"k":"247","t":"第二百四十七条","c":"（付合、混和又は加工の効果）","u":0},{"k":"248","t":"第二百四十八条","c":"（付合、混和又は加工に伴う償金の請求）","u":0},{"k":"249","t":"第二百四十九条","c":"（共有物の使用）","u":0},{"k":"250","t":"第二百五十条","c":"（共有持分の割合の推定）","u":0},{"k":"251","t":"第二百五十一条","c":"（共有物の変更）","u":0},{"k":"252","t":"第二百五十二条","c":"（共有物の管理）","u":0},{"k":"252_2","t":"第二百五十二条の二","c":"（共有物の管理者）","u":0},{"k":"253","t":"第二百五十三条","c":"（共有物に関する負担）","u":0},{"k":"254","t":"第二百五十四条","c":"（共有物についての債権）","u":0},{"k":"255","t":"第二百五十五条","c":"（持分の放棄及び共有者の死亡）","u":0},{"k":"256","t":"第二百五十六条","c":"（共有物の分割請求）","u":0},{"k":"257","t":"第二百五十七条","c":"","u":0},{"k":"258","t":"第二百五十八条","c":"（裁判による共有物の分割）","u":0},{"k":"258_2","t":"第二百五十八条の二","c":"","u":0},{"k":"259","t":"第二百五十九条","c":"（共有に関する債権の弁済）","u":0},{"k":"260","t":"第二百六十条","c":"（共有物の分割への参加）","u":0},{"k":"261","t":"第二百六十一条","c":"（分割における共有者の担保責任）","u":0},{"k":"262","t":"第二百六十二条","c":"（共有物に関する証書）","u":0},{"k":"262_2","t":"第二百六十二条の二","c":"（所在等不明共有者の持分の取得）","u":0},{"k":"262_3","t":"第二百六十二条の三","c":"（所在等不明共有者の持分の譲渡）","u":0},{"k":"263","t":"第二百六十三条","c":"（共有の性質を有する入会権）","u":0},{"k":"264","t":"第二百六十四条","c":"（準共有）","u":0},{"k":"264_2","t":"第二百六十四条の二","c":"（所有者不明土地管理命令）","u":0},{"k":"264_3","t":"第二百六十四条の三","c":"（所有者不明土地管理人の権限）","u":0},{"k":"264_4","t":"第二百六十四条の四","c":"（所有者不明土地等に関する訴えの取扱い）","u":0},{"k":"264_5","t":"第二百六十四条の五","c":"（所有者不明土地管理人の義務）","u":0},{"k":"264_6","t":"第二百六十四条の六","c":"（所有者不明土地管理人の解任及び辞任）","u":0},{"k":"264_7","t":"第二百六十四条の七","c":"（所有者不明土地管理人の報酬等）","u":0},{"k":"264_8","t":"第二百六十四条の八","c":"（所有者不明建物管理命令）","u":0},{"k":"264_9","t":"第二百六十四条の九","c":"（管理不全土地管理命令）","u":0},{"k":"264_10","t":"第二百六十四条の十","c":"（管理不全土地管理人の権限）","u":0},{"k":"264_11","t":"第二百六十四条の十一","c":"（管理不全土地管理人の義務）","u":0},{"k":"264_12","t":"第二百六十四条の十二","c":"（管理不全土地管理人の解任及び辞任）","u":0},{"k":"264_13","t":"第二百六十四条の十三","c":"（管理不全土地管理人の報酬等）","u":0},{"k":"264_14","t":"第二百六十四条の十四","c":"（管理不全建物管理命令）","u":0}]},{"t":"第二編　物権 第四章　地上権","a":[{"k":"265","t":"第二百六十五条","c":"（地上権の内容）","u":0},{"k":"266","t":"第二百六十六条","c":"（地代）","u":0},{"k":"267","t":"第二百六十七条","c":"（相隣関係の規定の準用）","u":0},{"k":"268","t":"第二百六十八条","c":"（地上権の存続期間）","u":0},{"k":"269","t":"第二百六十九条","c":"（工作物等の収去等）","u":0},{"k":"269_2","t":"第二百六十九条の二","c":"（地下又は空間を目的とする地上権）","u":0}]},{"t":"第二編　物権 第五章　永小作権","a":[{"k":"270","t":"第二百七十条","c":"（永小作権の内容）","u":0},{"k":"271","t":"第二百七十一条","c":"（永小作人による土地の変更の制限）","u":0},{"k":"272","t":"第二百七十二条","c":"（永小作権の譲渡又は土地の賃貸）","u":0},{"k":"273","t":"第二百七十三条","c":"（賃貸借に関する規定の準用）","u":0},{"k":"274","t":"第二百七十四条","c":"（小作料の減免）","u":0},{"k":"275","t":"第二百七十五条","c":"（永小作権の放棄）","u":0},{"k":"276","t":"第二百七十六条","c":"（永小作権の消滅請求）","u":0},{"k":"277","t":"第二百七十七条","c":"（永小作権に関する慣習）","u":0},{"k":"278","t":"第二百七十八条","c":"（永小作権の存続期間）","u":0},{"k":"279","t":"第二百七十九条","c":"（工作物等の収去等）","u":0}]},{"t":"第二編　物権 第六章　地役権","a":[{"k":"280","t":"第二百八十条","c":"（地役権の内容）","u":0},{"k":"281","t":"第二百八十一条","c":"（地役権の付従性）","u":0},{"k":"282","t":"第二百八十二条","c":"（地役権の不可分性）","u":0},{"k":"283","t":"第二百八十三条","c":"（地役権の時効取得）","u":0},{"k":"284","t":"第二百八十四条","c":"","u":0},{"k":"285","t":"第二百八十五条","c":"（用水地役権）","u":0},{"k":"286","t":"第二百八十六条","c":"（承役地の所有者の工作物の設置義務等）","u":0},{"k":"287","t":"第二百八十七条","c":"","u":0},{"k":"288","t":"第二百八十八条","c":"（承役地の所有者の工作物の使用）","u":0},{"k":"289","t":"第二百八十九条","c":"（承役地の時効取得による地役権の消滅）","u":0},{"k":"290","t":"第二百九十条","c":"","u":0},{"k":"291","t":"第二百九十一条","c":"（地役権の消滅時効）","u":0},{"k":"292","t":"第二百九十二条","c":"","u":0},{"k":"293","t":"第二百九十三条","c":"","u":0},{"k":"294","t":"第二百九十四条","c":"（共有の性質を有しない入会権）","u":0}]},{"t":"第二編　物権 第七章　留置権","a":[{"k":"295","t":"第二百九十五条","c":"（留置権の内容）","u":0},{"k":"296","t":"第二百九十六条","c":"（留置権の不可分性）","u":0},{"k":"297","t":"第二百九十七条","c":"（留置権者による果実の収取）","u":0},{"k":"298","t":"第二百九十八条","c":"（留置権者による留置物の保管等）","u":0},{"k":"299","t":"第二百九十九条","c":"（留置権者による費用の償還請求）","u":0},{"k":"300","t":"第三百条","c":"（留置権の行使と債権の消滅時効）","u":0},{"k":"301","t":"第三百一条","c":"（担保の供与による留置権の消滅）","u":0},{"k":"302","t":"第三百二条","c":"（占有の喪失による留置権の消滅）","u":0}]},{"t":"第二編　物権 第八章　先取特権","a":[{"k":"303","t":"第三百三条","c":"（先取特権の内容）","u":0},{"k":"304","t":"第三百四条","c":"（物上代位）","u":0},{"k":"305","t":"第三百五条","c":"（先取特権の不可分性）","u":0},{"k":"306","t":"第三百六条","c":"（一般の先取特権）","u":0},{"k":"307","t":"第三百七条","c":"（共益費用の先取特権）","u":0},{"k":"308","t":"第三百八条","c":"（雇用関係の先取特権）","u":0},{"k":"308_2","t":"第三百八条の二","c":"（子の監護費用の先取特権）","u":0},{"k":"309","t":"第三百九条","c":"（葬式費用の先取特権）","u":0},{"k":"310","t":"第三百十条","c":"（日用品供給の先取特権）","u":0},{"k":"311","t":"第三百十一条","c":"（動産の先取特権）","u":0},{"k":"312","t":"第三百十二条","c":"（不動産賃貸の先取特権）","u":0},{"k":"313","t":"第三百十三条","c":"（不動産賃貸の先取特権の目的物の範囲）","u":0},{"k":"314","t":"第三百十四条","c":"","u":0},{"k":"315","t":"第三百十五条","c":"（不動産賃貸の先取特権の被担保債権の範囲）","u":0},{"k":"316","t":"第三百十六条","c":"","u":0},{"k":"317","t":"第三百十七条","c":"（旅館宿泊の先取特権）","u":0},{"k":"318","t":"第三百十八条","c":"（運輸の先取特権）","u":0},{"k":"319","t":"第三百十九条","c":"（即時取得の規定の準用）","u":0},{"k":"320","t":"第三百二十条","c":"（動産保存の先取特権）","u":0},{"k":"321","t":"第三百二十一条","c":"（動産売買の先取特権）","u":0},{"k":"322","t":"第三百二十二条","c":"（種苗又は肥料の供給の先取特権）","u":0},{"k":"323","t":"第三百二十三条","c":"（農業労務の先取特権）","u":0},{"k":"324","t":"第三百二十四条","c":"（工業労務の先取特権）","u":0},{"k":"325","t":"第三百二十五条","c":"（不動産の先取特権）","u":0},{"k":"326","t":"第三百二十六条","c":"（不動産保存の先取特権）","u":0},{"k":"327","t":"第三百二十七条","c":"（不動産工事の先取特権）","u":0},{"k":"328","t":"第三百二十八条","c":"（不動産売買の先取特権）","u":0},{"k":"329","t":"第三百二十九条","c":"（一般の先取特権の順位）","u":0},{"k":"330","t":"第三百三十条","c":"（動産の先取特権の順位）","u":0},{"k":"331","t":"第三百三十一条","c":"（不動産の先取特権の順位）","u":0},{"k":"332","t":"第三百三十二条","c":"（同一順位の先取特権）","u":0},{"k":"333","t":"第三百三十三条","c":"（先取特権と第三取得者）","u":0},{"k":"334","t":"第三百三十四条","c":"（先取特権と動産質権との競合）","u":0},{"k":"335","t":"第三百三十五条","c":"（一般の先取特権の効力）","u":0},{"k":"336","t":"第三百三十六条","c":"（一般の先取特権の対抗力）","u":0},{"k":"337","t":"第三百三十七条","c":"（不動産保存の先取特権の登記）","u":0},{"k":"338","t":"第三百三十八条","c":"（不動産工事の先取特権の登記）","u":0},{"k":"339","t":"第三百三十九条","c":"（登記をした不動産保存又は不動産工事の先取特権）","u":0},{"k":"340","t":"第三百四十条","c":"（不動産売買の先取特権の登記）","u":0},{"k":"341","t":"第三百四十一条","c":"（抵当権に関する規定の準用）","u":0}]},{"t":"第二編　物権 第九章　質権","a":[{"k":"342","t":"第三百四十二条","c":"（質権の内容）","u":0},{"k":"343","t":"第三百四十三条","c":"（質権の目的）","u":0},{"k":"344","t":"第三百四十四条","c":"（質権の設定）","u":0},{"k":"345","t":"第三百四十五条","c":"（質権設定者による代理占有の禁止）","u":0},{"k":"346","t":"第三百四十六条","c":"（質権の被担保債権の範囲）","u":0},{"k":"347","t":"第三百四十七条","c":"（質物の留置）","u":0},{"k":"348","t":"第三百四十八条","c":"（転質）","u":0},{"k":"349","t":"第三百四十九条","c":"（契約による質物の処分の禁止）","u":0},{"k":"350","t":"第三百五十条","c":"（留置権及び先取特権の規定の準用）","u":0},{"k":"351","t":"第三百五十一条","c":"（物上保証人の求償権）","u":0},{"k":"352","t":"第三百五十二条","c":"（動産質の対抗要件）","u":0},{"k":"353","t":"第三百五十三条","c":"（質物の占有の回復）","u":0},{"k":"354","t":"第三百五十四条","c":"（動産質権の実行）","u":0},{"k":"355","t":"第三百五十五条","c":"（動産質権の順位）","u":0},{"k":"356","t":"第三百五十六条","c":"（不動産質権者による使用及び収益）","u":0},{"k":"357","t":"第三百五十七条","c":"（不動産質権者による管理の費用等の負担）","u":0},{"k":"358","t":"第三百五十八条","c":"（不動産質権者による利息の請求の禁止）","u":0},{"k":"359","t":"第三百五十九条","c":"（設定行為に別段の定めがある場合等）","u":0},{"k":"360","t":"第三百六十条","c":"（不動産質権の存続期間）","u":0},{"k":"361","t":"第三百六十一条","c":"（抵当権の規定の準用）","u":0},{"k":"362","t":"第三百六十二条","c":"（権利質の目的等）","u":0},{"k":"363","t":"第三百六十三条","c":"","u":2},{"k":"364","t":"第三百六十四条","c":"（債権を目的とする質権の対抗要件）","u":0},{"k":"365","t":"第三百六十五条","c":"","u":2},{"k":"366","t":"第三百六十六条","c":"（質権者による債権の取立て等）","u":0},{"k":"367:368","t":"第三百六十七条及び第三百六十八条","c":"","u":2}]},{"t":"第二編　物権 第十章　抵当権","a":[{"k":"369","t":"第三百六十九条","c":"（抵当権の内容）","u":0},{"k":"370","t":"第三百七十条","c":"（抵当権の効力の及ぶ範囲）","u":0},{"k":"371","t":"第三百七十一条","c":"","u":0},{"k":"372","t":"第三百七十二条","c":"（留置権等の規定の準用）","u":0},{"k":"373","t":"第三百七十三条","c":"（抵当権の順位）","u":0},{"k":"374","t":"第三百七十四条","c":"（抵当権の順位の変更）","u":0},{"k":"375","t":"第三百七十五条","c":"（抵当権の被担保債権の範囲）","u":0},{"k":"376","t":"第三百七十六条","c":"（抵当権の処分）","u":0},{"k":"377","t":"第三百七十七条","c":"（抵当権の処分の対抗要件）","u":0},{"k":"378","t":"第三百七十八条","c":"（代価弁済）","u":0},{"k":"379","t":"第三百七十九条","c":"（抵当権消滅請求）","u":0},{"k":"380","t":"第三百八十条","c":"","u":0},{"k":"381","t":"第三百八十一条","c":"","u":0},{"k":"382","t":"第三百八十二条","c":"（抵当権消滅請求の時期）","u":0},{"k":"383","t":"第三百八十三条","c":"（抵当権消滅請求の手続）","u":0},{"k":"384","t":"第三百八十四条","c":"（債権者のみなし承諾）","u":0},{"k":"385","t":"第三百八十五条","c":"（競売の申立ての通知）","u":0},{"k":"386","t":"第三百八十六条","c":"（抵当権消滅請求の効果）","u":0},{"k":"387","t":"第三百八十七条","c":"（抵当権者の同意の登記がある場合の賃貸借の対抗力）","u":0},{"k":"388","t":"第三百八十八条","c":"（法定地上権）","u":0},{"k":"389","t":"第三百八十九条","c":"（抵当地の上の建物の競売）","u":0},{"k":"390","t":"第三百九十条","c":"（抵当不動産の第三取得者による買受け）","u":0},{"k":"391","t":"第三百九十一条","c":"（抵当不動産の第三取得者による費用の償還請求）","u":0},{"k":"392","t":"第三百九十二条","c":"（共同抵当における代価の配当）","u":0},{"k":"393","t":"第三百九十三条","c":"（共同抵当における代位の付記登記）","u":0},{"k":"394","t":"第三百九十四条","c":"（抵当不動産以外の財産からの弁済）","u":0},{"k":"395","t":"第三百九十五条","c":"（抵当建物使用者の引渡しの猶予）","u":0},{"k":"396","t":"第三百九十六条","c":"（抵当権の消滅時効）","u":0},{"k":"397","t":"第三百九十七条","c":"（抵当不動産の時効取得による抵当権の消滅）","u":0},{"k":"398","t":"第三百九十八条","c":"（抵当権の目的である地上権等の放棄）","u":0},{"k":"398_2","t":"第三百九十八条の二","c":"（根抵当権）","u":0},{"k":"398_3","t":"第三百九十八条の三","c":"（根抵当権の被担保債権の範囲）","u":0},{"k":"398_4","t":"第三百九十八条の四","c":"（根抵当権の被担保債権の範囲及び債務者の変更）","u":0},{"k":"398_5","t":"第三百九十八条の五","c":"（根抵当権の極度額の変更）","u":0},{"k":"398_6","t":"第三百九十八条の六","c":"（根抵当権の元本確定期日の定め）","u":0},{"k":"398_7","t":"第三百九十八条の七","c":"（根抵当権の被担保債権の譲渡等）","u":0},{"k":"398_8","t":"第三百九十八条の八","c":"（根抵当権者又は債務者の相続）","u":0},{"k":"398_9","t":"第三百九十八条の九","c":"（根抵当権者又は債務者の合併）","u":0},{"k":"398_10","t":"第三百九十八条の十","c":"（根抵当権者又は債務者の会社分割）","u":0},{"k":"398_11","t":"第三百九十八条の十一","c":"（根抵当権の処分）","u":0},{"k":"398_12","t":"第三百九十八条の十二","c":"（根抵当権の譲渡）","u":0},{"k":"398_13","t":"第三百九十八条の十三","c":"（根抵当権の一部譲渡）","u":0},{"k":"398_14","t":"第三百九十八条の十四","c":"（根抵当権の共有）","u":0},{"k":"398_15","t":"第三百九十八条の十五","c":"（抵当権の順位の譲渡又は放棄と根抵当権の譲渡又は一部譲渡）","u":0},{"k":"398_16","t":"第三百九十八条の十六","c":"（共同根抵当）","u":0},{"k":"398_17","t":"第三百九十八条の十七","c":"（共同根抵当の変更等）","u":0},{"k":"398_18","t":"第三百九十八条の十八","c":"（累積根抵当）","u":0},{"k":"398_19","t":"第三百九十八条の十九","c":"（根抵当権の元本の確定請求）","u":0},{"k":"398_20","t":"第三百九十八条の二十","c":"（根抵当権の元本の確定事由）","u":0},{"k":"398_21","t":"第三百九十八条の二十一","c":"（根抵当権の極度額の減額請求）","u":0},{"k":"398_22","t":"第三百九十八条の二十二","c":"（根抵当権の消滅請求）","u":0}]},{"t":"第三編　債権 第一章　総則","a":[{"k":"399","t":"第三百九十九条","c":"（債権の目的）","u":0},{"k":"400","t":"第四百条","c":"（特定物の引渡しの場合の注意義務）","u":0},{"k":"401","t":"第四百一条","c":"（種類債権）","u":0},{"k":"402","t":"第四百二条","c":"（金銭債権）","u":0},{"k":"403","t":"第四百三条","c":"","u":0},{"k":"404","t":"第四百四条","c":"（法定利率）","u":0},{"k":"405","t":"第四百五条","c":"（利息の元本への組入れ）","u":0},{"k":"406","t":"第四百六条","c":"（選択債権における選択権の帰属）","u":0},{"k":"407","t":"第四百七条","c":"（選択権の行使）","u":0},{"k":"408","t":"第四百八条","c":"（選択権の移転）","u":0},{"k":"409","t":"第四百九条","c":"（第三者の選択権）","u":0},{"k":"410","t":"第四百十条","c":"（不能による選択債権の特定）","u":0},{"k":"411","t":"第四百十一条","c":"（選択の効力）","u":0},{"k":"412","t":"第四百十二条","c":"（履行期と履行遅滞）","u":0},{"k":"412_2","t":"第四百十二条の二","c":"（履行不能）","u":0},{"k":"413","t":"第四百十三条","c":"（受領遅滞）","u":0},{"k":"413_2","t":"第四百十三条の二","c":"（履行遅滞中又は受領遅滞中の履行不能と帰責事由）","u":0},{"k":"414","t":"第四百十四条","c":"（履行の強制）","u":0},{"k":"415","t":"第四百十五条","c":"（債務不履行による損害賠償）","u":0},{"k":"416","t":"第四百十六条","c":"（損害賠償の範囲）","u":0},{"k":"417","t":"第四百十七条","c":"（損害賠償の方法）","u":0},{"k":"417_2","t":"第四百十七条の二","c":"（中間利息の控除）","u":0},{"k":"418","t":"第四百十八条","c":"（過失相殺）","u":0},{"k":"419","t":"第四百十九条","c":"（金銭債務の特則）","u":0},{"k":"420","t":"第四百二十条","c":"（賠償額の予定）","u":0},{"k":"421","t":"第四百二十一条","c":"","u":0},{"k":"422","t":"第四百二十二条","c":"（損害賠償による代位）","u":0},{"k":"422_2","t":"第四百二十二条の二","c":"（代償請求権）","u":0},{"k":"423","t":"第四百二十三条","c":"（債権者代位権の要件）","u":0},{"k":"423_2","t":"第四百二十三条の二","c":"（代位行使の範囲）","u":0},{"k":"423_3","t":"第四百二十三条の三","c":"（債権者への支払又は引渡し）","u":0},{"k":"423_4","t":"第四百二十三条の四","c":"（相手方の抗弁）","u":0},{"k":"423_5","t":"第四百二十三条の五","c":"（債務者の取立てその他の処分の権限等）","u":0},{"k":"423_6","t":"第四百二十三条の六","c":"（被代位権利の行使に係る訴えを提起した場合の訴訟告知）","u":0},{"k":"423_7","t":"第四百二十三条の七","c":"（登記又は登録の請求権を保全するための債権者代位権）","u":0},{"k":"424","t":"第四百二十四条","c":"（詐害行為取消請求）","u":0},{"k":"424_2","t":"第四百二十四条の二","c":"（相当の対価を得てした財産の処分行為の特則）","u":0},{"k":"424_3","t":"第四百二十四条の三","c":"（特定の債権者に対する担保の供与等の特則）","u":0},{"k":"424_4","t":"第四百二十四条の四","c":"（過大な代物弁済等の特則）","u":0},{"k":"424_5","t":"第四百二十四条の五","c":"（転得者に対する詐害行為取消請求）","u":0},{"k":"424_6","t":"第四百二十四条の六","c":"（財産の返還又は価額の償還の請求）","u":0},{"k":"424_7","t":"第四百二十四条の七","c":"（被告及び訴訟告知）","u":0},{"k":"424_8","t":"第四百二十四条の八","c":"（詐害行為の取消しの範囲）","u":0},{"k":"424_9","t":"第四百二十四条の九","c":"（債権者への支払又は引渡し）","u":0},{"k":"425","t":"第四百二十五条","c":"（認容判決の効力が及ぶ者の範囲）","u":0},{"k":"425_2","t":"第四百二十五条の二","c":"（債務者の受けた反対給付に関する受益者の権利）","u":0},{"k":"425_3","t":"第四百二十五条の三","c":"（受益者の債権の回復）","u":0},{"k":"425_4","t":"第四百二十五条の四","c":"（詐害行為取消請求を受けた転得者の権利）","u":0},{"k":"426","t":"第四百二十六条","c":"","u":0},{"k":"427","t":"第四百二十七条","c":"（分割債権及び分割債務）","u":0},{"k":"428","t":"第四百二十八条","c":"（不可分債権）","u":0},{"k":"429","t":"第四百二十九条","c":"（不可分債権者の一人との間の更改又は免除）","u":0},{"k":"430","t":"第四百三十条","c":"（不可分債務）","u":0},{"k":"431","t":"第四百三十一条","c":"（可分債権又は可分債務への変更）","u":0},{"k":"432","t":"第四百三十二条","c":"（連帯債権者による履行の請求等）","u":0},{"k":"433","t":"第四百三十三条","c":"（連帯債権者の一人との間の更改又は免除）","u":0},{"k":"434","t":"第四百三十四条","c":"（連帯債権者の一人との間の相殺）","u":0},{"k":"435","t":"第四百三十五条","c":"（連帯債権者の一人との間の混同）","u":0},{"k":"435_2","t":"第四百三十五条の二","c":"（相対的効力の原則）","u":0},{"k":"436","t":"第四百三十六条","c":"（連帯債務者に対する履行の請求）","u":0},{"k":"437","t":"第四百三十七条","c":"（連帯債務者の一人についての法律行為の無効等）","u":0},{"k":"438","t":"第四百三十八条","c":"（連帯債務者の一人との間の更改）","u":0},{"k":"439","t":"第四百三十九条","c":"（連帯債務者の一人による相殺等）","u":0},{"k":"440","t":"第四百四十条","c":"（連帯債務者の一人との間の混同）","u":0},{"k":"441","t":"第四百四十一条","c":"（相対的効力の原則）","u":0},{"k":"442","t":"第四百四十二条","c":"（連帯債務者間の求償権）","u":0},{"k":"443","t":"第四百四十三条","c":"（通知を怠った連帯債務者の求償の制限）","u":0},{"k":"444","t":"第四百四十四条","c":"（償還をする資力のない者の負担部分の分担）","u":0},{"k":"445","t":"第四百四十五条","c":"（連帯債務者の一人との間の免除等と求償権）","u":0},{"k":"446","t":"第四百四十六条","c":"（保証人の責任等）","u":1},{"k":"447","t":"第四百四十七条","c":"（保証債務の範囲）","u":0},{"k":"448","t":"第四百四十八条","c":"（保証人の負担と主たる債務の目的又は態様）","u":1},{"k":"449","t":"第四百四十九条","c":"（取り消すことができる債務の保証）","u":0},{"k":"450","t":"第四百五十条","c":"（保証人の要件）","u":0},{"k":"451","t":"第四百五十一条","c":"（他の担保の供与）","u":0},{"k":"452","t":"第四百五十二条","c":"（催告の抗弁）","u":1},{"k":"453","t":"第四百五十三条","c":"（検索の抗弁）","u":1},{"k":"454","t":"第四百五十四条","c":"（連帯保証の場合の特則）","u":1},{"k":"455","t":"第四百五十五条","c":"（催告の抗弁及び検索の抗弁の効果）","u":1},{"k":"456","t":"第四百五十六条","c":"（数人の保証人がある場合）","u":0},{"k":"457","t":"第四百五十七条","c":"（主たる債務者について生じた事由の効力）","u":1},{"k":"458","t":"第四百五十八条","c":"（連帯保証人について生じた事由の効力）","u":0},{"k":"458_2","t":"第四百五十八条の二","c":"（主たる債務の履行状況に関する情報の提供義務）","u":1},{"k":"458_3","t":"第四百五十八条の三","c":"（主たる債務者が期限の利益を喪失した場合における情報の提供義務）","u":1},{"k":"459","t":"第四百五十九条","c":"（委託を受けた保証人の求償権）","u":1},{"k":"459_2","t":"第四百五十九条の二","c":"（委託を受けた保証人が弁済期前に弁済等をした場合の求償権）","u":1},{"k":"460","t":"第四百六十条","c":"（委託を受けた保証人の事前の求償権）","u":1},{"k":"461","t":"第四百六十一条","c":"（主たる債務者が保証人に対して償還をする場合）","u":0},{"k":"462","t":"第四百六十二条","c":"（委託を受けない保証人の求償権）","u":1},{"k":"463","t":"第四百六十三条","c":"（通知を怠った保証人の求償の制限等）","u":1},{"k":"464","t":"第四百六十四条","c":"（連帯債務又は不可分債務の保証人の求償権）","u":0},{"k":"465","t":"第四百六十五条","c":"（共同保証人間の求償権）","u":0},{"k":"465_2","t":"第四百六十五条の二","c":"（個人根保証契約の保証人の責任等）","u":1},{"k":"465_3","t":"第四百六十五条の三","c":"（個人貸金等根保証契約の元本確定期日）","u":1},{"k":"465_4","t":"第四百六十五条の四","c":"（個人根保証契約の元本の確定事由）","u":1},{"k":"465_5","t":"第四百六十五条の五","c":"（保証人が法人である根保証契約の求償権）","u":0},{"k":"465_6","t":"第四百六十五条の六","c":"（公正証書の作成と保証の効力）","u":1},{"k":"465_7","t":"第四百六十五条の七","c":"（保証に係る公正証書の方式の特則）","u":0},{"k":"465_8","t":"第四百六十五条の八","c":"（公正証書の作成と求償権についての保証の効力）","u":0},{"k":"465_9","t":"第四百六十五条の九","c":"（公正証書の作成と保証の効力に関する規定の適用除外）","u":1},{"k":"465_10","t":"第四百六十五条の十","c":"（契約締結時の情報の提供義務）","u":1},{"k":"466","t":"第四百六十六条","c":"（債権の譲渡性）","u":0},{"k":"466_2","t":"第四百六十六条の二","c":"（譲渡制限の意思表示がされた債権に係る債務者の供託）","u":0},{"k":"466_3","t":"第四百六十六条の三","c":"","u":0},{"k":"466_4","t":"第四百六十六条の四","c":"（譲渡制限の意思表示がされた債権の差押え）","u":0},{"k":"466_5","t":"第四百六十六条の五","c":"（預金債権又は貯金債権に係る譲渡制限の意思表示の効力）","u":0},{"k":"466_6","t":"第四百六十六条の六","c":"（将来債権の譲渡性）","u":0},{"k":"467","t":"第四百六十七条","c":"（債権の譲渡の対抗要件）","u":0},{"k":"468","t":"第四百六十八条","c":"（債権の譲渡における債務者の抗弁）","u":0},{"k":"469","t":"第四百六十九条","c":"（債権の譲渡における相殺権）","u":0},{"k":"470","t":"第四百七十条","c":"（併存的債務引受の要件及び効果）","u":0},{"k":"471","t":"第四百七十一条","c":"（併存的債務引受における引受人の抗弁等）","u":0},{"k":"472","t":"第四百七十二条","c":"（免責的債務引受の要件及び効果）","u":0},{"k":"472_2","t":"第四百七十二条の二","c":"（免責的債務引受における引受人の抗弁等）","u":0},{"k":"472_3","t":"第四百七十二条の三","c":"（免責的債務引受における引受人の求償権）","u":0},{"k":"472_4","t":"第四百七十二条の四","c":"（免責的債務引受による担保の移転）","u":0},{"k":"473","t":"第四百七十三条","c":"（弁済）","u":0},{"k":"474","t":"第四百七十四条","c":"（第三者の弁済）","u":0},{"k":"475","t":"第四百七十五条","c":"（弁済として引き渡した物の取戻し）","u":0},{"k":"476","t":"第四百七十六条","c":"（弁済として引き渡した物の消費又は譲渡がされた場合の弁済の効力等）","u":0},{"k":"477","t":"第四百七十七条","c":"（預金又は貯金の口座に対する払込みによる弁済）","u":0},{"k":"478","t":"第四百七十八条","c":"（受領権者としての外観を有する者に対する弁済）","u":0},{"k":"479","t":"第四百七十九条","c":"（受領権者以外の者に対する弁済）","u":0},{"k":"480","t":"第四百八十条","c":"","u":2},{"k":"481","t":"第四百八十一条","c":"（差押えを受けた債権の第三債務者の弁済）","u":0},{"k":"482","t":"第四百八十二条","c":"（代物弁済）","u":0},{"k":"483","t":"第四百八十三条","c":"（特定物の現状による引渡し）","u":0},{"k":"484","t":"第四百八十四条","c":"（弁済の場所及び時間）","u":0},{"k":"485","t":"第四百八十五条","c":"（弁済の費用）","u":0},{"k":"486","t":"第四百八十六条","c":"（受取証書の交付請求等）","u":0},{"k":"487","t":"第四百八十七条","c":"（債権証書の返還請求）","u":0},{"k":"488","t":"第四百八十八条","c":"（同種の給付を目的とする数個の債務がある場合の充当）","u":0},{"k":"489","t":"第四百八十九条","c":"（元本、利息及び費用を支払うべき場合の充当）","u":0},{"k":"490","t":"第四百九十条","c":"（合意による弁済の充当）","u":0},{"k":"491","t":"第四百九十一条","c":"（数個の給付をすべき場合の充当）","u":0},{"k":"492","t":"第四百九十二条","c":"（弁済の提供の効果）","u":0},{"k":"493","t":"第四百九十三条","c":"（弁済の提供の方法）","u":0},{"k":"494","t":"第四百九十四条","c":"（供託）","u":0},{"k":"495","t":"第四百九十五条","c":"（供託の方法）","u":0},{"k":"496","t":"第四百九十六条","c":"（供託物の取戻し）","u":0},{"k":"497","t":"第四百九十七条","c":"（供託に適しない物等）","u":0},{"k":"498","t":"第四百九十八条","c":"（供託物の還付請求等）","u":0},{"k":"499","t":"第四百九十九条","c":"（弁済による代位の要件）","u":0},{"k":"500","t":"第五百条","c":"","u":0},{"k":"501","t":"第五百一条","c":"（弁済による代位の効果）","u":0},{"k":"502","t":"第五百二条","c":"（一部弁済による代位）","u":0},{"k":"503","t":"第五百三条","c":"（債権者による債権証書の交付等）","u":0},{"k":"504","t":"第五百四条","c":"（債権者による担保の喪失等）","u":0},{"k":"505","t":"第五百五条","c":"（相殺の要件等）","u":0},{"k":"506","t":"第五百六条","c":"（相殺の方法及び効力）","u":0},{"k":"507","t":"第五百七条","c":"（履行地の異なる債務の相殺）","u":0},{"k":"508","t":"第五百八条","c":"（時効により消滅した債権を自働債権とする相殺）","u":0},{"k":"509","t":"第五百九条","c":"（不法行為等により生じた債権を受働債権とする相殺の禁止）","u":0},{"k":"510","t":"第五百十条","c":"（差押禁止債権を受働債権とする相殺の禁止）","u":0},{"k":"511","t":"第五百十一条","c":"（差押えを受けた債権を受働債権とする相殺の禁止）","u":0},{"k":"512","t":"第五百十二条","c":"（相殺の充当）","u":0},{"k":"512_2","t":"第五百十二条の二","c":"","u":0},{"k":"513","t":"第五百十三条","c":"（更改）","u":0},{"k":"514","t":"第五百十四条","c":"（債務者の交替による更改）","u":0},{"k":"515","t":"第五百十五条","c":"（債権者の交替による更改）","u":0},{"k":"516:517","t":"第五百十六条及び第五百十七条","c":"","u":2},{"k":"518","t":"第五百十八条","c":"（更改後の債務への担保の移転）","u":0},{"k":"519","t":"第五百十九条","c":"","u":0},{"k":"520","t":"第五百二十条","c":"","u":0},{"k":"520_2","t":"第五百二十条の二","c":"（指図証券の譲渡）","u":0},{"k":"520_3","t":"第五百二十条の三","c":"（指図証券の裏書の方式）","u":0},{"k":"520_4","t":"第五百二十条の四","c":"（指図証券の所持人の権利の推定）","u":0},{"k":"520_5","t":"第五百二十条の五","c":"（指図証券の善意取得）","u":0},{"k":"520_6","t":"第五百二十条の六","c":"（指図証券の譲渡における債務者の抗弁の制限）","u":0},{"k":"520_7","t":"第五百二十条の七","c":"（指図証券の質入れ）","u":0},{"k":"520_8","t":"第五百二十条の八","c":"（指図証券の弁済の場所）","u":0},{"k":"520_9","t":"第五百二十条の九","c":"（指図証券の提示と履行遅滞）","u":0},{"k":"520_10","t":"第五百二十条の十","c":"（指図証券の債務者の調査の権利等）","u":0},{"k":"520_11","t":"第五百二十条の十一","c":"（指図証券の喪失）","u":0},{"k":"520_12","t":"第五百二十条の十二","c":"（指図証券喪失の場合の権利行使方法）","u":0},{"k":"520_13","t":"第五百二十条の十三","c":"（記名式所持人払証券の譲渡）","u":0},{"k":"520_14","t":"第五百二十条の十四","c":"（記名式所持人払証券の所持人の権利の推定）","u":0},{"k":"520_15","t":"第五百二十条の十五","c":"（記名式所持人払証券の善意取得）","u":0},{"k":"520_16","t":"第五百二十条の十六","c":"（記名式所持人払証券の譲渡における債務者の抗弁の制限）","u":0},{"k":"520_17","t":"第五百二十条の十七","c":"（記名式所持人払証券の質入れ）","u":0},{"k":"520_18","t":"第五百二十条の十八","c":"（指図証券の規定の準用）","u":0},{"k":"520_19","t":"第五百二十条の十九","c":"","u":0},{"k":"520_20","t":"第五百二十条の二十","c":"","u":0}]},{"t":"第三編　債権 第二章　契約","a":[{"k":"521","t":"第五百二十一条","c":"（契約の締結及び内容の自由）","u":0},{"k":"522","t":"第五百二十二条","c":"（契約の成立と方式）","u":0},{"k":"523","t":"第五百二十三条","c":"（承諾の期間の定めのある申込み）","u":0},{"k":"524","t":"第五百二十四条","c":"（遅延した承諾の効力）","u":0},{"k":"525","t":"第五百二十五条","c":"（承諾の期間の定めのない申込み）","u":0},{"k":"526","t":"第五百二十六条","c":"（申込者の死亡等）","u":0},{"k":"527","t":"第五百二十七条","c":"（承諾の通知を必要としない場合における契約の成立時期）","u":0},{"k":"528","t":"第五百二十八条","c":"（申込みに変更を加えた承諾）","u":0},{"k":"529","t":"第五百二十九条","c":"（懸賞広告）","u":0},{"k":"529_2","t":"第五百二十九条の二","c":"（指定した行為をする期間の定めのある懸賞広告）","u":0},{"k":"529_3","t":"第五百二十九条の三","c":"（指定した行為をする期間の定めのない懸賞広告）","u":0},{"k":"530","t":"第五百三十条","c":"（懸賞広告の撤回の方法）","u":0},{"k":"531","t":"第五百三十一条","c":"（懸賞広告の報酬を受ける権利）","u":0},{"k":"532","t":"第五百三十二条","c":"（優等懸賞広告）","u":0},{"k":"533","t":"第五百三十三条","c":"（同時履行の抗弁）","u":0},{"k":"534:535","t":"第五百三十四条及び第五百三十五条","c":"","u":2},{"k":"536","t":"第五百三十六条","c":"（債務者の危険負担等）","u":0},{"k":"537","t":"第五百三十七条","c":"（第三者のためにする契約）","u":0},{"k":"538","t":"第五百三十八条","c":"（第三者の権利の確定）","u":0},{"k":"539","t":"第五百三十九条","c":"（債務者の抗弁）","u":0},{"k":"539_2","t":"第五百三十九条の二","c":"","u":0},{"k":"540","t":"第五百四十条","c":"（解除権の行使）","u":0},{"k":"541","t":"第五百四十一条","c":"（催告による解除）","u":0},{"k":"542","t":"第五百四十二条","c":"（催告によらない解除）","u":0},{"k":"543","t":"第五百四十三条","c":"（債権者の責めに帰すべき事由による場合）","u":0},{"k":"544","t":"第五百四十四条","c":"（解除権の不可分性）","u":0},{"k":"545","t":"第五百四十五条","c":"（解除の効果）","u":0},{"k":"546","t":"第五百四十六条","c":"（契約の解除と同時履行）","u":0},{"k":"547","t":"第五百四十七条","c":"（催告による解除権の消滅）","u":0},{"k":"548","t":"第五百四十八条","c":"（解除権者の故意による目的物の損傷等による解除権の消滅）","u":0},{"k":"548_2","t":"第五百四十八条の二","c":"（定型約款の合意）","u":0},{"k":"548_3","t":"第五百四十八条の三","c":"（定型約款の内容の表示）","u":0},{"k":"548_4","t":"第五百四十八条の四","c":"（定型約款の変更）","u":0},{"k":"549","t":"第五百四十九条","c":"（贈与）","u":0},{"k":"550","t":"第五百五十条","c":"（書面によらない贈与の解除）","u":0},{"k":"551","t":"第五百五十一条","c":"（贈与者の引渡義務等）","u":0},{"k":"552","t":"第五百五十二条","c":"（定期贈与）","u":0},{"k":"553","t":"第五百五十三条","c":"（負担付贈与）","u":0},{"k":"554","t":"第五百五十四条","c":"（死因贈与）","u":0},{"k":"555","t":"第五百五十五条","c":"（売買）","u":0},{"k":"556","t":"第五百五十六条","c":"（売買の一方の予約）","u":0},{"k":"557","t":"第五百五十七条","c":"（手付）","u":0},{"k":"558","t":"第五百五十八条","c":"（売買契約に関する費用）","u":0},{"k":"559","t":"第五百五十九条","c":"（有償契約への準用）","u":0},{"k":"560","t":"第五百六十条","c":"（権利移転の対抗要件に係る売主の義務）","u":0},{"k":"561","t":"第五百六十一条","c":"（他人の権利の売買における売主の義務）","u":0},{"k":"562","t":"第五百六十二条","c":"（買主の追完請求権）","u":0},{"k":"563","t":"第五百六十三条","c":"（買主の代金減額請求権）","u":0},{"k":"564","t":"第五百六十四条","c":"（買主の損害賠償請求及び解除権の行使）","u":0},{"k":"565","t":"第五百六十五条","c":"（移転した権利が契約の内容に適合しない場合における売主の担保責任）","u":0},{"k":"566","t":"第五百六十六条","c":"（目的物の種類又は品質に関する担保責任の期間の制限）","u":0},{"k":"567","t":"第五百六十七条","c":"（目的物の滅失等についての危険の移転）","u":0},{"k":"568","t":"第五百六十八条","c":"（競売における担保責任等）","u":0},{"k":"569","t":"第五百六十九条","c":"（債権の売主の担保責任）","u":0},{"k":"570","t":"第五百七十条","c":"（抵当権等がある場合の買主による費用の償還請求）","u":0},{"k":"571","t":"第五百七十一条","c":"","u":2},{"k":"572","t":"第五百七十二条","c":"（担保責任を負わない旨の特約）","u":0},{"k":"573","t":"第五百七十三条","c":"（代金の支払期限）","u":0},{"k":"574","t":"第五百七十四条","c":"（代金の支払場所）","u":0},{"k":"575","t":"第五百七十五条","c":"（果実の帰属及び代金の利息の支払）","u":0},{"k":"576","t":"第五百七十六条","c":"（権利を取得することができない等のおそれがある場合の買主による代金の支払の拒絶）","u":0},{"k":"577","t":"第五百七十七条","c":"（抵当権等の登記がある場合の買主による代金の支払の拒絶）","u":0},{"k":"578","t":"第五百七十八条","c":"（売主による代金の供託の請求）","u":0},{"k":"579","t":"第五百七十九条","c":"（買戻しの特約）","u":0},{"k":"580","t":"第五百八十条","c":"（買戻しの期間）","u":0},{"k":"581","t":"第五百八十一条","c":"（買戻しの特約の対抗力）","u":0},{"k":"582","t":"第五百八十二条","c":"（買戻権の代位行使）","u":0},{"k":"583","t":"第五百八十三条","c":"（買戻しの実行）","u":0},{"k":"584","t":"第五百八十四条","c":"（共有持分の買戻特約付売買）","u":0},{"k":"585","t":"第五百八十五条","c":"","u":0},{"k":"586","t":"第五百八十六条","c":"","u":0},{"k":"587","t":"第五百八十七条","c":"（消費貸借）","u":0},{"k":"587_2","t":"第五百八十七条の二","c":"（書面でする消費貸借等）","u":0},{"k":"588","t":"第五百八十八条","c":"（準消費貸借）","u":0},{"k":"589","t":"第五百八十九条","c":"（利息）","u":0},{"k":"590","t":"第五百九十条","c":"（貸主の引渡義務等）","u":0},{"k":"591","t":"第五百九十一条","c":"（返還の時期）","u":0},{"k":"592","t":"第五百九十二条","c":"（価額の償還）","u":0},{"k":"593","t":"第五百九十三条","c":"（使用貸借）","u":0},{"k":"593_2","t":"第五百九十三条の二","c":"（借用物受取り前の貸主による使用貸借の解除）","u":0},{"k":"594","t":"第五百九十四条","c":"（借主による使用及び収益）","u":0},{"k":"595","t":"第五百九十五条","c":"（借用物の費用の負担）","u":0},{"k":"596","t":"第五百九十六条","c":"（貸主の引渡義務等）","u":0},{"k":"597","t":"第五百九十七条","c":"（期間満了等による使用貸借の終了）","u":0},{"k":"598","t":"第五百九十八条","c":"（使用貸借の解除）","u":0},{"k":"599","t":"第五百九十九条","c":"（借主による収去等）","u":0},{"k":"600","t":"第六百条","c":"（損害賠償及び費用の償還の請求権についての期間の制限）","u":0},{"k":"601","t":"第六百一条","c":"（賃貸借）","u":0},{"k":"602","t":"第六百二条","c":"（短期賃貸借）","u":0},{"k":"603","t":"第六百三条","c":"（短期賃貸借の更新）","u":0},{"k":"604","t":"第六百四条","c":"（賃貸借の存続期間）","u":0},{"k":"605","t":"第六百五条","c":"（不動産賃貸借の対抗力）","u":0},{"k":"605_2","t":"第六百五条の二","c":"（不動産の賃貸人たる地位の移転）","u":0},{"k":"605_3","t":"第六百五条の三","c":"（合意による不動産の賃貸人たる地位の移転）","u":0},{"k":"605_4","t":"第六百五条の四","c":"（不動産の賃借人による妨害の停止の請求等）","u":0},{"k":"606","t":"第六百六条","c":"（賃貸人による修繕等）","u":0},{"k":"607","t":"第六百七条","c":"（賃借人の意思に反する保存行為）","u":0},{"k":"607_2","t":"第六百七条の二","c":"（賃借人による修繕）","u":0},{"k":"608","t":"第六百八条","c":"（賃借人による費用の償還請求）","u":0},{"k":"609","t":"第六百九条","c":"（減収による賃料の減額請求）","u":0},{"k":"610","t":"第六百十条","c":"（減収による解除）","u":0},{"k":"611","t":"第六百十一条","c":"（賃借物の一部滅失等による賃料の減額等）","u":0},{"k":"612","t":"第六百十二条","c":"（賃借権の譲渡及び転貸の制限）","u":0},{"k":"613","t":"第六百十三条","c":"（転貸の効果）","u":0},{"k":"614","t":"第六百十四条","c":"（賃料の支払時期）","u":0},{"k":"615","t":"第六百十五条","c":"（賃借人の通知義務）","u":0},{"k":"616","t":"第六百十六条","c":"（賃借人による使用及び収益）","u":0},{"k":"616_2","t":"第六百十六条の二","c":"（賃借物の全部滅失等による賃貸借の終了）","u":0},{"k":"617","t":"第六百十七条","c":"（期間の定めのない賃貸借の解約の申入れ）","u":0},{"k":"618","t":"第六百十八条","c":"（期間の定めのある賃貸借の解約をする権利の留保）","u":0},{"k":"619","t":"第六百十九条","c":"（賃貸借の更新の推定等）","u":0},{"k":"620","t":"第六百二十条","c":"（賃貸借の解除の効力）","u":0},{"k":"621","t":"第六百二十一条","c":"（賃借人の原状回復義務）","u":0},{"k":"622","t":"第六百二十二条","c":"（使用貸借の規定の準用）","u":0},{"k":"622_2","t":"第六百二十二条の二","c":"","u":0},{"k":"623","t":"第六百二十三条","c":"（雇用）","u":0},{"k":"624","t":"第六百二十四条","c":"（報酬の支払時期）","u":0},{"k":"624_2","t":"第六百二十四条の二","c":"（履行の割合に応じた報酬）","u":0},{"k":"625","t":"第六百二十五条","c":"（使用者の権利の譲渡の制限等）","u":0},{"k":"626","t":"第六百二十六条","c":"（期間の定めのある雇用の解除）","u":0},{"k":"627","t":"第六百二十七条","c":"（期間の定めのない雇用の解約の申入れ）","u":0},{"k":"628","t":"第六百二十八条","c":"（やむを得ない事由による雇用の解除）","u":0},{"k":"629","t":"第六百二十九条","c":"（雇用の更新の推定等）","u":0},{"k":"630","t":"第六百三十条","c":"（雇用の解除の効力）","u":0},{"k":"631","t":"第六百三十一条","c":"（使用者についての破産手続の開始による解約の申入れ）","u":0},{"k":"632","t":"第六百三十二条","c":"（請負）","u":0},{"k":"633","t":"第六百三十三条","c":"（報酬の支払時期）","u":0},{"k":"634","t":"第六百三十四条","c":"（注文者が受ける利益の割合に応じた報酬）","u":0},{"k":"635","t":"第六百三十五条","c":"","u":2},{"k":"636","t":"第六百三十六条","c":"（請負人の担保責任の制限）","u":0},{"k":"637","t":"第六百三十七条","c":"（目的物の種類又は品質に関する担保責任の期間の制限）","u":0},{"k":"638:640","t":"第六百三十八条から第六百四十条まで","c":"","u":2},{"k":"641","t":"第六百四十一条","c":"（注文者による契約の解除）","u":0},{"k":"642","t":"第六百四十二条","c":"（注文者についての破産手続の開始による解除）","u":0},{"k":"643","t":"第六百四十三条","c":"（委任）","u":0},{"k":"644","t":"第六百四十四条","c":"（受任者の注意義務）","u":0},{"k":"644_2","t":"第六百四十四条の二","c":"（復受任者の選任等）","u":0},{"k":"645","t":"第六百四十五条","c":"（受任者による報告）","u":0},{"k":"646","t":"第六百四十六条","c":"（受任者による受取物の引渡し等）","u":0},{"k":"647","t":"第六百四十七条","c":"（受任者の金銭の消費についての責任）","u":0},{"k":"648","t":"第六百四十八条","c":"（受任者の報酬）","u":0},{"k":"648_2","t":"第六百四十八条の二","c":"（成果等に対する報酬）","u":0},{"k":"649","t":"第六百四十九条","c":"（受任者による費用の前払請求）","u":0},{"k":"650","t":"第六百五十条","c":"（受任者による費用等の償還請求等）","u":0},{"k":"651","t":"第六百五十一条","c":"（委任の解除）","u":0},{"k":"652","t":"第六百五十二条","c":"（委任の解除の効力）","u":0},{"k":"653","t":"第六百五十三条","c":"（委任の終了事由）","u":0},{"k":"654","t":"第六百五十四条","c":"（委任の終了後の処分）","u":0},{"k":"655","t":"第六百五十五条","c":"（委任の終了の対抗要件）","u":0},{"k":"656","t":"第六百五十六条","c":"（準委任）","u":0},{"k":"657","t":"第六百五十七条","c":"（寄託）","u":0},{"k":"657_2","t":"第六百五十七条の二","c":"（寄託物受取り前の寄託者による寄託の解除等）","u":0},{"k":"658","t":"第六百五十八条","c":"（寄託物の使用及び第三者による保管）","u":0},{"k":"659","t":"第六百五十九条","c":"（無報酬の受寄者の注意義務）","u":0},{"k":"660","t":"第六百六十条","c":"（受寄者の通知義務等）","u":0},{"k":"661","t":"第六百六十一条","c":"（寄託者による損害賠償）","u":0},{"k":"662","t":"第六百六十二条","c":"（寄託者による返還請求等）","u":0},{"k":"663","t":"第六百六十三条","c":"（寄託物の返還の時期）","u":0},{"k":"664","t":"第六百六十四条","c":"（寄託物の返還の場所）","u":0},{"k":"664_2","t":"第六百六十四条の二","c":"（損害賠償及び費用の償還の請求権についての期間の制限）","u":0},{"k":"665","t":"第六百六十五条","c":"（委任の規定の準用）","u":0},{"k":"665_2","t":"第六百六十五条の二","c":"（混合寄託）","u":0},{"k":"666","t":"第六百六十六条","c":"（消費寄託）","u":0},{"k":"667","t":"第六百六十七条","c":"（組合契約）","u":0},{"k":"667_2","t":"第六百六十七条の二","c":"（他の組合員の債務不履行）","u":0},{"k":"667_3","t":"第六百六十七条の三","c":"（組合員の一人についての意思表示の無効等）","u":0},{"k":"668","t":"第六百六十八条","c":"（組合財産の共有）","u":0},{"k":"669","t":"第六百六十九条","c":"（金銭出資の不履行の責任）","u":0},{"k":"670","t":"第六百七十条","c":"（業務の決定及び執行の方法）","u":0},{"k":"670_2","t":"第六百七十条の二","c":"（組合の代理）","u":0},{"k":"671","t":"第六百七十一条","c":"（委任の規定の準用）","u":0},{"k":"672","t":"第六百七十二条","c":"（業務執行組合員の辞任及び解任）","u":0},{"k":"673","t":"第六百七十三条","c":"（組合員の組合の業務及び財産状況に関する検査）","u":0},{"k":"674","t":"第六百七十四条","c":"（組合員の損益分配の割合）","u":0},{"k":"675","t":"第六百七十五条","c":"（組合の債権者の権利の行使）","u":0},{"k":"676","t":"第六百七十六条","c":"（組合員の持分の処分及び組合財産の分割）","u":0},{"k":"677","t":"第六百七十七条","c":"（組合財産に対する組合員の債権者の権利の行使の禁止）","u":0},{"k":"677_2","t":"第六百七十七条の二","c":"（組合員の加入）","u":0},{"k":"678","t":"第六百七十八条","c":"（組合員の脱退）","u":0},{"k":"679","t":"第六百七十九条","c":"","u":0},{"k":"680","t":"第六百八十条","c":"（組合員の除名）","u":0},{"k":"680_2","t":"第六百八十条の二","c":"（脱退した組合員の責任等）","u":0},{"k":"681","t":"第六百八十一条","c":"（脱退した組合員の持分の払戻し）","u":0},{"k":"682","t":"第六百八十二条","c":"（組合の解散事由）","u":0},{"k":"683","t":"第六百八十三条","c":"（組合の解散の請求）","u":0},{"k":"684","t":"第六百八十四条","c":"（組合契約の解除の効力）","u":0},{"k":"685","t":"第六百八十五条","c":"（組合の清算及び清算人の選任）","u":0},{"k":"686","t":"第六百八十六条","c":"（清算人の業務の決定及び執行の方法）","u":0},{"k":"687","t":"第六百八十七条","c":"（組合員である清算人の辞任及び解任）","u":0},{"k":"688","t":"第六百八十八条","c":"（清算人の職務及び権限並びに残余財産の分割方法）","u":0},{"k":"689","t":"第六百八十九条","c":"（終身定期金契約）","u":0},{"k":"690","t":"第六百九十条","c":"（終身定期金の計算）","u":0},{"k":"691","t":"第六百九十一条","c":"（終身定期金契約の解除）","u":0},{"k":"692","t":"第六百九十二条","c":"（終身定期金契約の解除と同時履行）","u":0},{"k":"693","t":"第六百九十三条","c":"（終身定期金債権の存続の宣告）","u":0},{"k":"694","t":"第六百九十四条","c":"（終身定期金の遺贈）","u":0},{"k":"695","t":"第六百九十五条","c":"（和解）","u":0},{"k":"696","t":"第六百九十六条","c":"（和解の効力）","u":0}]},{"t":"第三編　債権 第三章　事務管理","a":[{"k":"697","t":"第六百九十七条","c":"（事務管理）","u":0},{"k":"698","t":"第六百九十八条","c":"（緊急事務管理）","u":0},{"k":"699","t":"第六百九十九条","c":"（管理者の通知義務）","u":0},{"k":"700","t":"第七百条","c":"（管理者による事務管理の継続）","u":0},{"k":"701","t":"第七百一条","c":"（委任の規定の準用）","u":0},{"k":"702","t":"第七百二条","c":"（管理者による費用の償還請求等）","u":0}]},{"t":"第三編　債権 第四章　不当利得","a":[{"k":"703","t":"第七百三条","c":"（不当利得の返還義務）","u":0},{"k":"704","t":"第七百四条","c":"（悪意の受益者の返還義務等）","u":0},{"k":"705","t":"第七百五条","c":"（債務の不存在を知ってした弁済）","u":0},{"k":"706","t":"第七百六条","c":"（期限前の弁済）","u":0},{"k":"707","t":"第七百七条","c":"（他人の債務の弁済）","u":0},{"k":"708","t":"第七百八条","c":"（不法原因給付）","u":0}]},{"t":"第三編　債権 第五章　不法行為","a":[{"k":"709","t":"第七百九条","c":"（不法行為による損害賠償）","u":0},{"k":"710","t":"第七百十条","c":"（財産以外の損害の賠償）","u":0},{"k":"711","t":"第七百十一条","c":"（近親者に対する損害の賠償）","u":0},{"k":"712","t":"第七百十二条","c":"（責任能力）","u":0},{"k":"713","t":"第七百十三条","c":"","u":0},{"k":"714","t":"第七百十四条","c":"（責任無能力者の監督義務者等の責任）","u":0},{"k":"715","t":"第七百十五条","c":"（使用者等の責任）","u":0},{"k":"716","t":"第七百十六条","c":"（注文者の責任）","u":0},{"k":"717","t":"第七百十七条","c":"（土地の工作物等の占有者及び所有者の責任）","u":0},{"k":"718","t":"第七百十八条","c":"（動物の占有者等の責任）","u":0},{"k":"719","t":"第七百十九条","c":"（共同不法行為者の責任）","u":0},{"k":"720","t":"第七百二十条","c":"（正当防衛及び緊急避難）","u":0},{"k":"721","t":"第七百二十一条","c":"（損害賠償請求権に関する胎児の権利能力）","u":0},{"k":"722","t":"第七百二十二条","c":"（損害賠償の方法、中間利息の控除及び過失相殺）","u":0},{"k":"723","t":"第七百二十三条","c":"（名誉毀損における原状回復）","u":0},{"k":"724","t":"第七百二十四条","c":"（不法行為による損害賠償請求権の消滅時効）","u":0},{"k":"724_2","t":"第七百二十四条の二","c":"（人の生命又は身体を害する不法行為による損害賠償請求権の消滅時効）","u":0}]},{"t":"第四編　親族 第一章　総則","a":[{"k":"725","t":"第七百二十五条","c":"（親族の範囲）","u":0},{"k":"726","t":"第七百二十六条","c":"（親等の計算）","u":0},{"k":"727","t":"第七百二十七条","c":"（縁組による親族関係の発生）","u":0},{"k":"728","t":"第七百二十八条","c":"（離婚等による姻族関係の終了）","u":0},{"k":"729","t":"第七百二十九条","c":"（離縁による親族関係の終了）","u":0},{"k":"730","t":"第七百三十条","c":"（親族間の扶け合い）","u":0}]},{"t":"第四編　親族 第二章　婚姻","a":[{"k":"731","t":"第七百三十一条","c":"（婚姻適齢）","u":0},{"k":"732","t":"第七百三十二条","c":"（重婚の禁止）","u":0},{"k":"733","t":"第七百三十三条","c":"","u":2},{"k":"734","t":"第七百三十四条","c":"（近親者間の婚姻の禁止）","u":0},{"k":"735","t":"第七百三十五条","c":"（直系姻族間の婚姻の禁止）","u":0},{"k":"736","t":"第七百三十六条","c":"（養親子等の間の婚姻の禁止）","u":0},{"k":"737","t":"第七百三十七条","c":"","u":2},{"k":"738","t":"第七百三十八条","c":"（成年被後見人の婚姻）","u":0},{"k":"739","t":"第七百三十九条","c":"（婚姻の届出）","u":0},{"k":"740","t":"第七百四十条","c":"（婚姻の届出の受理）","u":0},{"k":"741","t":"第七百四十一条","c":"（外国に在る日本人間の婚姻の方式）","u":0},{"k":"742","t":"第七百四十二条","c":"（婚姻の無効）","u":0},{"k":"743","t":"第七百四十三条","c":"（婚姻の取消し）","u":0},{"k":"744","t":"第七百四十四条","c":"（不適法な婚姻の取消し）","u":0},{"k":"745","t":"第七百四十五条","c":"（不適齢者の婚姻の取消し）","u":0},{"k":"746","t":"第七百四十六条","c":"","u":2},{"k":"747","t":"第七百四十七条","c":"（詐欺又は強迫による婚姻の取消し）","u":0},{"k":"748","t":"第七百四十八条","c":"（婚姻の取消しの効力）","u":0},{"k":"749","t":"第七百四十九条","c":"（離婚の規定の準用）","u":0},{"k":"750","t":"第七百五十条","c":"（夫婦の氏）","u":0},{"k":"751","t":"第七百五十一条","c":"（生存配偶者の復氏等）","u":0},{"k":"752","t":"第七百五十二条","c":"（同居、協力及び扶助の義務）","u":0},{"k":"753:754","t":"第七百五十三条及び第七百五十四条","c":"","u":2},{"k":"755","t":"第七百五十五条","c":"（夫婦の財産関係）","u":0},{"k":"756","t":"第七百五十六条","c":"（夫婦財産契約の対抗要件）","u":0},{"k":"757","t":"第七百五十七条","c":"","u":2},{"k":"758","t":"第七百五十八条","c":"（夫婦の財産関係の変更の制限等）","u":0},{"k":"759","t":"第七百五十九条","c":"（財産の管理者の変更及び共有財産の分割の対抗要件）","u":0},{"k":"760","t":"第七百六十条","c":"（婚姻費用の分担）","u":0},{"k":"761","t":"第七百六十一条","c":"（日常の家事に関する債務の連帯責任）","u":0},{"k":"762","t":"第七百六十二条","c":"（夫婦間における財産の帰属）","u":0},{"k":"763","t":"第七百六十三条","c":"（協議上の離婚）","u":0},{"k":"764","t":"第七百六十四条","c":"（婚姻の規定の準用）","u":0},{"k":"765","t":"第七百六十五条","c":"（離婚の届出の受理）","u":0},{"k":"766","t":"第七百六十六条","c":"（離婚後の子の監護に関する事項の定め等）","u":0},{"k":"766_2","t":"第七百六十六条の二","c":"（審判による父母以外の親族と子との交流の定め）","u":0},{"k":"766_3","t":"第七百六十六条の三","c":"（子の監護に要する費用の分担の定めがない場合の特例）","u":0},{"k":"767","t":"第七百六十七条","c":"（離婚による復氏等）","u":0},{"k":"768","t":"第七百六十八条","c":"（財産分与）","u":0},{"k":"769","t":"第七百六十九条","c":"（離婚による復氏の際の権利の承継）","u":0},{"k":"770","t":"第七百七十条","c":"（裁判上の離婚）","u":0},{"k":"771","t":"第七百七十一条","c":"（協議上の離婚の規定の準用）","u":0}]},{"t":"第四編　親族 第三章　親子","a":[{"k":"772","t":"第七百七十二条","c":"（嫡出の推定）","u":0},{"k":"773","t":"第七百七十三条","c":"（父を定めることを目的とする訴え）","u":0},{"k":"774","t":"第七百七十四条","c":"（嫡出の否認）","u":0},{"k":"775","t":"第七百七十五条","c":"（嫡出否認の訴え）","u":0},{"k":"776","t":"第七百七十六条","c":"（嫡出の承認）","u":0},{"k":"777","t":"第七百七十七条","c":"（嫡出否認の訴えの出訴期間）","u":0},{"k":"778","t":"第七百七十八条","c":"","u":0},{"k":"778_2","t":"第七百七十八条の二","c":"","u":0},{"k":"778_3","t":"第七百七十八条の三","c":"（子の監護に要した費用の償還の制限）","u":0},{"k":"778_4","t":"第七百七十八条の四","c":"（相続の開始後に新たに子と推定された者の価額の支払請求権）","u":0},{"k":"779","t":"第七百七十九条","c":"（認知）","u":0},{"k":"780","t":"第七百八十条","c":"（認知能力）","u":0},{"k":"781","t":"第七百八十一条","c":"（認知の方式）","u":0},{"k":"782","t":"第七百八十二条","c":"（成年の子の認知）","u":0},{"k":"783","t":"第七百八十三条","c":"（胎児又は死亡した子の認知）","u":0},{"k":"784","t":"第七百八十四条","c":"（認知の効力）","u":0},{"k":"785","t":"第七百八十五条","c":"（認知の取消しの禁止）","u":0},{"k":"786","t":"第七百八十六条","c":"（認知の無効の訴え）","u":0},{"k":"787","t":"第七百八十七条","c":"（認知の訴え）","u":0},{"k":"788","t":"第七百八十八条","c":"（認知後の子の監護に関する事項の定め等）","u":0},{"k":"789","t":"第七百八十九条","c":"（準正）","u":0},{"k":"790","t":"第七百九十条","c":"（子の氏）","u":0},{"k":"791","t":"第七百九十一条","c":"（子の氏の変更）","u":0},{"k":"792","t":"第七百九十二条","c":"（養親となる者の年齢）","u":0},{"k":"793","t":"第七百九十三条","c":"（尊属又は年長者を養子とすることの禁止）","u":0},{"k":"794","t":"第七百九十四条","c":"（後見人が被後見人を養子とする縁組）","u":0},{"k":"795","t":"第七百九十五条","c":"（配偶者のある者が未成年者を養子とする縁組）","u":0},{"k":"796","t":"第七百九十六条","c":"（配偶者のある者の縁組）","u":0},{"k":"797","t":"第七百九十七条","c":"（十五歳未満の者を養子とする縁組）","u":0},{"k":"798","t":"第七百九十八条","c":"（未成年者を養子とする縁組）","u":0},{"k":"799","t":"第七百九十九条","c":"（婚姻の規定の準用）","u":0},{"k":"800","t":"第八百条","c":"（縁組の届出の受理）","u":0},{"k":"801","t":"第八百一条","c":"（外国に在る日本人間の縁組の方式）","u":0},{"k":"802","t":"第八百二条","c":"（縁組の無効）","u":0},{"k":"803","t":"第八百三条","c":"（縁組の取消し）","u":0},{"k":"804","t":"第八百四条","c":"（養親が二十歳未満の者である場合の縁組の取消し）","u":0},{"k":"805","t":"第八百五条","c":"（養子が尊属又は年長者である場合の縁組の取消し）","u":0},{"k":"806","t":"第八百六条","c":"（後見人と被後見人との間の無許可縁組の取消し）","u":0},{"k":"806_2","t":"第八百六条の二","c":"（配偶者の同意のない縁組等の取消し）","u":0},{"k":"806_3","t":"第八百六条の三","c":"（子の監護をすべき者の同意のない縁組等の取消し）","u":0},{"k":"807","t":"第八百七条","c":"（養子が未成年者である場合の無許可縁組の取消し）","u":0},{"k":"808","t":"第八百八条","c":"（婚姻の取消し等の規定の準用）","u":0},{"k":"809","t":"第八百九条","c":"（嫡出子の身分の取得）","u":0},{"k":"810","t":"第八百十条","c":"（養子の氏）","u":0},{"k":"811","t":"第八百十一条","c":"（協議上の離縁等）","u":0},{"k":"811_2","t":"第八百十一条の二","c":"（夫婦である養親と未成年者との離縁）","u":0},{"k":"812","t":"第八百十二条","c":"（婚姻の規定の準用）","u":0},{"k":"813","t":"第八百十三条","c":"（離縁の届出の受理）","u":0},{"k":"814","t":"第八百十四条","c":"（裁判上の離縁）","u":0},{"k":"815","t":"第八百十五条","c":"（養子が十五歳未満である場合の離縁の訴えの当事者）","u":0},{"k":"816","t":"第八百十六条","c":"（離縁による復氏等）","u":0},{"k":"817","t":"第八百十七条","c":"（離縁による復氏の際の権利の承継）","u":0},{"k":"817_2","t":"第八百十七条の二","c":"（特別養子縁組の成立）","u":0},{"k":"817_3","t":"第八百十七条の三","c":"（養親の夫婦共同縁組）","u":0},{"k":"817_4","t":"第八百十七条の四","c":"（養親となる者の年齢）","u":0},{"k":"817_5","t":"第八百十七条の五","c":"（養子となる者の年齢）","u":0},{"k":"817_6","t":"第八百十七条の六","c":"（父母の同意）","u":0},{"k":"817_7","t":"第八百十七条の七","c":"（子の利益のための特別の必要性）","u":0},{"k":"817_8","t":"第八百十七条の八","c":"（監護の状況）","u":0},{"k":"817_9","t":"第八百十七条の九","c":"（実方との親族関係の終了）","u":0},{"k":"817_10","t":"第八百十七条の十","c":"（特別養子縁組の離縁）","u":0},{"k":"817_11","t":"第八百十七条の十一","c":"（離縁による実方との親族関係の回復）","u":0},{"k":"817_12","t":"第八百十七条の十二","c":"（親の責務等）","u":0},{"k":"817_13","t":"第八百十七条の十三","c":"（親子の交流等）","u":0}]},{"t":"第四編　親族 第四章　親権","a":[{"k":"818","t":"第八百十八条","c":"（親権）","u":0},{"k":"819","t":"第八百十九条","c":"（離婚又は認知の場合の親権者）","u":0},{"k":"820","t":"第八百二十条","c":"（監護及び教育の権利義務）","u":0},{"k":"821","t":"第八百二十一条","c":"（子の人格の尊重等）","u":0},{"k":"822","t":"第八百二十二条","c":"（居所の指定）","u":0},{"k":"823","t":"第八百二十三条","c":"（職業の許可）","u":0},{"k":"824","t":"第八百二十四条","c":"（財産の管理及び代表）","u":0},{"k":"824_2","t":"第八百二十四条の二","c":"（親権の行使方法等）","u":0},{"k":"824_3","t":"第八百二十四条の三","c":"（監護者の権利義務）","u":0},{"k":"825","t":"第八百二十五条","c":"（父母の一方が共同の名義でした行為の効力）","u":0},{"k":"826","t":"第八百二十六条","c":"（利益相反行為）","u":0},{"k":"827","t":"第八百二十七条","c":"（財産の管理における注意義務）","u":0},{"k":"828","t":"第八百二十八条","c":"（財産の管理の計算）","u":0},{"k":"829","t":"第八百二十九条","c":"","u":0},{"k":"830","t":"第八百三十条","c":"（第三者が無償で子に与えた財産の管理）","u":0},{"k":"831","t":"第八百三十一条","c":"（委任の規定の準用）","u":0},{"k":"832","t":"第八百三十二条","c":"（財産の管理について生じた親子間の債権の消滅時効）","u":0},{"k":"833","t":"第八百三十三条","c":"（子に代わる親権の行使）","u":0},{"k":"834","t":"第八百三十四条","c":"（親権喪失の審判）","u":0},{"k":"834_2","t":"第八百三十四条の二","c":"（親権停止の審判）","u":0},{"k":"835","t":"第八百三十五条","c":"（管理権喪失の審判）","u":0},{"k":"836","t":"第八百三十六条","c":"（親権喪失、親権停止又は管理権喪失の審判の取消し）","u":0},{"k":"837","t":"第八百三十七条","c":"（親権又は管理権の辞任及び回復）","u":0}]},{"t":"第四編　親族 第五章　後見","a":[{"k":"838","t":"第八百三十八条","c":"","u":0},{"k":"839","t":"第八百三十九条","c":"（未成年後見人の指定）","u":0},{"k":"840","t":"第八百四十条","c":"（未成年後見人の選任）","u":0},{"k":"841","t":"第八百四十一条","c":"（父母による未成年後見人の選任の請求）","u":0},{"k":"842","t":"第八百四十二条","c":"","u":2},{"k":"843","t":"第八百四十三条","c":"（成年後見人の選任）","u":0},{"k":"844","t":"第八百四十四条","c":"（後見人の辞任）","u":0},{"k":"845","t":"第八百四十五条","c":"（辞任した後見人による新たな後見人の選任の請求）","u":0},{"k":"846","t":"第八百四十六条","c":"（後見人の解任）","u":0},{"k":"847","t":"第八百四十七条","c":"（後見人の欠格事由）","u":0},{"k":"848","t":"第八百四十八条","c":"（未成年後見監督人の指定）","u":0},{"k":"849","t":"第八百四十九条","c":"（後見監督人の選任）","u":0},{"k":"850","t":"第八百五十条","c":"（後見監督人の欠格事由）","u":0},{"k":"851","t":"第八百五十一条","c":"（後見監督人の職務）","u":0},{"k":"852","t":"第八百五十二条","c":"（委任及び後見人の規定の準用）","u":0},{"k":"853","t":"第八百五十三条","c":"（財産の調査及び目録の作成）","u":0},{"k":"854","t":"第八百五十四条","c":"（財産の目録の作成前の権限）","u":0},{"k":"855","t":"第八百五十五条","c":"（後見人の被後見人に対する債権又は債務の申出義務）","u":0},{"k":"856","t":"第八百五十六条","c":"（被後見人が包括財産を取得した場合についての準用）","u":0},{"k":"857","t":"第八百五十七条","c":"（未成年被後見人の身上の監護に関する権利義務）","u":0},{"k":"857_2","t":"第八百五十七条の二","c":"（未成年後見人が数人ある場合の権限の行使等）","u":0},{"k":"858","t":"第八百五十八条","c":"（成年被後見人の意思の尊重及び身上の配慮）","u":0},{"k":"859","t":"第八百五十九条","c":"（財産の管理及び代表）","u":0},{"k":"859_2","t":"第八百五十九条の二","c":"（成年後見人が数人ある場合の権限の行使等）","u":0},{"k":"859_3","t":"第八百五十九条の三","c":"（成年被後見人の居住用不動産の処分についての許可）","u":0},{"k":"860","t":"第八百六十条","c":"（利益相反行為）","u":0},{"k":"860_2","t":"第八百六十条の二","c":"（成年後見人による郵便物等の管理）","u":0},{"k":"860_3","t":"第八百六十条の三","c":"","u":0},{"k":"861","t":"第八百六十一条","c":"（支出金額の予定及び後見の事務の費用）","u":0},{"k":"862","t":"第八百六十二条","c":"（後見人の報酬）","u":0},{"k":"863","t":"第八百六十三条","c":"（後見の事務の監督）","u":0},{"k":"864","t":"第八百六十四条","c":"（後見監督人の同意を要する行為）","u":0},{"k":"865","t":"第八百六十五条","c":"","u":0},{"k":"866","t":"第八百六十六条","c":"（被後見人の財産等の譲受けの取消し）","u":0},{"k":"867","t":"第八百六十七条","c":"（未成年被後見人に代わる親権の行使）","u":0},{"k":"868","t":"第八百六十八条","c":"（財産に関する権限のみを有する未成年後見人）","u":0},{"k":"869","t":"第八百六十九条","c":"（委任及び親権の規定の準用）","u":0},{"k":"870","t":"第八百七十条","c":"（後見の計算）","u":0},{"k":"871","t":"第八百七十一条","c":"","u":0},{"k":"872","t":"第八百七十二条","c":"（未成年被後見人と未成年後見人等との間の契約等の取消し）","u":0},{"k":"873","t":"第八百七十三条","c":"（返還金に対する利息の支払等）","u":0},{"k":"873_2","t":"第八百七十三条の二","c":"（成年被後見人の死亡後の成年後見人の権限）","u":0},{"k":"874","t":"第八百七十四条","c":"（委任の規定の準用）","u":0},{"k":"875","t":"第八百七十五条","c":"（後見に関して生じた債権の消滅時効）","u":0}]},{"t":"第四編　親族 第六章　保佐及び補助","a":[{"k":"876","t":"第八百七十六条","c":"（保佐の開始）","u":0},{"k":"876_2","t":"第八百七十六条の二","c":"（保佐人及び臨時保佐人の選任等）","u":0},{"k":"876_3","t":"第八百七十六条の三","c":"（保佐監督人）","u":0},{"k":"876_4","t":"第八百七十六条の四","c":"（保佐人に代理権を付与する旨の審判）","u":0},{"k":"876_5","t":"第八百七十六条の五","c":"（保佐の事務及び保佐人の任務の終了等）","u":0},{"k":"876_6","t":"第八百七十六条の六","c":"（補助の開始）","u":0},{"k":"876_7","t":"第八百七十六条の七","c":"（補助人及び臨時補助人の選任等）","u":0},{"k":"876_8","t":"第八百七十六条の八","c":"（補助監督人）","u":0},{"k":"876_9","t":"第八百七十六条の九","c":"（補助人に代理権を付与する旨の審判）","u":0},{"k":"876_10","t":"第八百七十六条の十","c":"（補助の事務及び補助人の任務の終了等）","u":0}]},{"t":"第四編　親族 第七章　扶養","a":[{"k":"877","t":"第八百七十七条","c":"（扶養義務者）","u":0},{"k":"878","t":"第八百七十八条","c":"（扶養の順位）","u":0},{"k":"879","t":"第八百七十九条","c":"（扶養の程度又は方法）","u":0},{"k":"880","t":"第八百八十条","c":"（扶養に関する協議又は審判の変更又は取消し）","u":0},{"k":"881","t":"第八百八十一条","c":"（扶養請求権の処分の禁止）","u":0}]},{"t":"第五編　相続 第一章　総則","a":[{"k":"882","t":"第八百八十二条","c":"（相続開始の原因）","u":0},{"k":"883","t":"第八百八十三条","c":"（相続開始の場所）","u":0},{"k":"884","t":"第八百八十四条","c":"（相続回復請求権）","u":0},{"k":"885","t":"第八百八十五条","c":"（相続財産に関する費用）","u":0}]},{"t":"第五編　相続 第二章　相続人","a":[{"k":"886","t":"第八百八十六条","c":"（相続に関する胎児の権利能力）","u":0},{"k":"887","t":"第八百八十七条","c":"（子及びその代襲者等の相続権）","u":0},{"k":"888","t":"第八百八十八条","c":"","u":2},{"k":"889","t":"第八百八十九条","c":"（直系尊属及び兄弟姉妹の相続権）","u":0},{"k":"890","t":"第八百九十条","c":"（配偶者の相続権）","u":0},{"k":"891","t":"第八百九十一条","c":"（相続人の欠格事由）","u":0},{"k":"892","t":"第八百九十二条","c":"（推定相続人の廃除）","u":0},{"k":"893","t":"第八百九十三条","c":"（遺言による推定相続人の廃除）","u":0},{"k":"894","t":"第八百九十四条","c":"（推定相続人の廃除の取消し）","u":0},{"k":"895","t":"第八百九十五条","c":"（推定相続人の廃除に関する審判確定前の遺産の管理）","u":0}]},{"t":"第五編　相続 第三章　相続の効力","a":[{"k":"896","t":"第八百九十六条","c":"（相続の一般的効力）","u":0},{"k":"897","t":"第八百九十七条","c":"（祭祀に関する権利の承継）","u":0},{"k":"897_2","t":"第八百九十七条の二","c":"（相続財産の保存）","u":0},{"k":"898","t":"第八百九十八条","c":"（共同相続の効力）","u":0},{"k":"899","t":"第八百九十九条","c":"","u":0},{"k":"899_2","t":"第八百九十九条の二","c":"（共同相続における権利の承継の対抗要件）","u":0},{"k":"900","t":"第九百条","c":"（法定相続分）","u":0},{"k":"901","t":"第九百一条","c":"（代襲相続人の相続分）","u":0},{"k":"902","t":"第九百二条","c":"（遺言による相続分の指定）","u":0},{"k":"902_2","t":"第九百二条の二","c":"（相続分の指定がある場合の債権者の権利の行使）","u":0},{"k":"903","t":"第九百三条","c":"（特別受益者の相続分）","u":0},{"k":"904","t":"第九百四条","c":"","u":0},{"k":"904_2","t":"第九百四条の二","c":"（寄与分）","u":0},{"k":"904_3","t":"第九百四条の三","c":"（期間経過後の遺産の分割における相続分）","u":0},{"k":"905","t":"第九百五条","c":"（相続分の取戻権）","u":0},{"k":"906","t":"第九百六条","c":"（遺産の分割の基準）","u":0},{"k":"906_2","t":"第九百六条の二","c":"（遺産の分割前に遺産に属する財産が処分された場合の遺産の範囲）","u":0},{"k":"907","t":"第九百七条","c":"（遺産の分割の協議又は審判）","u":0},{"k":"908","t":"第九百八条","c":"（遺産の分割の方法の指定及び遺産の分割の禁止）","u":0},{"k":"909","t":"第九百九条","c":"（遺産の分割の効力）","u":0},{"k":"909_2","t":"第九百九条の二","c":"（遺産の分割前における預貯金債権の行使）","u":0},{"k":"910","t":"第九百十条","c":"（相続の開始後に認知された者の価額の支払請求権）","u":0},{"k":"911","t":"第九百十一条","c":"（共同相続人間の担保責任）","u":0},{"k":"912","t":"第九百十二条","c":"（遺産の分割によって受けた債権についての担保責任）","u":0},{"k":"913","t":"第九百十三条","c":"（資力のない共同相続人がある場合の担保責任の分担）","u":0},{"k":"914","t":"第九百十四条","c":"（遺言による担保責任の定め）","u":0}]},{"t":"第五編　相続 第四章　相続の承認及び放棄","a":[{"k":"915","t":"第九百十五条","c":"（相続の承認又は放棄をすべき期間）","u":0},{"k":"916","t":"第九百十六条","c":"","u":0},{"k":"917","t":"第九百十七条","c":"","u":0},{"k":"918","t":"第九百十八条","c":"（相続人による管理）","u":0},{"k":"919","t":"第九百十九条","c":"（相続の承認及び放棄の撤回及び取消し）","u":0},{"k":"920","t":"第九百二十条","c":"（単純承認の効力）","u":0},{"k":"921","t":"第九百二十一条","c":"（法定単純承認）","u":0},{"k":"922","t":"第九百二十二条","c":"（限定承認）","u":0},{"k":"923","t":"第九百二十三条","c":"（共同相続人の限定承認）","u":0},{"k":"924","t":"第九百二十四条","c":"（限定承認の方式）","u":0},{"k":"925","t":"第九百二十五条","c":"（限定承認をしたときの権利義務）","u":0},{"k":"926","t":"第九百二十六条","c":"（限定承認者による管理）","u":0},{"k":"927","t":"第九百二十七条","c":"（相続債権者及び受遺者に対する公告及び催告）","u":0},{"k":"928","t":"第九百二十八条","c":"（公告期間満了前の弁済の拒絶）","u":0},{"k":"929","t":"第九百二十九条","c":"（公告期間満了後の弁済）","u":0},{"k":"930","t":"第九百三十条","c":"（期限前の債務等の弁済）","u":0},{"k":"931","t":"第九百三十一条","c":"（受遺者に対する弁済）","u":0},{"k":"932","t":"第九百三十二条","c":"（弁済のための相続財産の換価）","u":0},{"k":"933","t":"第九百三十三条","c":"（相続債権者及び受遺者の換価手続への参加）","u":0},{"k":"934","t":"第九百三十四条","c":"（不当な弁済をした限定承認者の責任等）","u":0},{"k":"935","t":"第九百三十五条","c":"（公告期間内に申出をしなかった相続債権者及び受遺者）","u":0},{"k":"936","t":"第九百三十六条","c":"（相続人が数人ある場合の相続財産の清算人）","u":0},{"k":"937","t":"第九百三十七条","c":"（法定単純承認の事由がある場合の相続債権者）","u":0},{"k":"938","t":"第九百三十八条","c":"（相続の放棄の方式）","u":0},{"k":"939","t":"第九百三十九条","c":"（相続の放棄の効力）","u":0},{"k":"940","t":"第九百四十条","c":"（相続の放棄をした者による管理）","u":0}]},{"t":"第五編　相続 第五章　財産分離","a":[{"k":"941","t":"第九百四十一条","c":"（相続債権者又は受遺者の請求による財産分離）","u":0},{"k":"942","t":"第九百四十二条","c":"（財産分離の効力）","u":0},{"k":"943","t":"第九百四十三条","c":"（財産分離の請求後の相続財産の管理）","u":0},{"k":"944","t":"第九百四十四条","c":"（財産分離の請求後の相続人による管理）","u":0},{"k":"945","t":"第九百四十五条","c":"（不動産についての財産分離の対抗要件）","u":0},{"k":"946","t":"第九百四十六条","c":"（物上代位の規定の準用）","u":0},{"k":"947","t":"第九百四十七条","c":"（相続債権者及び受遺者に対する弁済）","u":0},{"k":"948","t":"第九百四十八条","c":"（相続人の固有財産からの弁済）","u":0},{"k":"949","t":"第九百四十九条","c":"（財産分離の請求の防止等）","u":0},{"k":"950","t":"第九百五十条","c":"（相続人の債権者の請求による財産分離）","u":0}]},{"t":"第五編　相続 第六章　相続人の不存在","a":[{"k":"951","t":"第九百五十一条","c":"（相続財産法人の成立）","u":0},{"k":"952","t":"第九百五十二条","c":"（相続財産の清算人の選任）","u":0},{"k":"953","t":"第九百五十三条","c":"（不在者の財産の管理人に関する規定の準用）","u":0},{"k":"954","t":"第九百五十四条","c":"（相続財産の清算人の報告）","u":0},{"k":"955","t":"第九百五十五条","c":"（相続財産法人の不成立）","u":0},{"k":"956","t":"第九百五十六条","c":"（相続財産の清算人の代理権の消滅）","u":0},{"k":"957","t":"第九百五十七条","c":"（相続債権者及び受遺者に対する弁済）","u":0},{"k":"958","t":"第九百五十八条","c":"（権利を主張する者がない場合）","u":0},{"k":"958_2","t":"第九百五十八条の二","c":"（特別縁故者に対する相続財産の分与）","u":0},{"k":"959","t":"第九百五十九条","c":"（残余財産の国庫への帰属）","u":0}]},{"t":"第五編　相続 第七章　遺言","a":[{"k":"960","t":"第九百六十条","c":"（遺言の方式）","u":0},{"k":"961","t":"第九百六十一条","c":"（遺言能力）","u":0},{"k":"962","t":"第九百六十二条","c":"","u":0},{"k":"963","t":"第九百六十三条","c":"","u":0},{"k":"964","t":"第九百六十四条","c":"（包括遺贈及び特定遺贈）","u":0},{"k":"965","t":"第九百六十五条","c":"（相続人に関する規定の準用）","u":0},{"k":"966","t":"第九百六十六条","c":"（被後見人の遺言の制限）","u":0},{"k":"967","t":"第九百六十七条","c":"（普通の方式による遺言の種類）","u":0},{"k":"968","t":"第九百六十八条","c":"（自筆証書遺言）","u":0},{"k":"969","t":"第九百六十九条","c":"（公正証書遺言）","u":0},{"k":"969_2","t":"第九百六十九条の二","c":"（公正証書遺言の方式の特則）","u":0},{"k":"970","t":"第九百七十条","c":"（秘密証書遺言）","u":0},{"k":"971","t":"第九百七十一条","c":"（方式に欠ける秘密証書遺言の効力）","u":0},{"k":"972","t":"第九百七十二条","c":"（秘密証書遺言の方式の特則）","u":0},{"k":"973","t":"第九百七十三条","c":"（成年被後見人の遺言）","u":0},{"k":"974","t":"第九百七十四条","c":"（証人及び立会人の欠格事由）","u":0},{"k":"975","t":"第九百七十五条","c":"（共同遺言の禁止）","u":0},{"k":"976","t":"第九百七十六条","c":"（死亡の危急に迫った者の遺言）","u":0},{"k":"977","t":"第九百七十七条","c":"（伝染病隔離者の遺言）","u":0},{"k":"978","t":"第九百七十八条","c":"（在船者の遺言）","u":0},{"k":"979","t":"第九百七十九条","c":"（船舶遭難者の遺言）","u":0},{"k":"980","t":"第九百八十条","c":"（遺言関係者の署名及び押印）","u":0},{"k":"981","t":"第九百八十一条","c":"（署名又は押印が不能の場合）","u":0},{"k":"982","t":"第九百八十二条","c":"（普通の方式による遺言の規定の準用）","u":0},{"k":"983","t":"第九百八十三条","c":"（特別の方式による遺言の効力）","u":0},{"k":"984","t":"第九百八十四条","c":"（外国に在る日本人の遺言の方式）","u":0},{"k":"985","t":"第九百八十五条","c":"（遺言の効力の発生時期）","u":0},{"k":"986","t":"第九百八十六条","c":"（遺贈の放棄）","u":0},{"k":"987","t":"第九百八十七条","c":"（受遺者に対する遺贈の承認又は放棄の催告）","u":0},{"k":"988","t":"第九百八十八条","c":"（受遺者の相続人による遺贈の承認又は放棄）","u":0},{"k":"989","t":"第九百八十九条","c":"（遺贈の承認及び放棄の撤回及び取消し）","u":0},{"k":"990","t":"第九百九十条","c":"（包括受遺者の権利義務）","u":0},{"k":"991","t":"第九百九十一条","c":"（受遺者による担保の請求）","u":0},{"k":"992","t":"第九百九十二条","c":"（受遺者による果実の取得）","u":0},{"k":"993","t":"第九百九十三条","c":"（遺贈義務者による費用の償還請求）","u":0},{"k":"994","t":"第九百九十四条","c":"（受遺者の死亡による遺贈の失効）","u":0},{"k":"995","t":"第九百九十五条","c":"（遺贈の無効又は失効の場合の財産の帰属）","u":0},{"k":"996","t":"第九百九十六条","c":"（相続財産に属しない権利の遺贈）","u":0},{"k":"997","t":"第九百九十七条","c":"","u":0},{"k":"998","t":"第九百九十八条","c":"（遺贈義務者の引渡義務）","u":0},{"k":"999","t":"第九百九十九条","c":"（遺贈の物上代位）","u":0},{"k":"1000","t":"第千条","c":"","u":2},{"k":"1001","t":"第千一条","c":"（債権の遺贈の物上代位）","u":0},{"k":"1002","t":"第千二条","c":"（負担付遺贈）","u":0},{"k":"1003","t":"第千三条","c":"（負担付遺贈の受遺者の免責）","u":0},{"k":"1004","t":"第千四条","c":"（遺言書の検認）","u":0},{"k":"1005","t":"第千五条","c":"（過料）","u":0},{"k":"1006","t":"第千六条","c":"（遺言執行者の指定）","u":0},{"k":"1007","t":"第千七条","c":"（遺言執行者の任務の開始）","u":0},{"k":"1008","t":"第千八条","c":"（遺言執行者に対する就職の催告）","u":0},{"k":"1009","t":"第千九条","c":"（遺言執行者の欠格事由）","u":0},{"k":"1010","t":"第千十条","c":"（遺言執行者の選任）","u":0},{"k":"1011","t":"第千十一条","c":"（相続財産の目録の作成）","u":0},{"k":"1012","t":"第千十二条","c":"（遺言執行者の権利義務）","u":0},{"k":"1013","t":"第千十三条","c":"（遺言の執行の妨害行為の禁止）","u":0},{"k":"1014","t":"第千十四条","c":"（特定財産に関する遺言の執行）","u":0},{"k":"1015","t":"第千十五条","c":"（遺言執行者の行為の効果）","u":0},{"k":"1016","t":"第千十六条","c":"（遺言執行者の復任権）","u":0},{"k":"1017","t":"第千十七条","c":"（遺言執行者が数人ある場合の任務の執行）","u":0},{"k":"1018","t":"第千十八条","c":"（遺言執行者の報酬）","u":0},{"k":"1019","t":"第千十九条","c":"（遺言執行者の解任及び辞任）","u":0},{"k":"1020","t":"第千二十条","c":"（委任の規定の準用）","u":0},{"k":"1021","t":"第千二十一条","c":"（遺言の執行に関する費用の負担）","u":0},{"k":"1022","t":"第千二十二条","c":"（遺言の撤回）","u":0},{"k":"1023","t":"第千二十三条","c":"（前の遺言と後の遺言との抵触等）","u":0},{"k":"1024","t":"第千二十四条","c":"（遺言書又は遺贈の目的物の破棄）","u":0},{"k":"1025","t":"第千二十五条","c":"（撤回された遺言の効力）","u":0},{"k":"1026","t":"第千二十六条","c":"（遺言の撤回権の放棄の禁止）","u":0},{"k":"1027","t":"第千二十七条","c":"（負担付遺贈に係る遺言の取消し）","u":0}]},{"t":"第五編　相続 第八章　配偶者の居住の権利","a":[{"k":"1028","t":"第千二十八条","c":"（配偶者居住権）","u":0},{"k":"1029","t":"第千二十九条","c":"（審判による配偶者居住権の取得）","u":0},{"k":"1030","t":"第千三十条","c":"（配偶者居住権の存続期間）","u":0},{"k":"1031","t":"第千三十一条","c":"（配偶者居住権の登記等）","u":0},{"k":"1032","t":"第千三十二条","c":"（配偶者による使用及び収益）","u":0},{"k":"1033","t":"第千三十三条","c":"（居住建物の修繕等）","u":0},{"k":"1034","t":"第千三十四条","c":"（居住建物の費用の負担）","u":0},{"k":"1035","t":"第千三十五条","c":"（居住建物の返還等）","u":0},{"k":"1036","t":"第千三十六条","c":"（使用貸借及び賃貸借の規定の準用）","u":0},{"k":"1037","t":"第千三十七条","c":"（配偶者短期居住権）","u":0},{"k":"1038","t":"第千三十八条","c":"（配偶者による使用）","u":0},{"k":"1039","t":"第千三十九条","c":"（配偶者居住権の取得による配偶者短期居住権の消滅）","u":0},{"k":"1040","t":"第千四十条","c":"（居住建物の返還等）","u":0},{"k":"1041","t":"第千四十一条","c":"（使用貸借等の規定の準用）","u":0}]},{"t":"第五編　相続 第九章　遺留分","a":[{"k":"1042","t":"第千四十二条","c":"（遺留分の帰属及びその割合）","u":0},{"k":"1043","t":"第千四十三条","c":"（遺留分を算定するための財産の価額）","u":0},{"k":"1044","t":"第千四十四条","c":"","u":0},{"k":"1045","t":"第千四十五条","c":"","u":0},{"k":"1046","t":"第千四十六条","c":"（遺留分侵害額の請求）","u":0},{"k":"1047","t":"第千四十七条","c":"（受遺者又は受贈者の負担額）","u":0},{"k":"1048","t":"第千四十八条","c":"（遺留分侵害額請求権の期間の制限）","u":0},{"k":"1049","t":"第千四十九条","c":"（遺留分の放棄）","u":0}]},{"t":"第五編　相続 第十章　特別の寄与","a":[{"k":"1050","t":"第千五十条","c":"","u":0}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  // '446条2項' '452条本文' '460条第1号' '465条の2第1項' '465条の4第1項第3号' '465条の4第1項ただし書' のような形。複数条が「・」で区切られることもある → 最初の条だけ見る
+  const first = String(a).split("・")[0];
+  const m = first.match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(?:第?(\d+)号((?:の\d+)*))?([イロハニホ])?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[4] ? m[4] + (m[5] || "").replace(/の/g, "_") : null, sub: m[6] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para);
+  // 号まで指定があれば、項の本文とその号だけ出す
+  if (r.item) ps = ps.filter(p => p.i.some(it => it.n === r.item));
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const list = r.item ? p.i.filter(it => it.n === r.item) : p.i;
+    const its = list.map(it => `<p class="it">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => r.sub && x.startsWith(r.sub + " ") ? `<br><span class="hit">　${esc(x)}</span>` : `<br>　${esc(x)}`).join("")}</p>`).join("");
+    // 第465条の6第2項の各号（方式の中身）は載せない。build.py が omit を付ける
+    return `<p>${esc(head + p.s)}</p>${its}${p.omit ? `<p class="hint">（この項の各号は収録していません）</p>` : ""}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなくこのアプリの決め事。</p>`;
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+
+// ---------- ここから別ページ（about.html）だけの処理 ----------
+if (location.protocol === "file:") $("back").href = "hosho.html";
+function openHash(){ const d = location.hash && document.getElementById(location.hash.slice(1)); if (d && d.tagName === "DETAILS") d.open = true; }
+openHash(); window.addEventListener("hashchange", openHash);
+
+async function bootAbout(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    // 全条文の地図
+    let C = []; try{ C = JSON.parse(document.getElementById("cover-data").textContent); }catch(e){}
+    const cover = $("cover");
+    C.forEach(ch => {
+      const div = document.createElement("div"); div.className = "cover-ch";
+      div.innerHTML = `<h4>${esc(ch.t)} <span>${ch.a.length}条</span></h4><div class="cells"></div>`;
+      const cells = div.querySelector(".cells");
+      ch.a.forEach(a => {
+        const btn = document.createElement("button"); btn.type = "button";
+        btn.className = `cell u${a.u}`; btn.title = `${a.t}${a.c}`;
+        btn.addEventListener("click", () => {
+          const old = document.getElementById("cover-pick"); if (old) old.remove();
+          const pk = document.createElement("div"); pk.id = "cover-pick";
+          pk.innerHTML = a.u === 1 ? lawHTML(a.k.includes("_") ? a.k.replace("_", "条の").replace(/_/g, "の") : a.k + "条") : `<p class="hint" style="margin-top:6px">${esc(a.t)}${esc(a.c)}${a.u === 2 ? "（削除）" : "（このアプリでは使用しない条）"}</p>`;
+          div.appendChild(pk);
+        });
+        cells.appendChild(btn);
+      });
+      cover.appendChild(div);
+    });
+    const used = C.flatMap(c => c.a).filter(a => a.u === 1).length;
+    const total = C.flatMap(c => c.a).filter(a => a.u !== 2).length;
+    cover.insertAdjacentHTML("afterbegin", `<p class="cover-total">使っている条：${used} / ${total} 条</p>`);
+    // ソース表示
+    const src = $("src");
+    files.forEach(f => {
+      const det = document.createElement("details"); det.className = "srcfile";
+      det.innerHTML = `<summary>${esc(f.dataset.name.replace(/_/g, "/"))}</summary><pre>${esc(f.textContent)}</pre>`;
+      src.appendChild(det);
+    });
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+  }
+}
+
+// 直接クエリ実行
+$("run").addEventListener("click", () => {
+  if (!pl){ $("out").textContent = "まだ読み込み中です。"; return; }
+  const q = $("q").value.trim().replace(/\.$/, "");
+  try{
+    const it = pl.prolog.query(q); const out = [];
+    for (let i = 0; i < 20; i++){
+      const r = it.next();
+      if (!r) break;
+      if (r.error){ out.push("エラー：" + r.message); break; }
+      // 最後の解は done:true に値が付いて返る。done で先に抜けると、その解を捨てて「解なし」に見える
+      if (r.value && r.value.$tag === "bindings"){
+        const { $tag, ...vars } = r.value;
+        out.push(Object.keys(vars).length ? JSON.stringify(vars, null, 2) : "true");
+      }
+      if (r.done) break;
+    }
+    $("out").textContent = out.length ? out.join("\n---\n") : "（解なし）";
+  } catch(e){ $("out").textContent = "エラー：" + e.message; }
+});
+
+if (typeof SWIPL === "function") bootAbout();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; }
+</script>
