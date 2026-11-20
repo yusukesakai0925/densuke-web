@@ -1,0 +1,1035 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="「この通知で、いつ終わる？ 借地借家法を条文から引く」の収録範囲、全条文の地図、アプリの約束事、Prologのソース全部。">
+<title>収録範囲・仕組み｜この通知で、いつ終わる？ 借地借家法を条文から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・賃貸借版（chintai-prolog）と同じ書式感に統一（2026-11-21 10月の形から写した）。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+.full-slot{grid-column:1 / -1}
+/* 日付の欄（.slot の直下の input と、「◯ヶ月前」の行） */
+.slot > input{font:inherit;font-size:1rem;font-weight:700;color:var(--ink);background:var(--field);border:2px solid var(--line);border-radius:0;padding:6px 8px;margin:4px 10px 6px;min-width:0}
+.slot > .rd{margin:4px 10px 6px}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ng,.tree .m.stay{color:var(--ng)} .tree .m.fine,.tree .m.end,.tree .m.ok{color:var(--ok)} .tree .m.renew{color:var(--blue)} .tree .m.open{color:var(--or)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border-left:2px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+
+/* 日付の欄を「◯ヶ月前」で入れる（rd-。8本で同じ文字列） */
+.rd{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;min-width:0}
+.rd.rd-m{margin:4px 10px 6px}
+.rd input,.rd select{font:inherit;font-size:1rem;color:var(--ink);background:var(--field,var(--bg));border:1px solid var(--line);border-radius:0;padding:6px 8px;min-width:0}
+.rd input:disabled,.rd select:disabled{opacity:.45}
+.rd select option{background:var(--paper);color:var(--ink)}
+.rd .rd-n{flex:0 0 4.6em;width:4.6em}
+.rd .rd-u{flex:0 1 auto;width:auto}
+.rd-to{font-size:.8rem;color:var(--muted);white-space:nowrap}
+.rd-hide{display:none!important}
+.rd-other{min-width:0}
+.rd-other summary{cursor:pointer;font-size:.84rem;font-weight:400;color:var(--muted)}
+.rd-other label{display:block}
+.rd-other.rd-m > summary{padding:6px 10px}
+.rd-note{font-size:.76rem;color:var(--muted)}
+.rd-other.rd-m .rd-note{padding:0 10px 6px}
+.rd-when{font-size:.84rem;font-weight:700;color:var(--muted);margin:0 0 6px}
+</style>
+
+<div class="wrap about">
+  <header class="mast sub">
+    <p class="backlink"><a href="./" id="back">← 判定ページに戻る</a></p>
+    <h1>収録範囲・仕組み</h1>
+    <p class="lead">「この通知で、いつ終わる？ 借地借家法を条文から引く」で、どの条文をどこまでルールにしたか、アプリが決めたこと、プログラムの中身です。</p>
+  </header>
+
+  <div class="appendix">
+  <details class="box" id="scope-box" open>
+    <summary>収録範囲と、入っていないもの</summary>
+    <div class="scope" id="scope">
+      <p><b>収録しているのは借地借家法と民法の一部です。</b>借地借家法の建物賃貸借の更新・解約（26条〜30条）と定期建物賃貸借（38条）、民法の期間の定めのない賃貸借の解約の申入れ（617条）・解約の権利の留保（618条）・期間の計算（140条〜143条）を入れています。</p>
+      <p>入っていないもの：借地（土地）・取壊し予定の建物（39条）・一時使用（40条）・借賃の増減（32条）は入っていません（<a href="#cover-box">全条文の地図</a>）。消費者契約法など、ほかの法律で特約が無効になる場合（借主の予告期間が長すぎる特約など）は入っていません。判例・学説・実務の運用は入れていません（借主の予告期間の特約の読みだけは公開の解説によります。下の「判定について」）。</p>
+      <p><b>判定について：</b></p>
+      <ul id="hantei-notes" style="margin:0;padding-left:1.2em">
+        <li id="note-seito">正当の事由（28条）はプログラムでは判定しません。入力で「ある／ない／わからない」を選びます。あるかどうかは、裁判所が28条の事情を考慮して判断します。「わからない」を選ぶと、結論は「正当の事由があれば」「正当の事由がなければ」の2つに分けて出します。</li>
+        <li id="note-nini">借主の予告期間の特約は、民法617条1項2号（3箇月）を任意規定と読み、特約どおりにします（公開の解説 <a href="https://www.mc-law.jp/fudousan/25443/">「民法６１７条１項 任意規定である →他の期間を合意することができる」</a>）。3か月より長い特約も特約どおりです。30条は借地借家法26条〜30条の規定に反する特約だけを無効にし、借主の申入れの期間はそこに定めがないので、30条では無効になりません。</li>
+        <li id="note-ryuho">期間の定めがある賃貸借で、貸主に期間内の解約の権利を残した特約（民法618条）が、30条でいう「この節の規定に反する特約」に当たるかは、条文に書かれていません。結論は「特約が効くなら」「特約が無効なら」の2つに分けて出します。</li>
+        <li id="note-kankei">欄はいつも全部出します。正当の事由の欄は、貸主が通知・申入れをしたときだけ判定に使います。やむを得ない事情の欄は、定期建物賃貸借で借主が解約の申入れをしたときだけ判定に使います（38条7項）。ほかの組では、この2つの欄は答えを変えません。</li>
+        <li id="note-mankyo">契約の満了日は、期間の定めがないときは空のままにします。期間の定めがないのに満了日が入っている組と、期間の定めがあるのに満了日が空の組は、「この組み合わせはありません」と出します。</li>
+        <li id="note-shiyo">終わったあとも借主が使い続け、貸主が遅滞なく異議を述べなかったときは、更新したものとみなされます（26条2項。解約の申入れで終わる場合も27条2項で同じ）。このアプリは満了・終了の後のことを入力に取っていません。</li>
+        <li id="note-kyujitsu">期間の末日が日曜日・休日に当たるとき、その日に取引をしない慣習がある場合に限り翌日に満了します（民法142条）。このアプリは休日を見ていません。</li>
+        <li id="note-ichiji">一時使用のための建物の賃貸借であることが明らかな場合は、借地借家法の第3章は適用されません（40条）。このアプリは一時使用でないものとして判定しています。</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="box" id="cover-box">
+    <summary>借地借家法のどこまでをルールにしたか（全条文の地図）</summary>
+    <p class="hint" style="margin-top:6px">借地借家法の本則の全条文を章ごとに1マスずつ並べました。<span class="cell u1"></span> はプログラムの中（ルール・注意書き）で使っている条、<span class="cell u0"></span> は使っていない条、<span class="cell u2"></span> は「削除」された条です。マスを押すと条の名前（使っている条は原文）が出ます。民法の条はこの地図に入れていません。</p>
+    <div id="cover"></div>
+  </details>
+
+  <details class="box" id="yaku-box">
+    <summary>アプリの約束事（法律にないもの）</summary>
+    <p class="hint" style="margin-top:6px">判定のためにこのアプリが決めたことで、条文そのものではありません。プログラムでは <code>yakusoku/</code> のファイルと、ルールの中の「約束」の行に書いています。論理の木では <span class="yk">アプリの約束事</span> の印が付きます。</p>
+    <ul class="hint" style="margin:8px 0 0;padding-left:1.2em">
+      <li>欄の選択肢。特約は「〈貸主／借主〉は N か月前の予告で解約できる」（N＝1・2・3・6）の形だけを扱う</li>
+      <li>通知・申入れは日の途中にされるものとして、初日を数えない（民法140条本文）。契約期間は開始日の午前零時から始まるものとして、開始日を1日目に数える（民法140条ただし書）</li>
+      <li>「満了の1年前から6月前までの間」は、通知日から6か月を経過する日が満了日以前で、12か月を経過する日が満了日以後になる通知日、と読む（さかのぼる数え方は民法に書かれていないため、前向きの数え方を使う）</li>
+      <li>期間の定めがある賃貸借は、26条1項で更新したものとみなされなければ、期間の満了で終わると読む</li>
+      <li>貸主の解約の申入れには、民法617条1項2号（3箇月）より借地借家法27条1項（6月）を先に当てはめる（1条：借地借家法は特別の定め）</li>
+      <li>期間の途中の解約の申入れで契約を終わらせる規定は、収録した条文の中では民法618条（留保）と38条7項だけとして扱う</li>
+      <li>正当の事由は判定しない。「わからない」なら結論も「正当の事由しだい」と出す</li>
+      <li>満了日と開始日・通知日の前後（満了日は開始日より後、通知日は開始日以後）が合わない組は「この組み合わせはありません」と出す</li>
+    </ul>
+  </details>
+
+  <details class="box" id="src-box">
+    <summary>プログラムの中身（Prologのソース全部）</summary>
+    <p class="hint" style="margin-top:6px">このページで動いているPrologのプログラムそのものです。ファイルを開くと全文が出ます。</p>
+    <div id="src"></div>
+  </details>
+
+  <details class="box" id="core-box">
+    <summary>仕組みを見る（上級者向け）</summary>
+    <p class="hint" style="margin-top:6px">まず契約の期間の扱い（定期／期間あり／29条1項で期間の定めがないとみなす／期間の定めがない）を決め、通知の種類 × 期間の扱い × 誰が で場合を分けます。場合ごとの節が、結論と「なぜそうなるか」の木を一緒に作ります。日付は民法140条・141条・143条のとおりに数えます。</p>
+    <pre id="core"></pre>
+    <p class="hint" style="margin-top:10px">Prologに直接聞く（最初の30件まで）：</p>
+    <textarea id="q" spellcheck="false">judge(ctx(貸主, あり, '2026-04-01', '2028-03-31', 定期でない, 期間満了で終える通知, '2027-09-30', なし, ある, ない), R).</textarea>
+    <button type="button" class="btn" id="run">実行</button>
+    <pre id="out"></pre>
+  </details>
+  </div>
+
+  <p class="foot techline"><span>借地借家法 第26条〜第30条・第38条／民法 第140条〜第143条・第617条・第618条／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot">e-Gov法令検索の借地借家法（平成三年法律第九十号）と民法（明治二十九年法律第八十九号）の原文から、建物の賃貸借の終わり方に当たる規定をルールにしたものです。法律の解釈・判例・行政の運用は含みません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 借地借家法Prolog（建物の賃貸借はいつ終わるか）の共通の型・日付・木の部品
+%
+% 文脈 ctx(誰が, 期間の定め, 開始日, 満了日, 定期の定め, 通知の種類, 通知日, 特約, 正当の事由, やむを得ない事情) のもとで
+%   ① その通知で建物の賃貸借が終わるか／更新したものとみなされるか、いつ終わるか（結論/3）
+%   ② 契約書の特約が効くか（特約の効力/3）
+% を判定する。どちらも、結論と一緒に「なぜそうなるか」の木を返す。
+%
+% 政治資金規正法Prolog（shikin-prolog）との違い：
+%   ・欄に日付がある（'2026-08-31' の形の原子）。日付は全部は並べられないので、画面の「？」探しはしない。
+%   ・違反かどうかではなく「いつ終わるか」なので、禁止（prohibited）＋ただし書（excepted）の形ではなく、
+%     場合分けの節を rules/ に条文ごとに書き、各節が結論と木を一緒に作る。
+%     節の頭の条件はたがいに重ならないように書く（どの ctx でも結論は1つ）。
+%
+% rules/*.pl が書くもの（借地借家法・民法の条文から来たものだけ）：
+%   結論(ctx(...), 結論, 木).          a_shuryo.pl
+%   特約の効力(ctx(...), 効力, 木).    b_tokuyaku.pl
+%   期間の扱い(ctx(...), 種類, 木).    a_shuryo.pl（定期／期間あり／期間なし（29条）／期間なし）
+%   期間を経過する日(通知日, 月数, 末日, 木).  c_kikan.pl（民法140条・141条・143条）
+% yakusoku/*.pl が書くもの（法律にないアプリの約束事）：
+%   選択肢(欄, 値, 説明).  特約の中身(特約, 当事者, 月数).  no_such(ctx(...), 理由, 根拠条のリスト).
+%
+% 結論の形（日付は '2027-03-31' の形の原子）：
+%   終わる(日)                     日 の終了をもって終わる
+%   更新とみなす(日)               日（満了日）に従前と同じ条件で更新したものとみなされ、以後は期間の定めがない（26条1項）
+%   終わらない                     この通知では終わらない
+%   対抗できない                   定期建物賃貸借の終了を借主に対抗できない（38条6項）
+%   遅れて対抗(満了日, 日)         満了日で終わるが、借主に対抗できるのは 日 の経過後（38条6項ただし書）
+%   正当の事由しだい(あれば, なければ)   28条。裁判所の判断次第
+%   特約しだい(効くなら, 無効なら)       貸主に期間内の解約の権利を残した特約が30条で無効になるか次第（30条でいう特約に当たるかは条文に書かれていない）
+%
+% 書き方のきまり：
+%   ・条番号は '26条1項' のような原子。借地借家法は番号だけ、民法は '民法617条1項2号' のように「民法」をつける
+%     （借地借家法30条と民法30条のように番号が重なるため）。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = end（終わる）| renew（更新とみなす）| stay（終わらない）| open（決まらない）
+%     | ok（成り立つ文）| info（ありえない組み合わせ）| and（子がすべて）| or（子のどれか）。
+%     規定を当てはめる行は (A, A→B) ⊢ B の形：「規定：…」の行（A→B）と、条件の行（A）を and で並べる。
+%   ・アプリの約束事の行は 条 を '@約束事' にする（画面で印がつく）。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+:- use_module(library(aggregate)).
+:- discontiguous 結論/3, 特約の効力/3, 期間の扱い/3, no_such/3, 選択肢/3, 特約の中身/3.
+:- multifile 結論/3, 特約の効力/3, 期間の扱い/3, no_such/3, 選択肢/3, 特約の中身/3.
+:- dynamic 結論/3, 特約の効力/3, 期間の扱い/3, no_such/3, 選択肢/3, 特約の中身/3.
+
+%% ---------- 欄 ----------
+ctx_kinds([誰が, 期間の定め, 開始日, 満了日, 定期の定め, 通知の種類, 通知日, 特約, 正当の事由, やむを得ない事情]).
+
+% 欄(C, 欄の名前, 値)
+欄(C, K, V) :- ctx_kinds(Ks), nth1(I, Ks, K), arg(I, C, V).
+
+% 日付の欄は選択肢ではなく、暦にある日なら何でもよい
+日付の欄(開始日).
+日付の欄(通知日).
+
+ctx(C) :-
+    ctx_kinds(Ks), length(Ks, N), functor(C, ctx, N),
+    forall(( nth1(I, Ks, K), \+ 日付の欄(K), K \== 満了日 ), ( arg(I, C, V), 選択肢(K, V, _) )),
+    欄(C, 開始日, S), 日付(S, _),
+    欄(C, 通知日, D), 日付(D, _),
+    欄(C, 満了日, E), ( E == なし -> true ; 日付(E, _) ).
+
+%% ---------- 日付（暦の計算。期間の数え方そのものは rules/c_kikan.pl） ----------
+% '2026-08-31' ⇔ date(2026, 8, 31)
+日付(A, date(Y, M, D)) :-
+    atom(A), atomic_list_concat([Ys, Ms, Ds], '-', A),
+    atom_number(Ys, Y), atom_number(Ms, M), atom_number(Ds, D),
+    integer(Y), integer(M), integer(D), M >= 1, M =< 12, D >= 1,
+    月の日数(Y, M, L), D =< L.
+
+日付の原子(date(Y, M, D), A) :-
+    二桁(M, MA), 二桁(D, DA), format(atom(A), '~d-~w-~w', [Y, MA, DA]).
+二桁(N, A) :- N < 10, !, format(atom(A), '0~d', [N]).
+二桁(N, A) :- format(atom(A), '~d', [N]).
+
+% 画面に出す形：'2026-08-31' → '2026年8月31日'
+日付の表示(A, S) :- 日付(A, date(Y, M, D)), !, format(atom(S), '~d年~d月~d日', [Y, M, D]).
+日付の表示(date(Y, M, D), S) :- !, format(atom(S), '~d年~d月~d日', [Y, M, D]).
+日付の表示(X, X).
+
+うるう年(Y) :- ( Y mod 400 =:= 0 -> true ; Y mod 100 =:= 0 -> fail ; Y mod 4 =:= 0 ).
+
+月の日数(Y, 2, 29) :- うるう年(Y), !.
+月の日数(_, 2, 28) :- !.
+月の日数(_, M, 30) :- memberchk(M, [4, 6, 9, 11]), !.
+月の日数(_, _, 31).
+
+翌日(date(Y, M, D), date(Y, M, D1)) :- 月の日数(Y, M, L), D < L, !, D1 is D + 1.
+翌日(date(Y, 12, 31), date(Y1, 1, 1)) :- !, Y1 is Y + 1.
+翌日(date(Y, M, _), date(Y, M1, 1)) :- M1 is M + 1.
+
+前日(date(Y, M, D), date(Y, M, D1)) :- D > 1, !, D1 is D - 1.
+前日(date(Y, 1, 1), date(Y1, 12, 31)) :- !, Y1 is Y - 1.
+前日(date(Y, M, 1), date(Y, M1, L)) :- M1 is M - 1, 月の日数(Y, M1, L).
+
+% N か月後の年と月
+月を足す(Y, M, N, Y2, M2) :- T is Y * 12 + (M - 1) + N, Y2 is T // 12, M2 is T mod 12 + 1.
+
+% 通し日数（大小を比べるためだけに使う）
+通日(date(Y, M, D), N) :-
+    ( M =< 2 -> Y1 is Y - 1, M1 is M + 12 ; Y1 = Y, M1 = M ),
+    N is 365 * Y1 + Y1 // 4 - Y1 // 100 + Y1 // 400 + (153 * (M1 - 3) + 2) // 5 + D.
+
+% 原子の日付どうしを比べる
+日が前(A, B)       :- 日付(A, X), 日付(B, Y), 通日(X, NX), 通日(Y, NY), NX < NY.
+日が同じか前(A, B) :- 日付(A, X), 日付(B, Y), 通日(X, NX), 通日(Y, NY), NX =< NY.
+
+%% ---------- 特約 ----------
+% 特約がこの通知に使われるか：特約の当事者が、通知をした人と同じで、通知が解約の申入れのとき
+留保した(C) :- 欄(C, 特約, P), 特約の中身(P, Who, _), 欄(C, 誰が, Who).
+
+%% ---------- 推論の入口 ----------
+act_ctx(C) :- ctx(C), \+ no_such(C, _, _).
+
+impossible(C, Why, Arts) :- no_such(C, Why, Arts), !.
+
+%% ---------- 木の部品 ----------
+% 子が2つ以上のときだけ「かつ」「または」の節をはさむ
+ex_and(_, [], []) :- !.
+ex_and(_, [X], [X]) :- !.
+ex_and(Title, Xs, [t(and, Title, '', Xs)]).
+ex_or(_, [], []) :- !.
+ex_or(_, [X], [X]) :- !.
+ex_or(Title, Xs, [t(or, Title, '', Xs)]).
+
+% 規定の行（A→B にあたる前提）
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+% 成り立つ文（入力の値など）
+文(X, t(ok, X, '', [])).
+% アプリの約束事の行
+約束(X, t(ok, X, '@約束事', [])).
+% 上の行 H（種類 K・条 Ar）を、子 Cs のすべてから導く
+導く(K, H, Ar, Cs, t(K, H, Ar, Cs1)) :- ex_and('次のすべてが成り立つ', Cs, Cs1).
+
+% 文の中に入れる日付・値の表示
+d(A, S) :- 日付の表示(A, S).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（法律にないもの）：欄の選択肢・特約の型・ありえない組み合わせ
+%
+% ここに書くのは、このアプリが判定のために決めた約束事。借地借家法・民法の条文そのものではない。
+%   ・欄の選択肢（どう区切るか）。日付の欄（開始日・満了日・通知日）は選択肢を持たない
+%   ・特約は「〈当事者〉は N か月前の予告で解約できる」の形だけを扱う（N = 1・2・3・6）
+%   ・ありえない組み合わせの除外（no_such/3）
+% 対象は建物の賃貸借だけ（土地の賃貸借・借地権は入れていない）。一時使用（40条）でないことを前提にする。
+
+%% ---------- 誰が終わらせようとしているか ----------
+選択肢(誰が, 貸主, '建物の賃貸人（大家・オーナー）').
+選択肢(誰が, 借主, '建物の賃借人（入居者）').
+
+%% ---------- 期間の定め ----------
+選択肢(期間の定め, あり, '「2026年4月1日から2027年3月31日まで」のように期間を決めた契約').
+選択肢(期間の定め, なし, '期間を決めていない契約').
+
+%% ---------- 定期建物賃貸借（38条） ----------
+選択肢(定期の定め, 定期でない, '普通の建物賃貸借（更新がある）').
+選択肢(定期の定め, '定期（書面で契約・事前に書面を交付して説明した）', '「更新がない」旨を書面（電磁的記録を含む）で定め、契約の前に、更新がなく期間満了で終わることを書いた書面を交付して説明した（38条1項〜4項）').
+選択肢(定期の定め, '定期（書面で契約・事前の書面での説明なし）', '書面で「更新がない」と定めたが、契約の前に書面を交付しての説明をしていない（38条5項）').
+選択肢(定期の定め, '定期（書面で契約していない）', '「更新がない」と口頭などで決めただけで、書面（電磁的記録を含む）で契約していない（38条1項・2項）').
+
+%% ---------- 通知の種類 ----------
+選択肢(通知の種類, 解約の申入れ, '期間の途中や、期間の定めがない契約で「この契約を終わらせる」と申し入れる').
+選択肢(通知の種類, 期間満了で終える通知, '期間の満了で終わらせる通知（普通の賃貸借なら26条1項の「更新をしない旨の通知」、定期建物賃貸借なら38条6項の「期間の満了により終了する旨の通知」）').
+
+%% ---------- 特約（契約書の解約予告の条項） ----------
+選択肢(特約, なし, '解約予告の特約はない').
+選択肢(特約, P, '契約書の解約予告の条項') :- 特約の中身(P, _, _).
+特約の中身('貸主は1か月前の予告で解約できる', 貸主, 1).
+特約の中身('貸主は2か月前の予告で解約できる', 貸主, 2).
+特約の中身('貸主は3か月前の予告で解約できる', 貸主, 3).
+特約の中身('貸主は6か月前の予告で解約できる', 貸主, 6).
+特約の中身('借主は1か月前の予告で解約できる', 借主, 1).
+特約の中身('借主は2か月前の予告で解約できる', 借主, 2).
+特約の中身('借主は3か月前の予告で解約できる', 借主, 3).
+特約の中身('借主は6か月前の予告で解約できる', 借主, 6).
+
+%% ---------- 正当の事由（28条）：プログラムでは判定しない ----------
+選択肢(正当の事由, ある, '裁判所が正当の事由があると認める見込み（貸主・借主が建物を必要とする事情、これまでの経過、利用状況、建物の現況、立退料の申出などを考慮する：28条）').
+選択肢(正当の事由, ない, '正当の事由があるとは認められない').
+選択肢(正当の事由, わからない, '正当の事由があるかは、裁判所が28条の事情を考慮して判断する。このアプリは判定しない').
+
+%% ---------- 38条7項の事情（定期建物賃貸借の借主の中途解約） ----------
+選択肢(やむを得ない事情, ない, '').
+選択肢(やむを得ない事情, ある, '居住用で床面積200平方メートル未満の建物で、転勤・療養・親族の介護その他のやむを得ない事情により、借主が建物を生活の本拠として使うことが難しくなった（38条7項）').
+
+%% ---------- ありえない組み合わせ ----------
+no_such(C, '期間の定めがある契約には満了日を入れる', []) :-
+    欄(C, 期間の定め, あり), 欄(C, 満了日, なし).
+no_such(C, '期間の定めがない契約には満了日がない', []) :-
+    欄(C, 期間の定め, なし), 欄(C, 満了日, E), E \== なし.
+no_such(C, '満了日は開始日より後の日にする', []) :-
+    欄(C, 期間の定め, あり), 欄(C, 開始日, S), 欄(C, 満了日, E), E \== なし, 日が同じか前(E, S).
+no_such(C, '通知日は契約の開始日以後の日にする', []) :-
+    欄(C, 開始日, S), 欄(C, 通知日, D), 日が前(D, S).
+no_such(C, '定期建物賃貸借は、期間の定めがある建物の賃貸借でしか定められない', ['38条1項']) :-
+    欄(C, 期間の定め, なし), 欄(C, 定期の定め, T), T \== 定期でない.
+no_such(C, '期間の定めがない契約には期間の満了がないので、「期間満了で終える通知」はない（解約の申入れを選ぶ）', []) :-
+    欄(C, 期間の定め, なし), 欄(C, 通知の種類, 期間満了で終える通知).
+</script>
+<script type="text/prolog" data-name="rules_a_shuryo.pl">% rules/a_shuryo.pl — その通知で建物の賃貸借が終わるか（借地借家法26条〜29条・38条、民法617条・618条）
+%
+%   結論(C, R, 木)：R は schema.pl の「結論の形」のどれか。
+%   まず 期間の扱い（定期／期間あり／期間なし29（29条1項でみなす）／期間なし）を決め、
+%   通知の種類 × 期間の扱い × 誰が で場合を分ける。場合の頭の条件はたがいに重ならない。
+
+%% ---------- 期間の扱い ----------
+期間の扱い(C, 期間なし, t(ok, '期間の定めがない建物の賃貸借', '', [])) :-
+    欄(C, 期間の定め, なし).
+期間の扱い(C, 定期, t(ok, '定期建物賃貸借（契約の更新がない）', '38条1項', Cs)) :-
+    欄(C, 期間の定め, あり), 欄(C, 定期の定め, '定期（書面で契約・事前に書面を交付して説明した）'),
+    規定('38条1項', '期間の定めがある建物の賃貸借をする場合、書面によって契約をするときに限り、30条にかかわらず、契約の更新がないこととする旨を定めることができる', R1),
+    文('期間の定めがあり、更新がない旨を書面（電磁的記録を含む：38条2項）で定めた', F1),
+    規定('38条3項', '貸主は、あらかじめ、更新がなく期間の満了で終了することを記載した書面を交付して説明しなければならない（電磁的方法も可：38条4項）', R3),
+    文('契約の前に、その書面を交付して説明した', F3),
+    規定('38条1項後段', 'この場合には、29条1項（1年未満は期間の定めがないとみなす）を適用しない', R1b),
+    ex_and('次のすべてが成り立つ', [R1, F1, R3, F3, R1b], Cs).
+期間の扱い(C, K, t(ok, H, Art, Cs)) :-
+    欄(C, 期間の定め, あり), 欄(C, 定期の定め, T), T \== '定期（書面で契約・事前に書面を交付して説明した）',
+    欄(C, 開始日, S), 欄(C, 満了日, E),
+    期間の長さ(S, E, Len, LN),
+    定期が効かない(T, VN),
+    ( Len == 以上 -> K = 期間あり, H = '期間の定めがある普通の建物賃貸借', Art = '', Cs0 = [LN | VN]
+    ; K = 期間なし29, H = '期間の定めがない建物の賃貸借とみなす', Art = '29条1項',
+      規定('29条1項', '期間を1年未満とする建物の賃貸借は、期間の定めがない建物の賃貸借とみなす', R29),
+      Cs0 = [R29, LN | VN] ),
+    ex_and('次のすべてが成り立つ', Cs0, Cs).
+
+% 定期の定めが効かない理由（定期でないなら空）
+定期が効かない(定期でない, []).
+定期が効かない('定期（書面で契約していない）', [t(ok, '更新がない旨の定めは効かない（普通の建物賃貸借になる）', '38条1項', Cs)]) :-
+    規定('38条1項', '更新がない旨を定められるのは、書面によって契約をするときに限る', R1),
+    文('書面（電磁的記録を含む）で契約していない', F1),
+    規定('30条', 'この節（26条〜30条）の規定に反する特約で借主に不利なものは、無効とする', R30),
+    文('更新がない旨の定めは、26条1項（通知がなければ更新したものとみなす）に反し、借主に不利', F2),
+    ex_and('次のすべてが成り立つ', [R1, F1, R30, F2], Cs).
+定期が効かない('定期（書面で契約・事前の書面での説明なし）', [t(ok, '更新がない旨の定めは無効（普通の建物賃貸借になる）', '38条5項', Cs)]) :-
+    規定('38条5項', '貸主が3項の説明（あらかじめ書面を交付して説明すること）をしなかったときは、更新がない旨の定めは無効とする', R5),
+    文('契約の前に書面を交付しての説明をしていない', F5),
+    ex_and('次のすべてが成り立つ', [R5, F5], Cs).
+
+%% ---------- 結論 ----------
+結論(C, R, T) :-
+    act_ctx(C),
+    欄(C, 通知の種類, N), 欄(C, 誰が, W),
+    期間の扱い(C, K, KN),
+    format(atom(WT), '~wをしたのは~w', [N, W]), 文(WT, WN),
+    場合(N, K, W, C, KN, WN, R, Cs0, Art),
+    種類(R, Kind), 結論の文(R, H),
+    導く(Kind, H, Art, Cs0, T).
+
+% ---- (1) 定期建物賃貸借で、期間満了で終える通知 ----
+場合(期間満了で終える通知, 定期, 借主, C, KN, WN, 終わる(E), [KN, WN, R1, F], '38条1項') :-
+    欄(C, 満了日, E),
+    規定('38条1項', '更新がない旨を定めた建物の賃貸借は、期間の満了で終わり、更新しない', R1),
+    d(E, SE),
+    format(atom(X), '満了日は ~w。38条6項の通知は貸主がするもので、借主の通知は条文に求められていない', [SE]), 文(X, F).
+場合(期間満了で終える通知, 定期, 貸主, C, KN, WN, R, Cs, Art) :-
+    欄(C, 開始日, S), 欄(C, 満了日, E), 欄(C, 通知日, A),
+    期間の長さ(S, E, Len, LN),
+    規定('38条6項', '期間が1年以上の定期建物賃貸借では、貸主は満了の1年前から6月前までの間（通知期間）に、期間の満了で終了する旨を借主に通知しなければ、その終了を借主に対抗できない', R6),
+    ( Len == 未満
+    ->  R = 終わる(E), Art = '38条1項',
+        文('期間が1年未満なので38条6項はかからず、通知がなくても期間の満了で終わる', F), Cs = [KN, WN, LN, R6, F]
+    ;   通知期間(A, E, '38条6項', Ans, PN),
+        (   Ans == 内 -> R = 終わる(E), Art = '38条6項', Cs = [KN, WN, LN, R6, PN]
+        ;   Ans == 遅い ->
+            期間を経過する日(A, 6, L6, TL), R = 遅れて対抗(E, L6), Art = '38条6項ただし書',
+            規定('38条6項ただし書', '通知期間の経過後に通知したときは、その通知の日から6月を経過した後は、終了を借主に対抗できる', R6b),
+            Cs = [KN, WN, LN, R6, PN, R6b, TL]
+        ;   R = 対抗できない, Art = '38条6項',
+            文('1年前より前の通知は、通知期間内の通知にも、ただし書の「通知期間の経過後」の通知にも当たらない', F),
+            Cs = [KN, WN, LN, R6, PN, F] ) ).
+
+% ---- (2) 期間の定めがある普通の建物賃貸借で、期間満了で終える通知（26条1項の更新をしない旨の通知） ----
+場合(期間満了で終える通知, 期間あり, W, C, KN, WN, R, Cs, Art) :-
+    欄(C, 満了日, E), 欄(C, 通知日, A),
+    通知期間(A, E, '26条1項', Ans, PN),
+    規定('26条1項', '期間の定めがある建物の賃貸借で、当事者が満了の1年前から6月前までの間に更新をしない旨の通知をしなかったときは、従前の契約と同一の条件で更新したものとみなす。ただし、その期間は定めがないものとする', R26),
+    (   Ans \== 内
+    ->  R = 更新とみなす(E), Art = '26条1項',
+        文('通知は「満了の1年前から6月前までの間」にされていないので、その間に通知をしなかったことになる', F),
+        Cs = [KN, WN, PN, R26, F]
+    ;   約束('期間の定めがある賃貸借は、26条1項で更新したものとみなされなければ、期間の満了で終わると読む', Y),
+        (   W == 借主 -> R = 終わる(E), Art = '26条1項', Cs = [KN, WN, PN, R26, Y]
+        ;   規定('28条', '貸主の26条1項の通知は、正当の事由があると認められる場合でなければ、することができない', R28),
+            欄(C, 正当の事由, J), 正当の事由の行(J, JN),
+            正当事由の分岐(J, 終わる(E), 更新とみなす(E), R), Art = '28条',
+            Cs = [KN, WN, PN, R26, R28, JN, Y] ) ).
+
+% ---- (3) 29条1項で期間の定めがないとみなされる賃貸借で、期間満了で終える通知 ----
+場合(期間満了で終える通知, 期間なし29, _, _, KN, WN, 終わらない, [KN, WN, R26, F], '29条1項') :-
+    規定('26条1項', '更新をしない旨の通知は、建物の賃貸借について期間の定めがある場合の規定', R26),
+    文('期間の定めがないとみなされるので、期間の満了で終わることはない。終わらせるには解約の申入れが要る（貸主は27条1項で6月、借主は民法617条1項2号で3箇月）', F).
+
+% ---- (4) 期間の定めがない（29条1項でみなされるものを含む）賃貸借で、解約の申入れ ----
+場合(解約の申入れ, K, 貸主, C, KN, WN, R, [KN, WN, R617 | Ts], '27条1項') :-
+    memberchk(K, [期間なし, 期間なし29]),
+    規定('民法617条1項', '期間を定めなかったときは、各当事者は、いつでも解約の申入れをすることができる', R617),
+    貸主の申入れ(C, R, Ts).
+場合(解約の申入れ, K, 借主, C, KN, WN, R, Cs, Art) :-
+    memberchk(K, [期間なし, 期間なし29]),
+    規定('民法617条1項', '期間を定めなかったときは、各当事者は、いつでも解約の申入れをすることができる', R617),
+    規定('民法617条1項2号', '建物の賃貸借は、解約の申入れの日から3箇月を経過することによって終了する', R2),
+    文('借主からの解約の申入れの期間は、借地借家法に定めがない（27条1項は貸主がした申入れの規定）', F),
+    借主の期間(C, R, Ts, Art),
+    append([KN, WN, R617, R2, F], Ts, Cs).
+
+% ---- (5) 期間の定めがある賃貸借（定期を含む）で、期間の途中の解約の申入れ ----
+場合(解約の申入れ, K, 借主, C, KN, WN, R, Cs, Art) :-
+    memberchk(K, [期間あり, 定期]),
+    欄(C, やむを得ない事情, X),
+    (   K == 定期, X == ある
+    ->  欄(C, 通知日, A), 期間を経過する日(A, 1, L1, T1), R = 終わる(L1), Art = '38条7項',
+        規定('38条7項', '居住用（床面積200平方メートル未満）の定期建物賃貸借で、転勤・療養・親族の介護その他のやむを得ない事情により借主が建物を生活の本拠として使うことが困難となったときは、借主は解約の申入れができ、申入れの日から1月を経過することによって終了する', R7),
+        文('やむを得ない事情：ある（入力）', F),
+        Cs = [KN, WN, R7, F, T1]
+    ;   留保した(C)
+    ->  留保の行(C, R618, F),
+        規定('民法617条1項2号', '（民法618条で準用）建物の賃貸借は、解約の申入れの日から3箇月を経過することによって終了する', R2),
+        借主の期間(C, R, Ts, _), Art = '民法618条',
+        append([KN, WN, R618, F, R2], Ts, Cs)
+    ;   R = 終わらない, Art = '民法618条', 解約できない理由(C, K, Fs), Cs = [KN, WN | Fs] ).
+場合(解約の申入れ, K, 貸主, C, KN, WN, R, Cs, Art) :-
+    memberchk(K, [期間あり, 定期]),
+    (   留保した(C)
+    ->  留保の行(C, R618, F),
+        規定('30条', 'この節（26条〜30条）の規定に反する特約で借主に不利なものは、無効とする', R30),
+        文('貸主に期間内の解約の権利を残す特約が、30条でいう「この節の規定に反する特約」に当たるかは、条文に書かれていない', FY),
+        貸主の申入れ(C, R2, Ts),
+        結論の文(R2, H2), format(atom(HY), '特約が効くなら：~w', [H2]),
+        導く(ok, HY, '27条1項', Ts, TY),
+        文('特約が無効なら：貸主に期間内の解約の権利はなく、期間の途中の解約の申入れでは契約は終わらない', TN),
+        R = 特約しだい(R2, 終わらない), Art = '30条',
+        Cs = [KN, WN, R618, F, R30, FY, TY, TN]
+    ;   R = 終わらない, Art = '民法618条', 解約できない理由(C, K, Fs), Cs = [KN, WN | Fs] ).
+
+%% ---------- 部品 ----------
+% 貸主の解約の申入れ：27条1項（6月）＋28条（正当の事由）
+貸主の申入れ(C, R, Ts) :-
+    欄(C, 通知日, A), 期間を経過する日(A, 6, L6, TL),
+    規定('1条', 'この法律は、建物の賃貸借の契約の更新、効力等に関し特別の定めをする', R1),
+    約束('特別の定めがあるところは、民法より借地借家法を先に当てはめる（貸主の申入れには、民法617条1項2号の3箇月ではなく27条1項の6月）', Y),
+    規定('27条1項', '貸主が解約の申入れをしたときは、建物の賃貸借は、解約の申入れの日から6月を経過することによって終了する', R27),
+    短い特約の行(C, SF),
+    規定('28条', '貸主の解約の申入れは、正当の事由があると認められる場合でなければ、することができない', R28),
+    欄(C, 正当の事由, J), 正当の事由の行(J, JN),
+    正当事由の分岐(J, 終わる(L6), 終わらない, R),
+    append([R1, Y, R27 | SF], [TL, R28, JN], Ts).
+
+% 貸主の特約の予告期間が6月より短いときの1行（30条で無効なので6月で数える）
+短い特約の行(C, [F]) :-
+    欄(C, 特約, P), 特約の中身(P, 貸主, M), M < 6, !,
+    format(atom(X), '特約の予告期間（~dか月）は27条1項の6月より短く借主に不利なので、30条で無効。6月で数える', [M]),
+    F = t(ok, X, '30条', []).
+短い特約の行(_, []).
+
+% 借主の申入れの期間：民法617条1項2号の3箇月。借主の特約があれば特約の予告期間による
+%   617条1項2号は任意規定と読む（公開の解説 https://www.mc-law.jp/fudousan/25443/「民法６１７条１項 任意規定である →他の期間を合意することができる」。
+%   3か月より長い特約も同じ。about の「判定について」note-nini に1行。2026-11-21 LLMレビュー 例5）
+借主の期間(C, R, Ts, '民法617条1項2号') :-
+    欄(C, 通知日, A),
+    (   留保した(C), 欄(C, 特約, P), 特約の中身(P, 借主, M), M =\= 3
+    ->  期間を経過する日(A, M, LM, TM), R = 終わる(LM),
+        任意規定の行(M, F), Ts = [F, TM]
+    ;   期間を経過する日(A, 3, L3, T3), R = 終わる(L3), Ts = [T3] ).
+
+任意規定の行(M, t(ok, X, '民法617条1項2号', [])) :-
+    format(atom(X), '民法617条1項2号の3箇月は任意規定なので、特約の予告期間（~dか月）による（解説の読み）', [M]).
+
+留保の行(C, R618, F) :-
+    規定('民法618条', '期間を定めた場合でも、当事者の一方又は双方がその期間内に解約をする権利を留保したときは、民法617条を準用する', R618),
+    欄(C, 特約, P), 欄(C, 誰が, W),
+    format(atom(X), '特約「~w」は、~wが期間内に解約する権利を留保したもの', [P, W]), 文(X, F).
+
+解約できない理由(C, K, Fs) :-
+    規定('民法617条1項', '期間を定めなかったときは、各当事者は、いつでも解約の申入れをすることができる', R617),
+    規定('民法618条', '期間を定めた場合でも、その期間内に解約をする権利を留保したときは、民法617条を準用する', R618),
+    欄(C, 誰が, W),
+    format(atom(X), '期間の定めがあり、~wが期間内に解約する権利を留保した特約はない', [W]), 文(X, F),
+    (   K == 定期, W == 借主
+    ->  規定('38条7項', '居住用（200平方メートル未満）の定期建物賃貸借では、やむを得ない事情があれば借主は解約の申入れができる', R7),
+        文('やむを得ない事情：ない（入力）', F7), Ex = [R7, F7]
+    ;   Ex = [] ),
+    約束('このアプリが収録した条文の中に、ほかに期間の途中の解約の申入れで契約を終わらせる規定はない（期間の満了まで続く）', Y),
+    append([R617, R618, F | Ex], [Y], Fs).
+
+正当の事由の行(ある, t(ok, '正当の事由：ある（入力）', '', [])).
+正当の事由の行(ない, t(ok, '正当の事由：ない（入力）。正当の事由がなければ、貸主はこの通知・申入れをすることができない', '28条', [])).
+正当の事由の行(わからない, t(ok, '正当の事由：わからない（入力）。あるかどうかは、裁判所が28条の事情を考慮して判断する', '@約束事', [])).
+
+正当事由の分岐(ある, Y, _, Y).
+正当事由の分岐(ない, _, N, N).
+正当事由の分岐(わからない, Y, N, 正当の事由しだい(Y, N)).
+
+%% ---------- 結論の種類と文 ----------
+種類(終わる(_), end).
+種類(遅れて対抗(_, _), end).
+種類(更新とみなす(_), renew).
+種類(終わらない, stay).
+種類(対抗できない, stay).
+種類(正当の事由しだい(_, _), open).
+種類(特約しだい(_, _), open).
+
+結論の文(終わる(D), S) :- d(D, SD), format(atom(S), '~w の終了をもって契約は終わる', [SD]).
+結論の文(遅れて対抗(E, D), S) :- d(E, SE), d(D, SD), format(atom(S), '満了日 ~w を過ぎても、~w が終わるまでは、終了を借主に対抗できない（~w の終了後は対抗できる）', [SE, SD, SD]).
+結論の文(更新とみなす(D), S) :- d(D, SD), format(atom(S), '~w の満了時に、従前と同じ条件で更新したものとみなされる（以後は期間の定めがない）', [SD]).
+結論の文(終わらない, 'この通知では契約は終わらない').
+結論の文(対抗できない, '期間の満了による終了を、借主に対抗できない（通知期間内か、その経過後にあらためて通知が要る）').
+結論の文(正当の事由しだい(Y, N), S) :- 結論の文(Y, SY), 結論の文(N, SN),
+    format(atom(S), '正当の事由しだい：あれば「~w」、なければ「~w」', [SY, SN]).   % 「裁判所の判断次第」は about の「判定について」へ（REVIEW_RULES A5。2026-11-21）
+結論の文(特約しだい(Y, N), S) :- 結論の文(Y, SY), 結論の文(N, SN),
+    format(atom(S), '特約しだい：効くなら「~w」、無効なら「~w」', [SY, SN]).   % 30条で無効になるかは木の中と about に（REVIEW_RULES A1。2026-11-21）
+</script>
+<script type="text/prolog" data-name="rules_b_tokuyaku.pl">% rules/b_tokuyaku.pl — 契約書の解約予告の特約が効くか（30条、27条1項、民法617条・618条）
+%
+%   特約の効力(C, T, 木)：T = なし | 効く | 無効 | 決まらない（決まらないは、期間あり・定期で貸主が期間内の解約を留保した6か月の特約だけ）
+%   特約は「〈当事者〉は N か月前の予告で解約できる」の形だけ（yakusoku/kihon.pl）。
+%   効力は、誰が通知したかに関係なく示す（この通知で使う特約かどうかは、木の1行目に書く）。
+
+特約の効力(C, なし, t(fine, '解約予告の特約はない', '', [])) :-
+    act_ctx(C), 欄(C, 特約, なし).
+特約の効力(C, T, Tree) :-
+    act_ctx(C), 欄(C, 特約, P), 特約の中身(P, Who, M),
+    期間の扱い(C, K, _),
+    使うかの行(C, P, UN),
+    特約の判定(Who, M, K, T, H, Art, Cs0),
+    特約の種類(T, Kind),
+    導く(Kind, H, Art, [UN | Cs0], Tree).
+
+特約の種類(効く, fine).
+特約の種類(無効, ng).
+特約の種類(決まらない, open).
+
+使うかの行(C, P, F) :-
+    欄(C, 誰が, W), 欄(C, 通知の種類, N),
+    (   N == 解約の申入れ, 特約の中身(P, W, _)
+    ->  format(atom(X), '特約「~w」は、今回の~wの解約の申入れに使う特約', [P, W])
+    ;   format(atom(X), '特約「~w」は、今回の通知（~wの~w）には使わない。効力だけを示す', [P, W, N]) ),
+    文(X, F).
+
+% ---- 貸主の特約 ----
+特約の判定(貸主, M, K, 無効, H, '30条', Cs) :-
+    M < 6,
+    format(atom(H), '予告期間（~dか月）の部分は無効（貸主の解約の申入れは6月を経過して終了する）', [M]),
+    規定('27条1項', '貸主が解約の申入れをしたときは、建物の賃貸借は、解約の申入れの日から6月を経過することによって終了する', R27),
+    format(atom(X), '~dか月は27条1項の6月より短く、借主に不利', [M]), 文(X, F),
+    規定('30条', 'この節（26条〜30条）の規定に反する特約で借主に不利なものは、無効とする', R30),
+    (   memberchk(K, [期間あり, 定期])
+    ->  文('期間の途中に貸主が解約できるとした部分まで無効になるかは、条文だけでは決まらない', F2), Ex = [F2]
+    ;   Ex = [] ),
+    append([R27, F, R30], Ex, Cs).
+特約の判定(貸主, 6, K, 効く, '効く（予告期間の6か月は27条1項の6月と同じ。特約がなくても同じ結論）', '27条1項', [R27, F, R28, F28]) :-
+    memberchk(K, [期間なし, 期間なし29]),
+    規定('27条1項', '貸主が解約の申入れをしたときは、建物の賃貸借は、解約の申入れの日から6月を経過することによって終了する', R27),
+    文('6か月は27条1項の6月と同じで、この節の規定に反しない', F),
+    規定('28条', '貸主の解約の申入れは、正当の事由があると認められる場合でなければ、することができない', R28),
+    t(ok, '特約があっても、28条の正当の事由は要る（28条に反して借主に不利な特約は30条で無効）', '30条', []) = F28.
+特約の判定(貸主, 6, K, 決まらない, '期間の途中に貸主が解約できるとした特約が効くかは、条文だけでは決まらない', '30条', [R618, R30, F]) :-
+    memberchk(K, [期間あり, 定期]),
+    規定('民法618条', '期間を定めた場合でも、当事者の一方又は双方がその期間内に解約をする権利を留保したときは、民法617条を準用する', R618),
+    規定('30条', 'この節（26条〜30条）の規定に反する特約で借主に不利なものは、無効とする', R30),
+    文('貸主に期間内の解約の権利を残す特約が、30条でいう「この節の規定に反する特約」に当たるかは、条文に書かれていない', F).
+
+% ---- 借主の特約 ----
+特約の判定(借主, M, K, T, H, Art, Cs) :-
+    規定('30条', 'この節（26条〜30条）の規定に反する特約で借主に不利なものは、無効とする', R30),
+    文('借主からの解約の申入れの期間は、この節（26条〜30条）に定めがない（27条1項は貸主の申入れ）。だから30条ではこの特約は無効にならない', F30),
+    (   memberchk(K, [期間あり, 定期])
+    ->  規定('民法618条', '期間を定めた場合でも、当事者の一方又は双方がその期間内に解約をする権利を留保したときは、民法617条を準用する', R618),
+        文('この特約は、借主が期間内に解約する権利を留保したもの。期間の途中でも借主は解約の申入れができる', F618),
+        Ex = [R618, F618]
+    ;   Ex = [] ),
+    規定('民法617条1項2号', '建物の賃貸借は、解約の申入れの日から3箇月を経過することによって終了する', R617),
+    T = 効く, Art = '民法617条1項2号',
+    (   M =:= 3
+    ->  H = '効く（予告期間の3か月は民法617条1項2号の3箇月と同じ）', Last = []
+    ;   format(atom(H), '効く（予告期間の~dか月による）', [M]),
+        % 617条1項2号は任意規定と読む（a_shuryo.pl の 借主の期間 と同じ出典。2026-11-21 LLMレビュー 例5）
+        format(atom(X), '民法617条1項2号の3箇月は任意規定なので、特約で別の期間（~dか月）を定められる（解説の読み）', [M]),
+        Last = [t(ok, X, '民法617条1項2号', [])] ),
+    append([R30, F30 | Ex], [R617 | Last], Cs).
+</script>
+<script type="text/prolog" data-name="rules_c_kikan.pl">% rules/c_kikan.pl — 期間の計算（民法138条〜143条）
+%   「解約の申入れの日から六月を経過する」（27条）、「三箇月」（民法617条1項2号）、「一年前から六月前まで」（26条1項・38条6項）、
+%   「期間を一年未満とする」（29条1項）の日付を、民法の期間の計算どおりに出す。
+%   ・140条：初日は算入しない（ただし午前零時から始まるときは算入する）
+%   ・141条：末日の終了をもって満了する
+%   ・143条：月・年は暦に従う。最後の月の起算日に応当する日の前日に満了。応当する日がなければその月の末日
+%   ・142条（末日が休日）は入れていない：「その日に取引をしない慣習がある場合に限り」は条文だけでは決まらず、祝日の表も持たないため
+
+% 起算日から N か月の期間の末日（143条2項。本文か、ただし書か）
+期間の末日(date(Y, M, D), N, E, Which) :-
+    月を足す(Y, M, N, Y2, M2), 月の日数(Y2, M2, L),
+    ( D =< L -> 前日(date(Y2, M2, D), E), Which = 本文
+    ; E = date(Y2, M2, L), Which = ただし書 ).
+
+% 通知日（原子）から N か月を経過する日（＝期間の末日。その日の終了で経過する）と、その木
+期間を経過する日(A, N, EA, t(ok, H, '民法143条2項', Cs)) :-
+    日付(A, Dt), 翌日(Dt, K), 期間の末日(K, N, E, Which), 日付の原子(E, EA),
+    d(A, SA), 日付の表示(K, SK), 日付の表示(E, SE),
+    format(atom(H), '~w から ~d か月を経過するのは ~w の終了時', [SA, N, SE]),
+    約束('通知・申入れは日の途中にされるものとして数える（午前零時から始まる期間ではない）', Y0),
+    規定('民法140条', '日・週・月・年で期間を定めたときは、期間の初日は算入しない', R140),
+    format(atom(T1), '初日（~w）は数えず、翌日の ~w から数える', [SA, SK]), 文(T1, F1),
+    規定('民法143条1項', '週・月・年で期間を定めたときは、暦に従って計算する', R143),
+    応当の行(K, N, E, Which, F2),
+    規定('民法141条', '期間は、その末日の終了をもって満了する', R141),
+    Cs0 = [Y0, R140, F1, R143 | F2], append(Cs0, [R141], Cs1),
+    ex_and('次のすべてが成り立つ', Cs1, Cs).
+
+応当の行(K, N, E, 本文, [R, F]) :-
+    規定('民法143条2項', '月の初めから起算しないときは、最後の月の起算日に応当する日の前日に満了する', R),
+    K = date(Y, M, D), 月を足す(Y, M, N, Y2, M2), 日付の表示(date(Y2, M2, D), SO), 日付の表示(E, SE), 日付の表示(K, SK),
+    format(atom(T), '~w の ~d か月後の応当日は ~w。その前日は ~w（月の初めから数えるときも、暦に従えば同じ日になる）', [SK, N, SO, SE]),
+    文(T, F).
+応当の行(K, N, E, ただし書, [R, F]) :-
+    規定('民法143条2項ただし書', '最後の月に応当する日がないときは、その月の末日に満了する', R),
+    K = date(Y, M, D), 月を足す(Y, M, N, Y2, M2), 日付の表示(K, SK), 日付の表示(E, SE),
+    format(atom(T), '~w の ~d か月後の月（~d年~d月）に ~d 日はない。その月の末日は ~w', [SK, N, Y2, M2, D, SE]),
+    文(T, F).
+
+%% ---------- 契約期間の長さ（29条1項「一年未満」） ----------
+% 開始日 S から満了日 E までが1年以上か。Ans = 以上 | 未満
+期間の長さ(S, E, Ans, t(ok, H, '29条1項', Cs)) :-
+    日付(S, KS), 期間の末日(KS, 12, E1, _), 日付の原子(E1, E1A),
+    ( 日が同じか前(E1A, E) -> Ans = 以上, W = '1年以上', W2 = 'それと同じかそれより後' ; Ans = 未満, W = '1年未満', W2 = 'それより前' ),
+    d(S, SS), d(E, SE), d(E1A, S1),
+    format(atom(H), '契約の期間（~w 〜 ~w）は ~w', [SS, SE, W]),
+    約束('契約は開始日の午前零時から始まるものとして、開始日を1日目に数える', Y0),
+    規定('民法140条ただし書', '期間が午前零時から始まるときは、初日を算入する', R140),
+    規定('民法143条2項', '最後の年の起算日に応当する日の前日に満了する', R143),
+    format(atom(T), '~w から数えた1年は ~w で満了する。満了日 ~w は~w', [SS, S1, SE, W2]),
+    文(T, F),
+    ex_and('次のすべてが成り立つ', [Y0, R140, R143, F], Cs).
+
+%% ---------- 「満了の一年前から六月前までの間」（26条1項・38条6項） ----------
+% 通知日 A・満了日 E。Ans = 内 | 早い | 遅い
+通知期間(A, E, Art, Ans, t(ok, H, Art, Cs)) :-
+    期間を経過する日(A, 6, L6, T6), 期間を経過する日(A, 12, L12, T12),
+    ( 日が前(E, L6) -> Ans = 遅い, Ts = [T6], W = '6月前を過ぎている（遅い）'
+    ; 日が前(L12, E) -> Ans = 早い, Ts = [T12], W = '1年前より前（早い）'
+    ; Ans = 内, Ts = [T6, T12], W = '満了の1年前から6月前までの間に入る' ),
+    d(A, SA), d(E, SE), format(atom(H), '通知日 ~w は、満了日 ~w の~w', [SA, SE, W]),
+    約束('「満了の1年前から6月前までの間」は、通知日から6か月を経過する日が満了日以前で、12か月を経過する日が満了日以後になる通知日と読む（さかのぼる数え方は民法に書かれていないので、前向きの数え方を使う）', Y0),
+    ( Ans == 遅い -> d(L6, S6), format(atom(TX), '6か月を経過する日 ~w は満了日 ~w より後', [S6, SE])
+    ; Ans == 早い -> d(L12, S12), format(atom(TX), '12か月を経過する日 ~w は満了日 ~w より前', [S12, SE])
+    ; d(L6, S6), d(L12, S12), format(atom(TX), '6か月を経過する日 ~w は満了日 ~w 以前、12か月を経過する日 ~w は満了日以後', [S6, SE, S12]) ),
+    文(TX, FX),
+    append([Y0 | Ts], [FX], Cs1),
+    ex_and('次のすべてが成り立つ', Cs1, Cs).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   政治資金規正法Prolog（shikin-prolog/web.pl）と同じく、木を n(深さ, 種類, 文, 条) の行に平らにして返す。
+%   違うところ：木は rules/ の節が結論と一緒に作るので、ここでは平らにするだけ（clause を読んで木を組み立てない）。
+
+% 欄の選択肢：値-説明 のリスト（書いた順）
+choice_list(K, L) :- findall(X-D, 選択肢(K, X, D), L).
+
+% 判定の1行（段1：通知の結論）。Kind = end | renew | stay | open、Head = 結論の文、Art = 主な根拠条
+kekka_row(C, Kind, Head, Art) :- 結論(C, _, t(Kind, Head, Art, _)), !.
+
+% 段2：特約の効力。Kind = fine | ng | open
+tokuyaku_row(C, Kind, Head) :- 特約の効力(C, _, t(Kind, Head, _, _)), !.
+
+% 結論の項そのもの（「Prologに直接聞く」とテスト用）
+judge(C, R) :- 結論(C, R, _).
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする）----
+% 判定だけを「〜ます（条）」で短く書く。入力の言い直し・断り書き・指示語（この・その）を入れない（REVIEW_RULES A1・A2・A6・A7。2026-11-21）。
+% 木の一番上の行（結論の文/2）は変えない。箱だけここで組み直す。特約が「なし」でなければ、特約の答えも1つ足す
+heads(C, L) :-
+    結論(C, R, t(_, _, Art, _)), !,
+    欄(C, 通知の種類, N),
+    箱の文(R, N, Art, L1),
+    (   欄(C, 特約, P), P \== なし, 特約の効力(C, T, t(_, _, TA, _))
+    ->  特約の箱(T, P, TA, L2)
+    ;   L2 = [] ),
+    append(L1, L2, L).
+
+箱の文(終わる(D), _, A, [S]) :- d(D, SD), format(atom(S), '契約は~wの終了をもって終わります（~w）', [SD, A]).
+箱の文(遅れて対抗(_, D), _, A, [S]) :- d(D, SD), format(atom(S), '終了を借主に対抗できるのは、~wの終了後です（~w）', [SD, A]).
+箱の文(更新とみなす(D), _, A, [S]) :- d(D, SD), format(atom(S), '契約は~wの満了時に、従前と同じ条件で更新したものとみなされます（~w）', [SD, A]).
+箱の文(終わらない, N, A, [S]) :- format(atom(S), '~wでは契約は終わりません（~w）', [N, A]).
+箱の文(対抗できない, _, A, [S]) :- format(atom(S), '期間の満了による終了を、借主に対抗できません（~w）', [A]).
+% 正当の事由が「わからない」：あれば・なければの2つ。なければの方は28条（正当の事由がなければ通知・申入れができない）。
+% なければ更新とみなす組は、更新とみなすのが26条1項なので「26条1項・28条」（2026-11-21 LLMレビュー 例2）
+箱の文(正当の事由しだい(Y, No), N, A, [SY, SN]) :-
+    ( No = 更新とみなす(_) -> AN = '26条1項・28条' ; AN = '28条' ),
+    箱の文(Y, N, A, [Y1]), 箱の文(No, N, AN, [N1]),
+    format(atom(SY), '正当の事由があれば、~w', [Y1]),
+    format(atom(SN), '正当の事由がなければ、~w', [N1]).
+% 貸主に期間内の解約の権利を残した特約：効くなら27条1項、無効なら期間の途中の申入れでは終わらない（30条）。
+% 30条で無効になるかが条文に書かれていないことは、木の中と about に置く（REVIEW_RULES A1。2026-11-21 LLMレビュー）
+箱の文(特約しだい(Y, No), N, _, L) :-
+    箱の文(Y, N, '27条1項', L0),
+    findall(S, ( member(X, L0), format(atom(S), '特約が効くなら、~w', [X]) ), LY),
+    箱の文(No, N, '30条', [N1]), format(atom(SN), '特約が無効なら、~w', [N1]),
+    append(LY, [SN], L).
+
+特約の箱(効く, P, A, [S]) :- format(atom(S), '特約「~w」は効きます（~w）', [P, A]).
+特約の箱(無効, P, A, [S]) :- 特約の中身(P, _, M), format(atom(S), '特約「~w」のうち、予告期間（~dか月）の部分は無効です（~w）', [P, M, A]).
+% 決まらない（貸主の期間内の解約の6か月特約）は、結論の箱の「特約が効くなら／無効なら」が受け持つので足さない（A1）
+特約の箱(決まらない, _, _, []).
+
+% 根拠の木（段1）
+explain(C, Lines) :-
+    (   impossible(C, W, Arts)
+    ->  ( Arts = [Ar|_] -> true ; Ar = '' ),
+        Tree = t(info, 'この組み合わせはありません', '@約束事', [t(ok, W, Ar, [])])
+    ;   結論(C, _, Tree) ), !,
+    ex_flat(Tree, 0, Lines).
+
+% 根拠の木（段2）
+tokuyaku_explain(C, Lines) :- 特約の効力(C, _, Tree), !, ex_flat(Tree, 0, Lines).
+
+% 木 t(種類, 文, 条, 子) を、深さつきの行に平らにする
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :- ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+
+% 画面の結論の下に出す注意書き（入力に取っていないこと）
+notes(C, L) :- findall(X, note(C, X), L).
+
+note(C, '終わったあとも借主が使い続け、貸主が遅滞なく異議を述べなかったときは、更新したものとみなされる（26条2項。解約の申入れで終わる場合も27条2項で同じ）。このアプリは満了・終了の後のことを入力に取っていない。') :-
+    結論(C, R, _), 終わり方(R), 期間の扱い(C, K, _), K \== 定期.
+note(_, '期間の末日が日曜日・休日に当たるとき、その日に取引をしない慣習がある場合に限り翌日に満了する（民法142条）。このアプリは休日を見ていない。').
+note(_, '一時使用のための建物の賃貸借であることが明らかな場合は、借地借家法の第3章は適用されない（40条）。このアプリは一時使用でないものとして判定している。').
+
+終わり方(終わる(_)).
+終わり方(正当の事由しだい(_, _)).
+</script>
+<script type="application/json" id="law">{"1":{"t":"第一条","c":"（趣旨）","p":[{"n":"1","s":"この法律は、建物の所有を目的とする地上権及び土地の賃借権の存続期間、効力等並びに建物の賃貸借の契約の更新、効力等に関し特別の定めをするとともに、借地条件の変更等の裁判手続に関し必要な事項を定めるものとする。","i":[]}]},"26":{"t":"第二十六条","c":"（建物賃貸借契約の更新等）","p":[{"n":"1","s":"建物の賃貸借について期間の定めがある場合において、当事者が期間の満了の一年前から六月前までの間に相手方に対して更新をしない旨の通知又は条件を変更しなければ更新をしない旨の通知をしなかったときは、従前の契約と同一の条件で契約を更新したものとみなす。ただし、その期間は、定めがないものとする。","i":[]},{"n":"2","s":"前項の通知をした場合であっても、建物の賃貸借の期間が満了した後建物の賃借人が使用を継続する場合において、建物の賃貸人が遅滞なく異議を述べなかったときも、同項と同様とする。","i":[]},{"n":"3","s":"建物の転貸借がされている場合においては、建物の転借人がする建物の使用の継続を建物の賃借人がする建物の使用の継続とみなして、建物の賃借人と賃貸人との間について前項の規定を適用する。","i":[]}]},"27":{"t":"第二十七条","c":"（解約による建物賃貸借の終了）","p":[{"n":"1","s":"建物の賃貸人が賃貸借の解約の申入れをした場合においては、建物の賃貸借は、解約の申入れの日から六月を経過することによって終了する。","i":[]},{"n":"2","s":"前条第二項及び第三項の規定は、建物の賃貸借が解約の申入れによって終了した場合に準用する。","i":[]}]},"28":{"t":"第二十八条","c":"（建物賃貸借契約の更新拒絶等の要件）","p":[{"n":"1","s":"建物の賃貸人による第二十六条第一項の通知又は建物の賃貸借の解約の申入れは、建物の賃貸人及び賃借人（転借人を含む。以下この条において同じ。）が建物の使用を必要とする事情のほか、建物の賃貸借に関する従前の経過、建物の利用状況及び建物の現況並びに建物の賃貸人が建物の明渡しの条件として又は建物の明渡しと引換えに建物の賃借人に対して財産上の給付をする旨の申出をした場合におけるその申出を考慮して、正当の事由があると認められる場合でなければ、することができない。","i":[]}]},"29":{"t":"第二十九条","c":"（建物賃貸借の期間）","p":[{"n":"1","s":"期間を一年未満とする建物の賃貸借は、期間の定めがない建物の賃貸借とみなす。","i":[]},{"n":"2","s":"民法（明治二十九年法律第八十九号）第六百四条の規定は、建物の賃貸借については、適用しない。","i":[]}]},"30":{"t":"第三十条","c":"（強行規定）","p":[{"n":"1","s":"この節の規定に反する特約で建物の賃借人に不利なものは、無効とする。","i":[]}]},"38":{"t":"第三十八条","c":"（定期建物賃貸借）","p":[{"n":"1","s":"期間の定めがある建物の賃貸借をする場合においては、公正証書による等書面によって契約をするときに限り、第三十条の規定にかかわらず、契約の更新がないこととする旨を定めることができる。この場合には、第二十九条第一項の規定を適用しない。","i":[]},{"n":"2","s":"前項の規定による建物の賃貸借の契約がその内容を記録した電磁的記録によってされたときは、その契約は、書面によってされたものとみなして、同項の規定を適用する。","i":[]},{"n":"3","s":"第一項の規定による建物の賃貸借をしようとするときは、建物の賃貸人は、あらかじめ、建物の賃借人に対し、同項の規定による建物の賃貸借は契約の更新がなく、期間の満了により当該建物の賃貸借は終了することについて、その旨を記載した書面を交付して説明しなければならない。","i":[]},{"n":"4","s":"建物の賃貸人は、前項の規定による書面の交付に代えて、政令で定めるところにより、建物の賃借人の承諾を得て、当該書面に記載すべき事項を電磁的方法（電子情報処理組織を使用する方法その他の情報通信の技術を利用する方法であって法務省令で定めるものをいう。）により提供することができる。この場合において、当該建物の賃貸人は、当該書面を交付したものとみなす。","i":[]},{"n":"5","s":"建物の賃貸人が第三項の規定による説明をしなかったときは、契約の更新がないこととする旨の定めは、無効とする。","i":[]},{"n":"6","s":"第一項の規定による建物の賃貸借において、期間が一年以上である場合には、建物の賃貸人は、期間の満了の一年前から六月前までの間（以下この項において「通知期間」という。）に建物の賃借人に対し期間の満了により建物の賃貸借が終了する旨の通知をしなければ、その終了を建物の賃借人に対抗することができない。ただし、建物の賃貸人が通知期間の経過後建物の賃借人に対しその旨の通知をした場合においては、その通知の日から六月を経過した後は、この限りでない。","i":[]},{"n":"7","s":"第一項の規定による居住の用に供する建物の賃貸借（床面積（建物の一部分を賃貸借の目的とする場合にあっては、当該一部分の床面積）が二百平方メートル未満の建物に係るものに限る。）において、転勤、療養、親族の介護その他のやむを得ない事情により、建物の賃借人が建物を自己の生活の本拠として使用することが困難となったときは、建物の賃借人は、建物の賃貸借の解約の申入れをすることができる。この場合においては、建物の賃貸借は、解約の申入れの日から一月を経過することによって終了する。","i":[]},{"n":"8","s":"前二項の規定に反する特約で建物の賃借人に不利なものは、無効とする。","i":[]},{"n":"9","s":"第三十二条の規定は、第一項の規定による建物の賃貸借において、借賃の改定に係る特約がある場合には、適用しない。","i":[]}]},"40":{"t":"第四十条","c":"（一時使用目的の建物の賃貸借）","p":[{"n":"1","s":"この章の規定は、一時使用のために建物の賃貸借をしたことが明らかな場合には、適用しない。","i":[]}]},"m140":{"t":"民法第百四十条","c":"","p":[{"n":"1","s":"日、週、月又は年によって期間を定めたときは、期間の初日は、算入しない。ただし、その期間が午前零時から始まるときは、この限りでない。","i":[]}]},"m141":{"t":"民法第百四十一条","c":"（期間の満了）","p":[{"n":"1","s":"前条の場合には、期間は、その末日の終了をもって満了する。","i":[]}]},"m142":{"t":"民法第百四十二条","c":"","p":[{"n":"1","s":"期間の末日が日曜日、国民の祝日に関する法律（昭和二十三年法律第百七十八号）に規定する休日その他の休日に当たるときは、その日に取引をしない慣習がある場合に限り、期間は、その翌日に満了する。","i":[]}]},"m143":{"t":"民法第百四十三条","c":"（暦による期間の計算）","p":[{"n":"1","s":"週、月又は年によって期間を定めたときは、その期間は、暦に従って計算する。","i":[]},{"n":"2","s":"週、月又は年の初めから期間を起算しないときは、その期間は、最後の週、月又は年においてその起算日に応当する日の前日に満了する。ただし、月又は年によって期間を定めた場合において、最後の月に応当する日がないときは、その月の末日に満了する。","i":[]}]},"m617":{"t":"民法第六百十七条","c":"（期間の定めのない賃貸借の解約の申入れ）","p":[{"n":"1","s":"当事者が賃貸借の期間を定めなかったときは、各当事者は、いつでも解約の申入れをすることができる。この場合においては、次の各号に掲げる賃貸借は、解約の申入れの日からそれぞれ当該各号に定める期間を経過することによって終了する。","i":[{"n":"1","t":"一","s":"土地の賃貸借　一年","sub":[]},{"n":"2","t":"二","s":"建物の賃貸借　三箇月","sub":[]},{"n":"3","t":"三","s":"動産及び貸席の賃貸借　一日","sub":[]}]},{"n":"2","s":"収穫の季節がある土地の賃貸借については、その季節の後次の耕作に着手する前に、解約の申入れをしなければならない。","i":[]}]},"m618":{"t":"民法第六百十八条","c":"（期間の定めのある賃貸借の解約をする権利の留保）","p":[{"n":"1","s":"当事者が賃貸借の期間を定めた場合であっても、その一方又は双方がその期間内に解約をする権利を留保したときは、前条の規定を準用する。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"第一章　総則","a":[{"k":"1","t":"第一条","c":"（趣旨）","u":1},{"k":"2","t":"第二条","c":"（定義）","u":0}]},{"t":"第二章　借地","a":[{"k":"3","t":"第三条","c":"（借地権の存続期間）","u":0},{"k":"4","t":"第四条","c":"（借地権の更新後の期間）","u":0},{"k":"5","t":"第五条","c":"（借地契約の更新請求等）","u":0},{"k":"6","t":"第六条","c":"（借地契約の更新拒絶の要件）","u":0},{"k":"7","t":"第七条","c":"（建物の再築による借地権の期間の延長）","u":0},{"k":"8","t":"第八条","c":"（借地契約の更新後の建物の滅失による解約等）","u":0},{"k":"9","t":"第九条","c":"（強行規定）","u":0},{"k":"10","t":"第十条","c":"（借地権の対抗力）","u":0},{"k":"11","t":"第十一条","c":"（地代等増減請求権）","u":0},{"k":"12","t":"第十二条","c":"（借地権設定者の先取特権）","u":0},{"k":"13","t":"第十三条","c":"（建物買取請求権）","u":0},{"k":"14","t":"第十四条","c":"（第三者の建物買取請求権）","u":0},{"k":"15","t":"第十五条","c":"（自己借地権）","u":0},{"k":"16","t":"第十六条","c":"（強行規定）","u":0},{"k":"17","t":"第十七条","c":"（借地条件の変更及び増改築の許可）","u":0},{"k":"18","t":"第十八条","c":"（借地契約の更新後の建物の再築の許可）","u":0},{"k":"19","t":"第十九条","c":"（土地の賃借権の譲渡又は転貸の許可）","u":0},{"k":"20","t":"第二十条","c":"（建物競売等の場合における土地の賃借権の譲渡の許可）","u":0},{"k":"21","t":"第二十一条","c":"（強行規定）","u":0},{"k":"22","t":"第二十二条","c":"（定期借地権）","u":0},{"k":"23","t":"第二十三条","c":"（事業用定期借地権等）","u":0},{"k":"24","t":"第二十四条","c":"（建物譲渡特約付借地権）","u":0},{"k":"25","t":"第二十五条","c":"（一時使用目的の借地権）","u":0}]},{"t":"第三章　借家","a":[{"k":"26","t":"第二十六条","c":"（建物賃貸借契約の更新等）","u":1},{"k":"27","t":"第二十七条","c":"（解約による建物賃貸借の終了）","u":1},{"k":"28","t":"第二十八条","c":"（建物賃貸借契約の更新拒絶等の要件）","u":1},{"k":"29","t":"第二十九条","c":"（建物賃貸借の期間）","u":1},{"k":"30","t":"第三十条","c":"（強行規定）","u":1},{"k":"31","t":"第三十一条","c":"（建物賃貸借の対抗力）","u":0},{"k":"32","t":"第三十二条","c":"（借賃増減請求権）","u":0},{"k":"33","t":"第三十三条","c":"（造作買取請求権）","u":0},{"k":"34","t":"第三十四条","c":"（建物賃貸借終了の場合における転借人の保護）","u":0},{"k":"35","t":"第三十五条","c":"（借地上の建物の賃借人の保護）","u":0},{"k":"36","t":"第三十六条","c":"（居住用建物の賃貸借の承継）","u":0},{"k":"37","t":"第三十七条","c":"（強行規定）","u":0},{"k":"38","t":"第三十八条","c":"（定期建物賃貸借）","u":1},{"k":"39","t":"第三十九条","c":"（取壊し予定の建物の賃貸借）","u":0},{"k":"40","t":"第四十条","c":"（一時使用目的の建物の賃貸借）","u":1}]},{"t":"第四章　借地条件の変更等の裁判手続","a":[{"k":"41","t":"第四十一条","c":"（管轄裁判所）","u":0},{"k":"42","t":"第四十二条","c":"（非訟事件手続法の適用除外及び最高裁判所規則）","u":0},{"k":"43","t":"第四十三条","c":"（強制参加）","u":0},{"k":"44","t":"第四十四条","c":"（手続代理人の資格）","u":0},{"k":"45","t":"第四十五条","c":"（手続代理人の代理権の範囲）","u":0},{"k":"46","t":"第四十六条","c":"（事件の記録の閲覧等）","u":0},{"k":"47","t":"第四十七条","c":"（鑑定委員会）","u":0},{"k":"48","t":"第四十八条","c":"（手続の中止）","u":0},{"k":"49","t":"第四十九条","c":"（不適法な申立ての却下）","u":0},{"k":"50","t":"第五十条","c":"（申立書の送達）","u":0},{"k":"51","t":"第五十一条","c":"（審問期日）","u":0},{"k":"52","t":"第五十二条","c":"（呼出費用の予納がない場合の申立ての却下）","u":0},{"k":"53","t":"第五十三条","c":"（事実の調査の通知）","u":0},{"k":"54","t":"第五十四条","c":"（審理の終結）","u":0},{"k":"55","t":"第五十五条","c":"（裁判書の送達及び効力の発生）","u":0},{"k":"56","t":"第五十六条","c":"（理由の付記）","u":0},{"k":"57","t":"第五十七条","c":"（裁判の効力が及ぶ者の範囲）","u":0},{"k":"58","t":"第五十八条","c":"（給付を命ずる裁判の効力）","u":0},{"k":"59","t":"第五十九条","c":"（譲渡又は転貸の許可の裁判の失効）","u":0},{"k":"60","t":"第六十条","c":"（第一審の手続の規定の準用）","u":0},{"k":"61","t":"第六十一条","c":"（当事者に対する住所、氏名等の秘匿）","u":0}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+// '民法617条1項2号' → {key:'m617', para:'1', item:'2'}、'38条6項ただし書' → {key:'38', para:'6'}
+function parseArt(a){
+  a = String(a);
+  const m = a.match(/^(民法)?(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(ただし書|後段|括弧書)?(?:(\d+)号(の\d+)?)?/);
+  if (!m) return null;
+  return { key: (m[1] ? "m" : "") + m[2] + m[3].replace(/の/g, "_"), para: m[4] || null, item: m[6] ? m[6] + (m[7] ? m[7].replace("の", "_") : "") : null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para); else if (ps.length > 1 && r.item) ps = ps.slice(0, 1);
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const its = p.i.map(it => `<p class="it${r.item && it.n === r.item ? " hit" : ""}">${it.t ? esc(it.t) + "　" : ""}${esc(it.s)}${it.sub.map(x => `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p${!r.item && r.para ? ' class="hit"' : ""}>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { end: "■", renew: "↻", stay: "—", open: "？", ng: "✗", fine: "◯", ok: "", info: "・", and: "", or: "" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなくこのアプリの決め事。</p>`;
+function treeHTML(lines, legend = true){
+  if (!lines.length) return "";
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  // 子が「かつ／または」の節1つだけなら、その節を親の行に入れて1段浅くする。子が1行だけなら「かつ」の1つ分として青い線でつなぐ
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and", "or"].includes(n.c[0].l[1]) && !["and", "or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and", "or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k, t, a] = n.l;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+
+// ---------- ここから別ページ（about.html）だけの処理 ----------
+if (location.protocol === "file:") $("back").href = "shakuchi.html";
+function openHash(){ const d = location.hash && document.getElementById(location.hash.slice(1)); if (d && d.tagName === "DETAILS") d.open = true; }
+openHash(); window.addEventListener("hashchange", openHash);
+document.addEventListener("click", e => { const a = e.target.closest('a[href^="#"]'); if (a){ const d = document.getElementById(a.getAttribute("href").slice(1)); if (d && d.tagName === "DETAILS") d.open = true; } });
+
+// ---------- 全条文の地図とソース（10月の判定ページから移した）----------
+const kanjiArt = k => { const [a, ...r] = String(k).split("_"); return a + "条" + r.map(x => "の" + x).join(""); };
+function renderCover(){
+  let C = []; try{ C = JSON.parse(document.getElementById("cover-data").textContent); }catch(e){ return; }
+  const live = C.flatMap(c => c.a).filter(a => a.u !== 2), used = live.filter(a => a.u === 1).length;
+  $("cover").innerHTML = `<p class="cover-total">使っている条：${used} / ${live.length} 条（削除された条を除く）</p>` + C.map(c => {
+    const lv = c.a.filter(a => a.u !== 2), u = lv.filter(a => a.u === 1).length;
+    return `<div class="cover-ch"><h4>${esc(c.t)}<span>${u} / ${lv.length} 条</span></h4><div class="cells">${c.a.map(a => `<button type="button" class="cell u${a.u}" data-cover="${esc(a.k)}" title="${esc(a.t + a.c)}" aria-label="${esc(a.t + a.c)}"></button>`).join("")}</div></div>`;
+  }).join("") + `<div id="cover-pick"></div>`;
+  window.__COVER = Object.fromEntries(C.flatMap(c => c.a.map(a => [a.k, a])));
+}
+function renderSrc(){
+  const fs = [...document.querySelectorAll("script[type='text/prolog']")];
+  $("src").innerHTML = fs.map((f, i) => `<details class="srcfile" data-src="${i}"><summary>${esc(f.dataset.name.replace("_", "/"))}（${f.textContent.split("\n").length} 行）</summary><pre></pre></details>`).join("");
+  $("src").addEventListener("toggle", e => { const d = e.target; if (d.open && d.dataset.src){ const pre = d.querySelector("pre"); if (!pre.textContent) pre.textContent = fs[+d.dataset.src].textContent; } }, true);
+}
+renderCover(); renderSrc();
+$("core").textContent = `結論(C, R, T) :-\n    act_ctx(C),\n    欄(C, 通知の種類, N), 欄(C, 誰が, W),\n    期間の扱い(C, K, KN),\n    …\n    場合(N, K, W, C, KN, WN, R, Cs0, Art),\n    種類(R, Kind), 結論の文(R, H),\n    導く(Kind, H, Art, Cs0, T).`;
+
+async function bootAbout(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const nRules = once("aggregate_all(count, clause(場合(_,_,_,_,_,_,_,_,_), _), N)").N;
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中 ・ 場合分けの節 ${nRules} 件`;
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+  }
+}
+
+function runQuery(){
+  if (!pl){ $("out").textContent = "まだ読み込み中です。"; return; }
+  const q = $("q").value.trim().replace(/\.\s*$/, "");
+  try{
+    const it = pl.prolog.query(`catch((${q}), Err__, true)`), out = [];
+    for (let i = 0; i < 30; i++){
+      const r = it.next(), v = r.value;
+      if (v && v.$tag === "bindings"){
+        if (v.Err__ && v.Err__.$t !== "v"){ out.push("エラー"); break; }
+        out.push(Object.entries(v).filter(([k]) => !["$tag","success","Err__"].includes(k)).map(([k, x]) => `${k} = ${fmt(x)}`).join(", ") || "true");
+      }
+      if (r.done) break;
+    }
+    $("out").textContent = out.join("\n") || (errBuf.length ? errBuf.join("\n") : "false.");
+  } catch(e){ $("out").textContent = "エラー：" + e.message; }
+}
+function fmt(v){
+  if (Array.isArray(v)) return "[" + v.map(fmt).join(", ") + "]";
+  const t = T(v); if (t && t.f) return `${t.f}(${t.args.map(fmt).join(", ")})`;
+  if (v && v.$t === "v") return "_";
+  return String(v);
+}
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.id === "run"){ runQuery(); }
+  else if (b.dataset.cover){
+    const a = window.__COVER[b.dataset.cover], art = kanjiArt(a.k);
+    $("cover-pick").innerHTML = a.u === 1 ? lawHTML(art) : `<div class="lawtext"><h4>${esc(a.t + a.c)}</h4><p class="hint">${a.u === 2 ? "この条は削除されています。" : "この条はルールにしていません。"}</p></div>`;
+  }
+});
+
+if (typeof SWIPL === "function") bootAbout();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; }
+</script>
