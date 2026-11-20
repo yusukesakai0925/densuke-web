@@ -490,158 +490,29 @@
   <h2><span class="num">06 ─ 成果物</span>AIがまとめたレポート・作ったもの</h2>
   <p class="intro-lede">秘書AIのでんすけが調査・分析してまとめたレポートと、実際に作って動かしているものです。公開前に酒井さん（人間）が内容を確認したうえで、ここに置いています。</p>
   <div class="work-grid">
-    <article class="work-card">
+    <article class="work-card" style="grid-column: 1 / -1;">
       <div class="w-date">2026-11-20</div>
-      <h3>不法行為の損害賠償を条文から判定（民法の不法行為Prolog）</h3>
-      <p>民法の不法行為の条文（第709条〜第724条の2）をPrologのルールにして、でんすけが判定します。不注意があったか、損害が生じたか、未成年者や責任能力の無い人がしたことか、身を守るためにやむを得ずしたことか、使用者や動物の占有者か、損害を知ってから何年たったかなど、起きた事実を選ぶと、誰が損害賠償の責任を負うか、請求する権利が時効で消えていないかを、条文の原文つきで示します。この判定は条文を論理的にそのまま演算した結果であり、裁判所の判断とは異なる場合があります。</p>
+      <h3>法律の条文から判定するProlog（15本）</h3>
+      <p>民法・道路交通法の条文をPrologのルールにして、でんすけが判定します。起きた事実を選ぶと、請求できるか・責任を負うか・違反かどうかなどを、条文の原文つきで示します。この判定は条文を論理的にそのまま演算した結果であり、警察・裁判所の判断とは異なる場合があります。</p>
       <div class="w-tags">
         <span class="w-tag">法律</span><span class="w-tag">Prolog</span><span class="w-tag">動くもの</span>
       </div>
       <div class="w-links">
-        <a class="w-primary" href="fuhou/">› 判定してみる</a>
-      </div>
-    </article>
-    <article class="work-card">
-      <div class="w-date">2026-11-20</div>
-      <h3>法定相続分を条文から判定（民法の相続分Prolog）</h3>
-      <p>民法の相続人と法定相続分の条文（第887条・第889条・第890条・第900条・第901条・第939条）をPrologのルールにして、でんすけが判定します。配偶者がいたか、子・父母・祖父母・兄弟姉妹が何人いて、相続開始の時に生きていたか、先に亡くなっていたか、相続を放棄したかなど、起きた事実を選ぶと、誰が相続人になり、それぞれの相続分がいくつかを、条文の原文つきで示します。この判定は条文を論理的にそのまま演算した結果であり、裁判所の判断とは異なる場合があります。</p>
-      <div class="w-tags">
-        <span class="w-tag">法律</span><span class="w-tag">Prolog</span><span class="w-tag">動くもの</span>
-      </div>
-      <div class="w-links">
-        <a class="w-primary" href="souzoku/">› 判定してみる</a>
-      </div>
-    </article>
-    <article class="work-card">
-      <div class="w-date">2026-11-20</div>
-      <h3>善意の第三者に当たるかを判決から判定（民法の善意の第三者Prolog）</h3>
-      <p>民法の心裡留保・虚偽表示・錯誤・詐欺の第三者を守る条文（第93条2項・第94条2項・第95条4項・第96条3項）と、第94条2項の類推適用、最高裁の判決をPrologのルールにして、でんすけが判定します。意思表示に何が起きたか、関わった人がどの立場で取引したか、間に人が入ったか、事情を知っていたか、知らなかったことに過失があったかなど、起きた事実を選ぶと、その人が「第三者」に当たるか、無効や取消しをその人に対抗できるかを、条文と判決の原文つきで示します。この判定は条文と判決を論理的にそのまま演算した結果であり、裁判所の判断とは異なる場合があります。</p>
-      <div class="w-tags">
-        <span class="w-tag">法律</span><span class="w-tag">Prolog</span><span class="w-tag">動くもの</span>
-      </div>
-      <div class="w-links">
-        <a class="w-primary" href="daisansha/">› 判定してみる</a>
-      </div>
-    </article>
-    <article class="work-card">
-      <div class="w-date">2026-11-20</div>
-      <h3>条件と期限を条文から判定（民法の条件と期限Prolog）</h3>
-      <p>民法の条件と期限（第127条〜第137条）の条文をPrologのルールにして、でんすけが条文から判定します。どんな条件や期限をつけた約束か、条件が成就したか、相手が条件の成就を妨げたか、破産手続が始まったかなど、起きた事実を選ぶと、約束がいつ効力を生じ・失うか、無効か・無条件か、相手方がどうみなせるか、期限の利益を主張できるかを、条文の原文つきで示します。この判定は条文を論理的にそのまま演算した結果であり、裁判所の判断とは異なる場合があります。</p>
-      <div class="w-tags">
-        <span class="w-tag">法律</span><span class="w-tag">Prolog</span><span class="w-tag">動くもの</span>
-      </div>
-      <div class="w-links">
-        <a class="w-primary" href="joken/">› 判定してみる</a>
-      </div>
-    </article>
-    <article class="work-card">
-      <div class="w-date">2026-11-20</div>
-      <h3>債権譲渡と相殺を条文から判定（民法の債権譲渡と相殺Prolog）</h3>
-      <p>民法の債権譲渡（第466条〜第469条）と相殺（第505条〜第512条の2）の条文をPrologのルールにして、でんすけが条文から判定します。どんな債権を譲ったか、譲渡制限の約束があったか、譲り受けた人がそれを知っていたか、通知・承諾をしたか、相殺の相手の債権をいつ持ったかなど、起きた事実を選ぶと、譲渡が債務者や第三者に対抗できるか、債務者が供託できるか、相殺できるかを、条文の原文つきで示します。この判定は条文を論理的にそのまま演算した結果であり、裁判所の判断とは異なる場合があります。</p>
-      <div class="w-tags">
-        <span class="w-tag">法律</span><span class="w-tag">Prolog</span><span class="w-tag">動くもの</span>
-      </div>
-      <div class="w-links">
-        <a class="w-primary" href="joto/">› 判定してみる</a>
-      </div>
-    </article>
-    <article class="work-card">
-      <div class="w-date">2026-11-20</div>
-      <h3>連帯債務を条文から判定（民法の連帯債務Prolog）</h3>
-      <p>民法の連帯債務の条文（第436条〜第445条）をPrologのルールにして、でんすけが条文から判定します。何人で借りたか、一人に更改・相殺・免除・時効の完成などが起きたか、誰がいくら払ったか、各自の負担部分、払う前後に通知したか、払えない人がいるかなど、起きた事実を選ぶと、債権者が誰にいくら請求できるか、一人に起きたことが他の人に及ぶか、払った人が他の人にいくら求償できるかを、条文の原文つきで示します。この判定は条文を論理的にそのまま演算した結果であり、裁判所の判断とは異なる場合があります。</p>
-      <div class="w-tags">
-        <span class="w-tag">法律</span><span class="w-tag">Prolog</span><span class="w-tag">動くもの</span>
-      </div>
-      <div class="w-links">
-        <a class="w-primary" href="rentai/">› 判定してみる</a>
-      </div>
-    </article>
-    <article class="work-card">
-      <div class="w-date">2026-11-20</div>
-      <h3>保証を条文から判定（民法の保証Prolog）</h3>
-      <p>民法の保証の条文（第446条〜第465条の10）をPrologのルールにして、でんすけが条文から判定します。書面で契約したか、根保証で極度額を決めたか、事業のための借入れで公正証書を作ったか、連帯保証か、保証人が払ったか・いつ払ったか・通知したかなど、起きた事実を選ぶと、保証契約が効力を生じるか、債権者に「先に主たる債務者へ」と言えるか、主たる債務者にいくらまで求償できるかを、条文の原文つきで示します。この判定は条文を論理的にそのまま演算した結果であり、裁判所の判断とは異なる場合があります。</p>
-      <div class="w-tags">
-        <span class="w-tag">法律</span><span class="w-tag">Prolog</span><span class="w-tag">動くもの</span>
-      </div>
-      <div class="w-links">
-        <a class="w-primary" href="hosho/">› 判定してみる</a>
-      </div>
-    </article>
-    <article class="work-card">
-      <div class="w-date">2026-11-20</div>
-      <h3>代理を条文から判定（民法の代理Prolog）</h3>
-      <p>民法の代理の条文（第99条〜第118条）をPrologのルールにして、でんすけが条文から判定します。代理権があったか、その範囲内の行為か、代理権が消える出来事（本人の死亡・破産など）が起きたか、頼んで与えた代理権か法律で決まった代理権か、復代理人を選んだかなど、起きた事実を選ぶと、代理人のした契約が本人に効くか、本人が追認できるか、代理人が相手に責任を負うかを、条文の原文つきで示します。この判定は条文を論理的にそのまま演算した結果であり、裁判所の判断とは異なる場合があります。</p>
-      <div class="w-tags">
-        <span class="w-tag">法律</span><span class="w-tag">Prolog</span><span class="w-tag">動くもの</span>
-      </div>
-      <div class="w-links">
-        <a class="w-primary" href="dairi/">› 判定してみる</a>
-      </div>
-    </article>
-    <article class="work-card">
-      <div class="w-date">2026-11-19</div>
-      <h3>消滅時効を条文から判定（民法の消滅時効Prolog）</h3>
-      <p>民法の消滅時効の条文（第140条〜第143条・第145条・第147条〜第152条・第166条・第167条・第169条・第724条）をPrologのルールにして、でんすけが条文から判定します。どんな請求か、いつ知ったか、いつから請求できたか、催告・裁判・協議の合意・承認があったかなど、起きた事実と日付を選ぶと、時効がいつ完成するか、完成が延びるか、数え直しになるかを、条文の原文つきで示します。この判定は条文を論理的にそのまま演算した結果であり、裁判所の判断とは異なる場合があります。</p>
-      <div class="w-tags">
-        <span class="w-tag">法律</span><span class="w-tag">Prolog</span><span class="w-tag">動くもの</span>
-      </div>
-      <div class="w-links">
-        <a class="w-primary" href="jikou/">› 判定してみる</a>
-      </div>
-    </article>
-    <article class="work-card">
-      <div class="w-date">2026-11-19</div>
-      <h3>債務不履行を条文から判定（民法の債務不履行Prolog）</h3>
-      <p>民法の債務不履行の条文（第412条〜第421条）と契約の解除の条文（第540条〜第548条）をPrologのルールにして、でんすけが条文から判定します。約束の期限、果たせなかった理由、お金を払う約束か、催告をしたかなど、起きた事実を選ぶと、いつから遅れの責任を負うか、損害の賠償を請求できるか、契約を解除できるかを、条文の原文つきで示します。この判定は条文を論理的にそのまま演算した結果であり、裁判所の判断とは異なる場合があります。</p>
-      <div class="w-tags">
-        <span class="w-tag">法律</span><span class="w-tag">Prolog</span><span class="w-tag">動くもの</span>
-      </div>
-      <div class="w-links">
-        <a class="w-primary" href="saimu/">› 判定してみる</a>
-      </div>
-    </article>
-    <article class="work-card">
-      <div class="w-date">2026-11-19</div>
-      <h3>売買の契約不適合を条文から判定（民法の売買Prolog）</h3>
-      <p>民法の売買の契約不適合の条文（第562条〜第568条・第572条）をPrologのルールにして、でんすけが条文から判定します。買った物の種類・品質・数量が契約と合っていなかった、いつ気づいて売主に知らせた、競売で買った、責任を負わない特約があったなど、起きた事実を選ぶと、買主が直す・代わりの物を渡す・代金を減らすよう請求できるか、いつ請求できなくなるかを、条文の原文つきで示します。この判定は条文を論理的にそのまま演算した結果であり、裁判所の判断とは異なる場合があります。</p>
-      <div class="w-tags">
-        <span class="w-tag">法律</span><span class="w-tag">Prolog</span><span class="w-tag">動くもの</span>
-      </div>
-      <div class="w-links">
-        <a class="w-primary" href="baibai/">› 判定してみる</a>
-      </div>
-    </article>
-    <article class="work-card">
-      <div class="w-date">2026-11-19</div>
-      <h3>請負と委任を条文から判定（民法の請負・委任Prolog）</h3>
-      <p>民法の請負の条文（第632条〜第642条）と委任の条文（第643条〜第656条）をPrologのルールにして、でんすけが条文から判定します。何を約束したか、仕事が終わったか、途中で止まったか、誰が解除したかなど、起きた事実を選ぶと、報酬をいつ請求できるか、合っていないところの責任、解除できるか、委任が終わるかを、条文の原文つきで示します。この判定は条文を論理的にそのまま演算した結果であり、裁判所の判断とは異なる場合があります。</p>
-      <div class="w-tags">
-        <span class="w-tag">法律</span><span class="w-tag">Prolog</span><span class="w-tag">動くもの</span>
-      </div>
-      <div class="w-links">
-        <a class="w-primary" href="ukeoi/">› 判定してみる</a>
-      </div>
-    </article>
-    <article class="work-card">
-      <div class="w-date">2026-11-19</div>
-      <h3>意思表示の無効・取消しを条文から判定（民法の意思表示Prolog）</h3>
-      <p>民法の意思表示の条文（第93条〜第98条の2）をPrologのルールにして、でんすけが条文から判定します。本心でないと分かっていて言った・相手と示し合わせた・勘違いしていた・だまされた・おどされたなど、起きた事実を選ぶと、その意思表示が無効になるか、取り消せるか、第三者に対抗できるか、いつ効力を生じるかを、条文の原文つきで示します。この判定は条文を論理的にそのまま演算した結果であり、裁判所の判断とは異なる場合があります。</p>
-      <div class="w-tags">
-        <span class="w-tag">法律</span><span class="w-tag">Prolog</span><span class="w-tag">動くもの</span>
-      </div>
-      <div class="w-links">
-        <a class="w-primary" href="ishi/">› 判定してみる</a>
-      </div>
-    </article>
-    <article class="work-card">
-      <div class="w-date">2026-11-18</div>
-      <h3>贈与を条文から判定（民法の贈与Prolog）</h3>
-      <p>民法の贈与の条文（第549条〜第554条）をPrologのルールにして、でんすけが条文から判定します。起きた事実を選ぶと、贈与が成り立つか、口約束の贈与を解除できるか、どんな状態で渡すか、亡くなったら効力を失うかを、条文の原文つきで示します。この判定は条文を論理的にそのまま演算した結果であり、裁判所の判断とは異なる場合があります。</p>
-      <div class="w-tags">
-        <span class="w-tag">法律</span><span class="w-tag">Prolog</span><span class="w-tag">動くもの</span>
-      </div>
-      <div class="w-links">
-        <a class="w-primary" href="zoyo/">› 判定してみる</a>
+        <a class="w-primary" href="fuhou/">› 不法行為</a>
+        <a class="w-primary" href="souzoku/">› 相続分</a>
+        <a class="w-primary" href="daisansha/">› 善意の第三者</a>
+        <a class="w-primary" href="joken/">› 条件と期限</a>
+        <a class="w-primary" href="joto/">› 債権譲渡と相殺</a>
+        <a class="w-primary" href="rentai/">› 連帯債務</a>
+        <a class="w-primary" href="hosho/">› 保証</a>
+        <a class="w-primary" href="dairi/">› 代理</a>
+        <a class="w-primary" href="jikou/">› 消滅時効</a>
+        <a class="w-primary" href="saimu/">› 債務不履行</a>
+        <a class="w-primary" href="baibai/">› 売買</a>
+        <a class="w-primary" href="ukeoi/">› 請負・委任</a>
+        <a class="w-primary" href="ishi/">› 意思表示</a>
+        <a class="w-primary" href="zoyo/">› 贈与</a>
+        <a class="w-primary" href="doukou/">› 自転車の青切符（道路交通法）</a>
       </div>
     </article>
     <article class="work-card">
@@ -676,17 +547,6 @@
       </div>
       <div class="w-links">
         <a class="w-primary" href="analysis/academia-policy.html">› レポートを読む</a>
-      </div>
-    </article>
-    <article class="work-card">
-      <div class="w-date">2026-10-09</div>
-      <h3>自転車の青切符を条文から判定（道路交通法Prolog）</h3>
-      <p>道路交通法の自転車の反則行為（青切符）をPrologのルールにして、でんすけが条文から判定します。誰が・いつ・どこで・何に乗って・何をするかを選ぶと、違反かどうか・青切符か赤切符か・反則金はいくらかを、条文の原文つきで示します。欄のどれかを「？」にすると、そこに入る答えをPrologが全部探します。この判定は条文を論理的にそのまま演算した結果であり、警察・裁判所の判断とは異なる場合があります。</p>
-      <div class="w-tags">
-        <span class="w-tag">法律</span><span class="w-tag">Prolog</span><span class="w-tag">動くもの</span>
-      </div>
-      <div class="w-links">
-        <a class="w-primary" href="doukou/">› 判定してみる</a>
       </div>
     </article>
     <article class="work-card">
