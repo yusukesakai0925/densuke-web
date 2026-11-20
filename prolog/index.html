@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>法律の条文から判定するProlog 一覧 — でんすけの作業場</title>
+<meta name="description" content="民法・道路交通法の条文をPrologのルールにして、起きた事実から請求できるか・責任を負うか・違反かどうかを条文の原文つきで判定するページの一覧です。">
+<link rel="canonical" href="https://densuke.yusukesakai.jp/prolog/">
+<style>
+  :root {
+    --bg: #060a14;
+    --panel: rgba(20, 28, 40, 0.72);
+    --text: #e6ecf2;
+    --muted: #9db1c6;
+    --accent: #7df4ff;
+    --border: rgba(125,244,255,0.18);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, "Hiragino Sans", "Yu Gothic UI", system-ui, sans-serif;
+    font-size: 16px; line-height: 1.6; }
+  main { max-width: 960px; margin: 0 auto; padding: 32px 20px 64px; }
+  .back { color: var(--muted); font-size: 14px; text-decoration: none; }
+  .back:hover { color: var(--accent); }
+  h1 { font-size: 26px; margin: 16px 0 12px; line-height: 1.4; }
+  .lede { color: var(--muted); max-width: 38em; line-height: 1.8; margin: 0 0 8px; }
+  h2 { font-size: 18px; margin: 40px 0 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  a.card { display: block; background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 18px; color: var(--text); text-decoration: none; transition: border-color .15s; }
+  a.card:hover { border-color: var(--accent); }
+  a.card h3 { margin: 0 0 8px; font-size: 16px; color: var(--accent); line-height: 1.5; }
+  a.card p { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.7; }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="../#works">‹ でんすけの作業場に戻る</a>
+  <h1>法律の条文から判定するProlog（15本）</h1>
+  <p class="lede">民法・道路交通法の条文をPrologのルールにして、でんすけが判定します。起きた事実を選ぶと、請求できるか・責任を負うか・違反かどうかなどを、条文の原文つきで示します。</p>
+  <p class="lede">この判定は条文を論理的にそのまま演算した結果であり、警察・裁判所の判断とは異なる場合があります。</p>
+
+  <h2>民法　総則（契約・行為の効力と時効）</h2>
+  <div class="grid">
+    <a class="card" href="../ishi/"><h3>意思表示の無効・取消し・到達</h3><p>意思表示に問題があったときに無効か取り消せるか、第三者に対抗できるか、いつ届いたことになるかを判定します。</p></a>
+    <a class="card" href="../daisansha/"><h3>善意の第三者</h3><p>民法の善意の第三者に当たるかを、最高裁の判決の文と条文番号つきで判定します。判決が言っていない所も分けて出します。</p></a>
+    <a class="card" href="../dairi/"><h3>代理の効力・無権代理</h3><p>代理人がした行為が本人に効くか、代理権の無い人がした契約で本人・相手方は何ができるか、復代理人を選べるかを判定します（第99条〜第118条）。</p></a>
+    <a class="card" href="../joken/"><h3>条件と期限</h3><p>約束がいつ効力を生じ・失うか、無効か・無条件か、相手方がどうみなせるか、期限の利益を主張できるかを判定します（第127条〜第137条）。</p></a>
+    <a class="card" href="../jikou/"><h3>消滅時効</h3><p>どんな請求か・いつから請求できたか・その後に起きたこと（催告・承認・裁判・協議の合意）から、時効が完成しているかと完成する日を判定します。</p></a>
+  </div>
+
+  <h2>民法　債権（借金・保証・契約・損害賠償）</h2>
+  <div class="grid">
+    <a class="card" href="../saimu/"><h3>債務不履行と解除</h3><p>いつから遅れた扱いになるか、損害の賠償を請求できるか、解除できるか、解除した後に何を返すかを判定します。</p></a>
+    <a class="card" href="../rentai/"><h3>連帯債務</h3><p>債権者は誰にどれだけ請求できるか、1人に起きたことは他の人に及ぶか、払った人は他の人にいくら求償できるかを判定します。</p></a>
+    <a class="card" href="../hosho/"><h3>保証</h3><p>保証契約が効力を持つか、請求されたときに保証人は何を言えるか、払う前・払った後に主たる債務者へどの限度で請求できるかを判定します。</p></a>
+    <a class="card" href="../joto/"><h3>債権譲渡と相殺</h3><p>債権を譲れるか、譲ったことを誰に対抗できるか、債務者が譲受人に何を対抗できるか、相殺できるかを判定します。</p></a>
+    <a class="card" href="../zoyo/"><h3>贈与</h3><p>贈与が成り立つか、口約束の贈与を解除できるか、どんな状態で渡すか、負担付贈与・定期の贈与・死んだらあげる約束がどうなるかを判定します（第549条〜第554条）。</p></a>
+    <a class="card" href="../baibai/"><h3>売買の契約不適合</h3><p>買主が何を請求できるか、いつ請求できなくなるか、競売や特約でどうなるかを判定します（第562条〜第568条・第572条）。</p></a>
+    <a class="card" href="../ukeoi/"><h3>請負と委任</h3><p>請負の報酬と解除、委任の報酬・費用・受任者の義務、委任の解除と終了を判定します。</p></a>
+    <a class="card" href="../fuhou/"><h3>不法行為</h3><p>他人に損害を加えたとき、誰が賠償の責任を負うのか、責任を負わないのはどんなときか、請求権がいつ消えるかを判定します（第709条〜第724条の2）。</p></a>
+  </div>
+
+  <h2>民法　相続</h2>
+  <div class="grid">
+    <a class="card" href="../souzoku/"><h3>相続分</h3><p>家族の構成を入れると、だれが何分の何を相続するか（法定相続分）を計算します。</p></a>
+  </div>
+
+  <h2>道路交通法</h2>
+  <div class="grid">
+    <a class="card" href="../doukou/"><h3>自転車の青切符</h3><p>自転車の違反・青切符か赤切符か・反則金を、条文の原文つきで判定します。</p></a>
+  </div>
+</main>
+</body>
+</html>
