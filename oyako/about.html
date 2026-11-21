@@ -1,0 +1,2104 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="「親子と親権を逆から引く」の収録範囲、全条文の地図、アプリの約束事、Prologのソース全部。">
+<title>収録範囲・仕組み｜親子と親権を逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+.grp{grid-column:1 / -1;font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);background:var(--paper);border-right:2px solid var(--line);border-bottom:2px solid var(--line);padding:6px 10px}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.step.off{color:var(--muted)}
+.flow{margin:0;padding-left:1.2em}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border:1px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+</style>
+
+<div class="wrap about">
+  <header class="mast sub">
+    <p class="backlink"><a href="./" id="back">← 判定ページに戻る</a></p>
+    <h1>収録範囲・仕組み</h1>
+    <p class="lead">「親子と親権を逆から引く」で、どの条文をどこまでルールにしたか、アプリが決めたこと、プログラムの中身です。</p>
+  </header>
+
+  <div class="appendix">
+  <details class="box" id="scope-box" open>
+    <summary>収録範囲と、入っていないもの</summary>
+    <div class="scope" id="scope">
+      <p><b>民法の本則のうち、第772条〜第778条の3、第779条〜第787条、第789条、第818条〜第826条（第824条の2・第824条の3を含む）、第834条〜第837条（第834条の2を含む）をルールにしています。</b></p>
+      <p id="scope-ichi">判定ページの欄は、起きた事実を聞く44個で、いつも全部出ています。同じ入力で、第772条〜第837条を全部当てます。どの条の話かを先に選ぶ欄は置いていません。結論は「子の出生と父」「嫡出の否認」「認知」「親権者」「親権の行い方」「親権を止めること」の6つの塊ごとに、最後に決まった段の答えを1つずつ出します（各条の答えは論理の木に全部あります）。個別のことは法律の専門家に聞いてください。</p>
+      <p id="note-kankei">事実が関係しない欄（例えば、誰も否認しないときの5〜12の欄、子が成年に達しているときの親権の欄）は、その欄の条の答えを出さないだけで、「この組み合わせはありません」にはしません。成り立たない組（誰も否認しないのに否認の裁判が確定した、まだ生まれていない子が成年に達している、など）は「この組み合わせはありません」と、欄の番号・根拠の条とともに出します。嫡出でない子か、子の父が772条で定まるか、親権者が父母の一方だけかは欄で聞かず、ほかの欄（1・4・12・13・23・26〜28の欄）から決めます。第820条〜第822条は聞く事実が無いので、32〜44の欄がどれも最初の値のときだけ出します。</p>
+      <p id="note-hantei">判定しないもの：「子の利益を害することが明らか」「父の利益を著しく害する」「反対の事実」「子の利益のため必要」「急迫の事情」「日常の行為」「利益が相反する」「虐待」「悪意の遺棄」「著しく困難又は不適当」「やむを得ない事由」「承認」に当たるかは判定しません。裁判所などが決める評価なので、欄で選んだとおりに当たるものとして条を当てます。二百日・三百日・三年・七年などの数え方（初日を入れるか）も計算せず、欄で選んだ「以内」「経過した」のとおりに答えます。</p>
+      <p id="note-jobun">条文だけを読んでいます。判例は載せません。別の法律（戸籍法、家事事件手続法、人事訴訟法、児童福祉法）も読んでいません。</p>
+      <p>入っていないもの：下の<a href="#notes-box">載せなかったもの</a>をご覧ください。婚姻と離婚は<a href="../konin/">婚姻と離婚のページ</a>、相続は<a href="../souzoku/">相続のページ</a>で引けます。制限行為能力者（成年被後見人など）は、制限行為能力者の本で扱います（公開前です）。</p>
+    </div>
+  </details>
+
+  <details class="box" id="cover-box">
+    <summary>民法のどこまでをルールにしたか（全条文の地図）</summary>
+    <p class="hint" style="margin-top:6px">本則の全条文を1マスずつ並べました。<span class="cell u1"></span> はプログラムのルールの中で使っている条、<span class="cell u0"></span> は使っていない条です。マスを押すと原文が出ます。</p>
+    <div id="cover"></div>
+  </details>
+
+  <details class="box" id="yaku-box">
+    <summary>アプリの約束事（民法の条文にないもの）</summary>
+    <p class="hint" style="margin-top:6px">判定のためにこのアプリが決めたことで、条文そのものではありません。論理の木では <span class="yk">アプリの約束事</span> の印が付きます。</p>
+    <ul class="hint" style="margin:8px 0 0;padding-left:1.2em">
+      <li>条の要件に当たらないときは、欠けた要件が分かる起きた事実の文だけを出し、反対の結論は出さない</li>
+    </ul>
+  </details>
+
+  <details class="box" id="notes-box">
+    <summary>載せなかったものと、条文だけで決まらなかった点</summary>
+    <div class="scope">
+      <p><b>載せなかったもの（理由）：</b></p>
+      <ul style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>判例：条文だけを読むアプリのため</li>
+        <li>第778条の4：相続の開始後の価額の支払で、親子の判定の外のため</li>
+        <li>第788条：準用先の第766条第3項以降が法務省令の額に行くため</li>
+        <li>第790条・第791条：子の氏で、依頼の範囲の外のため</li>
+        <li>第792条以降の養子：第818条第3項の親権者だけを入力にするため</li>
+        <li>第827条〜第833条：財産の管理の細目で、依頼の範囲の外のため</li>
+        <li>第838条以降の後見：依頼の範囲の外のため</li>
+        <li>第877条以降の扶養：依頼の範囲の外のため</li>
+        <li>戸籍の手続：別の法律のため</li>
+        <li>改正の経過措置：本則だけを読むため</li>
+      </ul>
+      <p><b>条文だけで決まらなかった点（23点）：</b></p>
+      <ul id="kimaranai" style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>（a）772条2項の日数の数え方（婚姻の成立の日を入れるか）は書いていない → 二百日以内か・経過した後か、三百日以内か・経過した後かを1の欄で選び、日数は計算しない。これは読みです</li>
+        <li>（b）772条2項で、婚姻の解消又は取消しの日から三百日を超えて生まれた子の扱いは書いていない → 同項の推定に当たらないまでで止める。これは読みです</li>
+        <li>（c）776条の「承認」に当たる行為は書いていない → 7の欄で選んだとおりにする。子と前夫は776条に出てこないので、承認の段は父と母のときだけ出す。これは読みです</li>
+        <li>（d）778条の2第2項の「第二号に係る部分」 → 777条の三年も778条の一年も経過した後に、二十一歳まで提起できると読む。これは読みです</li>
+        <li>（e）783条2項で認知が効力を生じない後に誰が父かは書いていない → 772条で定められるとだけ答える。これは読みです</li>
+        <li>（f）786条2項の二十一歳が、七年の起点が子の出生の時に変わる胎内の子の認知でも同じに働くかは書いていない → 同じに答える。これは読みです</li>
+        <li>（g）819条5項は第1項・第3項・第4項の協議だけを挙げ、第2項を挙げていない → 裁判上の離婚は819条2項で裁判所が定めると答える。これは読みです</li>
+        <li>（h）824条の2第1項第3号の「急迫の事情」と第2項の「日常の行為」の両方に当たらない特定の事項 → 第3項の家庭裁判所の定めが無ければ共同で行うと読む。これは読みです</li>
+        <li>（i）新たに父と定められた者の否認権の相手と承認は書いていない → 775条1項第1号の「父の否認権」・776条の「父」に入ると読む。これは読みです</li>
+        <li>（j）778条の2第1項は「子は」とあるだけで、774条2項の行使者が使えるかは書いていない → 行使者を問わず同じに答える。これは読みです</li>
+        <li>（k）783条1項は「父は」とだけ定める → 母が胎内に在る子を認知する場面は当たらないと答える。これは読みです</li>
+        <li>（l）818条3項第1号・第2号に当たらない者の扱いは書いていない → 同項の親権者に当たらないと答える。これは読みです</li>
+        <li>（m）819条7項は第2項・第5項・第6項の裁判に及ぶ → 裁判上の離婚・協議に代わる審判・親権者の変更ができる組で、29の欄から答える。これは読みです</li>
+        <li>（n）823条1項は許可を得たときの文を書いていない → 営むことができると答える。これは読みです</li>
+        <li>（o）825条は他の一方の意思に反しないときの文を書いていない → 同条の場面に当たらないと答える。これは読みです</li>
+        <li>（p）834条・834条の2・835条・836条の請求者に挙がっていない人の扱いは書いていない → 当たらないと答える。これは読みです</li>
+        <li>（q）786条1項・787条に挙がっていない人の扱いは書いていない → 当たらないと答える。これは読みです</li>
+        <li>（r）837条は許可が無いときの文を書いていない → することができないと答える。これは読みです</li>
+        <li>（s）789条3項の準用の読み替えは書いていない → 準用されるとだけ答え、読み替えた答えは出さない。これは読みです</li>
+        <li>（t）834条の原因（虐待又は悪意の遺棄、親権の行使が著しく困難又は不適当）が834条の2第1項の「困難又は不適当であることにより子の利益を害するとき」にも入るかは書いていない → 入ると読み、親権停止の審判もできると答える。これは読みです</li>
+        <li>（u）824条の2・825条は「父母」の定めで、子が養子のとき（818条3項）に及ぶかは書いていない → 養子の組では出さない。これは読みです</li>
+        <li>（v）784条・789条・819条4項の「認知」「父が認知した子」に、認知の訴えで認知の裁判が確定した子が入るかは書いていない → 入ると読む（23の欄が「確定した」）。786条（認知の無効の訴え）は「認知をした者」「認知を知った時」の語なので、届出・遺言の認知（13の欄）にだけ当てる。これは読みです</li>
+        <li>（w）820条〜822条は、どの事実のときに当てるかを書いていない → 聞く事実が無いので、親権の行い方・止めることの欄（32〜44）がどれも最初の値のときだけ出す。これは読みです</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="box" id="src-box">
+    <summary>プログラムの中身（Prologのソース全部）</summary>
+    <p class="hint" style="margin-top:6px">このページで動いているPrologのプログラムそのものです。ファイルを開くと全文が出ます。</p>
+    <div id="src"></div>
+  </details>
+
+  <details class="box" id="core-box">
+    <summary>仕組みを見る（上級者向け）</summary>
+    <p class="hint" style="margin-top:6px">Prologに直接聞く（最初の20件まで）：</p>
+    <textarea id="q" spellcheck="false">heads(ctx(二百日後,一つ,いいえ,なし,まだ,いいえ,いない,以内,いた,以上,いる,まだ,なし,いいえ,未成年,得た,ない,なし,以内,以上,なし,生存,まだ,なし,未成年,でない,裁判離婚,まだ,第一号,なし,いいえ,なし,なし,できる,なし,なし,なし,なし,なし,ない,なし,喪失,まだ,なし), L).</textarea>
+    <button type="button" class="btn" id="run">実行</button>
+    <pre id="out"></pre>
+  </details>
+  </div>
+
+  <p class="foot techline"><span>民法 第772条〜第837条（親子と親権）／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot">e-Gov法令検索の民法の本則の原文をルールにしたものです。判例・戸籍法・家事事件手続法・児童福祉法・経過措置（附則）は含みません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 民法の親子と親権のProlog 共通の型・欄の読み出し・組み合わせなし・木の部品
+%
+% ctx(生まれ, 婚姻数, 重婚, 否認者, 先の否認, 子の利益, 承認, 期間, 満了前, 同居, 親権母, 否認確定,
+%     認知者, 能力, 認知の時, 承諾, 卑属, 無効者, 七年, 認知後同居, 訴える人, 父母の死亡, 認知確定, 準正, 子の今,
+%     養子, 父母, 協議, 事情, 変更, 必要, 職業, 財産, 他方, 単独, 監護者, 名義, 相反, 原因, 見込み, 請求者, 審判, 審判後, 辞任)
+%   欄は起きた事実を聞く44個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-22 入口の「どの話か」（iri）と3つの「どの話か」
+%   （fhanashi・nhanashi・khanashi）、「どの場合か」（njun）、「どの場面か」（sba）、欄の出し消し、値の「関係なし」をやめた）。
+%   引数の順は画面の欄の番号（1〜44）と同じ。同じ入力で 772条〜837条 を全部当てる。
+%   案は ../oyako_form_plan_answer_1122.md の案A（依頼書 ../task_beaver_oyako_fixed_fields_1122.md の決めたこと1）。konin-prolog と同じ形。
+%   入口ごとに別の欄で聞いていた同じ事実（子の年齢と生死・原因の消滅・請求者）は1欄にまとめた（C1）。
+%   ほかの欄から決まる事実（嫡出でない子か・出生して772条で父が定まるか・親権者が双方か一方か）は欄にせず、下の述語で決める。
+%   「経過したか」「同意したか」のように、ある値のときだけ聞いていた欄は、親の欄の値に入れた（9・10・19・20・33・35・37・43・44）。
+%    1 生まれ : 婚姻なし | 二百日内 | 二百日後 | 三百日内 | 三百日後 | 胎内（子が生まれた時と母の婚姻。772条1項・2項）
+%    2 婚姻数 : 一つ | 二以上（子の懐胎の時から出生の時までに母がした婚姻。772条3項・774条4項）
+%    3 重婚 : いいえ | はい（母は配偶者があるのに重ねて婚姻をしたか。773条）
+%    4 否認者 : なし | 父 | 母 | 子 | 親権母 | 養親 | 後見人 | 前夫（子が嫡出であることを否認する人。774条）
+%    5 先の否認 : まだ | 確定自ら | 確定他（直近の婚姻の夫についての嫡出否認の裁判。772条4項・774条5項・778条）
+%    6 子の利益 : いいえ | はい（否認権の行使が子の利益を害することが明らかか。774条3項・4項ただし書）
+%    7 承認 : いない | 父 | 母 | 父母（子の出生後に嫡出であることを承認した人。776条）
+%    8 期間 : 以内 | 経過（777条・778条の期間）
+%    9 満了前 : いた | いない内 | いない経過（期間の満了前六箇月以内に親権を行う母・養親・未成年後見人が。778条の2第1項）
+%   10 同居 : 以上 | 下回る | 著害（子が父と継続して同居した最も長い期間。778条の2第2項）
+%   11 親権母 : いる | いない（親権を行う母が。774条2項・775条2項）
+%   12 否認確定 : まだ | 確定（この嫡出否認の訴え。775条・778条の3）
+%   13 認知者 : なし | 父届出 | 父遺言 | 母届出 | 母遺言（認知をする人と方式。779条・781条）
+%   14 能力 : いいえ | はい（認知をする者は未成年者又は成年被後見人か。780条）
+%   15 認知の時 : 未成年 | 成年 | 胎内 | 死亡（認知の時の子。782条・783条）
+%   16 承諾 : 得た | 得ていない（成年の子・胎内の子の母・成年の直系卑属の承諾。782条・783条）
+%   17 卑属 : ない | 未成年者 | 成年者（死亡した子の直系卑属。783条3項）
+%   18 無効者 : なし | 子 | 代理人 | 認知者 | 母 | 他（認知の無効の訴えを提起する人。786条）
+%   19 七年 : 以内 | 以内害 | 経過（786条1項の七年）
+%   20 認知後同居 : 以上 | 下回る | 著害（子が認知をした者と認知後に同居した最も長い期間。786条2項）
+%   21 訴える人 : なし | 子 | 卑属 | 代理人 | 他（認知の訴えを提起する人。787条）
+%   22 父母の死亡 : 生存 | 三年内 | 経過（787条ただし書）
+%   23 認知確定 : まだ | 確定（認知の訴え。787条）
+%   24 準正 : なし | 後婚姻 | 中認知（父の認知と父母の婚姻の前後。789条）
+%   25 子の今 : 未成年 | 成年 | 二十一 | 死亡（778条の2・786条2項・789条3項・818条1項）
+%   26 養子 : でない | 直近 | 配偶者（818条3項）
+%   27 父母 : 婚姻中 | 協議離婚 | 裁判離婚 | 出生前離婚 | 婚姻していない（818条2項・819条1項〜4項）
+%   28 協議 : まだ | 双方 | 父 | 母 | 調わない | できない（親権者についての父母の協議。819条1項・3項〜5項）
+%   29 事情 : ない | 第一号 | 第二号 | その他（父母の一方を親権者と定めなければならない事情。819条7項）
+%   30 変更 : なし | 子 | 親族 | 他（親権者の変更の請求。819条6項）
+%   31 必要 : いいえ | はい（家庭裁判所が変更の必要を認めるか。819条6項）
+%   32 職業 : なし | 許可 | 無許可（823条）
+%   33 財産 : なし | 債務なし | 同意 | 不同意（824条）
+%   34 他方 : できる | できない（他の一方が親権を行うことが。824条の2第1項第2号）
+%   35 単独 : なし | 急迫 | 日常 | 調った | 必要 | 不要（父母の一方だけで行おうとする事項。824条の2）
+%   36 監護者 : なし | あり（824条の3）
+%   37 名義 : なし | 反しない | 善意 | 悪意（825条）
+%   38 相反 : なし | 子と | 数人（826条）
+%   39 原因 : なし | 虐待 | 著しく | 困難 | 管理（834条・834条の2・835条）
+%   40 見込み : ない | ある（834条ただし書）
+%   41 請求者 : なし | 子 | 親族 | 後見人 | 監督人 | 検察官 | 他（834条・834条の2・835条）
+%   42 審判 : 喪失 | 停止 | 管理権（請求する審判）
+%   43 審判後 : まだ | された | 消滅本人 | 消滅親族 | 消滅他 | 消滅なし（836条）
+%   44 辞任 : なし | 辞任 | 無許可 | 事由なし | 回復 | 回復無許可 | 消滅せず（837条）
+%
+%   関係のない欄（たとえば4の欄が「誰も否認しない」のときの5〜12の欄、13の欄が「誰も認知していない」のときの14〜17の欄、
+%   25の欄が「成年に達していない」以外のときの26〜44の欄）は、組み合わせなしにせず、その欄の段を出さない（konin-prolog と同じ）。
+%   欄どうしで成り立たない組は 組み合わせなし/4 が欄の番号と一緒に返す（REVIEW_RULES C3。案Aの a〜k と、依頼書 ②・③ の l〜t）。
+%
+% 書き方のきまり：
+%   ・条番号は '772条1項' '777条第1号' '775条1項第1号' '778条の2第1項' のような原子。
+%     ただし書・前段・後段は原文の表の行にせず、文の中に書く（表は項か号まで）。
+%   ・ルールの中で範囲の外の条を、原子の先頭に条番号を置く形で書かない。書くと build.py が使う条に数え、画面に中身が埋まる。
+%   ・段は 段(状態, 文, 条のリスト)。結論ごとの段は s(画面のid, 見出し, 段)。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | and | or | info
+%   ・アプリの約束事の行は 条 を '@約束事' にする。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか。組の成り立ちは 組み合わせなし/4 で見る）----
+ctx_valid(C) :-
+    functor(C, ctx, 44),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )).
+
+欄の値(1, [婚姻なし, 二百日内, 二百日後, 三百日内, 三百日後, 胎内]).
+欄の値(2, [一つ, 二以上]).
+欄の値(3, [いいえ, はい]).
+欄の値(4, [なし, 父, 母, 子, 親権母, 養親, 後見人, 前夫]).
+欄の値(5, [まだ, 確定自ら, 確定他]).
+欄の値(6, [いいえ, はい]).
+欄の値(7, [いない, 父, 母, 父母]).
+欄の値(8, [以内, 経過]).
+欄の値(9, [いた, いない内, いない経過]).
+欄の値(10, [以上, 下回る, 著害]).
+欄の値(11, [いる, いない]).
+欄の値(12, [まだ, 確定]).
+欄の値(13, [なし, 父届出, 父遺言, 母届出, 母遺言]).
+欄の値(14, [いいえ, はい]).
+欄の値(15, [未成年, 成年, 胎内, 死亡]).
+欄の値(16, [得た, 得ていない]).
+欄の値(17, [ない, 未成年者, 成年者]).
+欄の値(18, [なし, 子, 代理人, 認知者, 母, 他]).
+欄の値(19, [以内, 以内害, 経過]).
+欄の値(20, [以上, 下回る, 著害]).
+欄の値(21, [なし, 子, 卑属, 代理人, 他]).
+欄の値(22, [生存, 三年内, 経過]).
+欄の値(23, [まだ, 確定]).
+欄の値(24, [なし, 後婚姻, 中認知]).
+欄の値(25, [未成年, 成年, 二十一, 死亡]).
+欄の値(26, [でない, 直近, 配偶者]).
+欄の値(27, [婚姻中, 協議離婚, 裁判離婚, 出生前離婚, 婚姻していない]).
+欄の値(28, [まだ, 双方, 父, 母, 調わない, できない]).
+欄の値(29, [ない, 第一号, 第二号, その他]).
+欄の値(30, [なし, 子, 親族, 他]).
+欄の値(31, [いいえ, はい]).
+欄の値(32, [なし, 許可, 無許可]).
+欄の値(33, [なし, 債務なし, 同意, 不同意]).
+欄の値(34, [できる, できない]).
+欄の値(35, [なし, 急迫, 日常, 調った, 必要, 不要]).
+欄の値(36, [なし, あり]).
+欄の値(37, [なし, 反しない, 善意, 悪意]).
+欄の値(38, [なし, 子と, 数人]).
+欄の値(39, [なし, 虐待, 著しく, 困難, 管理]).
+欄の値(40, [ない, ある]).
+欄の値(41, [なし, 子, 親族, 後見人, 監督人, 検察官, 他]).
+欄の値(42, [喪失, 停止, 管理権]).
+欄の値(43, [まだ, された, 消滅本人, 消滅親族, 消滅他, 消滅なし]).
+欄の値(44, [なし, 辞任, 無許可, 事由なし, 回復, 回復無許可, 消滅せず]).
+
+%% ---- 欄の読み出し（番号は画面の欄の番号）----
+欄の番号(生まれ, 1).
+欄の番号(婚姻数, 2).
+欄の番号(重婚, 3).
+欄の番号(否認者, 4).
+欄の番号(先の否認, 5).
+欄の番号(子の利益, 6).
+欄の番号(承認, 7).
+欄の番号(期間, 8).
+欄の番号(満了前, 9).
+欄の番号(同居, 10).
+欄の番号(親権母, 11).
+欄の番号(否認確定, 12).
+欄の番号(認知者, 13).
+欄の番号(能力, 14).
+欄の番号(認知の時, 15).
+欄の番号(承諾, 16).
+欄の番号(卑属, 17).
+欄の番号(無効者, 18).
+欄の番号(七年, 19).
+欄の番号(認知後同居, 20).
+欄の番号(訴える人, 21).
+欄の番号(父母の死亡, 22).
+欄の番号(認知確定, 23).
+欄の番号(準正, 24).
+欄の番号(子の今, 25).
+欄の番号(養子, 26).
+欄の番号(父母, 27).
+欄の番号(協議, 28).
+欄の番号(事情, 29).
+欄の番号(変更, 30).
+欄の番号(必要, 31).
+欄の番号(職業, 32).
+欄の番号(財産, 33).
+欄の番号(他方, 34).
+欄の番号(単独, 35).
+欄の番号(監護者, 36).
+欄の番号(名義, 37).
+欄の番号(相反, 38).
+欄の番号(原因, 39).
+欄の番号(見込み, 40).
+欄の番号(請求者, 41).
+欄の番号(審判, 42).
+欄の番号(審判後, 43).
+欄の番号(辞任, 44).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+%% ---- よく使う組（ほかの欄から決まる事実は欄にせず、ここで決める。案A）----
+% 1の欄で、772条2項・1項により夫の子と推定される値
+推定が立つ(C) :- 欄(生まれ, C, V), memberchk(V, [二百日内, 二百日後, 三百日内]).
+生まれていない(C) :- 欄(生まれ, C, 胎内).
+% 親権の段（818条〜837条）を出す組：子が生まれていて、成年に達していない（依頼書 ③）
+親権の対象(C) :- \+ 生まれていない(C), 欄(子の今, C, 未成年).
+% 4の欄の値のうち、子の否認権を行使する人（774条1項・2項）
+子の系(P) :- memberchk(P, [子, 親権母, 養親, 後見人]).
+行使者(P) :- memberchk(P, [親権母, 養親, 後見人]).
+先の否認が確定(C) :- \+ 欄(先の否認, C, まだ).
+% 嫡出でない子（779条）：772条で夫の子と推定されないか、この嫡出否認の裁判が確定した。
+% 胎内に在る子は783条1項・2項で見る（出生して772条で父が定まれば、認知は効力を生じない）
+嫡出でない(C) :- \+ 推定が立つ(C), !.
+嫡出でない(C) :- 嫡出が否認された(C).
+% この嫡出否認の訴えの裁判が確定した（否認できない組は 組み合わせなし d なので、ここに来るのは否認された組だけ）
+嫡出が否認された(C) :- 欄(否認確定, C, 確定), \+ 欄(否認者, C, なし).
+父が認知する(C) :- 欄(認知者, C, P), memberchk(P, [父届出, 父遺言]).
+% 父が認知した子（784条・789条・819条4項）。裁判による認知（23の欄が確定した）も入れて読む（決めたこと2-4。about の読み）
+父の認知がある(C) :- 父が認知する(C), 認知の効力がある(C), !.
+父の認知がある(C) :- 欄(認知確定, C, 確定).
+% 法律上の父がいて、父母として婚姻できる組（818条2項の段を出すか。2026-11-22 LLMレビューの直し1）：
+% 772条で夫の子と推定され否認されていないか、父が認知して父母が婚姻した（789条の準正）。
+% 推定も認知も準正も無い子、認知だけの子（819条4項）には、27の欄が「婚姻中」でも「父母の双方が親権者」を出さない。
+% 先の否認が確定した子（5の欄）は、772条4項で推定が前の婚姻の夫に移り、母はその夫とはもう婚姻していないので出さない。
+% 前の婚姻の解消が離婚か死亡かは欄で決まらず819条3項を言い切れないので、代わりの行は置かない（2026-11-22 LLMレビューの直し その2）
+法律上の父がいる(C) :- 推定が立つ(C), \+ 先の否認が確定(C), \+ 嫡出が否認された(C), !.
+法律上の父がいる(C) :- 父の認知がある(C), \+ 欄(準正, C, なし).
+% 親権者が父母の一方だけ（824条の2第1項第1号・825条）。養子は818条3項だけを見るので、ここでは決めない（決めたこと2-3）
+親権者が一方(C) :- 欄(養子, C, でない), 欄(父母, C, 協議離婚), 欄(協議, C, K), memberchk(K, [父, 母]), !.
+親権者が一方(C) :- 欄(養子, C, でない), 欄(父母, C, F), memberchk(F, [出生前離婚, 婚姻していない]), \+ 欄(協議, C, 双方).
+
+%% ---- 成り立たない組（REVIEW_RULES C3。案Aの a〜k と、依頼書 ②・③ の l〜t）----
+% 組み合わせなし(C, 欄の番号のリスト, 理由の文, 根拠のリスト)
+% findall で全部の句を数えるので、句の中で ! を使わない（「または」は once で解を1つにする）
+% 既定の値（4=誰も否認しない・13=誰も認知していない・43=審判はまだされていない など）はどの組にも当たらない。
+% a：先の否認の確定は、772条3項で直近の婚姻の夫の子と推定される子の定め
+組み合わせなし(C, [1, 2, 5], '先の嫡出否認の裁判（772条4項）は、母が二以上の婚姻をしていて、772条3項で直近の婚姻の夫の子と推定される子についての裁判で、子はこれに当たらないので、確定した先の嫡出否認の裁判はありません', ['772条4項', '778条']) :-
+    先の否認が確定(C), once(( 欄(婚姻数, C, 一つ) ; \+ 推定が立つ(C) )).
+% b：否認は772条で父が定められる子の定め
+組み合わせなし(C, [1, 4], '嫡出の否認（774条）は、772条により子の父が定められる場合の定めで、子は772条で夫の子と推定されないので、否認する嫡出がありません', ['774条1項']) :-
+    \+ 欄(否認者, C, なし), \+ 推定が立つ(C).
+% c：否認権を行使する人がいない
+組み合わせなし(C, [4, 12], '嫡出であることを否認する人がいないので、確定する嫡出否認の訴えがありません', ['775条1項']) :-
+    欄(否認確定, C, 確定), 欄(否認者, C, なし).
+% d：否認できない訴えの裁判が確定している（決めたこと2-6。止めた条を根拠にする）
+組み合わせなし(C, Ns, M, [A]) :-
+    欄(否認確定, C, 確定), 否認の止め(C, Ns0, A),
+    append(Ns0, [12], Ns1), sort(Ns1, Ns),
+    format(atom(M), '嫡出否認の訴えは、~wにより提起することができないので、確定した嫡出否認の裁判はありません', [A]).
+% e：子のために否認権を行使する親権を行う母がいない
+組み合わせなし(C, [4, 11], '親権を行う母がいないので、子のために否認権を行使する親権を行う母がいません', ['774条2項']) :-
+    欄(否認者, C, 親権母), 欄(親権母, C, いない).
+% f：無効を訴える認知が無い
+組み合わせなし(C, [13, 18, 23], '認知がされていないので、無効を訴える認知がありません', ['786条1項']) :-
+    \+ 欄(無効者, C, なし), 欄(認知者, C, なし), 欄(認知確定, C, まだ).
+% g：認知の訴えを提起する人がいない、又は提起できない訴えの裁判が確定している（決めたこと2-6）
+組み合わせなし(C, [21, 23], '認知の訴えを提起する人がいないので、確定する認知の訴えがありません', ['787条']) :-
+    欄(認知確定, C, 確定), 欄(訴える人, C, なし).
+組み合わせなし(C, [21, 22, 23], '認知の訴えは、787条により提起することができないので、確定した認知の裁判はありません', ['787条']) :-
+    欄(認知確定, C, 確定), once(( 欄(訴える人, C, 他) ; \+ 欄(訴える人, C, なし), 欄(父母の死亡, C, 経過) )).
+% h：父が認知した子がいない
+組み合わせなし(C, [13, 23, 24], '父の認知がされていないので、父が認知した子として嫡出子の身分を取得する子がいません', ['789条1項', '789条2項']) :-
+    \+ 欄(準正, C, なし), \+ 父が認知する(C), 欄(認知確定, C, まだ).
+% i：父母が婚姻していない
+組み合わせなし(C, [24, 27], '父母が婚姻していないので、父母の婚姻による嫡出子の身分の取得がありません', ['789条1項', '789条2項']) :-
+    \+ 欄(準正, C, なし), 欄(父母, C, 婚姻していない).
+% j：父母が共同して親権を行う場合でない
+組み合わせなし(C, [27, 28, 37], '共同の名義の定め（825条）は父母が共同して親権を行う場合の定めで、親権者は父母の一方なので、共同の名義でする行為がありません', ['825条']) :-
+    \+ 欄(名義, C, なし), 親権者が一方(C).
+% k：請求できない審判、又はできない審判がされている（決めたこと2-6）
+組み合わせなし(C, [41, 43], M, [A]) :-
+    \+ 欄(審判後, C, まだ), 欄(請求者, C, なし),
+    欄(審判, C, K), 審判の名(K, N, A),
+    format(atom(M), '~wを請求した人がいないので、された~wはありません', [N, N]).
+組み合わせなし(C, Ns, M, [A]) :-
+    \+ 欄(審判後, C, まだ), \+ 欄(請求者, C, なし), 審判の止め(C, Ns0, A),
+    append(Ns0, [43], Ns1), sort(Ns1, Ns),
+    欄(審判, C, K), 審判の名(K, N, _),
+    format(atom(M), '~wは、~wによりすることができないので、された~wはありません', [N, A, N]).
+% l：子本人が訴えるのに、子が死亡している（依頼書 ③）
+組み合わせなし(C, [4, 25], '子は死亡しているので、子の否認権を行使する子がいません', ['774条1項']) :-
+    欄(否認者, C, 子), 欄(子の今, C, 死亡).
+組み合わせなし(C, [18, 25], '子は死亡しているので、認知の無効の訴えを提起する子がいません', ['786条1項']) :-
+    欄(無効者, C, 子), 欄(子の今, C, 死亡).
+組み合わせなし(C, [21, 25], '子は死亡しているので、認知の訴えを提起する子がいません', ['787条']) :-
+    欄(訴える人, C, 子), 欄(子の今, C, 死亡).
+% m：成年に達した子・死亡した子には、子のために否認権を行使する親権を行う者がいない（依頼書 ③）
+組み合わせなし(C, [4, 25], '子は成年に達しているか死亡しているので、子のために否認権を行使する親権を行う母・親権を行う養親・未成年後見人がいません', ['774条2項']) :-
+    欄(否認者, C, P), 行使者(P), \+ 欄(子の今, C, 未成年).
+% n・q：子がまだ生まれていない（依頼書 ③）
+組み合わせなし(C, [1, 13, 15], '子はまだ生まれていないので、生まれていた子・死亡していた子の認知はありません', ['783条1項']) :-
+    生まれていない(C), \+ 欄(認知者, C, なし), \+ 欄(認知の時, C, 胎内).
+% o・p：認知の時の子と今の子が食い違う
+組み合わせなし(C, [13, 15, 25], '認知の時に子が死亡していたので、今の子が生きていることはありません', ['783条3項']) :-
+    \+ 欄(認知者, C, なし), 欄(認知の時, C, 死亡), \+ 欄(子の今, C, 死亡).
+組み合わせなし(C, [13, 15, 25], '認知の時に子が成年に達していたので、今の子が成年に達していないことはありません', ['782条']) :-
+    \+ 欄(認知者, C, なし), 欄(認知の時, C, 成年), 欄(子の今, C, 未成年).
+組み合わせなし(C, [1, 25], '子はまだ生まれていないので、成年に達した子・死亡した子はいません', ['783条1項']) :-
+    生まれていない(C), \+ 欄(子の今, C, 未成年).
+% r：胎内に在る子の認知の無効の七年は子の出生の時から数えるもので、出生の時がまだ無い（依頼書 ②）
+組み合わせなし(C, [1, 15, 18], '胎内に在る子の認知の無効の訴えの七年は「子の出生の時」から数えるもので、子はまだ生まれていないので、出生の時がありません', ['786条1項']) :-
+    \+ 欄(無効者, C, なし), 欄(認知の時, C, 胎内), 生まれていない(C).
+% s：認知の裁判は嫡出でない子についてのもので、子は嫡出（依頼書 ②）
+組み合わせなし(C, [1, 12, 23], '認知（779条）は嫡出でない子についてするもので、子は772条で夫の子と推定され、嫡出否認の裁判も確定していないので、確定した認知の裁判はありません', ['779条', '787条']) :-
+    欄(認知確定, C, 確定), \+ 嫡出でない(C), \+ 生まれていない(C).
+% t：父が認知した子の親権者の協議（819条4項）は、父の認知があってのもの（依頼書 ②）
+組み合わせなし(C, [13, 23, 27, 28], '父母の協議で親権者を定める819条4項は父が認知した子についての定めで、父の認知がされていないので、親権者についての父母の協議はありません', ['819条4項']) :-
+    欄(父母, C, 婚姻していない), \+ 欄(協議, C, まだ), \+ 父の認知がある(C).
+
+組み合わせなしがある(C) :- 組み合わせなし(C, _, _, _), !.
+
+審判の名(喪失, '親権喪失の審判', '834条').
+審判の名(停止, '親権停止の審判', '834条の2第1項').
+審判の名(管理権, '管理権喪失の審判', '835条').
+
+%% ---- 前提が立たないときの段 ----
+% 判定しない段は画面にも木にも出さない（文はテストで段を見分けるためだけに持つ）
+判定しない段(段(判定しない, '判定していません', [])).
+
+%% ---- 木の部品 ----
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+原文規定(Art, X) :- 原文(Art, W), 規定(Art, W, X).
+約束(X, t(ok, X, '@約束事', [])).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（民法の条文にないもの）
+%
+%   論理の木の葉には、結論を支える規則だけを置く（青切符版の「規則：…ならば違反になる」と同じ形）。
+%   「子の利益を害することが明らか」「反対の事実」「子の利益のため必要」「急迫の事情」「日常の行為」「利益が相反する」「虐待」「悪意の遺棄」
+%   「著しく困難又は不適当」「やむを得ない事由」に当たるかは判定しない、という断り書きは木に置かず、about.html の「判定しないもの」に置く
+%   （REVIEW_RULES A5。2026-11-22 依頼書の「3案に共通する直し」。木の葉の 評価の約束 を消した。konin-prolog と同じ）。
+%   ① 条の要件に当たらないときは、欠けた要件が分かる起きた事実の文だけを出し、反対の結論は出さない。
+
+場面外の約束(X) :-
+    約束('規則：条の要件に当たらないときは、欠けた要件が分かる起きた事実の文だけを出し、反対の結論は出さない', X).
+</script>
+<script type="text/prolog" data-name="rules_a_genbun.pl">% rules/a_genbun.pl — 判定に使う条文の原文（law/minpo.xml の本則のまま）
+%
+%   原文(条, 文)。test/page_test.mjs が XML を別に読み、全行が一字一句一致するかを確かめる。
+%   2文ある項は続けて1行にする（build.py の text() と同じ）。
+%   表の形の号（775条・777条・778条・786条）は、左の欄と右の欄を全角の空白でつなぐ（build.py の text() と同じ）。
+
+原文('772条1項', '妻が婚姻中に懐胎した子は、当該婚姻における夫の子と推定する。女が婚姻前に懐胎した子であって、婚姻が成立した後に生まれたものも、同様とする。').
+原文('772条2項', '前項の場合において、婚姻の成立の日から二百日以内に生まれた子は、婚姻前に懐胎したものと推定し、婚姻の成立の日から二百日を経過した後又は婚姻の解消若しくは取消しの日から三百日以内に生まれた子は、婚姻中に懐胎したものと推定する。').
+原文('772条3項', '第一項の場合において、女が子を懐胎した時から子の出生の時までの間に二以上の婚姻をしていたときは、その子は、その出生の直近の婚姻における夫の子と推定する。').
+原文('772条4項', '前三項の規定により父が定められた子について、第七百七十四条の規定によりその父の嫡出であることが否認された場合における前項の規定の適用については、同項中「直近の婚姻」とあるのは、「直近の婚姻（第七百七十四条の規定により子がその嫡出であることが否認された夫との間の婚姻を除く。）」とする。').
+原文('773条', '第七百三十二条の規定に違反して婚姻をした女が出産した場合において、前条の規定によりその子の父を定めることができないときは、裁判所が、これを定める。').
+原文('774条1項', '第七百七十二条の規定により子の父が定められる場合において、父又は子は、子が嫡出であることを否認することができる。').
+原文('774条2項', '前項の規定による子の否認権は、親権を行う母、親権を行う養親又は未成年後見人が、子のために行使することができる。').
+原文('774条3項', '第一項に規定する場合において、母は、子が嫡出であることを否認することができる。ただし、その否認権の行使が子の利益を害することが明らかなときは、この限りでない。').
+原文('774条4項', '第七百七十二条第三項の規定により子の父が定められる場合において、子の懐胎の時から出生の時までの間に母と婚姻していた者であって、子の父以外のもの（以下「前夫」という。）は、子が嫡出であることを否認することができる。ただし、その否認権の行使が子の利益を害することが明らかなときは、この限りでない。').
+原文('774条5項', '前項の規定による否認権を行使し、第七百七十二条第四項の規定により読み替えられた同条第三項の規定により新たに子の父と定められた者は、第一項の規定にかかわらず、子が自らの嫡出であることを否認することができない。').
+原文('775条1項', '次の各号に掲げる否認権は、それぞれ当該各号に定める者に対する嫡出否認の訴えによって行う。').
+原文('775条1項第1号', '父の否認権　子又は親権を行う母').
+原文('775条1項第2号', '子の否認権　父').
+原文('775条1項第3号', '母の否認権　父').
+原文('775条1項第4号', '前夫の否認権　父及び子又は親権を行う母').
+原文('775条2項', '前項第一号又は第四号に掲げる否認権を親権を行う母に対し行使しようとする場合において、親権を行う母がないときは、家庭裁判所は、特別代理人を選任しなければならない。').
+原文('776条', '父又は母は、子の出生後において、その嫡出であることを承認したときは、それぞれその否認権を失う。').
+原文('777条', '次の各号に掲げる否認権の行使に係る嫡出否認の訴えは、それぞれ当該各号に定める時から三年以内に提起しなければならない。').
+原文('777条第1号', '父の否認権　父が子の出生を知った時').
+原文('777条第2号', '子の否認権　その出生の時').
+原文('777条第3号', '母の否認権　子の出生の時').
+原文('777条第4号', '前夫の否認権　前夫が子の出生を知った時').
+原文('778条', '第七百七十二条第三項の規定により父が定められた子について第七百七十四条の規定により嫡出であることが否認されたときは、次の各号に掲げる否認権の行使に係る嫡出否認の訴えは、前条の規定にかかわらず、それぞれ当該各号に定める時から一年以内に提起しなければならない。').
+原文('778条第1号', '第七百七十二条第四項の規定により読み替えられた同条第三項の規定により新たに子の父と定められた者の否認権　新たに子の父と定められた者が当該子に係る嫡出否認の裁判が確定したことを知った時').
+原文('778条第2号', '子の否認権　子が前号の裁判が確定したことを知った時').
+原文('778条第3号', '母の否認権　母が第一号の裁判が確定したことを知った時').
+原文('778条第4号', '前夫の否認権　前夫が第一号の裁判が確定したことを知った時').
+原文('778条の2第1項', '第七百七十七条（第二号に係る部分に限る。）又は前条（第二号に係る部分に限る。）の期間の満了前六箇月以内の間に親権を行う母、親権を行う養親及び未成年後見人がないときは、子は、母若しくは養親の親権停止の期間が満了し、親権喪失若しくは親権停止の審判の取消しの審判が確定し、若しくは親権が回復された時、新たに養子縁組が成立した時又は未成年後見人が就職した時から六箇月を経過するまでの間は、嫡出否認の訴えを提起することができる。').
+原文('778条の2第2項', '子は、その父と継続して同居した期間（当該期間が二以上あるときは、そのうち最も長い期間）が三年を下回るときは、第七百七十七条（第二号に係る部分に限る。）及び前条（第二号に係る部分に限る。）の規定にかかわらず、二十一歳に達するまでの間、嫡出否認の訴えを提起することができる。ただし、子の否認権の行使が父による養育の状況に照らして父の利益を著しく害するときは、この限りでない。').
+原文('778条の2第3項', '第七百七十四条第二項の規定は、前項の場合には、適用しない。').
+原文('778条の2第4項', '第七百七十七条（第四号に係る部分に限る。）及び前条（第四号に係る部分に限る。）に掲げる否認権の行使に係る嫡出否認の訴えは、子が成年に達した後は、提起することができない。').
+原文('778条の3', '第七百七十四条の規定により嫡出であることが否認された場合であっても、子は、父であった者が支出した子の監護に要した費用を償還する義務を負わない。').
+原文('779条', '嫡出でない子は、その父又は母がこれを認知することができる。').
+原文('780条', '認知をするには、父又は母が未成年者又は成年被後見人であるときであっても、その法定代理人の同意を要しない。').
+原文('781条1項', '認知は、戸籍法の定めるところにより届け出ることによってする。').
+原文('781条2項', '認知は、遺言によっても、することができる。').
+原文('782条', '成年の子は、その承諾がなければ、これを認知することができない。').
+原文('783条1項', '父は、胎内に在る子でも、認知することができる。この場合においては、母の承諾を得なければならない。').
+原文('783条2項', '前項の子が出生した場合において、第七百七十二条の規定によりその子の父が定められるときは、同項の規定による認知は、その効力を生じない。').
+原文('783条3項', '父又は母は、死亡した子でも、その直系卑属があるときに限り、認知することができる。この場合において、その直系卑属が成年者であるときは、その承諾を得なければならない。').
+原文('784条', '認知は、出生の時にさかのぼってその効力を生ずる。ただし、第三者が既に取得した権利を害することはできない。').
+原文('785条', '認知をした父又は母は、その認知を取り消すことができない。').
+原文('786条1項', '次の各号に掲げる者は、それぞれ当該各号に定める時（第七百八十三条第一項の規定による認知がされた場合にあっては、子の出生の時）から七年以内に限り、認知について反対の事実があることを理由として、認知の無効の訴えを提起することができる。ただし、第三号に掲げる者について、その認知の無効の主張が子の利益を害することが明らかなときは、この限りでない。').
+原文('786条1項第1号', '子又はその法定代理人　子又はその法定代理人が認知を知った時').
+原文('786条1項第2号', '認知をした者　認知の時').
+原文('786条1項第3号', '子の母　子の母が認知を知った時').
+原文('786条2項', '子は、その子を認知した者と認知後に継続して同居した期間（当該期間が二以上あるときは、そのうち最も長い期間）が三年を下回るときは、前項（第一号に係る部分に限る。）の規定にかかわらず、二十一歳に達するまでの間、認知の無効の訴えを提起することができる。ただし、子による認知の無効の主張が認知をした者による養育の状況に照らして認知をした者の利益を著しく害するときは、この限りでない。').
+原文('786条3項', '前項の規定は、同項に規定する子の法定代理人が第一項の認知の無効の訴えを提起する場合には、適用しない。').
+原文('786条4項', '第一項及び第二項の規定により認知が無効とされた場合であっても、子は、認知をした者が支出した子の監護に要した費用を償還する義務を負わない。').
+原文('787条', '子、その直系卑属又はこれらの者の法定代理人は、認知の訴えを提起することができる。ただし、父又は母の死亡の日から三年を経過したときは、この限りでない。').
+原文('789条1項', '父が認知した子は、その父母の婚姻によって嫡出子の身分を取得する。').
+原文('789条2項', '婚姻中父母が認知した子は、その認知の時から、嫡出子の身分を取得する。').
+原文('789条3項', '前二項の規定は、子が既に死亡していた場合について準用する。').
+原文('818条1項', '親権は、成年に達しない子について、その子の利益のために行使しなければならない。').
+原文('818条2項', '父母の婚姻中はその双方を親権者とする。').
+原文('818条3項', '子が養子であるときは、次に掲げる者を親権者とする。').
+原文('818条3項第1号', '養親（当該子を養子とする縁組が二以上あるときは、直近の縁組により養親となった者に限る。）').
+原文('818条3項第2号', '子の父母であって、前号に掲げる養親の配偶者であるもの').
+原文('819条1項', '父母が協議上の離婚をするときは、その協議で、その双方又は一方を親権者と定める。').
+原文('819条2項', '裁判上の離婚の場合には、裁判所は、父母の双方又は一方を親権者と定める。').
+原文('819条3項', '子の出生前に父母が離婚した場合には、親権は、母が行う。ただし、子の出生後に、父母の協議で、父母の双方又は父を親権者と定めることができる。').
+原文('819条4項', '父が認知した子に対する親権は、母が行う。ただし、父母の協議で、父母の双方又は父を親権者と定めることができる。').
+原文('819条5項', '第一項、第三項又は前項の協議が調わないとき、又は協議をすることができないときは、家庭裁判所は、父又は母の請求によって、協議に代わる審判をすることができる。').
+原文('819条6項', '子の利益のため必要があると認めるときは、家庭裁判所は、子又はその親族の請求によって、親権者を変更することができる。').
+原文('819条7項', '裁判所は、第二項又は前二項の裁判において、父母の双方を親権者と定めるかその一方を親権者と定めるかを判断するに当たっては、子の利益のため、父母と子との関係、父と母との関係その他一切の事情を考慮しなければならない。この場合において、次の各号のいずれかに該当するときその他の父母の双方を親権者と定めることにより子の利益を害すると認められるときは、父母の一方を親権者と定めなければならない。').
+原文('819条7項第1号', '父又は母が子の心身に害悪を及ぼすおそれがあると認められるとき。').
+原文('819条7項第2号', '父母の一方が他の一方から身体に対する暴力その他の心身に有害な影響を及ぼす言動（次項において「暴力等」という。）を受けるおそれの有無、第一項、第三項又は第四項の協議が調わない理由その他の事情を考慮して、父母が共同して親権を行うことが困難であると認められるとき。').
+原文('819条8項', '第六項の場合において、家庭裁判所は、父母の協議により定められた親権者を変更することが子の利益のため必要であるか否かを判断するに当たっては、当該協議の経過、その後の事情の変更その他の事情を考慮するものとする。この場合において、当該協議の経過を考慮するに当たっては、父母の一方から他の一方への暴力等の有無、家事事件手続法による調停の有無又は裁判外紛争解決手続（裁判外紛争解決手続の利用の促進に関する法律（平成十六年法律第百五十一号）第一条に規定する裁判外紛争解決手続をいう。）の利用の有無、協議の結果についての公正証書の作成の有無その他の事情をも勘案するものとする。').
+原文('820条', '親権を行う者は、子の利益のために子の監護及び教育をする権利を有し、義務を負う。').
+原文('821条', '親権を行う者は、前条の規定による監護及び教育をするに当たっては、子の人格を尊重するとともに、その年齢及び発達の程度に配慮しなければならず、かつ、体罰その他の子の心身の健全な発達に有害な影響を及ぼす言動をしてはならない。').
+原文('822条', '子は、親権を行う者が指定した場所に、その居所を定めなければならない。').
+原文('823条1項', '子は、親権を行う者の許可を得なければ、職業を営むことができない。').
+原文('823条2項', '親権を行う者は、第六条第二項の場合には、前項の許可を取り消し、又はこれを制限することができる。').
+原文('824条', '親権を行う者は、子の財産を管理し、かつ、その財産に関する法律行為についてその子を代表する。ただし、その子の行為を目的とする債務を生ずべき場合には、本人の同意を得なければならない。').
+原文('824条の2第1項', '親権は、父母が共同して行う。ただし、次に掲げるときは、その一方が行う。').
+原文('824条の2第1項第1号', 'その一方のみが親権者であるとき。').
+原文('824条の2第1項第2号', '他の一方が親権を行うことができないとき。').
+原文('824条の2第1項第3号', '子の利益のため急迫の事情があるとき。').
+原文('824条の2第2項', '父母は、その双方が親権者であるときであっても、前項本文の規定にかかわらず、監護及び教育に関する日常の行為に係る親権の行使を単独ですることができる。').
+原文('824条の2第3項', '特定の事項に係る親権の行使（第一項ただし書又は前項の規定により父母の一方が単独で行うことができるものを除く。）について、父母間に協議が調わない場合であって、子の利益のため必要があると認めるときは、家庭裁判所は、父又は母の請求により、当該事項に係る親権の行使を父母の一方が単独ですることができる旨を定めることができる。').
+原文('824条の3第1項', '第七百六十六条（第七百四十九条、第七百七十一条及び第七百八十八条において準用する場合を含む。）の規定により定められた子の監護をすべき者は、第八百二十条から第八百二十三条までに規定する事項について、親権を行う者と同一の権利義務を有する。この場合において、子の監護をすべき者は、単独で、子の監護及び教育、居所の指定及び変更並びに営業の許可、その許可の取消し及びその制限をすることができる。').
+原文('824条の3第2項', '前項の場合には、親権を行う者（子の監護をすべき者を除く。）は、子の監護をすべき者が同項後段の規定による行為をすることを妨げてはならない。').
+原文('825条', '父母が共同して親権を行う場合において、父母の一方が、共同の名義で、子に代わって法律行為をし又は子がこれをすることに同意したときは、その行為は、他の一方の意思に反したときであっても、そのためにその効力を妨げられない。ただし、相手方が悪意であったときは、この限りでない。').
+原文('826条1項', '親権を行う父又は母とその子との利益が相反する行為については、親権を行う者は、その子のために特別代理人を選任することを家庭裁判所に請求しなければならない。').
+原文('826条2項', '親権を行う者が数人の子に対して親権を行う場合において、その一人と他の子との利益が相反する行為については、親権を行う者は、その一方のために特別代理人を選任することを家庭裁判所に請求しなければならない。').
+原文('834条', '父又は母による虐待又は悪意の遺棄があるときその他父又は母による親権の行使が著しく困難又は不適当であることにより子の利益を著しく害するときは、家庭裁判所は、子、その親族、未成年後見人、未成年後見監督人又は検察官の請求により、その父又は母について、親権喪失の審判をすることができる。ただし、二年以内にその原因が消滅する見込みがあるときは、この限りでない。').
+原文('834条の2第1項', '父又は母による親権の行使が困難又は不適当であることにより子の利益を害するときは、家庭裁判所は、子、その親族、未成年後見人、未成年後見監督人又は検察官の請求により、その父又は母について、親権停止の審判をすることができる。').
+原文('834条の2第2項', '家庭裁判所は、親権停止の審判をするときは、その原因が消滅するまでに要すると見込まれる期間、子の心身の状態及び生活の状況その他一切の事情を考慮して、二年を超えない範囲内で、親権を停止する期間を定める。').
+原文('835条', '父又は母による管理権の行使が困難又は不適当であることにより子の利益を害するときは、家庭裁判所は、子、その親族、未成年後見人、未成年後見監督人又は検察官の請求により、その父又は母について、管理権喪失の審判をすることができる。').
+原文('836条', '第八百三十四条本文、第八百三十四条の二第一項又は前条に規定する原因が消滅したときは、家庭裁判所は、本人又はその親族の請求によって、それぞれ親権喪失、親権停止又は管理権喪失の審判を取り消すことができる。').
+原文('837条1項', '親権を行う父又は母は、やむを得ない事由があるときは、家庭裁判所の許可を得て、親権又は管理権を辞することができる。').
+原文('837条2項', '前項の事由が消滅したときは、父又は母は、家庭裁判所の許可を得て、親権又は管理権を回復することができる。').
+</script>
+<script type="text/prolog" data-name="rules_b_chichi.pl">% rules/b_chichi.pl — 子の出生と父（772条・773条）：1〜3・5の欄
+%
+%   2026-11-22 入口の「子の父はどう定まるか」と「どの話か」（fhanashi）、日数の数の欄（fnissu）をやめ、1〜3・5の欄の事実から段を出す形にした
+%   （REVIEW_RULES C4・C5。案A）。772条2項が比べるのは二百日以内か・三百日以内かだけなので、日数は1の欄の選択肢にした。
+%   段の文と答えから「という入力」「（これは読みです）」を外し、補足の段（kazoe・sonogo）は about へ移した（A2・A5）。
+%   第772条1項・2項：いつも出す。1の欄が推定に当たる値（二百日以内・二百日を経過した後・三百日以内）なら夫の子と推定する。
+%     三百日を経過した後は推定に当たらないまでで止める（about の読み (b)）。懐胎の時は直接聞かない（決めたこと2-2）。
+%   第772条3項・4項：2の欄が「二以上」で推定に当たるとき。5の欄が「確定し」の2値なら4項（1項と2項・3項と4項の区別。依頼書 ⑦）。
+%   第773条：3の欄が「はい」で、子が生まれているとき。1・2の欄から772条の推定が立てば「裁判所が父を定めることはありません」、
+%     立たなければ「裁判所が、子の父を定めます」（決めたこと2-1）。
+%   父の段(段のid, C, 状態, 段の文, 条のリスト, 答えの文)。答えの文には指示語（その・この・同項 など）を置かない（A6）。
+
+:- discontiguous 父の段/6.
+
+%% ---- 第772条1項・2項（嫡出の推定）----
+% 12の欄で嫡出否認の裁判が確定した組は、推定された後に否認されたことまで書く（状態は 否認された。2026-11-22 LLMレビューの直し2。
+% 前は「母の夫の子と推定されます」を今も効いている形で出していた）。二以上の婚姻の組は nijo の段で書く
+父の段(suitei, C, St, M, As, W) :-
+    欄(生まれ, C, V), 推定の答え(V, St0, M0, As, W0), !,
+    (   St0 == 推定, 嫡出が否認された(C), 欄(婚姻数, C, 一つ)
+    ->  St = 否認された, 推定の夫(V, H),
+        否認の後(M0, W0, H, M, W)
+    ;   St = St0, M = M0, W = W0
+    ).
+
+推定の夫(三百日内, '解消又は取消しの前の婚姻における夫の子') :- !.
+推定の夫(_, '母の夫の子').
+
+% 答えの文の末尾「推定されます」を「推定されましたが、…」につなぐ
+否認の後(M0, W0, H, M, W) :-
+    atom_concat(W1, 'ます', W0),
+    format(atom(W), '~wましたが、嫡出否認の裁判が確定したので、~wではありません', [W1, H]),
+    format(atom(M), '~w嫡出否認の裁判が確定し、子が嫡出であることが否認されました。', [M0]).
+
+推定の答え(二百日内, 推定,
+    '子は婚姻の成立の日から二百日以内に生まれました。婚姻の成立の日から二百日以内に生まれた子は、婚姻前に懐胎したものと推定し（772条2項）、女が婚姻前に懐胎した子であって、婚姻が成立した後に生まれたものは、当該婚姻における夫の子と推定します（772条1項）。',
+    ['772条2項', '772条1項'],
+    '子は、婚姻前に懐胎したものと推定され、婚姻が成立した後に生まれた子として、母の夫の子と推定されます').
+推定の答え(二百日後, 推定,
+    '子は婚姻の成立の日から二百日を経過した後に生まれました。婚姻の成立の日から二百日を経過した後に生まれた子は、婚姻中に懐胎したものと推定し（772条2項）、妻が婚姻中に懐胎した子は、当該婚姻における夫の子と推定します（772条1項）。',
+    ['772条2項', '772条1項'],
+    '子は、婚姻中に懐胎したものと推定され、母の夫の子と推定されます').
+推定の答え(三百日内, 推定,
+    '子は婚姻の解消又は取消しの日から三百日以内に生まれました。婚姻の解消若しくは取消しの日から三百日以内に生まれた子は、婚姻中に懐胎したものと推定し（772条2項）、妻が婚姻中に懐胎した子は、当該婚姻における夫の子と推定します（772条1項）。',
+    ['772条2項', '772条1項'],
+    '子は、婚姻中に懐胎したものと推定され、解消又は取消しの前の婚姻における夫の子と推定されます').
+推定の答え(三百日後, 当たらない,
+    '子は婚姻の解消又は取消しの日から三百日を経過した後に生まれました。772条2項が婚姻中に懐胎したものと推定するのは、婚姻の解消又は取消しの日から三百日以内に生まれた子です。',
+    ['772条2項'],
+    '婚姻の解消又は取消しの日から三百日を経過した後に生まれたので、子は、772条2項によっては婚姻中に懐胎したものと推定されません').
+推定の答え(婚姻なし, 当たらない,
+    '母は子の懐胎の時から出生の時まで婚姻をしていません。772条1項が夫の子と推定するのは、妻が婚姻中に懐胎した子と、女が婚姻前に懐胎して婚姻が成立した後に生まれた子です。',
+    ['772条1項'],
+    '母は子の懐胎の時から出生の時まで婚姻をしていないので、子は、772条によっては夫の子と推定されません').
+推定の答え(胎内, 当たらない,
+    '子はまだ生まれていません（胎内に在ります）。772条2項は、生まれた日から懐胎の時を推定します。',
+    ['772条2項'],
+    '子はまだ生まれていないので、772条2項によっては、懐胎の時は推定されません').
+
+%% ---- 第772条3項・4項（二以上の婚姻。2の欄が「二以上」）----
+父の段(nijo, C, 推定,
+    '子の懐胎の時から出生の時までの間に、母は二以上の婚姻をしていました。第一項の場合において、女が子を懐胎した時から子の出生の時までの間に二以上の婚姻をしていたときは、子は、出生の直近の婚姻における夫の子と推定します（772条3項）。',
+    ['772条3項'],
+    '母が二以上の婚姻をしていたので、子は、出生の直近の婚姻における夫の子と推定されます') :-
+    推定が立つ(C), 欄(婚姻数, C, 二以上), \+ 先の否認が確定(C), \+ 嫡出が否認された(C), !.
+父の段(nijo, C, 否認された,
+    '子の懐胎の時から出生の時までの間に、母は二以上の婚姻をしていました。第一項の場合において、女が子を懐胎した時から子の出生の時までの間に二以上の婚姻をしていたときは、子は、出生の直近の婚姻における夫の子と推定します（772条3項）。嫡出否認の裁判が確定し、子が嫡出であることが否認されました。',
+    ['772条3項'],
+    '母が二以上の婚姻をしていたので、子は、出生の直近の婚姻における夫の子と推定されましたが、嫡出否認の裁判が確定したので、直近の婚姻における夫の子ではありません') :-
+    推定が立つ(C), 欄(婚姻数, C, 二以上), \+ 先の否認が確定(C), 嫡出が否認された(C), !.
+父の段(nijo, C, 推定,
+    '母は二以上の婚姻をしていて、772条3項で子の父と定められた直近の婚姻の夫について、子が嫡出であることを否認する裁判が確定しました。772条4項は、772条3項の「直近の婚姻」を、否認された夫との間の婚姻を除いた直近の婚姻と読み替えます。',
+    ['772条3項', '772条4項'],
+    '直近の婚姻の夫について嫡出であることが否認されたので、子は、否認された夫との間の婚姻を除いた直近の婚姻における夫の子と推定されます') :-
+    推定が立つ(C), 欄(婚姻数, C, 二以上), 先の否認が確定(C), !.
+
+%% ---- 第773条（父を定めることを目的とする訴え。3の欄が「はい」）----
+父の段(saibansho, C, 当たらない,
+    '母は、配偶者があるのに重ねて婚姻をしました（第732条の違反）。子の父は、772条の規定により定まります。773条が裁判所に父を定めさせるのは、772条の規定により子の父を定めることができないときです。',
+    ['773条'],
+    '子の父は772条の規定により定まるので、裁判所が子の父を定めることはありません') :-
+    欄(重婚, C, はい), \+ 生まれていない(C), 推定が立つ(C), !.
+父の段(saibansho, C, 裁判所,
+    '母は、配偶者があるのに重ねて婚姻をして（第732条の違反）、子を出産しました。772条の規定により子の父を定めることができません。第七百三十二条の規定に違反して婚姻をした女が出産した場合において、772条の規定により子の父を定めることができないときは、裁判所が父を定めます（773条）。',
+    ['773条'],
+    '772条の規定により子の父を定めることができないので、裁判所が、子の父を定めます') :-
+    欄(重婚, C, はい), \+ 生まれていない(C), !.
+</script>
+<script type="text/prolog" data-name="rules_c_hinin.pl">% rules/c_hinin.pl — 嫡出の否認（774条〜778条の3）：2・4〜12・25の欄
+%
+%   2026-11-22 入口の「嫡出であることを否認できるか」と「者」「行使者」の欄をやめ、4の欄（否認する人）と5〜12の欄の事実から段を出す形にした
+%   （REVIEW_RULES C4・C5。案A）。段の文と答えから「という入力」「（これは読みです）」を外し、補足の段（承認と子・前夫）は about へ移した（A2・A5）。
+%   段はどれも、4の欄が「誰も否認しない」以外で、子が772条で夫の子と推定されるときだけ出す（推定されない組は 組み合わせなし b）。
+%   否認の行方/2 が、4の欄の人ごとに止まった段（否認できない・否認権を失う・提起できない）か、提起できる段かを1つに決める。
+%   止まった段より後ろの段は出さない（依頼書 ⑥）。775条（訴えの相手）・775条2項（特別代理人）・778条の3（費用）は、提起できる組でだけ出す。
+%   12の欄が「確定していない」組では、段の文を「〜することができます」までにする（B4）。778条の3は12の欄が「確定した」組でだけ出す。
+%   止まる組で12の欄が「確定した」は 組み合わせなし d にする（schema.pl。否認の止め/3 を使う）。
+%   第774条：1項（父・子）・2項（子のために行使する人）・3項（母。ただし書）・4項（前夫。ただし書）・5項（新たに父と定められた者）を分ける（依頼書 ⑦）。
+%   第777条と第778条：5の欄が「確定し」の2値なら778条の一年、そうでなければ777条の三年（依頼書 ⑦）。
+%   第778条の2：1項（9の欄）・2項（10の欄と25の欄）・3項（2項で子本人だけ）・4項（前夫と25の欄）を分ける（依頼書 ⑦）。
+%   776条に子と前夫は出てこないので、承認の段は父と母のときだけ出す（about の読み (c)）。
+%   否認の段(段のid, C, 状態, 段の文, 条のリスト, 答えの文)。答えの文には指示語（その・この・同項 など）を置かない（A6）。
+
+:- discontiguous 否認の段/6.
+
+否認する(C, P) :- 欄(否認者, C, P), P \== なし, 推定が立つ(C).
+
+者の語(C, 父, '新たに子の父と定められた者') :- 先の否認が確定(C), !.
+者の語(_, 父, '父').
+者の語(_, 母, '母').
+者の語(_, 子, '子').
+者の語(_, 親権母, '親権を行う母').
+者の語(_, 養親, '親権を行う養親').
+者の語(_, 後見人, '未成年後見人').
+者の語(_, 前夫, '前夫').
+
+権の語(父, '父の否認権').
+権の語(母, '母の否認権').
+権の語(前夫, '前夫の否認権').
+権の語(P, '子の否認権') :- 子の系(P).
+
+承認した(父, C) :- 欄(承認, C, A), memberchk(A, [父, 父母]).
+承認した(母, C) :- 欄(承認, C, A), memberchk(A, [母, 父母]).
+
+%% ---- 否認の行方（止まった段か、提起できる段か）----
+% 否認の行方(C, 止め(段のid, 欄の番号のリスト, 止めた条) | できる(段のid))。4の欄の人ごとに、条の順に見て最初に当たったもの1つ
+% 行方/3 は R0 に受けてから比べる（呼び手が 止め(..) や できる(_) を先に入れると、頭の合わない句を飛ばして後ろの句に落ちる。2026-11-22 run_cases NG 8件）
+否認の行方(C, R) :- 否認する(C, P), 行方(P, C, R0), !, R = R0.
+
+行方(父, C, 止め(hinin, [4, 5], '774条5項')) :- 欄(先の否認, C, 確定自ら), !.
+行方(母, C, 止め(hinin, [4, 6], '774条3項')) :- 欄(子の利益, C, はい), !.
+行方(前夫, C, 止め(hinin, [2, 4], '774条4項')) :- 欄(婚姻数, C, 一つ), !.
+行方(前夫, C, 止め(hinin, [4, 6], '774条4項')) :- 欄(子の利益, C, はい), !.
+行方(P, C, 止め(shonin, [4, 7], '776条')) :- 承認した(P, C), !.
+行方(前夫, C, 止め(seinen, [4, 25], '778条の2第4項')) :- 成年の後(C), !.
+行方(_, C, できる(kikan)) :- 欄(期間, C, 以内), !.
+行方(P, C, R) :- 子の系(P), !, 延長(P, C, R).
+行方(_, C, 止め(kikan, [4, 8], A)) :- 期間の条(C, A).
+
+延長(_, C, できる(manryo)) :- 欄(満了前, C, いない内), !.
+延長(_, C, 止め(dokyo, [4, 8, 10], '778条の2第2項')) :- 欄(同居, C, 著害), \+ 欄(子の今, C, 二十一), !.
+延長(子, C, できる(dokyo)) :- 欄(同居, C, 下回る), \+ 欄(子の今, C, 二十一), !.
+% 同居は三年を下回るが二十一歳に達した子は、778条の2第2項の段で止める（2026-11-22 LLMレビューの直し。前は teiki の段まで進み、
+% 箱の理由が「子の出生の時から三年を経過したので」になっていた）。行使者の組は子が成年なので 組み合わせなし m
+延長(_, C, 止め(dokyo, [4, 8, 10, 25], '778条の2第2項')) :- 欄(同居, C, 下回る), 欄(子の今, C, 二十一), !.
+延長(_, C, 止め(dokyo, [4, 8, 10], '778条の2第3項')) :- 欄(同居, C, 下回る), \+ 欄(子の今, C, 二十一), !.
+延長(_, C, 止め(teiki, [4, 8, 9, 10], A)) :- 期間の条(C, A).
+
+成年の後(C) :- 欄(子の今, C, A), memberchk(A, [成年, 二十一]).
+期間の条(C, '778条') :- 先の否認が確定(C), !.
+期間の条(_, '777条').
+
+% schema.pl の 組み合わせなし d から呼ぶ（止まる組で12の欄が「確定した」）。解は1つだけ返す
+否認の止め(C, Ns, A) :- 否認の行方(C, 止め(_, Ns, A)).
+
+% 段を出すか：止まった段より後ろの段は出さない（依頼書 ⑥）。提起できる組でだけ出す段は 提起できる/1 で見る
+段の順(hinin, 1). 段の順(koshi, 2). 段の順(shonin, 3). 段の順(seinen, 4).
+段の順(kikan, 5). 段の順(manryo, 6). 段の順(dokyo, 7). 段の順(teiki, 8).
+止まりまで(C, Id) :-
+    否認の行方(C, R), 段の順(Id, N),
+    ( R = 止め(S, _, _) ; R = できる(S) ), 段の順(S, NS), N =< NS.
+提起できる(C) :- 否認の行方(C, できる(_)).
+
+%% ---- 第774条（嫡出の否認。1項・3項・4項・5項）----
+否認の段(hinin, C, St, M, As, W) :-
+    否認する(C, P), 否認権の答え(P, C, St, M, As, W), !.
+
+否認権の答え(父, C, 否認不可,
+    '母は二以上の婚姻をしていて、前夫として否認権を行使した者が、772条4項により読み替えられた772条3項の規定により、新たに子の父と定められました。新たに子の父と定められた者は、774条1項の規定にかかわらず、子が自らの嫡出であることを否認することができません（774条5項）。',
+    ['774条5項'],
+    '前夫として否認権を行使して新たに子の父と定められた者は、子が自らの嫡出であることを否認することができません') :-
+    欄(先の否認, C, 確定自ら), !.
+否認権の答え(父, C, できる,
+    '母は二以上の婚姻をしていて、772条4項により読み替えられた772条3項の規定により、新たに子の父と定められた者がいます。新たに子の父と定められた者は、前夫として否認権を行使していません。772条の規定により子の父が定められる場合において、父は、子が嫡出であることを否認することができます（774条1項）。',
+    ['774条1項'],
+    '新たに子の父と定められた者は、子が嫡出であることを否認することができます') :-
+    欄(先の否認, C, 確定他), !.
+否認権の答え(父, _, できる,
+    '子の父は、772条の規定により定められます。772条の規定により子の父が定められる場合において、父は、子が嫡出であることを否認することができます（774条1項）。',
+    ['774条1項'],
+    '父は、子が嫡出であることを否認することができます').
+否認権の答え(P, _, できる,
+    '子の父は、772条の規定により定められます。772条の規定により子の父が定められる場合において、子は、子が嫡出であることを否認することができます（774条1項）。',
+    ['774条1項'],
+    '子は、自らが嫡出であることを否認することができます') :-
+    子の系(P), !.
+否認権の答え(母, C, 否認不可,
+    '母の否認権の行使は、子の利益を害することが明らかです。772条の規定により子の父が定められる場合において、母は、子が嫡出であることを否認することができます。ただし、否認権の行使が子の利益を害することが明らかなときは、この限りでありません（774条3項）。',
+    ['774条3項'],
+    '否認権の行使が子の利益を害することが明らかなので、母は、子が嫡出であることを否認することができません') :-
+    欄(子の利益, C, はい), !.
+否認権の答え(母, _, できる,
+    '母の否認権の行使が子の利益を害することは、明らかではありません。772条の規定により子の父が定められる場合において、母は、子が嫡出であることを否認することができます。ただし、否認権の行使が子の利益を害することが明らかなときは、この限りでありません（774条3項）。',
+    ['774条3項'],
+    '母は、子が嫡出であることを否認することができます').
+否認権の答え(前夫, C, 否認不可,
+    '母が子の懐胎の時から出生の時までの間にした婚姻は一つなので、子の父は、772条3項の規定によっては定められません。前夫が子が嫡出であることを否認することができるのは、772条3項の規定により子の父が定められる場合です（774条4項）。',
+    ['774条4項'],
+    '子の父は772条3項の規定によって定められるのではないので、前夫は、子が嫡出であることを否認することができません') :-
+    欄(婚姻数, C, 一つ), !.
+否認権の答え(前夫, C, 否認不可,
+    '前夫の否認権の行使は、子の利益を害することが明らかです。772条3項の規定により子の父が定められる場合において、前夫は、子が嫡出であることを否認することができます。ただし、否認権の行使が子の利益を害することが明らかなときは、この限りでありません（774条4項）。',
+    ['774条4項'],
+    '否認権の行使が子の利益を害することが明らかなので、前夫は、子が嫡出であることを否認することができません') :-
+    欄(子の利益, C, はい), !.
+否認権の答え(前夫, _, できる,
+    '母は二以上の婚姻をしていて、子の父は、772条3項の規定により定められます。前夫の否認権の行使が子の利益を害することは、明らかではありません。772条3項の規定により子の父が定められる場合において、子の懐胎の時から出生の時までの間に母と婚姻していた者であって、子の父以外のもの（前夫）は、子が嫡出であることを否認することができます。ただし、否認権の行使が子の利益を害することが明らかなときは、この限りでありません（774条4項）。',
+    ['774条4項'],
+    '前夫は、子が嫡出であることを否認することができます').
+
+%% ---- 第774条2項（子のために子の否認権を行使する人）----
+否認の段(koshi, C, 行使者, M, ['774条2項'], W) :-
+    否認する(C, P), 行使者(P), 止まりまで(C, koshi), !,
+    者の語(C, P, K),
+    format(atom(M), '~wが、子のために子の否認権を行使します。子の否認権は、親権を行う母、親権を行う養親又は未成年後見人が、子のために行使することができます（774条2項）。', [K]),
+    format(atom(W), '~wは、子のために子の否認権を行使することができます', [K]).
+
+%% ---- 第775条（嫡出否認の訴えの相手方。1項各号・2項）----
+% 提起できる組でだけ出す（否認できない組・否認権を失う組・提起できない組では、訴えの相手を言わない。依頼書 ⑥）
+相手の表(父, '子又は親権を行う母', '775条1項第1号').
+相手の表(母, '父', '775条1項第3号').
+相手の表(前夫, '父及び子又は親権を行う母', '775条1項第4号').
+相手の表(P, '父', '775条1項第2号') :- 子の系(P).
+
+否認の段(aite, C, 訴えで, M, ['775条1項', G], W) :-
+    否認する(C, P), 提起できる(C), !,
+    権の語(P, R), 相手の表(P, H, G),
+    format(atom(M), '~wは、~wに対する嫡出否認の訴えによって行います（775条1項）。', [R, H]),
+    format(atom(W), '~wは、~wに対する嫡出否認の訴えによって行います', [R, H]).
+
+否認の段(tokubetsu, C, 選任, M, ['775条2項'], W) :-
+    否認する(C, P), memberchk(P, [父, 前夫]), 提起できる(C), 欄(親権母, C, いない), !,
+    権の語(P, R),
+    format(atom(M), '親権を行う母がいません。775条1項第1号又は第4号に掲げる否認権を親権を行う母に対し行使しようとする場合において、親権を行う母がないときは、家庭裁判所は、特別代理人を選任しなければなりません（775条2項）。', []),
+    format(atom(W), '親権を行う母がいないので、~wを親権を行う母に対し行使しようとするときは、家庭裁判所は、特別代理人を選任しなければなりません', [R]).
+
+%% ---- 第776条（嫡出の承認。7の欄が「いない」以外で、4の欄が父か母）----
+承認の語(父, '父').
+承認の語(母, '母').
+承認の語(父母, '父と母').
+
+否認の段(shonin, C, St, M, ['776条'], W) :-
+    否認する(C, P), memberchk(P, [父, 母]), \+ 欄(承認, C, いない), 止まりまで(C, shonin), !,
+    欄(承認, C, A), 承認の語(A, AW), 者の語(C, P, K),
+    format(atom(M), '子の出生後に、~wが、子が嫡出であることを承認しました。父又は母は、子の出生後において、子が嫡出であることを承認したときは、それぞれ否認権を失います（776条）。', [AW]),
+    (   承認した(P, C)
+    ->  St = 失う, format(atom(W), '~wは、子の出生後に嫡出であることを承認したので、否認権を失います', [K])
+    ;   St = 当たらない, format(atom(W), '~wは、子の出生後に嫡出であることを承認していないので、776条によっては否認権を失いません', [K])
+    ).
+
+%% ---- 第777条・第778条（嫡出否認の訴えの出訴期間。8の欄）----
+% 期間の表(4の欄の人, C, 起点, 年数, 号の条)。5の欄が「確定し」の2値なら778条の一年（772条3項で父が定められた子の否認の後）
+期間の表(父, C, '新たに子の父と定められた者が嫡出否認の裁判が確定したことを知った時', '一年', '778条第1号') :- 先の否認が確定(C), !.
+期間の表(父, _, '父が子の出生を知った時', '三年', '777条第1号').
+期間の表(母, C, '母が嫡出否認の裁判が確定したことを知った時', '一年', '778条第3号') :- 先の否認が確定(C), !.
+期間の表(母, _, '子の出生の時', '三年', '777条第3号').
+期間の表(前夫, C, '前夫が嫡出否認の裁判が確定したことを知った時', '一年', '778条第4号') :- 先の否認が確定(C), !.
+期間の表(前夫, _, '前夫が子の出生を知った時', '三年', '777条第4号').
+期間の表(P, C, '子が嫡出否認の裁判が確定したことを知った時', '一年', '778条第2号') :- 子の系(P), 先の否認が確定(C), !.
+期間の表(P, _, '子の出生の時', '三年', '777条第2号') :- 子の系(P).
+
+期間の頭(C, '772条3項の規定により父が定められた子について、774条の規定により直近の婚姻の夫について嫡出であることが否認されたので、') :- 先の否認が確定(C), !.
+期間の頭(_, '').
+
+否認の段(kikan, C, St, M, [A, G], W) :-
+    否認する(C, P), 止まりまで(C, kikan), !,
+    期間の条(C, A), 期間の表(P, C, K, Y, G), 権の語(P, R), 者の語(C, P, N), 期間の頭(C, H),
+    format(atom(M0), '~w~wの行使に係る嫡出否認の訴えは、~wから~w以内に提起しなければなりません（~w）。', [H, R, K, Y, A]),
+    (   欄(期間, C, 以内)
+    ->  St = できる,
+        format(atom(M), '~wから~w以内に、嫡出否認の訴えを提起します。~w', [K, Y, M0]),
+        % 起点が「新たに子の父と定められた者が…」のときは主語と重なるので、起点の頭の「◯◯が」を落とす（2026-11-22 LLMレビューの直し。指示語は A6 で使わない）
+        ( 先の否認が確定(C), P == 父, atom_concat(N, R0, K), atom_concat('が', K1, R0) -> true ; K1 = K ),
+        ( 行使者(P) -> format(atom(W), '~wは、~wから~w以内なので、子のために嫡出否認の訴えを提起することができます', [N, K1, Y])
+        ; format(atom(W), '~wは、~wから~w以内なので、嫡出否認の訴えを提起することができます', [N, K1, Y]) )
+    ;   子の系(P)
+    ->  St = 経過,
+        format(atom(M), '~wから~wを経過しました。~w', [K, Y, M0]),
+        format(atom(W), '子の否認権の行使に係る嫡出否認の訴えは、~wから~wを経過しました', [K, Y])
+    ;   St = 提起不可,
+        format(atom(M), '~wから~wを経過しました。~w', [K, Y, M0]),
+        format(atom(W), '~wから~wを経過したので、~wは、嫡出否認の訴えを提起することができません', [K, Y, N])
+    ).
+
+%% ---- 第778条の2第4項（子が成年に達した後の前夫の否認権。25の欄）----
+% 25の欄が「死亡した」ときは、成年に達した後かが分からないので出さない
+否認の段(seinen, C, 提起不可,
+    '子は成年に達しました。777条（第4号に係る部分に限る。）及び778条（第4号に係る部分に限る。）に掲げる否認権の行使に係る嫡出否認の訴えは、子が成年に達した後は、提起することができません（778条の2第4項）。',
+    ['778条の2第4項'],
+    '子が成年に達したので、前夫は、嫡出否認の訴えを提起することができません') :-
+    否認する(C, 前夫), 成年の後(C), 止まりまで(C, seinen), !.
+
+%% ---- 第778条の2第1項（期間の満了前六箇月以内に親権を行う母などがいなかった。9の欄）----
+否認の段(manryo, C, St, M, ['778条の2第1項'], W) :-
+    否認する(C, P), 子の系(P), 欄(期間, C, 経過), \+ 欄(満了前, C, いた), 止まりまで(C, manryo), !,
+    欄(満了前, C, V), 満了前の答え(V, St, F, W),
+    format(atom(M), '子の否認権の行使に係る期間の満了前六箇月以内の間に、親権を行う母、親権を行う養親及び未成年後見人がいませんでした。~w。777条（第2号に係る部分に限る。）又は778条（第2号に係る部分に限る。）の期間の満了前六箇月以内の間に親権を行う母、親権を行う養親及び未成年後見人がないときは、子は、母若しくは養親の親権停止の期間が満了し、親権喪失若しくは親権停止の審判の取消しの審判が確定し、若しくは親権が回復された時、新たに養子縁組が成立した時又は未成年後見人が就職した時から六箇月を経過するまでの間は、嫡出否認の訴えを提起することができます（778条の2第1項）。', [F]).
+
+満了前の答え(いない内, できる, 'その後に親権が回復された時、未成年後見人が就職した時などから、まだ六箇月を経過していません',
+    '期間の満了前六箇月以内の間に親権を行う母・親権を行う養親・未成年後見人がいなかったので、子は、親権が回復された時や未成年後見人が就職した時などから六箇月を経過するまでの間は、嫡出否認の訴えを提起することができます').
+満了前の答え(いない経過, 当たらない, 'その後に親権が回復された時、未成年後見人が就職した時などから、六箇月を経過しました',
+    '親権が回復された時や未成年後見人が就職した時などから六箇月を経過したので、子は、778条の2第1項によっては嫡出否認の訴えを提起することができません').
+
+%% ---- 第778条の2第2項・第3項（父と同居した期間が三年を下回る子。10の欄と25の欄）----
+否認の段(dokyo, C, St, M, As, W) :-
+    否認する(C, P), 子の系(P), 欄(期間, C, 経過), \+ 欄(同居, C, 以上), 止まりまで(C, dokyo), !,
+    者の語(C, P, K), 同居の答え(P, C, K, St, F, As, W),
+    format(atom(M), '~w。子は、父と継続して同居した期間（当該期間が二以上あるときは、そのうち最も長い期間）が三年を下回るときは、777条（第2号に係る部分に限る。）及び778条（第2号に係る部分に限る。）の規定にかかわらず、二十一歳に達するまでの間、嫡出否認の訴えを提起することができます。ただし、子の否認権の行使が父による養育の状況に照らして父の利益を著しく害するときは、この限りでありません（778条の2第2項）。774条2項の規定は、この場合には、適用しません（778条の2第3項）。', [F]).
+
+同居の答え(_, C, _, 提起不可, '子が父と継続して同居した最も長い期間は三年を下回りますが、子は二十一歳に達しました', ['778条の2第2項'],
+    '子は二十一歳に達したので、嫡出否認の訴えを提起することができません') :-
+    欄(子の今, C, 二十一), !.
+同居の答え(_, C, _, 提起不可, '子が父と継続して同居した最も長い期間は三年を下回りますが、子の否認権の行使は、父による養育の状況に照らして父の利益を著しく害します', ['778条の2第2項'],
+    '子の否認権の行使が父による養育の状況に照らして父の利益を著しく害するので、子は、778条の2第2項ただし書により、嫡出否認の訴えを提起することができません') :-
+    欄(同居, C, 著害), !.
+同居の答え(子, _, _, できる, '子が父と継続して同居した最も長い期間は三年を下回り、子は二十一歳に達していません。子の否認権の行使は、父による養育の状況に照らして父の利益を著しく害しません', ['778条の2第2項'],
+    '父と継続して同居した最も長い期間が三年を下回るので、子は、二十一歳に達するまでの間、嫡出否認の訴えを提起することができます') :- !.
+同居の答え(_, _, K, 提起不可, '子が父と継続して同居した最も長い期間は三年を下回り、子は二十一歳に達していません。子の否認権の行使は、父による養育の状況に照らして父の利益を著しく害しません', ['778条の2第2項', '778条の2第3項'], W) :-
+    % 778条の2第3項（2項の場合には774条2項＝親権を行う母等が子のために否認権を行使する規定を適用しない）を日常語で書く
+    format(atom(W), '父と継続して同居した最も長い期間が三年を下回ることによる嫡出否認の訴えは、子が自ら提起するものなので、~wは、子のために嫡出否認の訴えを提起することができません', [K]).
+
+%% ---- 提起できるか（子の否認権で、期間を経過し、778条の2第1項・第2項のどちらでも提起できない）----
+否認の段(teiki, C, 提起不可, M, [G, '778条の2第1項', '778条の2第2項'], W) :-
+    否認する(C, P), 否認の行方(C, 止め(teiki, _, _)), !,
+    期間の表(P, C, K, Y, G), 者の語(C, P, N),
+    format(atom(M), '子の否認権の行使に係る嫡出否認の訴えは、~wから~wを経過し、778条の2第1項にも第2項にも当たりません。', [K, Y]),
+    ( 行使者(P) -> format(atom(W), '~wから~wを経過したので、~wは、子のために嫡出否認の訴えを提起することができません', [K, Y, N])
+    ; format(atom(W), '~wから~wを経過したので、子は、嫡出否認の訴えを提起することができません', [K, Y]) ).
+
+%% ---- 第778条の3（監護の費用の償還。12の欄が「確定した」）----
+% 否認の裁判が確定した組でだけ出す（B4。確定していない組では、否認されたとは言わない）
+否認の段(hiyo, C, 負わない,
+    '嫡出否認の裁判が確定し、子が嫡出であることが否認されました。774条の規定により嫡出であることが否認された場合であっても、子は、父であった者が支出した子の監護に要した費用を償還する義務を負いません（778条の3）。',
+    ['778条の3'],
+    '子は、父であった者が支出した子の監護に要した費用を償還する義務を負いません') :-
+    否認する(C, _), 提起できる(C), 欄(否認確定, C, 確定), !.
+</script>
+<script type="text/prolog" data-name="rules_d_ninchi.pl">% rules/d_ninchi.pl — 認知（779条〜787条・789条）：1・12〜25の欄
+%
+%   2026-11-22 入口の「認知できるか」と「どの話か」（nhanashi）、「どの場合か」（njun）、嫡出でない子かを聞く欄（nchaku）、出生して772条で
+%   父が定まるかを聞く欄（nshussei）をやめ、13〜25の欄の事実から段を出す形にした（REVIEW_RULES C1・C4・C5。案A）。
+%   嫡出でない子かは schema.pl の 嫡出でない/1（1・4・12の欄）で、出生して772条で父が定まるかは1の欄で決める。
+%   段の文と答えから「という入力」「（これは読みです）」を外し、補足の段（胎内の子の認知の後・胎内の子の認知と二十一歳）は about へ移した（A2・A5）。
+%   認知の行方/2 が、13の欄の認知について止まった段（認知できない・効力を生じない）か、認知できる段かを1つに決める。止まった段より後ろの段は出さない（依頼書 ⑥）。
+%   15の欄が「胎内に在った」ときは、779条の段を出さず、783条1項・2項で見る（783条2項。子が出生して772条で父が定まるかは1の欄）。
+%   783条1項は「父は」とだけあるので、母が胎内に在る子を認知する組は783条1項に当たらない段にする（about の読み (k)）。
+%   当たらない の答えは「〜に当たりません」と書かず、主語を立てた肯定の文にする（g_hantei.pl の 答え/4 の決まり。2026-11-22 page_test NG）。
+%   第784条：13の欄の認知が効力を持つ組か、23の欄が「確定した」組（認知の訴えによる認知。決めたこと2-4。about の読み）。
+%   第786条：18の欄が「誰もしない」以外で、13の欄の認知が効力を持つ組。786条4項は、無効の訴えを提起できる組で「認知が無効とされたときは」の形で出す（B4）。
+%   786条2項は786条1項第1号に係る部分だけの例外とし、胎内に在る子の認知でも同じに答える（about の読み (f)）。786条3項は子の法定代理人のとき。
+%   第787条：21の欄が「誰もしない」以外。22の欄が「三年を経過した」ならただし書（依頼書 ④）。23の欄が「確定した」なら、認知の裁判の段にする（B4）。
+%   第789条：24の欄が「父母は婚姻していない」以外で、父の認知がある組。25の欄が「死亡した」なら3項の準用を添える。
+%   認知の段(段のid, C, 状態, 段の文, 条のリスト, 答えの文)。答えの文には指示語（その・この・同項 など）を置かない（A6）。
+
+:- discontiguous 認知の段/6.
+
+認知する(C, P) :- 欄(認知者, C, P), P \== なし.
+
+認知者の語(父届出, '父'). 認知者の語(父遺言, '父').
+認知者の語(母届出, '母'). 認知者の語(母遺言, '母').
+
+%% ---- 認知の行方（13の欄の認知）----
+% 認知の行方(C, 止め(段のid) | できる(段のid))。条の順に見て最初に当たったもの1つ
+% R0 に受けてから比べる（呼び手が できる(_) を先に入れると、止め の句を飛ばして後ろの句に落ちる。c_hinin.pl の 否認の行方 と同じ）
+認知の行方(C, R) :- 認知する(C, P), 認知の時の行方(P, C, R0), !, R = R0.
+
+認知の時の行方(P, C, R) :- 欄(認知の時, C, 胎内), !, 胎内の行方(P, C, R).
+認知の時の行方(_, C, 止め(ninchi)) :- \+ 嫡出でない(C), !.
+認知の時の行方(_, C, R) :- 欄(認知の時, C, 成年), !,
+    ( 欄(承諾, C, 得た) -> R = できる(nseinen) ; R = 止め(nseinen) ).
+認知の時の行方(_, C, R) :- 欄(認知の時, C, 死亡), !,
+    ( 死亡した子を認知できる(C) -> R = できる(shibo) ; R = 止め(shibo) ).
+認知の時の行方(_, _, できる(ninchi)).
+
+胎内の行方(P, _, 止め(tainai)) :- \+ 父の認知者(P), !.
+胎内の行方(_, C, 止め(tainai)) :- 欄(承諾, C, 得ていない), !.
+胎内の行方(_, C, 止め(shussei)) :- \+ 生まれていない(C), 推定が立つ(C), !.
+胎内の行方(_, C, できる(shussei)) :- \+ 生まれていない(C), !.
+胎内の行方(_, _, できる(tainai)).
+
+父の認知者(P) :- memberchk(P, [父届出, 父遺言]).
+
+死亡した子を認知できる(C) :- 欄(卑属, C, 未成年者), !.
+死亡した子を認知できる(C) :- 欄(卑属, C, 成年者), 欄(承諾, C, 得た).
+
+% schema.pl の 父の認知がある/1 から呼ぶ（13の欄の認知が効力を持つ）
+認知の効力がある(C) :- 認知の行方(C, できる(_)).
+% 認知があった組：13の欄の認知が効力を持つか、認知の訴えによる認知の裁判が確定した（決めたこと2-4）
+認知がある(C) :- 認知の効力がある(C), !.
+認知がある(C) :- 欄(認知確定, C, 確定).
+
+認知の順(ninchi, 1). 認知の順(noryoku, 2). 認知の順(hoshiki, 3). 認知の順(nseinen, 4).
+認知の順(tainai, 5). 認知の順(shussei, 6). 認知の順(shibo, 7).
+% 止まった組だけ、止まった段より後ろを切る。認知できる組は全部の段を出す（できる(ninchi) で順1までに切ると780条・781条が出なかった）
+認知の止まりまで(C, Id) :-
+    認知の行方(C, R),
+    ( R = できる(_) -> true ; R = 止め(S), 認知の順(Id, N), 認知の順(S, NS), N =< NS ).
+
+%% ---- 第779条（認知。15の欄が「胎内に在った」以外）----
+認知の段(ninchi, C, St, M, ['779条'], W) :-
+    認知する(C, P), \+ 欄(認知の時, C, 胎内), 認知の止まりまで(C, ninchi), !,
+    認知者の語(P, N),
+    (   嫡出でない(C)
+    ->  St = できる,
+        M = '子は、嫡出でない子です。嫡出でない子は、その父又は母が認知することができます（779条）。',
+        format(atom(W), '~wは、子を認知することができます', [N])
+    ;   St = 当たらない,
+        M = '子は、772条の規定により母の夫の子と推定され、嫡出否認の裁判も確定していません。779条が父又は母に認知させるのは、嫡出でない子です。',
+        W = '子は772条の規定により母の夫の子と推定され、父又は母が認知することができるのは、嫡出でない子です'
+    ).
+
+%% ---- 第780条（認知をする者が未成年者又は成年被後見人。14の欄が「はい」）----
+認知の段(noryoku, C, 不要,
+    '認知をする者は、未成年者又は成年被後見人です。認知をするには、父又は母が未成年者又は成年被後見人であるときであっても、法定代理人の同意を要しません（780条）。',
+    ['780条'],
+    '認知をするのに、認知をする者の法定代理人の同意は要りません') :-
+    認知する(C, _), 欄(能力, C, はい), 認知の止まりまで(C, noryoku), !.
+
+%% ---- 第781条（認知の方式）----
+認知の段(hoshiki, C, 方式, M, [A], W) :-
+    認知する(C, P), 認知の止まりまで(C, hoshiki), !,
+    方式の答え(P, M, A, W).
+
+方式の答え(P, '認知を、戸籍法の定めるところにより届け出ます。認知は、戸籍法の定めるところにより届け出ることによってします（781条1項）。', '781条1項',
+    '認知は、戸籍法の定めるところにより届け出ることによってします') :- memberchk(P, [父届出, 母届出]), !.
+方式の答え(_, '認知を、遺言でします。認知は、遺言によっても、することができます（781条2項）。', '781条2項',
+    '認知は、遺言によってもすることができます').
+
+%% ---- 第782条（成年の子の認知。15の欄が「成年に達していた」）----
+認知の段(nseinen, C, St, M, ['782条'], W) :-
+    認知する(C, P), 欄(認知の時, C, 成年), 認知の止まりまで(C, nseinen), !,
+    認知者の語(P, N),
+    (   欄(承諾, C, 得た)
+    ->  St = できる,
+        M = '認知の時に、子は成年に達していて、子の承諾を得ました。成年の子は、その承諾がなければ、認知することができません（782条）。',
+        format(atom(W), '成年の子の承諾を得たので、~wは、子を認知することができます', [N])
+    ;   St = 認知不可,
+        M = '認知の時に、子は成年に達していて、子の承諾を得ていません。成年の子は、その承諾がなければ、認知することができません（782条）。',
+        format(atom(W), '成年の子の承諾を得ていないので、~wは、子を認知することができません', [N])
+    ).
+
+%% ---- 第783条1項（胎内に在る子の認知。15の欄が「胎内に在った」）----
+認知の段(tainai, C, St, M, ['783条1項'], W) :-
+    認知する(C, P), 欄(認知の時, C, 胎内), 認知の止まりまで(C, tainai), !,
+    胎内の答え(P, C, St, M, W).
+
+胎内の答え(P, _, 当たらない,
+    '母が、胎内に在る子を認知しようとしています。783条1項が胎内に在る子を認知することができるとしているのは、父です。',
+    '胎内に在る子を認知することができるのは、父です') :-
+    \+ 父の認知者(P), !.
+胎内の答え(_, C, 認知不可,
+    '父が、胎内に在る子を認知しようとしていて、母の承諾を得ていません。父は、胎内に在る子でも、認知することができます。この場合においては、母の承諾を得なければなりません（783条1項）。',
+    '母の承諾を得ていないので、父は、胎内に在る子を認知することができません') :-
+    欄(承諾, C, 得ていない), !.
+胎内の答え(_, _, できる,
+    '父が、胎内に在る子を認知しようとしていて、母の承諾を得ました。父は、胎内に在る子でも、認知することができます。この場合においては、母の承諾を得なければなりません（783条1項）。',
+    '母の承諾を得たので、父は、胎内に在る子を認知することができます').
+
+%% ---- 第783条2項（胎内に在る子の認知の後、子が出生した。1の欄が「まだ生まれていない」以外）----
+認知の段(shussei, C, St, M, ['783条2項'], W) :-
+    認知する(C, _), 欄(認知の時, C, 胎内), \+ 生まれていない(C), 認知の止まりまで(C, shussei), !,
+    (   推定が立つ(C)
+    ->  St = 生じない,
+        M = '父が母の承諾を得て胎内に在る子を認知した後、子が出生し、子の父は772条の規定により定められます。783条1項の子が出生した場合において、772条の規定により子の父が定められるときは、783条1項の規定による認知は、効力を生じません（783条2項）。',
+        W = '子の父は772条の規定により定められるので、胎内に在る子の認知は、効力を生じません'
+    ;   St = 生ずる,
+        M = '父が母の承諾を得て胎内に在る子を認知した後、子が出生し、子の父は772条の規定によっては定められません。783条1項の規定による認知が効力を生じないのは、子が出生した場合において、772条の規定により子の父が定められるときです（783条2項）。',
+        W = '子の父は772条の規定によっては定められないので、胎内に在る子の認知は、783条2項によっては効力を失いません'
+    ).
+
+%% ---- 第783条3項（死亡した子の認知。15の欄が「死亡していた」）----
+認知の段(shibo, C, St, M, ['783条3項'], W) :-
+    認知する(C, P), 欄(認知の時, C, 死亡), 認知の止まりまで(C, shibo), !,
+    認知者の語(P, N), 欄(卑属, C, H), 欄(承諾, C, S),
+    死亡の答え(H, S, N, St, F, W),
+    format(atom(M), '認知の時に、子は死亡していました。~w。父又は母は、死亡した子でも、その直系卑属があるときに限り、認知することができます。この場合において、直系卑属が成年者であるときは、その承諾を得なければなりません（783条3項）。', [F]).
+
+死亡の答え(ない, _, N, 認知不可, '子に直系卑属はありません', W) :- !,
+    format(atom(W), '死亡した子に直系卑属がないので、~wは、子を認知することができません', [N]).
+死亡の答え(未成年者, _, N, できる, '子の直系卑属は、未成年者だけです', W) :- !,
+    format(atom(W), '死亡した子に直系卑属があり、成年者ではないので、~wは、子を認知することができます', [N]).
+死亡の答え(成年者, 得た, N, できる, '子の直系卑属に成年者がいて、その承諾を得ました', W) :- !,
+    format(atom(W), '死亡した子の成年の直系卑属の承諾を得たので、~wは、子を認知することができます', [N]).
+死亡の答え(成年者, 得ていない, N, 認知不可, '子の直系卑属に成年者がいて、その承諾を得ていません', W) :-
+    format(atom(W), '死亡した子の成年の直系卑属の承諾を得ていないので、~wは、子を認知することができません', [N]).
+
+%% ---- 第784条（認知の効力。13の欄の認知が効力を持つか、23の欄が「確定した」）----
+% 認知の訴えを提起しただけの組（23の欄が「確定していない」）では出さない（B4）
+認知の段(koryoku, C, 遡る,
+    '子は認知されました。認知は、出生の時にさかのぼって効力を生じます。ただし、第三者が既に取得した権利を害することはできません（784条）。',
+    ['784条'],
+    '認知は、出生の時にさかのぼって効力を生じます。ただし、第三者が既に取得した権利を害することはできません') :-
+    認知がある(C), !.
+
+%% ---- 第785条（認知の取消しの禁止。13の欄の認知が効力を持つ）----
+認知の段(torikeshi, C, 取消不可, M, ['785条'], W) :-
+    認知する(C, P), 認知の効力がある(C), !,
+    認知者の語(P, N),
+    format(atom(M), '~wが子を認知しました。認知をした父又は母は、認知を取り消すことができません（785条）。', [N]),
+    format(atom(W), '認知をした~wは、認知を取り消すことができません', [N]).
+
+%% ---- 第786条（認知の無効の訴え。18の欄が「誰もしない」以外で、13の欄の認知が効力を持つ）----
+% 13の欄が「誰も認知していない」で23の欄が「確定した」組（認知の訴えによる認知）には出さない（786条1項第2号の「認知をした者」・起点の「認知を知った時」は届出・遺言の認知の語なので。未確認）
+無効の表(子, '子', '子又は子の法定代理人が認知を知った時', '786条1項第1号').
+無効の表(代理人, '子の法定代理人', '子又は子の法定代理人が認知を知った時', '786条1項第1号').
+無効の表(認知者, '認知をした者', '認知の時', '786条1項第2号').
+無効の表(母, '子の母', '子の母が認知を知った時', '786条1項第3号').
+
+無効を訴える(C, P) :- 欄(無効者, C, P), P \== なし, 認知の効力がある(C).
+
+起点の語(C, _, '子の出生の時') :- 欄(認知の時, C, 胎内), !.
+起点の語(_, K, K).
+
+% 無効の行方(C, 止め(段のid) | できる(段のid))
+無効の行方(C, R) :- 無効を訴える(C, P), 無効の行方(P, C, R0), !, R = R0.
+無効の行方(他, _, 止め(mukou)) :- !.
+無効の行方(母, C, 止め(mukou)) :- 欄(七年, C, 以内害), !.
+無効の行方(_, C, できる(mukou)) :- \+ 欄(七年, C, 経過), !.
+無効の行方(子, C, 止め(mdokyo)) :- 欄(認知後同居, C, 著害), \+ 欄(子の今, C, 二十一), !.
+無効の行方(子, C, できる(mdokyo)) :- 欄(認知後同居, C, 下回る), \+ 欄(子の今, C, 二十一), !.
+無効の行方(子, _, 止め(mteiki)) :- !.
+無効の行方(代理人, C, 止め(dairi)) :- \+ 欄(認知後同居, C, 以上), \+ 欄(子の今, C, 二十一), !.
+無効の行方(_, _, 止め(mukou)).
+
+認知の段(mukou, C, St, M, ['786条1項', G], W) :-
+    無効を訴える(C, P), P \== 他, !,
+    無効の表(P, N, K0, G), 起点の語(C, K0, K), 欄(七年, C, Y),
+    % 子の法定代理人で786条3項の段へ進む組は、1号の七年を経過した段（経過）にする
+    ( 無効の行方(C, 止め(dairi)) -> P1 = 子 ; P1 = P ),
+    無効の答え(P1, Y, N, K, St, F, W),
+    format(atom(M), '~w。786条1項各号に掲げる者は、それぞれ当該各号に定める時（783条1項の規定による認知がされた場合にあっては、子の出生の時）から七年以内に限り、認知について反対の事実があることを理由として、認知の無効の訴えを提起することができます。ただし、子の母について、認知の無効の主張が子の利益を害することが明らかなときは、この限りでありません（786条1項）。', [F]).
+認知の段(mukou, C, 当たらない,
+    '子、子の法定代理人、認知をした者、子の母のどれでもない人が、認知の無効の訴えを提起しようとしています。',
+    ['786条1項'],
+    '認知の無効の訴えを提起することができるのは、子又は子の法定代理人、認知をした者及び子の母です') :-
+    無効を訴える(C, 他), !.
+
+無効の答え(母, 以内害, _, K, 提起不可, F, '子の母の認知の無効の主張が子の利益を害することが明らかなので、子の母は、786条1項ただし書により、認知の無効の訴えを提起することができません') :- !,
+    format(atom(F), '~wから七年以内ですが、子の母の認知の無効の主張は、子の利益を害することが明らかです', [K]).
+無効の答え(_, Y, N, K, できる, F, W) :- Y \== 経過, !,
+    format(atom(F), '~wから七年以内です', [K]),
+    format(atom(W), '~wから七年以内なので、~wは、認知について反対の事実があることを理由として、認知の無効の訴えを提起することができます', [K, N]).
+無効の答え(子, _, _, K, 経過, F, W) :- !,
+    format(atom(F), '~wから七年を経過しました', [K]),
+    format(atom(W), '子の認知の無効の訴えは、~wから七年を経過しました', [K]).
+無効の答え(_, _, N, K, 提起不可, F, W) :-
+    format(atom(F), '~wから七年を経過しました', [K]),
+    format(atom(W), '~wから七年を経過したので、~wは、認知の無効の訴えを提起することができません', [K, N]).
+
+%% ---- 第786条2項（認知後に同居した期間が三年を下回る子。20の欄と25の欄）----
+認知の段(mdokyo, C, St, M, ['786条2項'], W) :-
+    無効を訴える(C, 子), 欄(七年, C, 経過), \+ 欄(認知後同居, C, 以上), !,
+    無効の同居の答え(C, St, F, W),
+    format(atom(M), '~w。子は、子を認知した者と認知後に継続して同居した期間（当該期間が二以上あるときは、そのうち最も長い期間）が三年を下回るときは、786条1項（第1号に係る部分に限る。）の規定にかかわらず、二十一歳に達するまでの間、認知の無効の訴えを提起することができます。ただし、子による認知の無効の主張が認知をした者による養育の状況に照らして認知をした者の利益を著しく害するときは、この限りでありません（786条2項）。', [F]).
+
+無効の同居の答え(C, 当たらない, '子が認知をした者と認知後に継続して同居した最も長い期間は三年を下回りますが、子は二十一歳に達しました',
+    '子は二十一歳に達したので、786条2項によっては認知の無効の訴えを提起することができません') :-
+    欄(子の今, C, 二十一), !.
+無効の同居の答え(C, 提起不可, '子が認知をした者と認知後に継続して同居した最も長い期間は三年を下回りますが、子による認知の無効の主張は、認知をした者による養育の状況に照らして認知をした者の利益を著しく害します',
+    '子による認知の無効の主張が認知をした者の利益を著しく害するので、子は、786条2項ただし書により、認知の無効の訴えを提起することができません') :-
+    欄(認知後同居, C, 著害), !.
+無効の同居の答え(_, できる, '子が認知をした者と認知後に継続して同居した最も長い期間は三年を下回り、子は二十一歳に達していません。子による認知の無効の主張は、認知をした者の利益を著しく害しません',
+    '認知後に継続して同居した最も長い期間が三年を下回るので、子は、二十一歳に達するまでの間、認知の無効の訴えを提起することができます').
+
+%% ---- 第786条3項（子の法定代理人が提起する場合）----
+認知の段(dairi, C, 提起不可,
+    '子の法定代理人が、認知の無効の訴えを提起しようとしています。子が認知をした者と認知後に継続して同居した最も長い期間は三年を下回り、子は二十一歳に達していません。786条2項の規定は、子の法定代理人が786条1項の認知の無効の訴えを提起する場合には、適用しません（786条3項）。',
+    ['786条2項', '786条3項'],
+    '786条2項は子の法定代理人が提起する場合には適用しないので、子の法定代理人は、七年を経過した後に認知の無効の訴えを提起することができません') :-
+    無効の行方(C, 止め(dairi)), !.
+
+%% ---- 提起できるか（子が提起し、七年を経過し、786条2項にも当たらない）----
+認知の段(mteiki, C, 提起不可, M, ['786条1項', '786条1項第1号', '786条2項'], W) :-
+    無効の行方(C, 止め(mteiki)), !,
+    無効の表(子, _, K0, _), 起点の語(C, K0, K),
+    format(atom(M), '子の認知の無効の訴えは、~wから七年を経過し、786条2項にも当たりません。', [K]),
+    format(atom(W), '~wから七年を経過したので、子は、認知の無効の訴えを提起することができません', [K]).
+
+%% ---- 第786条4項（監護の費用の償還）----
+% 認知の無効の訴えを提起できる組で出す。無効の裁判の確定を聞く欄は無いので、「認知が無効とされたときは」の形にする（B4）
+認知の段(mukohiyo, C, 負わない,
+    '認知の無効の訴えを提起することができます。786条1項及び2項の規定により認知が無効とされた場合であっても、子は、認知をした者が支出した子の監護に要した費用を償還する義務を負いません（786条4項）。',
+    ['786条4項'],
+    '認知が無効とされたときであっても、子は、認知をした者が支出した子の監護に要した費用を償還する義務を負いません') :-
+    無効の行方(C, できる(_)), !.
+
+%% ---- 第787条（認知の訴え。21の欄が「誰もしない」以外）----
+訴える人の語(子, '子').
+訴える人の語(卑属, '子の直系卑属').
+訴える人の語(代理人, '子又は子の直系卑属の法定代理人').
+
+認知の段(uttae, C, 当たらない,
+    '子、子の直系卑属、子又は子の直系卑属の法定代理人のどれでもない人が、認知の訴えを提起しようとしています。',
+    ['787条'],
+    '認知の訴えを提起することができるのは、子、子の直系卑属、子又は子の直系卑属の法定代理人です') :-
+    欄(訴える人, C, 他), !.
+認知の段(uttae, C, St, M, ['787条'], W) :-
+    欄(訴える人, C, P), P \== なし, !,
+    訴える人の語(P, N), 欄(父母の死亡, C, D), 欄(認知確定, C, K),
+    訴えの答え(D, K, N, St, F, W),
+    format(atom(M), '~w。子、その直系卑属又はこれらの者の法定代理人は、認知の訴えを提起することができます。ただし、父又は母の死亡の日から三年を経過したときは、この限りでありません（787条）。', [F]).
+
+訴えの答え(経過, _, N, 提起不可, '父又は母は死亡し、死亡の日から三年を経過しました', W) :- !,
+    format(atom(W), '父又は母の死亡の日から三年を経過したので、~wは、787条ただし書により、認知の訴えを提起することができません', [N]).
+訴えの答え(D, 確定, N, 確定, F, '認知の訴えで認知の裁判が確定したので、子は、裁判によって認知されました') :- !,
+    死亡の語(D, F0), format(atom(F), '~w。~wが提起した認知の訴えで、認知の裁判が確定しました', [F0, N]).
+訴えの答え(D, まだ, N, できる, F, W) :-
+    死亡の語(D, F),
+    format(atom(W), '~wは、認知の訴えを提起することができます', [N]).
+
+死亡の語(生存, '父も母も生きています').
+死亡の語(三年内, '父又は母は死亡し、死亡の日から三年を経過していません').
+
+%% ---- 第789条（準正。24の欄が「父母は婚姻していない」以外で、父の認知がある）----
+認知の段(junsei, C, 取得, M, As, W) :-
+    \+ 欄(準正, C, なし), 父の認知がある(C), !,
+    欄(準正, C, J), 準正の答え(J, F, A, W0),
+    (   欄(子の今, C, 死亡)
+    ->  As = [A, '789条3項'],
+        format(atom(M), '~w。子は既に死亡していました。789条1項及び2項の規定は、子が既に死亡していた場合について準用します（789条3項）。', [F]),
+        atom_concat('子は既に死亡していましたが、789条3項の準用により、', W0, W)
+    ;   As = [A], atom_concat(F, '。', M), W = W0
+    ).
+
+準正の答え(後婚姻, '父が子を認知した後に、父母が婚姻しました。父が認知した子は、その父母の婚姻によって嫡出子の身分を取得します（789条1項）', '789条1項',
+    '父が認知した子は、父母の婚姻によって嫡出子の身分を取得します').
+準正の答え(中認知, '父母の婚姻中に、父が子を認知しました。婚姻中父母が認知した子は、その認知の時から、嫡出子の身分を取得します（789条2項）', '789条2項',
+    '婚姻中に父母が認知した子は、認知の時から、嫡出子の身分を取得します').
+</script>
+<script type="text/prolog" data-name="rules_e_shinkensha.pl">% rules/e_shinkensha.pl — 親権者（818条・819条）：13・23・25〜31の欄
+%
+%   2026-11-22 入口の「親権者は誰か」と「どの場面か」（sba）、「それ以外」の値をやめ、25〜31の欄の事実から段を出す形にした（REVIEW_RULES C4・C5。案A）。
+%   段の文と答えから「という入力」「本人が考えた」「これは裁判のときだけの決まりです」「（これは読みです）」を外した（A2・A5）。
+%   補足の段だった 819条7項・8項 は、29の欄（父母の一方と定めなければならない事情）と30の欄（変更）から答えを出す段にした。
+%   第818条1項：子が生まれているときはいつも出す。25の欄が「成年に達していない」以外なら、親権の段はここで止める（依頼書 ③）。
+%   第818条3項：26の欄が「養子でない」以外。養子のときは818条3項だけを出し、819条の段は出さない（決めたこと2-3）。
+%   第818条2項・819条1項〜4項：27の欄から。819条4項は、父の認知がある組（13の欄の父の認知が効力を持つか、23の欄が「確定した」。決めたこと2-4）。
+%   第819条5項：28の欄が「調わない」「することができない」で、819条1項・3項・4項の協議の組。
+%   第819条7項：裁判上の離婚（2項）・協議に代わる審判（5項）・親権者の変更（6項）の裁判の組で、29の欄から答える（about の読み (m)）。
+%   第819条6項・8項：30の欄が「請求していない」以外。8項は協議で定めた親権者を変更できる組。
+%   親権者の段(段のid, C, 状態, 段の文, 条のリスト, 答えの文)。答えの文には指示語（その・この・同項 など）を置かない（A6）。
+
+:- discontiguous 親権者の段/6.
+
+実親の組(C) :- 親権の対象(C), 欄(養子, C, でない).
+
+%% ---- 第818条1項（親権の対象。子が生まれているとき）----
+親権者の段(taisho, C, St, M, ['818条1項'], W) :-
+    \+ 生まれていない(C), !,
+    欄(子の今, C, K), 対象の答え(K, St, M, W).
+
+対象の答え(未成年, 対象,
+    '子は、成年に達していません。親権は、成年に達しない子について、子の利益のために行使しなければなりません（818条1項）。',
+    '親権は、成年に達しない子について、子の利益のために行使しなければなりません') :- !.
+対象の答え(死亡, 対象外,
+    '子は、死亡しました。親権は、成年に達しない子について、子の利益のために行使するものです（818条1項）。',
+    '子は死亡したので、親権の対象ではありません') :- !.
+対象の答え(_, 対象外,
+    '子は、成年に達しました。親権は、成年に達しない子について、子の利益のために行使するものです（818条1項）。',
+    '子は成年に達したので、親権の対象ではありません').
+
+%% ---- 第818条3項（子が養子。26の欄）----
+親権者の段(yoshi, C, 親権者, M, As, W) :-
+    親権の対象(C), \+ 欄(養子, C, でない), !,
+    欄(養子, C, K), 養子の答え(K, F, As, W),
+    format(atom(M), '子は養子で、~w。子が養子であるときは、養親（子を養子とする縁組が二以上あるときは、直近の縁組により養親となった者に限る。）と、子の父母であって、その養親の配偶者であるものを親権者とします（818条3項）。', [F]).
+
+養子の答え(直近, '直近の縁組の養親の配偶者は、子の父母ではありません', ['818条3項', '818条3項第1号'],
+    '直近の縁組により養親となった者が親権者です').
+養子の答え(配偶者, '直近の縁組の養親の配偶者は、子の父又は母です', ['818条3項', '818条3項第1号', '818条3項第2号'],
+    '直近の縁組により養親となった者と、養親の配偶者である子の父又は母が親権者です').
+
+%% ---- 第818条2項（父母の婚姻中。27の欄が「婚姻中」で、法律上の父がいる）----
+% 推定も認知も準正も無い子・認知だけの子・否認の裁判が確定した子には出さない（schema.pl の 法律上の父がいる/1。2026-11-22 LLMレビューの直し1・2）。
+% 父が定まっていない子の親権者を言う条は 818条・819条に無いので、代わりの行も置かない
+親権者の段(fubo, C, 親権者,
+    '子の父母は、婚姻中です。父母の婚姻中は父母の双方を親権者とします（818条2項）。',
+    ['818条2項'],
+    '父母の双方が親権者です') :-
+    実親の組(C), 欄(父母, C, 婚姻中), 法律上の父がいる(C), !.
+
+%% ---- 第819条1項（協議上の離婚。27の欄が「協議上の離婚をする」）----
+定めの語(双方, '父母の双方').
+定めの語(父, '父').
+定めの語(母, '母').
+
+親権者の段(kyogi, C, St, M, ['819条1項'], W) :-
+    実親の組(C), 欄(父母, C, 協議離婚), \+ 協議が調わない(C), !,
+    欄(協議, C, K),
+    (   定めの語(K, N)
+    ->  St = 親権者,
+        format(atom(M), '父母は協議上の離婚をし、協議で~wを親権者と定めました。父母が協議上の離婚をするときは、その協議で、父母の双方又は一方を親権者と定めます（819条1項）。', [N]),
+        format(atom(W), '~wが親権者です', [N])
+    ;   St = 協議で,
+        M = '父母は協議上の離婚をし、親権者についての協議はまだしていません。父母が協議上の離婚をするときは、その協議で、父母の双方又は一方を親権者と定めます（819条1項）。',
+        W = '父母は、協議上の離婚の協議で、父母の双方又は一方を親権者と定めます'
+    ).
+
+協議が調わない(C) :- 欄(協議, C, K), memberchk(K, [調わない, できない]).
+
+%% ---- 第819条2項（裁判上の離婚。27の欄が「裁判上の離婚を求めている」）----
+親権者の段(saiban, C, 裁判所が,
+    '父母は、裁判上の離婚を求めています。裁判上の離婚の場合には、裁判所は、父母の双方又は一方を親権者と定めます（819条2項）。',
+    ['819条2項'],
+    '裁判上の離婚の場合には、裁判所が、父母の双方又は一方を親権者と定めます') :-
+    実親の組(C), 欄(父母, C, 裁判離婚), !.
+
+%% ---- 第819条3項・4項（子の出生前の離婚・父が認知した子）----
+母が行う組(C, '819条3項', '子の出生前に父母が離婚しました', '子の出生前に父母が離婚したので',
+        '子の出生前に父母が離婚した場合には、親権は、母が行います。ただし、子の出生後に、父母の協議で、父母の双方又は父を親権者と定めることができます（819条3項）。') :-
+    実親の組(C), 欄(父母, C, 出生前離婚), !.
+母が行う組(C, '819条4項', '父母は婚姻しておらず、父が子を認知しました', '父が認知した子なので',
+        '父が認知した子に対する親権は、母が行います。ただし、父母の協議で、父母の双方又は父を親権者と定めることができます（819条4項）。') :-
+    実親の組(C), 欄(父母, C, 婚姻していない), 父の認知がある(C).
+
+親権者の段(hahaga, C, St, M, [A], W) :-
+    母が行う組(C, A, F, R, L), \+ 協議が調わない(C), !,
+    欄(協議, C, K), 母が行う答え(K, R, St, F1, W),
+    format(atom(M), '~w~w。~w', [F, F1, L]).
+
+母が行う答え(K, _, 親権者, F, W) :- memberchk(K, [双方, 父]), !,
+    定めの語(K, N),
+    format(atom(F), '。父母の協議で、~wを親権者と定めました', [N]),
+    format(atom(W), '父母の協議で定めたので、~wが親権者です', [N]).
+母が行う答え(母, R, 母が, '。父母の協議で、母を親権者と定めました', W) :- !,
+    format(atom(W), '~w、親権は、母が行います', [R]).
+母が行う答え(_, R, 母が, '', W) :-
+    format(atom(W), '~w、親権は、母が行います', [R]).
+
+%% ---- 第819条5項（協議に代わる審判。28の欄が「調わない」「することができない」）----
+協議の組(C, '819条1項') :- 実親の組(C), 欄(父母, C, 協議離婚), !.
+協議の組(C, A) :- 母が行う組(C, A, _, _, _).
+
+親権者の段(shinpan, C, 審判, M, [A, '819条5項'], W) :-
+    協議の組(C, A), 協議が調わない(C), !,
+    欄(協議, C, K),
+    ( K == 調わない -> R = '親権者についての父母の協議が調いません' ; R = '親権者についての父母の協議をすることができません' ),
+    format(atom(M), '~w。819条1項、3項又は4項の協議が調わないとき、又は協議をすることができないときは、家庭裁判所は、父又は母の請求によって、協議に代わる審判をすることができます（819条5項）。', [R]),
+    ( K == 調わない -> R2 = '協議が調わない' ; R2 = '協議をすることができない' ),
+    format(atom(W), '親権者についての~wので、家庭裁判所は、父又は母の請求によって、協議に代わる審判をすることができます', [R2]).
+
+%% ---- 第819条6項（親権者の変更。30の欄が「請求していない」以外）----
+変更の語(子, '子').
+変更の語(親族, '子の親族').
+
+親権者の段(henko, C, 当たらない,
+    '子又は子の親族のどちらでもない人が、親権者の変更を請求しました。子の利益のため必要があると認めるときは、家庭裁判所は、子又はその親族の請求によって、親権者を変更することができます（819条6項）。',
+    ['819条6項'],
+    '親権者の変更を請求することができるのは、子又は子の親族です') :-
+    実親の組(C), 欄(変更, C, 他), !.
+親権者の段(henko, C, St, M, ['819条6項'], W) :-
+    実親の組(C), 欄(変更, C, P), P \== なし, !,
+    変更の語(P, N),
+    (   欄(必要, C, はい)
+    ->  St = できる,
+        format(atom(M), '~wが親権者の変更を請求し、家庭裁判所は、子の利益のため必要があると認めます。子の利益のため必要があると認めるときは、家庭裁判所は、子又はその親族の請求によって、親権者を変更することができます（819条6項）。', [N]),
+        format(atom(W), '~wの請求によって、家庭裁判所は、親権者を変更することができます', [N])
+    ;   St = 変更不可,
+        format(atom(M), '~wが親権者の変更を請求しましたが、家庭裁判所は、子の利益のため必要があるとは認めません。子の利益のため必要があると認めるときは、家庭裁判所は、子又はその親族の請求によって、親権者を変更することができます（819条6項）。', [N]),
+        W = '子の利益のため必要があると認められないので、家庭裁判所は、819条6項によっては親権者を変更することができません'
+    ).
+
+% 欄を先に読む（memberchk を先に置くと P が「子」に決まって戻らず、「親族」の組で落ちた）
+変更できる(C) :- 実親の組(C), 欄(変更, C, P), memberchk(P, [子, 親族]), 欄(必要, C, はい).
+
+%% ---- 第819条7項（裁判で父母の双方を親権者と定めるか一方と定めるか。29の欄）----
+裁判の組(C) :- 実親の組(C), 欄(父母, C, 裁判離婚), !.
+裁判の組(C) :- 協議の組(C, _), 協議が調わない(C), !.
+裁判の組(C) :- 変更できる(C).
+
+親権者の段(dai7, C, St, M, As, W) :-
+    裁判の組(C), !,
+    欄(事情, C, J), 事情の答え(J, St, F, As, W),
+    format(atom(M), '~w。裁判所は、819条2項、5項又は6項の裁判において、父母の双方を親権者と定めるかその一方を親権者と定めるかを判断するに当たっては、子の利益のため、父母と子との関係、父と母との関係その他一切の事情を考慮しなければなりません。この場合において、819条7項各号のいずれかに該当するときその他の父母の双方を親権者と定めることにより子の利益を害すると認められるときは、父母の一方を親権者と定めなければなりません（819条7項）。', [F]).
+
+事情の答え(ない, 考慮, '父母の一方を親権者と定めなければならない事情は、ありません', ['819条7項'],
+    '裁判所は、子の利益のため、父母と子との関係、父と母との関係その他一切の事情を考慮して、父母の双方を親権者と定めるかその一方を親権者と定めるかを判断します').
+事情の答え(第一号, 一方, '父又は母が子の心身に害悪を及ぼすおそれがあると認められます', ['819条7項', '819条7項第1号'],
+    '父又は母が子の心身に害悪を及ぼすおそれがあると認められるので、裁判所は、父母の一方を親権者と定めなければなりません').
+事情の答え(第二号, 一方, '父母が共同して親権を行うことが困難であると認められます', ['819条7項', '819条7項第2号'],
+    '父母が共同して親権を行うことが困難であると認められるので、裁判所は、父母の一方を親権者と定めなければなりません').
+事情の答え(その他, 一方, '父母の双方を親権者と定めることにより子の利益を害すると認められます', ['819条7項'],
+    '父母の双方を親権者と定めることにより子の利益を害すると認められるので、裁判所は、父母の一方を親権者と定めなければなりません').
+
+%% ---- 第819条8項（協議で定めた親権者の変更）----
+協議で定めた(C) :- 協議の組(C, _), 欄(協議, C, K), memberchk(K, [双方, 父, 母]).
+
+親権者の段(dai8, C, 考慮, M, ['819条8項'], W) :-
+    変更できる(C), 協議で定めた(C), !,
+    原文('819条8項', H),
+    format(atom(M), '父母の協議で定めた親権者の変更を請求しています。~w', [H]),
+    W = '家庭裁判所は、協議の経過、その後の事情の変更その他の事情を考慮して、協議で定められた親権者を変更することが子の利益のため必要であるか否かを判断します'.
+</script>
+<script type="text/prolog" data-name="rules_f_koshi.pl">% rules/f_koshi.pl — 親権の行い方と、親権を止めること（820条〜826条・834条〜837条）：25〜44の欄
+%
+%   2026-11-22 入口の「親権の行い方と、止めること」と「どの話か」（khanashi）、使い回していた欄（kshometsu・ksha・kshinken）をやめ、
+%   32〜44の欄の事実から段を出す形にした（REVIEW_RULES C1・C4・C5。案A）。段の文と答えから「という入力」「（これは読みです）」を外し、
+%   補足の段（急迫でも日常でもない事項）は about へ移した（A2・A5）。
+%   段はどれも、子が生まれていて成年に達していない組（schema.pl の 親権の対象/1）だけ。
+%   第820条〜第822条：聞く事実が無いので、32〜44の欄がどれも既定のときだけ出す（決めたこと2-5）。
+%   第824条の2：父母の一方だけが親権者かは26〜28の欄から決める（schema.pl の 親権者が一方/1）。1項各号・2項・3項を分ける（依頼書 ⑦）。
+%     824条の2・825条は父母の定めなので、養子の組（818条3項）では出さない。
+%   第834条〜第835条：41の欄が「誰も請求していない」以外で、42の欄の審判について39・40の欄を当てる。834条と834条の2と835条を分ける（依頼書 ⑦）。
+%     834条の原因（虐待又は悪意の遺棄・著しく困難又は不適当）は、834条の2第1項の「困難又は不適当であることにより子の利益を害するとき」にも入ると読む（about の読み）。
+%     43の欄が「まだされていない」組では、段の文を「審判をすることができます」までにする（B4）。できない審判がされた組は 組み合わせなし k（審判の止め/3）。
+%   第836条：43の欄が「原因が消滅し」の4値。第837条：44の欄から1項（辞任）と2項（回復）を分ける（依頼書 ⑦）。
+%   行使の段(段のid, C, 状態, 段の文, 条のリスト, 答えの文)。答えの文には指示語（その・この・同項 など）を置かない（A6）。
+
+:- discontiguous 行使の段/6.
+
+% 32〜44の欄がどれも既定（各欄の値のリストの先頭）
+行い方は既定(C) :- forall(between(32, 44, N), ( 欄の値(N, [V|_]), arg(N, C, V) )).
+
+%% ---- 第820条〜第822条（監護及び教育・子の人格の尊重・居所の指定）----
+行使の段(kango, C, 義務,
+    '子は、成年に達していません。親権を行う者は、子の利益のために子の監護及び教育をする権利を有し、義務を負います（820条）。',
+    ['820条'],
+    '親権を行う者は、子の利益のために子の監護及び教育をする権利を有し、義務を負います') :-
+    親権の対象(C), 行い方は既定(C), !.
+行使の段(jinkaku, C, してはならない,
+    '親権を行う者は、820条の規定による監護及び教育をするに当たっては、子の人格を尊重するとともに、子の年齢及び発達の程度に配慮しなければならず、かつ、体罰その他の子の心身の健全な発達に有害な影響を及ぼす言動をしてはなりません（821条）。',
+    ['821条'],
+    '親権を行う者は、子の人格を尊重し、子の年齢及び発達の程度に配慮しなければならず、体罰その他の子の心身の健全な発達に有害な影響を及ぼす言動をしてはなりません') :-
+    親権の対象(C), 行い方は既定(C), !.
+行使の段(kyosho, C, 義務,
+    '子は、親権を行う者が指定した場所に、居所を定めなければなりません（822条）。',
+    ['822条'],
+    '子は、親権を行う者が指定した場所に、居所を定めなければなりません') :-
+    親権の対象(C), 行い方は既定(C), !.
+
+%% ---- 第823条（職業の許可。32の欄が「営もうとしていない」以外）----
+行使の段(shokugyo, C, St, M, ['823条1項'], W) :-
+    親権の対象(C), \+ 欄(職業, C, なし), !,
+    (   欄(職業, C, 許可)
+    ->  St = できる,
+        M = '子は、親権を行う者の許可を得て、職業を営みます。子は、親権を行う者の許可を得なければ、職業を営むことができません（823条1項）。',
+        W = '親権を行う者の許可を得たので、子は、職業を営むことができます'
+    ;   St = 営めない,
+        M = '子は、親権を行う者の許可を得ずに、職業を営もうとしています。子は、親権を行う者の許可を得なければ、職業を営むことができません（823条1項）。',
+        W = '親権を行う者の許可を得ていないので、子は、職業を営むことができません'
+    ).
+% 「第六条第二項の場合」は画面で何か分からないので、6条2項の中身（営業に堪えることができない事由。law/minpo.xml の6条2項の語）を書く。
+% 結論の箱には出さない（g_hantei.pl の 脇の段/1。箱は823条1項の判定。2026-11-22 LLMレビューの直し5）
+行使の段(shokugyo2, C, できる,
+    '親権を行う者は、子に職業を営むことを許可しました。未成年者が営業に堪えることができない事由があるとき（6条2項）は、親権を行う者は、823条1項の許可を取り消し、又は制限することができます（823条2項）。',
+    ['823条2項'],
+    '未成年者が営業に堪えることができない事由があるとき（6条2項）は、親権を行う者は、職業の許可を取り消し、又は制限することができます') :-
+    親権の対象(C), 欄(職業, C, 許可), !.
+
+%% ---- 第824条（財産の管理及び代表。33の欄が「していない」以外）----
+行使の段(zaisan, C, St, M, ['824条'], W) :-
+    親権の対象(C), \+ 欄(財産, C, なし), !,
+    欄(財産, C, K), 財産の答え(K, St, F, W),
+    format(atom(M), '~w。親権を行う者は、子の財産を管理し、かつ、子の財産に関する法律行為について子を代表します。ただし、子の行為を目的とする債務を生ずべき場合には、本人の同意を得なければなりません（824条）。', [F]).
+
+財産の答え(債務なし, 代表, '親権を行う者が、子の財産に関する法律行為について子を代表します。子の行為を目的とする債務は生じません',
+    '親権を行う者は、子の財産に関する法律行為について子を代表します').
+財産の答え(同意, 代表, '親権を行う者が、子の財産に関する法律行為について子を代表します。子の行為を目的とする債務を生じますが、本人の同意を得ました',
+    '本人の同意を得たので、親権を行う者は、子の行為を目的とする債務を生ずべき法律行為について子を代表することができます').
+財産の答え(不同意, 代表不可, '親権を行う者が、子の財産に関する法律行為について子を代表します。子の行為を目的とする債務を生じ、本人の同意を得ていません',
+    '本人の同意を得ていないので、親権を行う者は、824条ただし書により、子の行為を目的とする債務を生ずべき法律行為について子を代表することができません').
+
+%% ---- 第824条の2（親権の行使方法。34の欄が「できない」か、35の欄が「ない」以外）----
+行使の段(hoho, C, St, M, As, W) :-
+    親権の対象(C), 欄(養子, C, でない), ( 欄(他方, C, できない) ; \+ 欄(単独, C, なし) ), !,
+    方法の答え(C, St, F, As, W),
+    format(atom(M), '~w。親権は、父母が共同して行います。ただし、父母の一方のみが親権者であるとき、他の一方が親権を行うことができないとき、子の利益のため急迫の事情があるときは、父母の一方が行います（824条の2第1項）。父母は、双方が親権者であるときであっても、監護及び教育に関する日常の行為に係る親権の行使を単独ですることができます（824条の2第2項）。特定の事項に係る親権の行使について、父母間に協議が調わない場合であって、子の利益のため必要があると認めるときは、家庭裁判所は、父又は母の請求により、当該事項に係る親権の行使を父母の一方が単独ですることができる旨を定めることができます（824条の2第3項）。', [F]).
+
+方法の答え(C, 一方が, '父母の一方のみが親権者です', ['824条の2第1項', '824条の2第1項第1号'], '父母の一方のみが親権者なので、親権は、親権者である父又は母が行います') :-
+    親権者が一方(C), !.
+方法の答え(C, 一方が, '父母の他の一方は、親権を行うことができません', ['824条の2第1項', '824条の2第1項第2号'], '他の一方が親権を行うことができないので、親権は、父母の一方が行います') :-
+    欄(他方, C, できない), !.
+方法の答え(C, 一方が, '父母の一方だけで行おうとする事項について、子の利益のため急迫の事情があります', ['824条の2第1項', '824条の2第1項第3号'], '子の利益のため急迫の事情があるので、親権は、父母の一方が行います') :-
+    欄(単独, C, 急迫), !.
+方法の答え(C, 単独, '父母の一方だけで行おうとする事項は、監護及び教育に関する日常の行為です', ['824条の2第2項'], '監護及び教育に関する日常の行為なので、父母は、双方が親権者であるときであっても、親権の行使を単独ですることができます') :-
+    欄(単独, C, 日常), !.
+方法の答え(C, 共同, '父母の一方だけで行おうとする特定の事項は、急迫の事情がある事項でも日常の行為でもなく、父母間の協議が調いました', ['824条の2第1項'], '特定の事項に係る親権は、父母が共同して行います') :-
+    欄(単独, C, 調った), !.
+方法の答え(C, 家裁が, '父母の一方だけで行おうとする特定の事項について、父母間に協議が調わず、子の利益のため必要があります', ['824条の2第3項'], '家庭裁判所は、父又は母の請求により、特定の事項に係る親権の行使を父母の一方が単独ですることができる旨を定めることができます') :-
+    欄(単独, C, 必要), !.
+方法の答え(_, 共同, '父母の一方だけで行おうとする特定の事項について、父母間に協議が調わず、子の利益のため必要があるとはいえません', ['824条の2第1項', '824条の2第3項'], '特定の事項に係る親権は、父母が共同して行います').
+
+%% ---- 第824条の3（子の監護をすべき者。36の欄が「定められている」）----
+行使の段(kangosha, C, 単独,
+    '766条の規定により、子の監護をすべき者が定められています。子の監護をすべき者は、820条から823条までに規定する事項について、親権を行う者と同一の権利義務を有し、単独で、子の監護及び教育、居所の指定及び変更並びに営業の許可、その許可の取消し及びその制限をすることができます（824条の3第1項）。親権を行う者（子の監護をすべき者を除く。）は、子の監護をすべき者がこれらの行為をすることを妨げてはなりません（824条の3第2項）。',
+    ['824条の3第1項', '824条の3第2項'],
+    '子の監護をすべき者は、単独で、子の監護及び教育、居所の指定及び変更並びに営業の許可、許可の取消し及び制限をすることができ、親権を行う者は、子の監護をすべき者の行為を妨げてはなりません') :-
+    親権の対象(C), 欄(監護者, C, あり), !.
+
+%% ---- 第825条（共同の名義。37の欄が「していない」以外）----
+行使の段(meigi, C, St, M, ['825条'], W) :-
+    親権の対象(C), 欄(養子, C, でない), \+ 欄(名義, C, なし), !,
+    欄(名義, C, K), 名義の答え(K, St, F, W),
+    format(atom(M), '~w。父母が共同して親権を行う場合において、父母の一方が、共同の名義で、子に代わって法律行為をし又は子がこれをすることに同意したときは、その行為は、他の一方の意思に反したときであっても、そのためにその効力を妨げられません。ただし、相手方が悪意であったときは、この限りでありません（825条）。', [F]).
+
+名義の答え(反しない, 当たらない, '父母の一方が、共同の名義で、子に代わって法律行為をしました。他の一方の意思には反していません',
+    '825条が定めているのは、共同の名義でした行為が他の一方の意思に反したときです').
+名義の答え(善意, 妨げない, '父母の一方が、共同の名義で、子に代わって法律行為をしました。他の一方の意思に反していましたが、相手方は悪意ではありませんでした',
+    '相手方が悪意ではなかったので、共同の名義でした行為は、他の一方の意思に反したことによっては効力を妨げられません').
+名義の答え(悪意, 保たれない, '父母の一方が、共同の名義で、子に代わって法律行為をしました。他の一方の意思に反していて、相手方は悪意でした',
+    '相手方が悪意だったので、共同の名義でした行為は、他の一方の意思に反したことにより効力を妨げられます').
+
+%% ---- 第826条（利益相反行為。38の欄が「ない」以外）----
+行使の段(sohan, C, 請求, M, [A], W) :-
+    親権の対象(C), \+ 欄(相反, C, なし), !,
+    欄(相反, C, K), 相反の答え(K, M, A, W).
+
+相反の答え(子と, '親権を行う者と子との間で、利益が相反する行為があります。親権を行う父又は母とその子との利益が相反する行為については、親権を行う者は、その子のために特別代理人を選任することを家庭裁判所に請求しなければなりません（826条1項）。', '826条1項',
+    '親権を行う者は、子のために特別代理人を選任することを家庭裁判所に請求しなければなりません').
+相反の答え(数人, '親権を行う者が親権を行う数人の子の間で、利益が相反する行為があります。親権を行う者が数人の子に対して親権を行う場合において、その一人と他の子との利益が相反する行為については、親権を行う者は、その一方のために特別代理人を選任することを家庭裁判所に請求しなければなりません（826条2項）。', '826条2項',
+    '親権を行う者は、利益が相反する子の一方のために特別代理人を選任することを家庭裁判所に請求しなければなりません').
+
+%% ---- 第834条・第834条の2・第835条（親権喪失・親権停止・管理権喪失の審判。41の欄が「誰も請求していない」以外）----
+請求者の語(子, '子').
+請求者の語(親族, '子の親族').
+請求者の語(後見人, '未成年後見人').
+請求者の語(監督人, '未成年後見監督人').
+請求者の語(検察官, '検察官').
+
+% 42の欄の審判ごとに、当たる39の欄の値
+審判の原因(喪失, [虐待, 著しく]).
+審判の原因(停止, [虐待, 著しく, 困難]).
+審判の原因(管理権, [管理]).
+
+審判の段のid(喪失, soshitsu).
+審判の段のid(停止, teishi).
+審判の段のid(管理権, kanri).
+
+審判の求め(C) :- 親権の対象(C), \+ 欄(請求者, C, なし).
+
+% 審判の行方(C, 止め(欄の番号のリスト) | できる)。schema.pl の 組み合わせなし k は 審判の止め/3 を使う
+審判の行方(C, 止め([41])) :- 欄(請求者, C, 他), !.
+審判の行方(C, 止め([39, 42])) :- 欄(審判, C, K), 審判の原因(K, Gs), 欄(原因, C, G), \+ memberchk(G, Gs), !.
+審判の行方(C, 止め([40, 42])) :- 欄(審判, C, 喪失), 欄(見込み, C, ある), !.
+審判の行方(_, できる).
+
+審判の止め(C, Ns, A) :- 審判の求め(C), 審判の行方(C, 止め(Ns)), 欄(審判, C, K), 審判の名(K, _, A).
+
+原因の語(虐待, '父又は母による虐待又は悪意の遺棄があります').
+原因の語(著しく, '父又は母による親権の行使が著しく困難又は不適当であることにより、子の利益を著しく害します').
+原因の語(困難, '父又は母による親権の行使が困難又は不適当であることにより、子の利益を害します').
+原因の語(管理, '父又は母による管理権の行使が困難又は不適当であることにより、子の利益を害します').
+原因の語(なし, '父又は母について、虐待又は悪意の遺棄も、親権又は管理権の行使が困難又は不適当であることもありません').
+
+審判の条文(喪失, '父又は母による虐待又は悪意の遺棄があるときその他父又は母による親権の行使が著しく困難又は不適当であることにより子の利益を著しく害するときは、家庭裁判所は、子、その親族、未成年後見人、未成年後見監督人又は検察官の請求により、その父又は母について、親権喪失の審判をすることができます。ただし、二年以内にその原因が消滅する見込みがあるときは、この限りでありません（834条）。').
+審判の条文(停止, '父又は母による親権の行使が困難又は不適当であることにより子の利益を害するときは、家庭裁判所は、子、その親族、未成年後見人、未成年後見監督人又は検察官の請求により、その父又は母について、親権停止の審判をすることができます（834条の2第1項）。家庭裁判所は、親権停止の審判をするときは、二年を超えない範囲内で、親権を停止する期間を定めます（834条の2第2項）。').
+審判の条文(管理権, '父又は母による管理権の行使が困難又は不適当であることにより子の利益を害するときは、家庭裁判所は、子、その親族、未成年後見人、未成年後見監督人又は検察官の請求により、その父又は母について、管理権喪失の審判をすることができます（835条）。').
+
+審判の条(喪失, ['834条']).
+審判の条(停止, ['834条の2第1項', '834条の2第2項']).
+審判の条(管理権, ['835条']).
+
+行使の段(Id, C, St, M, As, W) :-
+    審判の段のid(K, Id), 審判の求め(C), 欄(審判, C, K), !,
+    審判の名(K, N, _), 審判の条(K, As0), 審判の条文(K, L),
+    欄(原因, C, G), 原因の語(G, GW),
+    審判の行方(C, R),
+    審判の答え(R, C, K, N, St, F, W),
+    % 審判をすることができない組では、停止の期間（834条の2第2項）を根拠に入れない
+    ( R == できる -> As = As0 ; As0 = [A0|_], As = [A0] ),
+    format(atom(M), '~w。~w~w', [GW, F, L]).
+
+審判の答え(止め([41]), _, _, N, 当たらない, '', W) :- !,
+    format(atom(W), '~wを請求することができるのは、子、子の親族、未成年後見人、未成年後見監督人又は検察官です', [N]).
+審判の答え(止め([39, 42]), _, K, N, 当たらない, '', W) :- !,
+    審判の原因の語(K, R),
+    format(atom(W), '~wがないので、家庭裁判所は、~wをすることができません', [R, N]).
+審判の答え(止め([40, 42]), _, _, _, 審判不可, '二年以内に原因が消滅する見込みがあります。', '二年以内に原因が消滅する見込みがあるので、家庭裁判所は、834条ただし書により、親権喪失の審判をすることができません') :- !.
+審判の答え(できる, C, K, N, できる, F, W) :-
+    欄(請求者, C, P), 請求者の語(P, PW),
+    ( K == 喪失 -> F = '二年以内に原因が消滅する見込みはありません。' ; F = '' ),
+    format(atom(W), '~wの請求により、家庭裁判所は、父又は母について、~wをすることができます', [PW, N]).
+
+審判の原因の語(喪失, '虐待又は悪意の遺棄や、親権の行使が著しく困難又は不適当であることにより子の利益を著しく害すること').
+審判の原因の語(停止, '親権の行使が困難又は不適当であることにより子の利益を害すること').
+審判の原因の語(管理権, '管理権の行使が困難又は不適当であることにより子の利益を害すること').
+
+%% ---- 第836条（審判の取消し。43の欄が「原因が消滅し」の4値）----
+% できない審判がされた組は 組み合わせなし k なので、ここに来るのは審判をすることができる組だけ
+行使の段(shintori, C, St, M, ['836条'], W) :-
+    審判の求め(C), 欄(審判後, C, H), memberchk(H, [消滅本人, 消滅親族, 消滅他, 消滅なし]), !,
+    欄(審判, C, K), 審判の名(K, N, _),
+    取消しの答え(H, N, St, F, W),
+    format(atom(M), '~wがされた後、~wの原因が消滅しました。~w834条本文、834条の2第1項又は835条に規定する原因が消滅したときは、家庭裁判所は、本人又はその親族の請求によって、それぞれ親権喪失、親権停止又は管理権喪失の審判を取り消すことができます（836条）。', [N, N, F]).
+
+取消しの答え(消滅本人, N, できる, '本人が審判の取消しを請求しました。', W) :- !,
+    format(atom(W), '原因が消滅したので、本人の請求によって、家庭裁判所は、~wを取り消すことができます', [N]).
+取消しの答え(消滅親族, N, できる, '本人の親族が審判の取消しを請求しました。', W) :- !,
+    format(atom(W), '原因が消滅したので、本人の親族の請求によって、家庭裁判所は、~wを取り消すことができます', [N]).
+取消しの答え(消滅他, N, 当たらない, '本人でも本人の親族でもない人が、審判の取消しを請求しました。', W) :- !,
+    format(atom(W), '~wの取消しを請求することができるのは、本人又は本人の親族です', [N]).
+取消しの答え(消滅なし, N, 請求で, '審判の取消しは、まだ請求していません。', W) :-
+    format(atom(W), '原因が消滅したので、家庭裁判所は、本人又は本人の親族の請求によって、~wを取り消すことができます', [N]).
+
+%% ---- 第837条（親権又は管理権の辞任及び回復。44の欄が「辞していない」以外）----
+行使の段(jinin, C, St, M, ['837条1項'], W) :-
+    親権の対象(C), 欄(辞任, C, J), memberchk(J, [辞任, 無許可, 事由なし]), !,
+    辞任の答え(J, St, F, W),
+    format(atom(M), '~w。親権を行う父又は母は、やむを得ない事由があるときは、家庭裁判所の許可を得て、親権又は管理権を辞することができます（837条1項）。', [F]).
+
+辞任の答え(辞任, できる, '親権を行う父又は母に、やむを得ない事由があり、家庭裁判所の許可を得ました',
+    'やむを得ない事由があり、家庭裁判所の許可を得たので、親権を行う父又は母は、親権又は管理権を辞することができます').
+辞任の答え(無許可, 辞任不可, '親権を行う父又は母に、やむを得ない事由がありますが、家庭裁判所の許可を得ていません',
+    '家庭裁判所の許可を得ていないので、親権を行う父又は母は、親権又は管理権を辞することができません').
+辞任の答え(事由なし, 辞任不可, '親権を行う父又は母に、やむを得ない事由はありません',
+    'やむを得ない事由がないので、親権を行う父又は母は、親権又は管理権を辞することができません').
+
+行使の段(kaifuku, C, St, M, ['837条2項'], W) :-
+    親権の対象(C), 欄(辞任, C, J), memberchk(J, [回復, 回復無許可, 消滅せず]), !,
+    回復の答え(J, St, F, W),
+    format(atom(M), '親権を行う父又は母は、やむを得ない事由があり、家庭裁判所の許可を得て、親権又は管理権を辞しました。~w。837条1項の事由が消滅したときは、父又は母は、家庭裁判所の許可を得て、親権又は管理権を回復することができます（837条2項）。', [F]).
+
+回復の答え(回復, できる, '辞したときの事由が消滅し、家庭裁判所の許可を得ました',
+    '辞したときの事由が消滅し、家庭裁判所の許可を得たので、父又は母は、親権又は管理権を回復することができます').
+回復の答え(回復無許可, 回復不可, '辞したときの事由は消滅しましたが、家庭裁判所の許可を得ていません',
+    '家庭裁判所の許可を得ていないので、父又は母は、親権又は管理権を回復することができません').
+回復の答え(消滅せず, 回復不可, '辞したときの事由は、消滅していません',
+    '辞したときの事由が消滅していないので、父又は母は、親権又は管理権を回復することができません').
+</script>
+<script type="text/prolog" data-name="rules_g_hantei.pl">% rules/g_hantei.pl — 段をまとめ、見出し・根拠条文・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 条のリスト)　結論ごとの段 = s(画面のid, 見出し, 段)
+%   形は konin-prolog の g_hantei.pl と同じ（2026-11-22。入口の5つと「どの話か」をやめ、結論1つにつき木1本にした。REVIEW_RULES A1・A7・B5）。
+%   前の見出しは段の答えを全部つないでいた（atomic_list_concat(Ws, '', S)）。前の木は全部の段を「次のすべてが成り立つ」の下にぶら下げた1本で、
+%   全部の段に 評価の約束 を付けていた。
+%   konin と違う所：結論の箱は、塊（子の出生と父・嫡出の否認・認知・親権者・親権の行い方・親権を止めること）ごとに1文まで（上限6行）。
+%   塊の1文は、その塊で最後に決まった段の答え（決めたこと2-5・7。段の文は論理の木に全部残す）。
+%   考慮 の段（819条7項・8項で裁判所が考慮すること）と 786条4項・823条2項 の段は、同じ塊にほかの段があれば塊の1文にしない（脇の段/1）。
+%   論理の木は塊の結論1つにつき1本。一番上の行は結論の箱の文で、その下に塊の段の木を全部置く。
+%   組の番号/2 は木の印（止まった段か）を決めるのに使い、知らない状態なら throw で止める（書き損じを見落とさない）。
+%   どの組でも 772条1項・2項の段が立つので、どれにも当たらない は受け皿として置くだけ。
+
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 成り立たない組があれば、その組だけを段にする（REVIEW_RULES C3。ほかの段は出さない）。
+% 無ければ 772条〜837条 を同じ入力で全部当てる（REVIEW_RULES C4・C5）。
+全部の段(C, Steps) :- 組み合わせなしがある(C), !, 組み合わせなしの段(C, Steps).
+全部の段(C, Steps) :- 条文の段(C, Steps).
+
+% 段の並び＝条の順。塊-[段のid-見出し, …]
+段の一覧([
+    chichi-[suitei-'嫡出の推定', nijo-'二以上の婚姻をしていたときの推定', saibansho-'父を定めることを目的とする訴え'],
+    hinin-[hinin-'嫡出の否認', koshi-'子のために否認権を行使する人', aite-'嫡出否認の訴えの相手方', tokubetsu-'特別代理人の選任',
+           shonin-'嫡出の承認', seinen-'子が成年に達した後の前夫の否認権', kikan-'嫡出否認の訴えの出訴期間',
+           manryo-'親権を行う母などがいなかったときの子の否認権', dokyo-'父と同居した期間が短い子の否認権', teiki-'嫡出否認の訴えを提起できるか',
+           hiyo-'監護の費用の償還（嫡出否認）'],
+    ninchi-[ninchi-'認知', noryoku-'未成年者又は成年被後見人の認知', hoshiki-'認知の方式', nseinen-'成年の子の認知', tainai-'胎内に在る子の認知',
+            shussei-'胎内に在る子の出生', shibo-'死亡した子の認知', koryoku-'認知の効力', torikeshi-'認知の取消しの禁止',
+            mukou-'認知の無効の訴え', mdokyo-'認知後に同居した期間が短い子の無効の訴え', dairi-'子の法定代理人の無効の訴え',
+            mteiki-'認知の無効の訴えを提起できるか', mukohiyo-'監護の費用の償還（認知の無効）', uttae-'認知の訴え', junsei-'準正'],
+    shinkensha-[taisho-'親権の対象', yoshi-'子が養子のときの親権者', fubo-'父母の婚姻中の親権者', kyogi-'協議上の離婚のときの親権者',
+                saiban-'裁判上の離婚のときの親権者', hahaga-'母が親権を行う場合', shinpan-'協議に代わる審判', henko-'親権者の変更',
+                dai7-'父母の一方を親権者と定めなければならない場合', dai8-'協議で定めた親権者の変更'],
+    koshi-[kango-'監護及び教育の権利義務', jinkaku-'子の人格の尊重等', kyosho-'居所の指定', shokugyo-'職業の許可', shokugyo2-'職業の許可の取消し又は制限',
+           zaisan-'財産の管理及び代表', hoho-'親権の行使方法', kangosha-'子の監護をすべき者の権利義務', meigi-'父母の一方が共同の名義でした行為の効力',
+           sohan-'利益相反行為'],
+    tomeru-[soshitsu-'親権喪失の審判', teishi-'親権停止の審判', kanri-'管理権喪失の審判', shintori-'審判の取消し',
+            jinin-'親権又は管理権の辞任', kaifuku-'親権又は管理権の回復']
+]).
+
+条文の段(C, Steps) :-
+    段の一覧(L),
+    findall(s(Id, T, S), ( member(_-Ids, L), member(Id-T, Ids), 段を作る(Id, C, S) ), Steps).
+
+段を作る(Id, C, S) :- ( 段の答え(Id, C, St, M, As, _) -> S = 段(St, M, As) ; 判定しない段(S) ).
+
+% 段のidで、どのファイルの段かを振り分ける（各ファイルの述語は名前を分けてある）
+段の答え(Id, C, St, M, As, W) :- 段の塊(Id, B), 塊の段(B, Id, C, St, M, As, W).
+
+段の塊(Id, B) :- 段の一覧(L), member(B-Ids, L), memberchk(Id-_, Ids), !.
+
+塊の段(chichi, Id, C, St, M, As, W) :- 父の段(Id, C, St, M, As, W).
+塊の段(hinin, Id, C, St, M, As, W) :- 否認の段(Id, C, St, M, As, W).
+塊の段(ninchi, Id, C, St, M, As, W) :- 認知の段(Id, C, St, M, As, W).
+塊の段(shinkensha, Id, C, St, M, As, W) :- 親権者の段(Id, C, St, M, As, W).
+塊の段(koshi, Id, C, St, M, As, W) :- 行使の段(Id, C, St, M, As, W).
+塊の段(tomeru, Id, C, St, M, As, W) :- 行使の段(Id, C, St, M, As, W).
+
+組み合わせなしの段(C, Steps) :-
+    組み合わせなしの一覧(C, L),
+    findall(s(Id, 'この組み合わせはありません', 段(組み合わせなし, M, As)),
+            ( nth1(I, L, _-M-As), atom_concat(mujun, I, Id) ), Steps).
+
+組み合わせなしの一覧(C, L) :- findall(Ns-M-As, 組み合わせなし(C, Ns, M, As), L).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、答え（判定）だけを短く出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」・補足を付けない）。
+% 段の文（理由まで書いた長い文）は論理の木にだけ出す。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(C, Steps, Ws) :-
+    結論の段(C, Steps, Ps),
+    findall(W, member(_-_-W-_, Ps), Ws).
+
+% 結論の箱に出す段を 段のid-段-答え-塊の段のリスト の組で、箱の並びのまま返す（論理の木も同じ並びで結論1つにつき1本立てる。REVIEW_RULES B5）
+% 組み合わせなしは1つずつ結論にする。そのほかは塊ごとに、最後に決まった段を1つ
+結論の段(C, Steps, Ps) :-
+    findall(Id-S-W-[S], ( member(s(Id, _, S), Steps), S = 段(組み合わせなし, _, As), 問いの答え(C, Id, 組み合わせなし, As, W) ), P1),
+    段の一覧(L),
+    findall(P, ( member(_-Ids, L), 塊の結論(C, Steps, Ids, P) ), P2),
+    append(P1, P2, Ps0),
+    ( Ps0 == [] -> どれにも当たらない(W0, S0), Ps = [none-S0-W0-[S0]] ; Ps = Ps0 ).
+
+塊の結論(C, Steps, Ids, Id-S-W-Ss) :-
+    findall(I-S0-W0, ( member(I-_, Ids), member(s(I, _, S0), Steps), S0 = 段(St, _, As), St \== 組み合わせなし, 問いの答え(C, I, St, As, W0) ), Xs),
+    Xs \== [],
+    findall(S1, member(_-S1-_, Xs), Ss),
+    exclude(脇の段, Xs, Ys),
+    ( Ys == [] -> last(Xs, Id-S-W) ; last(Ys, Id-S-W) ).
+
+% 同じ塊にほかの段があれば塊の1文にしない段：考慮の段と、
+% 786条4項（mukohiyo）・823条2項（shokugyo2）。この2つは塊の最後に来て、「提起することができます」（786条1項・2項）・
+% 「職業を営むことができます」（823条1項）の判定を箱から押し出していた（2026-11-22 LLMレビューの直し4・5）
+脇の段(_-段(考慮, _, _)-_) :- !.
+脇の段(I-_-_) :- memberchk(I, [mukohiyo, shokugyo2]).
+
+どれにも当たらない('当てる条がありません', 段(当たらない, '当てる条がありません。', [])).
+
+% 根拠の無い段（判定しない）は結論の箱に出さない
+% 「;」で書くと、根拠の付いた組み合わせなしで両方の枝が成り立ち、同じ文が結論の箱に2回出た（dairi-prolog 2026-11-19）。「->」で解を1つにする
+問いの答え(C, Id, St, As, W) :-
+    St \== 判定しない, As \== [],
+    答え(C, Id, St, W0), !,
+    ( St == 組み合わせなし -> 組み合わせなしの条(C, Id, S) ; 条の表記(As, S) ),
+    format(atom(W), '~w（~w）', [W0, S]).
+
+% 成り立たない組は「この組み合わせはありません。…（4と12の欄・775条1項）」
+組み合わせなしの条(C, Id, S) :-
+    atom_concat(mujun, IA, Id), atom_number(IA, I),
+    組み合わせなしの一覧(C, L), nth1(I, L, Ns-_-As),
+    atomic_list_concat(Ns, 'と', N),
+    条の表記(As, A),
+    format(atom(S), '~wの欄・~w', [N, A]).
+
+% 節の文：答えがあればそれを、無い段は段の文をそのまま出す
+節の文(C, Id, 段(St, _, _), W) :- 答え(C, Id, St, W), !.
+節の文(_, _, 段(_, M, _), M).
+
+% 答え(C, 段のid, 状態, 答えの文)
+% 当たらない の答えは、条の要件を「〜ときに当たりません」と否定で写さず、主語を立てた肯定の文で書く（依頼書 ⑤。hosho-prolog の e_hantei.pl と同じ）
+% 段の答え/6 は状態を縛らずに呼んでから比べる（状態を先に縛ると、別の状態の句へ進んで取り違えるため）
+答え(_, _, 判定しない, _) :- !, fail.
+答え(C, Id, 組み合わせなし, W) :- !,
+    atom_concat(mujun, IA, Id), atom_number(IA, I),
+    組み合わせなしの一覧(C, L), nth1(I, L, _-M-_),
+    atomic_list_concat(['この組み合わせはありません。', M], W).
+答え(C, Id, St, W) :- 段の答え(Id, C, St0, _, _, W), !, St0 == St.
+
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---- 根拠条文 ----
+% 段の順に並べ、重複は1つに
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As), Ss), member(A, As) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5）。並びは結論の箱と同じ。一番上の行は結論の箱の文で、
+% その下に塊の段の木を置く（段が1つなら直に、2つ以上なら「次のすべてが成り立つ」の下に。REVIEW_RULES B6）。
+木(C, Steps, Trees) :-
+    結論の段(C, Steps, Ps),
+    findall(t(K, W, '', Kids), ( member(_-S-W-Ss, Ps), 塊の木(Ss, Kids), 印(S, K) ), Trees).
+
+塊の木(Ss, Kids) :-
+    findall(X, ( member(S, Ss), 段の木(S, X) ), Xs),
+    ( Xs = [X1] -> Kids = [X1] ; Kids = [t(and, '次のすべてが成り立つ', '', Xs)] ).
+
+% 止まった段（できない・当たらない など）は info、そのほかは ok（木ごとに、結論の段で決める）
+印(段(St, _, _), K) :- 組の番号(St, N), ( N =:= 1 -> K = info ; K = ok ).
+
+% 組の番号(状態, 1=止まった段 | 2=当たった段)。状態は全部名前で書き、知らない状態は止める（依頼書）
+組の番号(当たらない, 1) :- !.
+組の番号(否認不可, 1) :- !.
+組の番号(失う, 1) :- !.
+組の番号(提起不可, 1) :- !.
+組の番号(経過, 1) :- !.
+組の番号(負わない, 1) :- !.
+組の番号(認知不可, 1) :- !.
+組の番号(生じない, 1) :- !.
+組の番号(取消不可, 1) :- !.
+組の番号(対象外, 1) :- !.
+組の番号(変更不可, 1) :- !.
+組の番号(営めない, 1) :- !.
+組の番号(代表不可, 1) :- !.
+組の番号(保たれない, 1) :- !.
+組の番号(審判不可, 1) :- !.
+組の番号(辞任不可, 1) :- !.
+組の番号(回復不可, 1) :- !.
+組の番号(組み合わせなし, 1) :- !.
+組の番号(否認された, 1) :- !.
+組の番号(推定, 2) :- !.
+組の番号(裁判所, 2) :- !.
+組の番号(できる, 2) :- !.
+組の番号(行使者, 2) :- !.
+組の番号(訴えで, 2) :- !.
+組の番号(選任, 2) :- !.
+組の番号(不要, 2) :- !.
+組の番号(方式, 2) :- !.
+組の番号(生ずる, 2) :- !.
+組の番号(遡る, 2) :- !.
+組の番号(確定, 2) :- !.
+組の番号(取得, 2) :- !.
+組の番号(対象, 2) :- !.
+組の番号(親権者, 2) :- !.
+組の番号(協議で, 2) :- !.
+組の番号(裁判所が, 2) :- !.
+組の番号(母が, 2) :- !.
+組の番号(審判, 2) :- !.
+組の番号(考慮, 2) :- !.
+組の番号(一方, 2) :- !.
+組の番号(義務, 2) :- !.
+組の番号(してはならない, 2) :- !.
+組の番号(代表, 2) :- !.
+組の番号(一方が, 2) :- !.
+組の番号(単独, 2) :- !.
+組の番号(共同, 2) :- !.
+組の番号(家裁が, 2) :- !.
+組の番号(妨げない, 2) :- !.
+組の番号(請求, 2) :- !.
+組の番号(請求で, 2) :- !.
+組の番号(St, _) :- throw(知らない状態(St)).
+
+段の木(段(判定しない, _, _), _) :- !, fail.
+段の木(段(St, M, Arts), X) :-
+    list_to_set(Arts, As),
+    maplist(原文規定, As, Rs),
+    段の約束(St, Ys),
+    append(Rs, Ys, Kids),
+    すべて(M, '', Kids, X).
+
+% 葉に置くのは結論を支える規則だけ。評価の語10個の「当たるかは判定しない」は木に置かず、about の「判定しないもの」に置く
+% （依頼書の「3案に共通する直し」。konin-prolog と同じ。前は全部の段に 評価の約束 を付けていた）
+段の約束(当たらない, [Y]) :- !, 場面外の約束(Y).
+段の約束(_, []).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は konin-prolog の web.pl と同じ（2026-11-22）。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(C, Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+</script>
+<script type="application/json" id="law">{"766":{"t":"第七百六十六条","c":"（離婚後の子の監護に関する事項の定め等）","p":[{"n":"1","s":"父母が協議上の離婚をするときは、子の監護をすべき者又は子の監護の分掌、父又は母と子との交流、子の監護に要する費用の分担その他の子の監護について必要な事項は、その協議で定める。この場合においては、子の利益を最も優先して考慮しなければならない。","i":[]},{"n":"2","s":"前項の協議が調わないとき、又は協議をすることができないときは、家庭裁判所が、同項の事項を定める。","i":[]},{"n":"3","s":"家庭裁判所は、必要があると認めるときは、前二項の規定による定めを変更し、その他子の監護について相当な処分を命ずることができる。","i":[]},{"n":"4","s":"前三項の規定によっては、監護の範囲外では、父母の権利義務に変更を生じない。","i":[]}]},"772":{"t":"第七百七十二条","c":"（嫡出の推定）","p":[{"n":"1","s":"妻が婚姻中に懐胎した子は、当該婚姻における夫の子と推定する。女が婚姻前に懐胎した子であって、婚姻が成立した後に生まれたものも、同様とする。","i":[]},{"n":"2","s":"前項の場合において、婚姻の成立の日から二百日以内に生まれた子は、婚姻前に懐胎したものと推定し、婚姻の成立の日から二百日を経過した後又は婚姻の解消若しくは取消しの日から三百日以内に生まれた子は、婚姻中に懐胎したものと推定する。","i":[]},{"n":"3","s":"第一項の場合において、女が子を懐胎した時から子の出生の時までの間に二以上の婚姻をしていたときは、その子は、その出生の直近の婚姻における夫の子と推定する。","i":[]},{"n":"4","s":"前三項の規定により父が定められた子について、第七百七十四条の規定によりその父の嫡出であることが否認された場合における前項の規定の適用については、同項中「直近の婚姻」とあるのは、「直近の婚姻（第七百七十四条の規定により子がその嫡出であることが否認された夫との間の婚姻を除く。）」とする。","i":[]}]},"773":{"t":"第七百七十三条","c":"（父を定めることを目的とする訴え）","p":[{"n":"1","s":"第七百三十二条の規定に違反して婚姻をした女が出産した場合において、前条の規定によりその子の父を定めることができないときは、裁判所が、これを定める。","i":[]}]},"774":{"t":"第七百七十四条","c":"（嫡出の否認）","p":[{"n":"1","s":"第七百七十二条の規定により子の父が定められる場合において、父又は子は、子が嫡出であることを否認することができる。","i":[]},{"n":"2","s":"前項の規定による子の否認権は、親権を行う母、親権を行う養親又は未成年後見人が、子のために行使することができる。","i":[]},{"n":"3","s":"第一項に規定する場合において、母は、子が嫡出であることを否認することができる。ただし、その否認権の行使が子の利益を害することが明らかなときは、この限りでない。","i":[]},{"n":"4","s":"第七百七十二条第三項の規定により子の父が定められる場合において、子の懐胎の時から出生の時までの間に母と婚姻していた者であって、子の父以外のもの（以下「前夫」という。）は、子が嫡出であることを否認することができる。ただし、その否認権の行使が子の利益を害することが明らかなときは、この限りでない。","i":[]},{"n":"5","s":"前項の規定による否認権を行使し、第七百七十二条第四項の規定により読み替えられた同条第三項の規定により新たに子の父と定められた者は、第一項の規定にかかわらず、子が自らの嫡出であることを否認することができない。","i":[]}]},"775":{"t":"第七百七十五条","c":"（嫡出否認の訴え）","p":[{"n":"1","s":"次の各号に掲げる否認権は、それぞれ当該各号に定める者に対する嫡出否認の訴えによって行う。","i":[{"n":"1","t":"一","s":"父の否認権　子又は親権を行う母","sub":[]},{"n":"2","t":"二","s":"子の否認権　父","sub":[]},{"n":"3","t":"三","s":"母の否認権　父","sub":[]},{"n":"4","t":"四","s":"前夫の否認権　父及び子又は親権を行う母","sub":[]}]},{"n":"2","s":"前項第一号又は第四号に掲げる否認権を親権を行う母に対し行使しようとする場合において、親権を行う母がないときは、家庭裁判所は、特別代理人を選任しなければならない。","i":[]}]},"776":{"t":"第七百七十六条","c":"（嫡出の承認）","p":[{"n":"1","s":"父又は母は、子の出生後において、その嫡出であることを承認したときは、それぞれその否認権を失う。","i":[]}]},"777":{"t":"第七百七十七条","c":"（嫡出否認の訴えの出訴期間）","p":[{"n":"1","s":"次の各号に掲げる否認権の行使に係る嫡出否認の訴えは、それぞれ当該各号に定める時から三年以内に提起しなければならない。","i":[{"n":"1","t":"一","s":"父の否認権　父が子の出生を知った時","sub":[]},{"n":"2","t":"二","s":"子の否認権　その出生の時","sub":[]},{"n":"3","t":"三","s":"母の否認権　子の出生の時","sub":[]},{"n":"4","t":"四","s":"前夫の否認権　前夫が子の出生を知った時","sub":[]}]}]},"778":{"t":"第七百七十八条","c":"","p":[{"n":"1","s":"第七百七十二条第三項の規定により父が定められた子について第七百七十四条の規定により嫡出であることが否認されたときは、次の各号に掲げる否認権の行使に係る嫡出否認の訴えは、前条の規定にかかわらず、それぞれ当該各号に定める時から一年以内に提起しなければならない。","i":[{"n":"1","t":"一","s":"第七百七十二条第四項の規定により読み替えられた同条第三項の規定により新たに子の父と定められた者の否認権　新たに子の父と定められた者が当該子に係る嫡出否認の裁判が確定したことを知った時","sub":[]},{"n":"2","t":"二","s":"子の否認権　子が前号の裁判が確定したことを知った時","sub":[]},{"n":"3","t":"三","s":"母の否認権　母が第一号の裁判が確定したことを知った時","sub":[]},{"n":"4","t":"四","s":"前夫の否認権　前夫が第一号の裁判が確定したことを知った時","sub":[]}]}]},"778_2":{"t":"第七百七十八条の二","c":"","p":[{"n":"1","s":"第七百七十七条（第二号に係る部分に限る。）又は前条（第二号に係る部分に限る。）の期間の満了前六箇月以内の間に親権を行う母、親権を行う養親及び未成年後見人がないときは、子は、母若しくは養親の親権停止の期間が満了し、親権喪失若しくは親権停止の審判の取消しの審判が確定し、若しくは親権が回復された時、新たに養子縁組が成立した時又は未成年後見人が就職した時から六箇月を経過するまでの間は、嫡出否認の訴えを提起することができる。","i":[]},{"n":"2","s":"子は、その父と継続して同居した期間（当該期間が二以上あるときは、そのうち最も長い期間）が三年を下回るときは、第七百七十七条（第二号に係る部分に限る。）及び前条（第二号に係る部分に限る。）の規定にかかわらず、二十一歳に達するまでの間、嫡出否認の訴えを提起することができる。ただし、子の否認権の行使が父による養育の状況に照らして父の利益を著しく害するときは、この限りでない。","i":[]},{"n":"3","s":"第七百七十四条第二項の規定は、前項の場合には、適用しない。","i":[]},{"n":"4","s":"第七百七十七条（第四号に係る部分に限る。）及び前条（第四号に係る部分に限る。）に掲げる否認権の行使に係る嫡出否認の訴えは、子が成年に達した後は、提起することができない。","i":[]}]},"778_3":{"t":"第七百七十八条の三","c":"（子の監護に要した費用の償還の制限）","p":[{"n":"1","s":"第七百七十四条の規定により嫡出であることが否認された場合であっても、子は、父であった者が支出した子の監護に要した費用を償還する義務を負わない。","i":[]}]},"779":{"t":"第七百七十九条","c":"（認知）","p":[{"n":"1","s":"嫡出でない子は、その父又は母がこれを認知することができる。","i":[]}]},"780":{"t":"第七百八十条","c":"（認知能力）","p":[{"n":"1","s":"認知をするには、父又は母が未成年者又は成年被後見人であるときであっても、その法定代理人の同意を要しない。","i":[]}]},"781":{"t":"第七百八十一条","c":"（認知の方式）","p":[{"n":"1","s":"認知は、戸籍法の定めるところにより届け出ることによってする。","i":[]},{"n":"2","s":"認知は、遺言によっても、することができる。","i":[]}]},"782":{"t":"第七百八十二条","c":"（成年の子の認知）","p":[{"n":"1","s":"成年の子は、その承諾がなければ、これを認知することができない。","i":[]}]},"783":{"t":"第七百八十三条","c":"（胎児又は死亡した子の認知）","p":[{"n":"1","s":"父は、胎内に在る子でも、認知することができる。この場合においては、母の承諾を得なければならない。","i":[]},{"n":"2","s":"前項の子が出生した場合において、第七百七十二条の規定によりその子の父が定められるときは、同項の規定による認知は、その効力を生じない。","i":[]},{"n":"3","s":"父又は母は、死亡した子でも、その直系卑属があるときに限り、認知することができる。この場合において、その直系卑属が成年者であるときは、その承諾を得なければならない。","i":[]}]},"784":{"t":"第七百八十四条","c":"（認知の効力）","p":[{"n":"1","s":"認知は、出生の時にさかのぼってその効力を生ずる。ただし、第三者が既に取得した権利を害することはできない。","i":[]}]},"785":{"t":"第七百八十五条","c":"（認知の取消しの禁止）","p":[{"n":"1","s":"認知をした父又は母は、その認知を取り消すことができない。","i":[]}]},"786":{"t":"第七百八十六条","c":"（認知の無効の訴え）","p":[{"n":"1","s":"次の各号に掲げる者は、それぞれ当該各号に定める時（第七百八十三条第一項の規定による認知がされた場合にあっては、子の出生の時）から七年以内に限り、認知について反対の事実があることを理由として、認知の無効の訴えを提起することができる。ただし、第三号に掲げる者について、その認知の無効の主張が子の利益を害することが明らかなときは、この限りでない。","i":[{"n":"1","t":"一","s":"子又はその法定代理人　子又はその法定代理人が認知を知った時","sub":[]},{"n":"2","t":"二","s":"認知をした者　認知の時","sub":[]},{"n":"3","t":"三","s":"子の母　子の母が認知を知った時","sub":[]}]},{"n":"2","s":"子は、その子を認知した者と認知後に継続して同居した期間（当該期間が二以上あるときは、そのうち最も長い期間）が三年を下回るときは、前項（第一号に係る部分に限る。）の規定にかかわらず、二十一歳に達するまでの間、認知の無効の訴えを提起することができる。ただし、子による認知の無効の主張が認知をした者による養育の状況に照らして認知をした者の利益を著しく害するときは、この限りでない。","i":[]},{"n":"3","s":"前項の規定は、同項に規定する子の法定代理人が第一項の認知の無効の訴えを提起する場合には、適用しない。","i":[]},{"n":"4","s":"第一項及び第二項の規定により認知が無効とされた場合であっても、子は、認知をした者が支出した子の監護に要した費用を償還する義務を負わない。","i":[]}]},"787":{"t":"第七百八十七条","c":"（認知の訴え）","p":[{"n":"1","s":"子、その直系卑属又はこれらの者の法定代理人は、認知の訴えを提起することができる。ただし、父又は母の死亡の日から三年を経過したときは、この限りでない。","i":[]}]},"789":{"t":"第七百八十九条","c":"（準正）","p":[{"n":"1","s":"父が認知した子は、その父母の婚姻によって嫡出子の身分を取得する。","i":[]},{"n":"2","s":"婚姻中父母が認知した子は、その認知の時から、嫡出子の身分を取得する。","i":[]},{"n":"3","s":"前二項の規定は、子が既に死亡していた場合について準用する。","i":[]}]},"818":{"t":"第八百十八条","c":"（親権）","p":[{"n":"1","s":"親権は、成年に達しない子について、その子の利益のために行使しなければならない。","i":[]},{"n":"2","s":"父母の婚姻中はその双方を親権者とする。","i":[]},{"n":"3","s":"子が養子であるときは、次に掲げる者を親権者とする。","i":[{"n":"1","t":"一","s":"養親（当該子を養子とする縁組が二以上あるときは、直近の縁組により養親となった者に限る。）","sub":[]},{"n":"2","t":"二","s":"子の父母であって、前号に掲げる養親の配偶者であるもの","sub":[]}]}]},"819":{"t":"第八百十九条","c":"（離婚又は認知の場合の親権者）","p":[{"n":"1","s":"父母が協議上の離婚をするときは、その協議で、その双方又は一方を親権者と定める。","i":[]},{"n":"2","s":"裁判上の離婚の場合には、裁判所は、父母の双方又は一方を親権者と定める。","i":[]},{"n":"3","s":"子の出生前に父母が離婚した場合には、親権は、母が行う。ただし、子の出生後に、父母の協議で、父母の双方又は父を親権者と定めることができる。","i":[]},{"n":"4","s":"父が認知した子に対する親権は、母が行う。ただし、父母の協議で、父母の双方又は父を親権者と定めることができる。","i":[]},{"n":"5","s":"第一項、第三項又は前項の協議が調わないとき、又は協議をすることができないときは、家庭裁判所は、父又は母の請求によって、協議に代わる審判をすることができる。","i":[]},{"n":"6","s":"子の利益のため必要があると認めるときは、家庭裁判所は、子又はその親族の請求によって、親権者を変更することができる。","i":[]},{"n":"7","s":"裁判所は、第二項又は前二項の裁判において、父母の双方を親権者と定めるかその一方を親権者と定めるかを判断するに当たっては、子の利益のため、父母と子との関係、父と母との関係その他一切の事情を考慮しなければならない。この場合において、次の各号のいずれかに該当するときその他の父母の双方を親権者と定めることにより子の利益を害すると認められるときは、父母の一方を親権者と定めなければならない。","i":[{"n":"1","t":"一","s":"父又は母が子の心身に害悪を及ぼすおそれがあると認められるとき。","sub":[]},{"n":"2","t":"二","s":"父母の一方が他の一方から身体に対する暴力その他の心身に有害な影響を及ぼす言動（次項において「暴力等」という。）を受けるおそれの有無、第一項、第三項又は第四項の協議が調わない理由その他の事情を考慮して、父母が共同して親権を行うことが困難であると認められるとき。","sub":[]}]},{"n":"8","s":"第六項の場合において、家庭裁判所は、父母の協議により定められた親権者を変更することが子の利益のため必要であるか否かを判断するに当たっては、当該協議の経過、その後の事情の変更その他の事情を考慮するものとする。この場合において、当該協議の経過を考慮するに当たっては、父母の一方から他の一方への暴力等の有無、家事事件手続法による調停の有無又は裁判外紛争解決手続（裁判外紛争解決手続の利用の促進に関する法律（平成十六年法律第百五十一号）第一条に規定する裁判外紛争解決手続をいう。）の利用の有無、協議の結果についての公正証書の作成の有無その他の事情をも勘案するものとする。","i":[]}]},"820":{"t":"第八百二十条","c":"（監護及び教育の権利義務）","p":[{"n":"1","s":"親権を行う者は、子の利益のために子の監護及び教育をする権利を有し、義務を負う。","i":[]}]},"821":{"t":"第八百二十一条","c":"（子の人格の尊重等）","p":[{"n":"1","s":"親権を行う者は、前条の規定による監護及び教育をするに当たっては、子の人格を尊重するとともに、その年齢及び発達の程度に配慮しなければならず、かつ、体罰その他の子の心身の健全な発達に有害な影響を及ぼす言動をしてはならない。","i":[]}]},"822":{"t":"第八百二十二条","c":"（居所の指定）","p":[{"n":"1","s":"子は、親権を行う者が指定した場所に、その居所を定めなければならない。","i":[]}]},"823":{"t":"第八百二十三条","c":"（職業の許可）","p":[{"n":"1","s":"子は、親権を行う者の許可を得なければ、職業を営むことができない。","i":[]},{"n":"2","s":"親権を行う者は、第六条第二項の場合には、前項の許可を取り消し、又はこれを制限することができる。","i":[]}]},"824":{"t":"第八百二十四条","c":"（財産の管理及び代表）","p":[{"n":"1","s":"親権を行う者は、子の財産を管理し、かつ、その財産に関する法律行為についてその子を代表する。ただし、その子の行為を目的とする債務を生ずべき場合には、本人の同意を得なければならない。","i":[]}]},"824_2":{"t":"第八百二十四条の二","c":"（親権の行使方法等）","p":[{"n":"1","s":"親権は、父母が共同して行う。ただし、次に掲げるときは、その一方が行う。","i":[{"n":"1","t":"一","s":"その一方のみが親権者であるとき。","sub":[]},{"n":"2","t":"二","s":"他の一方が親権を行うことができないとき。","sub":[]},{"n":"3","t":"三","s":"子の利益のため急迫の事情があるとき。","sub":[]}]},{"n":"2","s":"父母は、その双方が親権者であるときであっても、前項本文の規定にかかわらず、監護及び教育に関する日常の行為に係る親権の行使を単独ですることができる。","i":[]},{"n":"3","s":"特定の事項に係る親権の行使（第一項ただし書又は前項の規定により父母の一方が単独で行うことができるものを除く。）について、父母間に協議が調わない場合であって、子の利益のため必要があると認めるときは、家庭裁判所は、父又は母の請求により、当該事項に係る親権の行使を父母の一方が単独ですることができる旨を定めることができる。","i":[]}]},"824_3":{"t":"第八百二十四条の三","c":"（監護者の権利義務）","p":[{"n":"1","s":"第七百六十六条（第七百四十九条、第七百七十一条及び第七百八十八条において準用する場合を含む。）の規定により定められた子の監護をすべき者は、第八百二十条から第八百二十三条までに規定する事項について、親権を行う者と同一の権利義務を有する。この場合において、子の監護をすべき者は、単独で、子の監護及び教育、居所の指定及び変更並びに営業の許可、その許可の取消し及びその制限をすることができる。","i":[]},{"n":"2","s":"前項の場合には、親権を行う者（子の監護をすべき者を除く。）は、子の監護をすべき者が同項後段の規定による行為をすることを妨げてはならない。","i":[]}]},"825":{"t":"第八百二十五条","c":"（父母の一方が共同の名義でした行為の効力）","p":[{"n":"1","s":"父母が共同して親権を行う場合において、父母の一方が、共同の名義で、子に代わって法律行為をし又は子がこれをすることに同意したときは、その行為は、他の一方の意思に反したときであっても、そのためにその効力を妨げられない。ただし、相手方が悪意であったときは、この限りでない。","i":[]}]},"826":{"t":"第八百二十六条","c":"（利益相反行為）","p":[{"n":"1","s":"親権を行う父又は母とその子との利益が相反する行為については、親権を行う者は、その子のために特別代理人を選任することを家庭裁判所に請求しなければならない。","i":[]},{"n":"2","s":"親権を行う者が数人の子に対して親権を行う場合において、その一人と他の子との利益が相反する行為については、親権を行う者は、その一方のために特別代理人を選任することを家庭裁判所に請求しなければならない。","i":[]}]},"834":{"t":"第八百三十四条","c":"（親権喪失の審判）","p":[{"n":"1","s":"父又は母による虐待又は悪意の遺棄があるときその他父又は母による親権の行使が著しく困難又は不適当であることにより子の利益を著しく害するときは、家庭裁判所は、子、その親族、未成年後見人、未成年後見監督人又は検察官の請求により、その父又は母について、親権喪失の審判をすることができる。ただし、二年以内にその原因が消滅する見込みがあるときは、この限りでない。","i":[]}]},"834_2":{"t":"第八百三十四条の二","c":"（親権停止の審判）","p":[{"n":"1","s":"父又は母による親権の行使が困難又は不適当であることにより子の利益を害するときは、家庭裁判所は、子、その親族、未成年後見人、未成年後見監督人又は検察官の請求により、その父又は母について、親権停止の審判をすることができる。","i":[]},{"n":"2","s":"家庭裁判所は、親権停止の審判をするときは、その原因が消滅するまでに要すると見込まれる期間、子の心身の状態及び生活の状況その他一切の事情を考慮して、二年を超えない範囲内で、親権を停止する期間を定める。","i":[]}]},"835":{"t":"第八百三十五条","c":"（管理権喪失の審判）","p":[{"n":"1","s":"父又は母による管理権の行使が困難又は不適当であることにより子の利益を害するときは、家庭裁判所は、子、その親族、未成年後見人、未成年後見監督人又は検察官の請求により、その父又は母について、管理権喪失の審判をすることができる。","i":[]}]},"836":{"t":"第八百三十六条","c":"（親権喪失、親権停止又は管理権喪失の審判の取消し）","p":[{"n":"1","s":"第八百三十四条本文、第八百三十四条の二第一項又は前条に規定する原因が消滅したときは、家庭裁判所は、本人又はその親族の請求によって、それぞれ親権喪失、親権停止又は管理権喪失の審判を取り消すことができる。","i":[]}]},"837":{"t":"第八百三十七条","c":"（親権又は管理権の辞任及び回復）","p":[{"n":"1","s":"親権を行う父又は母は、やむを得ない事由があるときは、家庭裁判所の許可を得て、親権又は管理権を辞することができる。","i":[]},{"n":"2","s":"前項の事由が消滅したときは、父又は母は、家庭裁判所の許可を得て、親権又は管理権を回復することができる。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"第一編　総則 第一章　通則","a":[{"k":"1","t":"第一条","c":"（基本原則）","u":0},{"k":"2","t":"第二条","c":"（解釈の基準）","u":0}]},{"t":"第一編　総則 第二章　人","a":[{"k":"3","t":"第三条","c":"","u":0},{"k":"3_2","t":"第三条の二","c":"","u":0},{"k":"4","t":"第四条","c":"（成年）","u":0},{"k":"5","t":"第五条","c":"（未成年者の法律行為）","u":0},{"k":"6","t":"第六条","c":"（未成年者の営業の許可）","u":0},{"k":"7","t":"第七条","c":"（後見開始の審判）","u":0},{"k":"8","t":"第八条","c":"（成年被後見人及び成年後見人）","u":0},{"k":"9","t":"第九条","c":"（成年被後見人の法律行為）","u":0},{"k":"10","t":"第十条","c":"（後見開始の審判の取消し）","u":0},{"k":"11","t":"第十一条","c":"（保佐開始の審判）","u":0},{"k":"12","t":"第十二条","c":"（被保佐人及び保佐人）","u":0},{"k":"13","t":"第十三条","c":"（保佐人の同意を要する行為等）","u":0},{"k":"14","t":"第十四条","c":"（保佐開始の審判等の取消し）","u":0},{"k":"15","t":"第十五条","c":"（補助開始の審判）","u":0},{"k":"16","t":"第十六条","c":"（被補助人及び補助人）","u":0},{"k":"17","t":"第十七条","c":"（補助人の同意を要する旨の審判等）","u":0},{"k":"18","t":"第十八条","c":"（補助開始の審判等の取消し）","u":0},{"k":"19","t":"第十九条","c":"（審判相互の関係）","u":0},{"k":"20","t":"第二十条","c":"（制限行為能力者の相手方の催告権）","u":0},{"k":"21","t":"第二十一条","c":"（制限行為能力者の詐術）","u":0},{"k":"22","t":"第二十二条","c":"（住所）","u":0},{"k":"23","t":"第二十三条","c":"（居所）","u":0},{"k":"24","t":"第二十四条","c":"（仮住所）","u":0},{"k":"25","t":"第二十五条","c":"（不在者の財産の管理）","u":0},{"k":"26","t":"第二十六条","c":"（管理人の改任）","u":0},{"k":"27","t":"第二十七条","c":"（管理人の職務）","u":0},{"k":"28","t":"第二十八条","c":"（管理人の権限）","u":0},{"k":"29","t":"第二十九条","c":"（管理人の担保提供及び報酬）","u":0},{"k":"30","t":"第三十条","c":"（失踪の宣告）","u":0},{"k":"31","t":"第三十一条","c":"（失踪の宣告の効力）","u":0},{"k":"32","t":"第三十二条","c":"（失踪の宣告の取消し）","u":0},{"k":"32_2","t":"第三十二条の二","c":"","u":0}]},{"t":"第一編　総則 第三章　法人","a":[{"k":"33","t":"第三十三条","c":"（法人の成立等）","u":0},{"k":"34","t":"第三十四条","c":"（法人の能力）","u":0},{"k":"35","t":"第三十五条","c":"（外国法人）","u":0},{"k":"36","t":"第三十六条","c":"（登記）","u":0},{"k":"37","t":"第三十七条","c":"（外国法人の登記）","u":0},{"k":"38:84","t":"第三十八条から第八十四条まで","c":"","u":2}]},{"t":"第一編　総則 第四章　物","a":[{"k":"85","t":"第八十五条","c":"（定義）","u":0},{"k":"86","t":"第八十六条","c":"（不動産及び動産）","u":0},{"k":"87","t":"第八十七条","c":"（主物及び従物）","u":0},{"k":"88","t":"第八十八条","c":"（天然果実及び法定果実）","u":0},{"k":"89","t":"第八十九条","c":"（果実の帰属）","u":0}]},{"t":"第一編　総則 第五章　法律行為","a":[{"k":"90","t":"第九十条","c":"（公序良俗）","u":0},{"k":"91","t":"第九十一条","c":"（任意規定と異なる意思表示）","u":0},{"k":"92","t":"第九十二条","c":"（任意規定と異なる慣習）","u":0},{"k":"93","t":"第九十三条","c":"（心裡留保）","u":0},{"k":"94","t":"第九十四条","c":"（虚偽表示）","u":0},{"k":"95","t":"第九十五条","c":"（錯誤）","u":0},{"k":"96","t":"第九十六条","c":"（詐欺又は強迫）","u":0},{"k":"97","t":"第九十七条","c":"（意思表示の効力発生時期等）","u":0},{"k":"98","t":"第九十八条","c":"（公示による意思表示）","u":0},{"k":"98_2","t":"第九十八条の二","c":"（意思表示の受領能力）","u":0},{"k":"99","t":"第九十九条","c":"（代理行為の要件及び効果）","u":0},{"k":"100","t":"第百条","c":"（本人のためにすることを示さない意思表示）","u":0},{"k":"101","t":"第百一条","c":"（代理行為の瑕疵）","u":0},{"k":"102","t":"第百二条","c":"（代理人の行為能力）","u":0},{"k":"103","t":"第百三条","c":"（権限の定めのない代理人の権限）","u":0},{"k":"104","t":"第百四条","c":"（任意代理人による復代理人の選任）","u":0},{"k":"105","t":"第百五条","c":"（法定代理人による復代理人の選任）","u":0},{"k":"106","t":"第百六条","c":"（復代理人の権限等）","u":0},{"k":"107","t":"第百七条","c":"（代理権の濫用）","u":0},{"k":"108","t":"第百八条","c":"（自己契約及び双方代理等）","u":0},{"k":"109","t":"第百九条","c":"（代理権授与の表示による表見代理等）","u":0},{"k":"110","t":"第百十条","c":"（権限外の行為の表見代理）","u":0},{"k":"111","t":"第百十一条","c":"（代理権の消滅事由）","u":0},{"k":"112","t":"第百十二条","c":"（代理権消滅後の表見代理等）","u":0},{"k":"113","t":"第百十三条","c":"（無権代理）","u":0},{"k":"114","t":"第百十四条","c":"（無権代理の相手方の催告権）","u":0},{"k":"115","t":"第百十五条","c":"（無権代理の相手方の取消権）","u":0},{"k":"116","t":"第百十六条","c":"（無権代理行為の追認）","u":0},{"k":"117","t":"第百十七条","c":"（無権代理人の責任）","u":0},{"k":"118","t":"第百十八条","c":"（単独行為の無権代理）","u":0},{"k":"119","t":"第百十九条","c":"（無効な行為の追認）","u":0},{"k":"120","t":"第百二十条","c":"（取消権者）","u":0},{"k":"121","t":"第百二十一条","c":"（取消しの効果）","u":0},{"k":"121_2","t":"第百二十一条の二","c":"（原状回復の義務）","u":0},{"k":"122","t":"第百二十二条","c":"（取り消すことができる行為の追認）","u":0},{"k":"123","t":"第百二十三条","c":"（取消し及び追認の方法）","u":0},{"k":"124","t":"第百二十四条","c":"（追認の要件）","u":0},{"k":"125","t":"第百二十五条","c":"（法定追認）","u":0},{"k":"126","t":"第百二十六条","c":"（取消権の期間の制限）","u":0},{"k":"127","t":"第百二十七条","c":"（条件が成就した場合の効果）","u":0},{"k":"128","t":"第百二十八条","c":"（条件の成否未定の間における相手方の利益の侵害の禁止）","u":0},{"k":"129","t":"第百二十九条","c":"（条件の成否未定の間における権利の処分等）","u":0},{"k":"130","t":"第百三十条","c":"（条件の成就の妨害等）","u":0},{"k":"131","t":"第百三十一条","c":"（既成条件）","u":0},{"k":"132","t":"第百三十二条","c":"（不法条件）","u":0},{"k":"133","t":"第百三十三条","c":"（不能条件）","u":0},{"k":"134","t":"第百三十四条","c":"（随意条件）","u":0},{"k":"135","t":"第百三十五条","c":"（期限の到来の効果）","u":0},{"k":"136","t":"第百三十六条","c":"（期限の利益及びその放棄）","u":0},{"k":"137","t":"第百三十七条","c":"（期限の利益の喪失）","u":0}]},{"t":"第一編　総則 第六章　期間の計算","a":[{"k":"138","t":"第百三十八条","c":"（期間の計算の通則）","u":0},{"k":"139","t":"第百三十九条","c":"（期間の起算）","u":0},{"k":"140","t":"第百四十条","c":"","u":0},{"k":"141","t":"第百四十一条","c":"（期間の満了）","u":0},{"k":"142","t":"第百四十二条","c":"","u":0},{"k":"143","t":"第百四十三条","c":"（暦による期間の計算）","u":0}]},{"t":"第一編　総則 第七章　時効","a":[{"k":"144","t":"第百四十四条","c":"（時効の効力）","u":0},{"k":"145","t":"第百四十五条","c":"（時効の援用）","u":0},{"k":"146","t":"第百四十六条","c":"（時効の利益の放棄）","u":0},{"k":"147","t":"第百四十七条","c":"（裁判上の請求等による時効の完成猶予及び更新）","u":0},{"k":"148","t":"第百四十八条","c":"（強制執行等による時効の完成猶予及び更新）","u":0},{"k":"149","t":"第百四十九条","c":"（仮差押え等による時効の完成猶予）","u":0},{"k":"150","t":"第百五十条","c":"（催告による時効の完成猶予）","u":0},{"k":"151","t":"第百五十一条","c":"（協議を行う旨の合意による時効の完成猶予）","u":0},{"k":"152","t":"第百五十二条","c":"（承認による時効の更新）","u":0},{"k":"153","t":"第百五十三条","c":"（時効の完成猶予又は更新の効力が及ぶ者の範囲）","u":0},{"k":"154","t":"第百五十四条","c":"","u":0},{"k":"155:157","t":"第百五十五条から第百五十七条まで","c":"","u":2},{"k":"158","t":"第百五十八条","c":"（未成年者又は成年被後見人と時効の完成猶予）","u":0},{"k":"159","t":"第百五十九条","c":"（夫婦間の権利の時効の完成猶予）","u":0},{"k":"160","t":"第百六十条","c":"（相続財産に関する時効の完成猶予）","u":0},{"k":"161","t":"第百六十一条","c":"（天災等による時効の完成猶予）","u":0},{"k":"162","t":"第百六十二条","c":"（所有権の取得時効）","u":0},{"k":"163","t":"第百六十三条","c":"（所有権以外の財産権の取得時効）","u":0},{"k":"164","t":"第百六十四条","c":"（占有の中止等による取得時効の中断）","u":0},{"k":"165","t":"第百六十五条","c":"","u":0},{"k":"166","t":"第百六十六条","c":"（債権等の消滅時効）","u":0},{"k":"167","t":"第百六十七条","c":"（人の生命又は身体の侵害による損害賠償請求権の消滅時効）","u":0},{"k":"168","t":"第百六十八条","c":"（定期金債権の消滅時効）","u":0},{"k":"169","t":"第百六十九条","c":"（判決で確定した権利の消滅時効）","u":0},{"k":"170:174","t":"第百七十条から第百七十四条まで","c":"","u":2}]},{"t":"第二編　物権 第一章　総則","a":[{"k":"175","t":"第百七十五条","c":"（物権の創設）","u":0},{"k":"176","t":"第百七十六条","c":"（物権の設定及び移転）","u":0},{"k":"177","t":"第百七十七条","c":"（不動産に関する物権の変動の対抗要件）","u":0},{"k":"178","t":"第百七十八条","c":"（動産に関する物権の譲渡の対抗要件）","u":0},{"k":"179","t":"第百七十九条","c":"（混同）","u":0}]},{"t":"第二編　物権 第二章　占有権","a":[{"k":"180","t":"第百八十条","c":"（占有権の取得）","u":0},{"k":"181","t":"第百八十一条","c":"（代理占有）","u":0},{"k":"182","t":"第百八十二条","c":"（現実の引渡し及び簡易の引渡し）","u":0},{"k":"183","t":"第百八十三条","c":"（占有改定）","u":0},{"k":"184","t":"第百八十四条","c":"（指図による占有移転）","u":0},{"k":"185","t":"第百八十五条","c":"（占有の性質の変更）","u":0},{"k":"186","t":"第百八十六条","c":"（占有の態様等に関する推定）","u":0},{"k":"187","t":"第百八十七条","c":"（占有の承継）","u":0},{"k":"188","t":"第百八十八条","c":"（占有物について行使する権利の適法の推定）","u":0},{"k":"189","t":"第百八十九条","c":"（善意の占有者による果実の取得等）","u":0},{"k":"190","t":"第百九十条","c":"（悪意の占有者による果実の返還等）","u":0},{"k":"191","t":"第百九十一条","c":"（占有者による損害賠償）","u":0},{"k":"192","t":"第百九十二条","c":"（即時取得）","u":0},{"k":"193","t":"第百九十三条","c":"（盗品又は遺失物の回復）","u":0},{"k":"194","t":"第百九十四条","c":"","u":0},{"k":"195","t":"第百九十五条","c":"（動物の占有による権利の取得）","u":0},{"k":"196","t":"第百九十六条","c":"（占有者による費用の償還請求）","u":0},{"k":"197","t":"第百九十七条","c":"（占有の訴え）","u":0},{"k":"198","t":"第百九十八条","c":"（占有保持の訴え）","u":0},{"k":"199","t":"第百九十九条","c":"（占有保全の訴え）","u":0},{"k":"200","t":"第二百条","c":"（占有回収の訴え）","u":0},{"k":"201","t":"第二百一条","c":"（占有の訴えの提起期間）","u":0},{"k":"202","t":"第二百二条","c":"（本権の訴えとの関係）","u":0},{"k":"203","t":"第二百三条","c":"（占有権の消滅事由）","u":0},{"k":"204","t":"第二百四条","c":"（代理占有権の消滅事由）","u":0},{"k":"205","t":"第二百五条","c":"","u":0}]},{"t":"第二編　物権 第三章　所有権","a":[{"k":"206","t":"第二百六条","c":"（所有権の内容）","u":0},{"k":"207","t":"第二百七条","c":"（土地所有権の範囲）","u":0},{"k":"208","t":"第二百八条","c":"","u":2},{"k":"209","t":"第二百九条","c":"（隣地の使用）","u":0},{"k":"210","t":"第二百十条","c":"（公道に至るための他の土地の通行権）","u":0},{"k":"211","t":"第二百十一条","c":"","u":0},{"k":"212","t":"第二百十二条","c":"","u":0},{"k":"213","t":"第二百十三条","c":"","u":0},{"k":"213_2","t":"第二百十三条の二","c":"（継続的給付を受けるための設備の設置権等）","u":0},{"k":"213_3","t":"第二百十三条の三","c":"","u":0},{"k":"214","t":"第二百十四条","c":"（自然水流に対する妨害の禁止）","u":0},{"k":"215","t":"第二百十五条","c":"（水流の障害の除去）","u":0},{"k":"216","t":"第二百十六条","c":"（水流に関する工作物の修繕等）","u":0},{"k":"217","t":"第二百十七条","c":"（費用の負担についての慣習）","u":0},{"k":"218","t":"第二百十八条","c":"（雨水を隣地に注ぐ工作物の設置の禁止）","u":0},{"k":"219","t":"第二百十九条","c":"（水流の変更）","u":0},{"k":"220","t":"第二百二十条","c":"（排水のための低地の通水）","u":0},{"k":"221","t":"第二百二十一条","c":"（通水用工作物の使用）","u":0},{"k":"222","t":"第二百二十二条","c":"（堰の設置及び使用）","u":0},{"k":"223","t":"第二百二十三条","c":"（境界標の設置）","u":0},{"k":"224","t":"第二百二十四条","c":"（境界標の設置及び保存の費用）","u":0},{"k":"225","t":"第二百二十五条","c":"（囲障の設置）","u":0},{"k":"226","t":"第二百二十六条","c":"（囲障の設置及び保存の費用）","u":0},{"k":"227","t":"第二百二十七条","c":"（相隣者の一人による囲障の設置）","u":0},{"k":"228","t":"第二百二十八条","c":"（囲障の設置等に関する慣習）","u":0},{"k":"229","t":"第二百二十九条","c":"（境界標等の共有の推定）","u":0},{"k":"230","t":"第二百三十条","c":"","u":0},{"k":"231","t":"第二百三十一条","c":"（共有の障壁の高さを増す工事）","u":0},{"k":"232","t":"第二百三十二条","c":"","u":0},{"k":"233","t":"第二百三十三条","c":"（竹木の枝の切除及び根の切取り）","u":0},{"k":"234","t":"第二百三十四条","c":"（境界線付近の建築の制限）","u":0},{"k":"235","t":"第二百三十五条","c":"","u":0},{"k":"236","t":"第二百三十六条","c":"（境界線付近の建築に関する慣習）","u":0},{"k":"237","t":"第二百三十七条","c":"（境界線付近の掘削の制限）","u":0},{"k":"238","t":"第二百三十八条","c":"（境界線付近の掘削に関する注意義務）","u":0},{"k":"239","t":"第二百三十九条","c":"（無主物の帰属）","u":0},{"k":"240","t":"第二百四十条","c":"（遺失物の拾得）","u":0},{"k":"241","t":"第二百四十一条","c":"（埋蔵物の発見）","u":0},{"k":"242","t":"第二百四十二条","c":"（不動産の付合）","u":0},{"k":"243","t":"第二百四十三条","c":"（動産の付合）","u":0},{"k":"244","t":"第二百四十四条","c":"","u":0},{"k":"245","t":"第二百四十五条","c":"（混和）","u":0},{"k":"246","t":"第二百四十六条","c":"（加工）","u":0},{"k":"247","t":"第二百四十七条","c":"（付合、混和又は加工の効果）","u":0},{"k":"248","t":"第二百四十八条","c":"（付合、混和又は加工に伴う償金の請求）","u":0},{"k":"249","t":"第二百四十九条","c":"（共有物の使用）","u":0},{"k":"250","t":"第二百五十条","c":"（共有持分の割合の推定）","u":0},{"k":"251","t":"第二百五十一条","c":"（共有物の変更）","u":0},{"k":"252","t":"第二百五十二条","c":"（共有物の管理）","u":0},{"k":"252_2","t":"第二百五十二条の二","c":"（共有物の管理者）","u":0},{"k":"253","t":"第二百五十三条","c":"（共有物に関する負担）","u":0},{"k":"254","t":"第二百五十四条","c":"（共有物についての債権）","u":0},{"k":"255","t":"第二百五十五条","c":"（持分の放棄及び共有者の死亡）","u":0},{"k":"256","t":"第二百五十六条","c":"（共有物の分割請求）","u":0},{"k":"257","t":"第二百五十七条","c":"","u":0},{"k":"258","t":"第二百五十八条","c":"（裁判による共有物の分割）","u":0},{"k":"258_2","t":"第二百五十八条の二","c":"","u":0},{"k":"259","t":"第二百五十九条","c":"（共有に関する債権の弁済）","u":0},{"k":"260","t":"第二百六十条","c":"（共有物の分割への参加）","u":0},{"k":"261","t":"第二百六十一条","c":"（分割における共有者の担保責任）","u":0},{"k":"262","t":"第二百六十二条","c":"（共有物に関する証書）","u":0},{"k":"262_2","t":"第二百六十二条の二","c":"（所在等不明共有者の持分の取得）","u":0},{"k":"262_3","t":"第二百六十二条の三","c":"（所在等不明共有者の持分の譲渡）","u":0},{"k":"263","t":"第二百六十三条","c":"（共有の性質を有する入会権）","u":0},{"k":"264","t":"第二百六十四条","c":"（準共有）","u":0},{"k":"264_2","t":"第二百六十四条の二","c":"（所有者不明土地管理命令）","u":0},{"k":"264_3","t":"第二百六十四条の三","c":"（所有者不明土地管理人の権限）","u":0},{"k":"264_4","t":"第二百六十四条の四","c":"（所有者不明土地等に関する訴えの取扱い）","u":0},{"k":"264_5","t":"第二百六十四条の五","c":"（所有者不明土地管理人の義務）","u":0},{"k":"264_6","t":"第二百六十四条の六","c":"（所有者不明土地管理人の解任及び辞任）","u":0},{"k":"264_7","t":"第二百六十四条の七","c":"（所有者不明土地管理人の報酬等）","u":0},{"k":"264_8","t":"第二百六十四条の八","c":"（所有者不明建物管理命令）","u":0},{"k":"264_9","t":"第二百六十四条の九","c":"（管理不全土地管理命令）","u":0},{"k":"264_10","t":"第二百六十四条の十","c":"（管理不全土地管理人の権限）","u":0},{"k":"264_11","t":"第二百六十四条の十一","c":"（管理不全土地管理人の義務）","u":0},{"k":"264_12","t":"第二百六十四条の十二","c":"（管理不全土地管理人の解任及び辞任）","u":0},{"k":"264_13","t":"第二百六十四条の十三","c":"（管理不全土地管理人の報酬等）","u":0},{"k":"264_14","t":"第二百六十四条の十四","c":"（管理不全建物管理命令）","u":0}]},{"t":"第二編　物権 第四章　地上権","a":[{"k":"265","t":"第二百六十五条","c":"（地上権の内容）","u":0},{"k":"266","t":"第二百六十六条","c":"（地代）","u":0},{"k":"267","t":"第二百六十七条","c":"（相隣関係の規定の準用）","u":0},{"k":"268","t":"第二百六十八条","c":"（地上権の存続期間）","u":0},{"k":"269","t":"第二百六十九条","c":"（工作物等の収去等）","u":0},{"k":"269_2","t":"第二百六十九条の二","c":"（地下又は空間を目的とする地上権）","u":0}]},{"t":"第二編　物権 第五章　永小作権","a":[{"k":"270","t":"第二百七十条","c":"（永小作権の内容）","u":0},{"k":"271","t":"第二百七十一条","c":"（永小作人による土地の変更の制限）","u":0},{"k":"272","t":"第二百七十二条","c":"（永小作権の譲渡又は土地の賃貸）","u":0},{"k":"273","t":"第二百七十三条","c":"（賃貸借に関する規定の準用）","u":0},{"k":"274","t":"第二百七十四条","c":"（小作料の減免）","u":0},{"k":"275","t":"第二百七十五条","c":"（永小作権の放棄）","u":0},{"k":"276","t":"第二百七十六条","c":"（永小作権の消滅請求）","u":0},{"k":"277","t":"第二百七十七条","c":"（永小作権に関する慣習）","u":0},{"k":"278","t":"第二百七十八条","c":"（永小作権の存続期間）","u":0},{"k":"279","t":"第二百七十九条","c":"（工作物等の収去等）","u":0}]},{"t":"第二編　物権 第六章　地役権","a":[{"k":"280","t":"第二百八十条","c":"（地役権の内容）","u":0},{"k":"281","t":"第二百八十一条","c":"（地役権の付従性）","u":0},{"k":"282","t":"第二百八十二条","c":"（地役権の不可分性）","u":0},{"k":"283","t":"第二百八十三条","c":"（地役権の時効取得）","u":0},{"k":"284","t":"第二百八十四条","c":"","u":0},{"k":"285","t":"第二百八十五条","c":"（用水地役権）","u":0},{"k":"286","t":"第二百八十六条","c":"（承役地の所有者の工作物の設置義務等）","u":0},{"k":"287","t":"第二百八十七条","c":"","u":0},{"k":"288","t":"第二百八十八条","c":"（承役地の所有者の工作物の使用）","u":0},{"k":"289","t":"第二百八十九条","c":"（承役地の時効取得による地役権の消滅）","u":0},{"k":"290","t":"第二百九十条","c":"","u":0},{"k":"291","t":"第二百九十一条","c":"（地役権の消滅時効）","u":0},{"k":"292","t":"第二百九十二条","c":"","u":0},{"k":"293","t":"第二百九十三条","c":"","u":0},{"k":"294","t":"第二百九十四条","c":"（共有の性質を有しない入会権）","u":0}]},{"t":"第二編　物権 第七章　留置権","a":[{"k":"295","t":"第二百九十五条","c":"（留置権の内容）","u":0},{"k":"296","t":"第二百九十六条","c":"（留置権の不可分性）","u":0},{"k":"297","t":"第二百九十七条","c":"（留置権者による果実の収取）","u":0},{"k":"298","t":"第二百九十八条","c":"（留置権者による留置物の保管等）","u":0},{"k":"299","t":"第二百九十九条","c":"（留置権者による費用の償還請求）","u":0},{"k":"300","t":"第三百条","c":"（留置権の行使と債権の消滅時効）","u":0},{"k":"301","t":"第三百一条","c":"（担保の供与による留置権の消滅）","u":0},{"k":"302","t":"第三百二条","c":"（占有の喪失による留置権の消滅）","u":0}]},{"t":"第二編　物権 第八章　先取特権","a":[{"k":"303","t":"第三百三条","c":"（先取特権の内容）","u":0},{"k":"304","t":"第三百四条","c":"（物上代位）","u":0},{"k":"305","t":"第三百五条","c":"（先取特権の不可分性）","u":0},{"k":"306","t":"第三百六条","c":"（一般の先取特権）","u":0},{"k":"307","t":"第三百七条","c":"（共益費用の先取特権）","u":0},{"k":"308","t":"第三百八条","c":"（雇用関係の先取特権）","u":0},{"k":"308_2","t":"第三百八条の二","c":"（子の監護費用の先取特権）","u":0},{"k":"309","t":"第三百九条","c":"（葬式費用の先取特権）","u":0},{"k":"310","t":"第三百十条","c":"（日用品供給の先取特権）","u":0},{"k":"311","t":"第三百十一条","c":"（動産の先取特権）","u":0},{"k":"312","t":"第三百十二条","c":"（不動産賃貸の先取特権）","u":0},{"k":"313","t":"第三百十三条","c":"（不動産賃貸の先取特権の目的物の範囲）","u":0},{"k":"314","t":"第三百十四条","c":"","u":0},{"k":"315","t":"第三百十五条","c":"（不動産賃貸の先取特権の被担保債権の範囲）","u":0},{"k":"316","t":"第三百十六条","c":"","u":0},{"k":"317","t":"第三百十七条","c":"（旅館宿泊の先取特権）","u":0},{"k":"318","t":"第三百十八条","c":"（運輸の先取特権）","u":0},{"k":"319","t":"第三百十九条","c":"（即時取得の規定の準用）","u":0},{"k":"320","t":"第三百二十条","c":"（動産保存の先取特権）","u":0},{"k":"321","t":"第三百二十一条","c":"（動産売買の先取特権）","u":0},{"k":"322","t":"第三百二十二条","c":"（種苗又は肥料の供給の先取特権）","u":0},{"k":"323","t":"第三百二十三条","c":"（農業労務の先取特権）","u":0},{"k":"324","t":"第三百二十四条","c":"（工業労務の先取特権）","u":0},{"k":"325","t":"第三百二十五条","c":"（不動産の先取特権）","u":0},{"k":"326","t":"第三百二十六条","c":"（不動産保存の先取特権）","u":0},{"k":"327","t":"第三百二十七条","c":"（不動産工事の先取特権）","u":0},{"k":"328","t":"第三百二十八条","c":"（不動産売買の先取特権）","u":0},{"k":"329","t":"第三百二十九条","c":"（一般の先取特権の順位）","u":0},{"k":"330","t":"第三百三十条","c":"（動産の先取特権の順位）","u":0},{"k":"331","t":"第三百三十一条","c":"（不動産の先取特権の順位）","u":0},{"k":"332","t":"第三百三十二条","c":"（同一順位の先取特権）","u":0},{"k":"333","t":"第三百三十三条","c":"（先取特権と第三取得者）","u":0},{"k":"334","t":"第三百三十四条","c":"（先取特権と動産質権との競合）","u":0},{"k":"335","t":"第三百三十五条","c":"（一般の先取特権の効力）","u":0},{"k":"336","t":"第三百三十六条","c":"（一般の先取特権の対抗力）","u":0},{"k":"337","t":"第三百三十七条","c":"（不動産保存の先取特権の登記）","u":0},{"k":"338","t":"第三百三十八条","c":"（不動産工事の先取特権の登記）","u":0},{"k":"339","t":"第三百三十九条","c":"（登記をした不動産保存又は不動産工事の先取特権）","u":0},{"k":"340","t":"第三百四十条","c":"（不動産売買の先取特権の登記）","u":0},{"k":"341","t":"第三百四十一条","c":"（抵当権に関する規定の準用）","u":0}]},{"t":"第二編　物権 第九章　質権","a":[{"k":"342","t":"第三百四十二条","c":"（質権の内容）","u":0},{"k":"343","t":"第三百四十三条","c":"（質権の目的）","u":0},{"k":"344","t":"第三百四十四条","c":"（質権の設定）","u":0},{"k":"345","t":"第三百四十五条","c":"（質権設定者による代理占有の禁止）","u":0},{"k":"346","t":"第三百四十六条","c":"（質権の被担保債権の範囲）","u":0},{"k":"347","t":"第三百四十七条","c":"（質物の留置）","u":0},{"k":"348","t":"第三百四十八条","c":"（転質）","u":0},{"k":"349","t":"第三百四十九条","c":"（契約による質物の処分の禁止）","u":0},{"k":"350","t":"第三百五十条","c":"（留置権及び先取特権の規定の準用）","u":0},{"k":"351","t":"第三百五十一条","c":"（物上保証人の求償権）","u":0},{"k":"352","t":"第三百五十二条","c":"（動産質の対抗要件）","u":0},{"k":"353","t":"第三百五十三条","c":"（質物の占有の回復）","u":0},{"k":"354","t":"第三百五十四条","c":"（動産質権の実行）","u":0},{"k":"355","t":"第三百五十五条","c":"（動産質権の順位）","u":0},{"k":"356","t":"第三百五十六条","c":"（不動産質権者による使用及び収益）","u":0},{"k":"357","t":"第三百五十七条","c":"（不動産質権者による管理の費用等の負担）","u":0},{"k":"358","t":"第三百五十八条","c":"（不動産質権者による利息の請求の禁止）","u":0},{"k":"359","t":"第三百五十九条","c":"（設定行為に別段の定めがある場合等）","u":0},{"k":"360","t":"第三百六十条","c":"（不動産質権の存続期間）","u":0},{"k":"361","t":"第三百六十一条","c":"（抵当権の規定の準用）","u":0},{"k":"362","t":"第三百六十二条","c":"（権利質の目的等）","u":0},{"k":"363","t":"第三百六十三条","c":"","u":2},{"k":"364","t":"第三百六十四条","c":"（債権を目的とする質権の対抗要件）","u":0},{"k":"365","t":"第三百六十五条","c":"","u":2},{"k":"366","t":"第三百六十六条","c":"（質権者による債権の取立て等）","u":0},{"k":"367:368","t":"第三百六十七条及び第三百六十八条","c":"","u":2}]},{"t":"第二編　物権 第十章　抵当権","a":[{"k":"369","t":"第三百六十九条","c":"（抵当権の内容）","u":0},{"k":"370","t":"第三百七十条","c":"（抵当権の効力の及ぶ範囲）","u":0},{"k":"371","t":"第三百七十一条","c":"","u":0},{"k":"372","t":"第三百七十二条","c":"（留置権等の規定の準用）","u":0},{"k":"373","t":"第三百七十三条","c":"（抵当権の順位）","u":0},{"k":"374","t":"第三百七十四条","c":"（抵当権の順位の変更）","u":0},{"k":"375","t":"第三百七十五条","c":"（抵当権の被担保債権の範囲）","u":0},{"k":"376","t":"第三百七十六条","c":"（抵当権の処分）","u":0},{"k":"377","t":"第三百七十七条","c":"（抵当権の処分の対抗要件）","u":0},{"k":"378","t":"第三百七十八条","c":"（代価弁済）","u":0},{"k":"379","t":"第三百七十九条","c":"（抵当権消滅請求）","u":0},{"k":"380","t":"第三百八十条","c":"","u":0},{"k":"381","t":"第三百八十一条","c":"","u":0},{"k":"382","t":"第三百八十二条","c":"（抵当権消滅請求の時期）","u":0},{"k":"383","t":"第三百八十三条","c":"（抵当権消滅請求の手続）","u":0},{"k":"384","t":"第三百八十四条","c":"（債権者のみなし承諾）","u":0},{"k":"385","t":"第三百八十五条","c":"（競売の申立ての通知）","u":0},{"k":"386","t":"第三百八十六条","c":"（抵当権消滅請求の効果）","u":0},{"k":"387","t":"第三百八十七条","c":"（抵当権者の同意の登記がある場合の賃貸借の対抗力）","u":0},{"k":"388","t":"第三百八十八条","c":"（法定地上権）","u":0},{"k":"389","t":"第三百八十九条","c":"（抵当地の上の建物の競売）","u":0},{"k":"390","t":"第三百九十条","c":"（抵当不動産の第三取得者による買受け）","u":0},{"k":"391","t":"第三百九十一条","c":"（抵当不動産の第三取得者による費用の償還請求）","u":0},{"k":"392","t":"第三百九十二条","c":"（共同抵当における代価の配当）","u":0},{"k":"393","t":"第三百九十三条","c":"（共同抵当における代位の付記登記）","u":0},{"k":"394","t":"第三百九十四条","c":"（抵当不動産以外の財産からの弁済）","u":0},{"k":"395","t":"第三百九十五条","c":"（抵当建物使用者の引渡しの猶予）","u":0},{"k":"396","t":"第三百九十六条","c":"（抵当権の消滅時効）","u":0},{"k":"397","t":"第三百九十七条","c":"（抵当不動産の時効取得による抵当権の消滅）","u":0},{"k":"398","t":"第三百九十八条","c":"（抵当権の目的である地上権等の放棄）","u":0},{"k":"398_2","t":"第三百九十八条の二","c":"（根抵当権）","u":0},{"k":"398_3","t":"第三百九十八条の三","c":"（根抵当権の被担保債権の範囲）","u":0},{"k":"398_4","t":"第三百九十八条の四","c":"（根抵当権の被担保債権の範囲及び債務者の変更）","u":0},{"k":"398_5","t":"第三百九十八条の五","c":"（根抵当権の極度額の変更）","u":0},{"k":"398_6","t":"第三百九十八条の六","c":"（根抵当権の元本確定期日の定め）","u":0},{"k":"398_7","t":"第三百九十八条の七","c":"（根抵当権の被担保債権の譲渡等）","u":0},{"k":"398_8","t":"第三百九十八条の八","c":"（根抵当権者又は債務者の相続）","u":0},{"k":"398_9","t":"第三百九十八条の九","c":"（根抵当権者又は債務者の合併）","u":0},{"k":"398_10","t":"第三百九十八条の十","c":"（根抵当権者又は債務者の会社分割）","u":0},{"k":"398_11","t":"第三百九十八条の十一","c":"（根抵当権の処分）","u":0},{"k":"398_12","t":"第三百九十八条の十二","c":"（根抵当権の譲渡）","u":0},{"k":"398_13","t":"第三百九十八条の十三","c":"（根抵当権の一部譲渡）","u":0},{"k":"398_14","t":"第三百九十八条の十四","c":"（根抵当権の共有）","u":0},{"k":"398_15","t":"第三百九十八条の十五","c":"（抵当権の順位の譲渡又は放棄と根抵当権の譲渡又は一部譲渡）","u":0},{"k":"398_16","t":"第三百九十八条の十六","c":"（共同根抵当）","u":0},{"k":"398_17","t":"第三百九十八条の十七","c":"（共同根抵当の変更等）","u":0},{"k":"398_18","t":"第三百九十八条の十八","c":"（累積根抵当）","u":0},{"k":"398_19","t":"第三百九十八条の十九","c":"（根抵当権の元本の確定請求）","u":0},{"k":"398_20","t":"第三百九十八条の二十","c":"（根抵当権の元本の確定事由）","u":0},{"k":"398_21","t":"第三百九十八条の二十一","c":"（根抵当権の極度額の減額請求）","u":0},{"k":"398_22","t":"第三百九十八条の二十二","c":"（根抵当権の消滅請求）","u":0}]},{"t":"第三編　債権 第一章　総則","a":[{"k":"399","t":"第三百九十九条","c":"（債権の目的）","u":0},{"k":"400","t":"第四百条","c":"（特定物の引渡しの場合の注意義務）","u":0},{"k":"401","t":"第四百一条","c":"（種類債権）","u":0},{"k":"402","t":"第四百二条","c":"（金銭債権）","u":0},{"k":"403","t":"第四百三条","c":"","u":0},{"k":"404","t":"第四百四条","c":"（法定利率）","u":0},{"k":"405","t":"第四百五条","c":"（利息の元本への組入れ）","u":0},{"k":"406","t":"第四百六条","c":"（選択債権における選択権の帰属）","u":0},{"k":"407","t":"第四百七条","c":"（選択権の行使）","u":0},{"k":"408","t":"第四百八条","c":"（選択権の移転）","u":0},{"k":"409","t":"第四百九条","c":"（第三者の選択権）","u":0},{"k":"410","t":"第四百十条","c":"（不能による選択債権の特定）","u":0},{"k":"411","t":"第四百十一条","c":"（選択の効力）","u":0},{"k":"412","t":"第四百十二条","c":"（履行期と履行遅滞）","u":0},{"k":"412_2","t":"第四百十二条の二","c":"（履行不能）","u":0},{"k":"413","t":"第四百十三条","c":"（受領遅滞）","u":0},{"k":"413_2","t":"第四百十三条の二","c":"（履行遅滞中又は受領遅滞中の履行不能と帰責事由）","u":0},{"k":"414","t":"第四百十四条","c":"（履行の強制）","u":0},{"k":"415","t":"第四百十五条","c":"（債務不履行による損害賠償）","u":0},{"k":"416","t":"第四百十六条","c":"（損害賠償の範囲）","u":0},{"k":"417","t":"第四百十七条","c":"（損害賠償の方法）","u":0},{"k":"417_2","t":"第四百十七条の二","c":"（中間利息の控除）","u":0},{"k":"418","t":"第四百十八条","c":"（過失相殺）","u":0},{"k":"419","t":"第四百十九条","c":"（金銭債務の特則）","u":0},{"k":"420","t":"第四百二十条","c":"（賠償額の予定）","u":0},{"k":"421","t":"第四百二十一条","c":"","u":0},{"k":"422","t":"第四百二十二条","c":"（損害賠償による代位）","u":0},{"k":"422_2","t":"第四百二十二条の二","c":"（代償請求権）","u":0},{"k":"423","t":"第四百二十三条","c":"（債権者代位権の要件）","u":0},{"k":"423_2","t":"第四百二十三条の二","c":"（代位行使の範囲）","u":0},{"k":"423_3","t":"第四百二十三条の三","c":"（債権者への支払又は引渡し）","u":0},{"k":"423_4","t":"第四百二十三条の四","c":"（相手方の抗弁）","u":0},{"k":"423_5","t":"第四百二十三条の五","c":"（債務者の取立てその他の処分の権限等）","u":0},{"k":"423_6","t":"第四百二十三条の六","c":"（被代位権利の行使に係る訴えを提起した場合の訴訟告知）","u":0},{"k":"423_7","t":"第四百二十三条の七","c":"（登記又は登録の請求権を保全するための債権者代位権）","u":0},{"k":"424","t":"第四百二十四条","c":"（詐害行為取消請求）","u":0},{"k":"424_2","t":"第四百二十四条の二","c":"（相当の対価を得てした財産の処分行為の特則）","u":0},{"k":"424_3","t":"第四百二十四条の三","c":"（特定の債権者に対する担保の供与等の特則）","u":0},{"k":"424_4","t":"第四百二十四条の四","c":"（過大な代物弁済等の特則）","u":0},{"k":"424_5","t":"第四百二十四条の五","c":"（転得者に対する詐害行為取消請求）","u":0},{"k":"424_6","t":"第四百二十四条の六","c":"（財産の返還又は価額の償還の請求）","u":0},{"k":"424_7","t":"第四百二十四条の七","c":"（被告及び訴訟告知）","u":0},{"k":"424_8","t":"第四百二十四条の八","c":"（詐害行為の取消しの範囲）","u":0},{"k":"424_9","t":"第四百二十四条の九","c":"（債権者への支払又は引渡し）","u":0},{"k":"425","t":"第四百二十五条","c":"（認容判決の効力が及ぶ者の範囲）","u":0},{"k":"425_2","t":"第四百二十五条の二","c":"（債務者の受けた反対給付に関する受益者の権利）","u":0},{"k":"425_3","t":"第四百二十五条の三","c":"（受益者の債権の回復）","u":0},{"k":"425_4","t":"第四百二十五条の四","c":"（詐害行為取消請求を受けた転得者の権利）","u":0},{"k":"426","t":"第四百二十六条","c":"","u":0},{"k":"427","t":"第四百二十七条","c":"（分割債権及び分割債務）","u":0},{"k":"428","t":"第四百二十八条","c":"（不可分債権）","u":0},{"k":"429","t":"第四百二十九条","c":"（不可分債権者の一人との間の更改又は免除）","u":0},{"k":"430","t":"第四百三十条","c":"（不可分債務）","u":0},{"k":"431","t":"第四百三十一条","c":"（可分債権又は可分債務への変更）","u":0},{"k":"432","t":"第四百三十二条","c":"（連帯債権者による履行の請求等）","u":0},{"k":"433","t":"第四百三十三条","c":"（連帯債権者の一人との間の更改又は免除）","u":0},{"k":"434","t":"第四百三十四条","c":"（連帯債権者の一人との間の相殺）","u":0},{"k":"435","t":"第四百三十五条","c":"（連帯債権者の一人との間の混同）","u":0},{"k":"435_2","t":"第四百三十五条の二","c":"（相対的効力の原則）","u":0},{"k":"436","t":"第四百三十六条","c":"（連帯債務者に対する履行の請求）","u":0},{"k":"437","t":"第四百三十七条","c":"（連帯債務者の一人についての法律行為の無効等）","u":0},{"k":"438","t":"第四百三十八条","c":"（連帯債務者の一人との間の更改）","u":0},{"k":"439","t":"第四百三十九条","c":"（連帯債務者の一人による相殺等）","u":0},{"k":"440","t":"第四百四十条","c":"（連帯債務者の一人との間の混同）","u":0},{"k":"441","t":"第四百四十一条","c":"（相対的効力の原則）","u":0},{"k":"442","t":"第四百四十二条","c":"（連帯債務者間の求償権）","u":0},{"k":"443","t":"第四百四十三条","c":"（通知を怠った連帯債務者の求償の制限）","u":0},{"k":"444","t":"第四百四十四条","c":"（償還をする資力のない者の負担部分の分担）","u":0},{"k":"445","t":"第四百四十五条","c":"（連帯債務者の一人との間の免除等と求償権）","u":0},{"k":"446","t":"第四百四十六条","c":"（保証人の責任等）","u":0},{"k":"447","t":"第四百四十七条","c":"（保証債務の範囲）","u":0},{"k":"448","t":"第四百四十八条","c":"（保証人の負担と主たる債務の目的又は態様）","u":0},{"k":"449","t":"第四百四十九条","c":"（取り消すことができる債務の保証）","u":0},{"k":"450","t":"第四百五十条","c":"（保証人の要件）","u":0},{"k":"451","t":"第四百五十一条","c":"（他の担保の供与）","u":0},{"k":"452","t":"第四百五十二条","c":"（催告の抗弁）","u":0},{"k":"453","t":"第四百五十三条","c":"（検索の抗弁）","u":0},{"k":"454","t":"第四百五十四条","c":"（連帯保証の場合の特則）","u":0},{"k":"455","t":"第四百五十五条","c":"（催告の抗弁及び検索の抗弁の効果）","u":0},{"k":"456","t":"第四百五十六条","c":"（数人の保証人がある場合）","u":0},{"k":"457","t":"第四百五十七条","c":"（主たる債務者について生じた事由の効力）","u":0},{"k":"458","t":"第四百五十八条","c":"（連帯保証人について生じた事由の効力）","u":0},{"k":"458_2","t":"第四百五十八条の二","c":"（主たる債務の履行状況に関する情報の提供義務）","u":0},{"k":"458_3","t":"第四百五十八条の三","c":"（主たる債務者が期限の利益を喪失した場合における情報の提供義務）","u":0},{"k":"459","t":"第四百五十九条","c":"（委託を受けた保証人の求償権）","u":0},{"k":"459_2","t":"第四百五十九条の二","c":"（委託を受けた保証人が弁済期前に弁済等をした場合の求償権）","u":0},{"k":"460","t":"第四百六十条","c":"（委託を受けた保証人の事前の求償権）","u":0},{"k":"461","t":"第四百六十一条","c":"（主たる債務者が保証人に対して償還をする場合）","u":0},{"k":"462","t":"第四百六十二条","c":"（委託を受けない保証人の求償権）","u":0},{"k":"463","t":"第四百六十三条","c":"（通知を怠った保証人の求償の制限等）","u":0},{"k":"464","t":"第四百六十四条","c":"（連帯債務又は不可分債務の保証人の求償権）","u":0},{"k":"465","t":"第四百六十五条","c":"（共同保証人間の求償権）","u":0},{"k":"465_2","t":"第四百六十五条の二","c":"（個人根保証契約の保証人の責任等）","u":0},{"k":"465_3","t":"第四百六十五条の三","c":"（個人貸金等根保証契約の元本確定期日）","u":0},{"k":"465_4","t":"第四百六十五条の四","c":"（個人根保証契約の元本の確定事由）","u":0},{"k":"465_5","t":"第四百六十五条の五","c":"（保証人が法人である根保証契約の求償権）","u":0},{"k":"465_6","t":"第四百六十五条の六","c":"（公正証書の作成と保証の効力）","u":0},{"k":"465_7","t":"第四百六十五条の七","c":"（保証に係る公正証書の方式の特則）","u":0},{"k":"465_8","t":"第四百六十五条の八","c":"（公正証書の作成と求償権についての保証の効力）","u":0},{"k":"465_9","t":"第四百六十五条の九","c":"（公正証書の作成と保証の効力に関する規定の適用除外）","u":0},{"k":"465_10","t":"第四百六十五条の十","c":"（契約締結時の情報の提供義務）","u":0},{"k":"466","t":"第四百六十六条","c":"（債権の譲渡性）","u":0},{"k":"466_2","t":"第四百六十六条の二","c":"（譲渡制限の意思表示がされた債権に係る債務者の供託）","u":0},{"k":"466_3","t":"第四百六十六条の三","c":"","u":0},{"k":"466_4","t":"第四百六十六条の四","c":"（譲渡制限の意思表示がされた債権の差押え）","u":0},{"k":"466_5","t":"第四百六十六条の五","c":"（預金債権又は貯金債権に係る譲渡制限の意思表示の効力）","u":0},{"k":"466_6","t":"第四百六十六条の六","c":"（将来債権の譲渡性）","u":0},{"k":"467","t":"第四百六十七条","c":"（債権の譲渡の対抗要件）","u":0},{"k":"468","t":"第四百六十八条","c":"（債権の譲渡における債務者の抗弁）","u":0},{"k":"469","t":"第四百六十九条","c":"（債権の譲渡における相殺権）","u":0},{"k":"470","t":"第四百七十条","c":"（併存的債務引受の要件及び効果）","u":0},{"k":"471","t":"第四百七十一条","c":"（併存的債務引受における引受人の抗弁等）","u":0},{"k":"472","t":"第四百七十二条","c":"（免責的債務引受の要件及び効果）","u":0},{"k":"472_2","t":"第四百七十二条の二","c":"（免責的債務引受における引受人の抗弁等）","u":0},{"k":"472_3","t":"第四百七十二条の三","c":"（免責的債務引受における引受人の求償権）","u":0},{"k":"472_4","t":"第四百七十二条の四","c":"（免責的債務引受による担保の移転）","u":0},{"k":"473","t":"第四百七十三条","c":"（弁済）","u":0},{"k":"474","t":"第四百七十四条","c":"（第三者の弁済）","u":0},{"k":"475","t":"第四百七十五条","c":"（弁済として引き渡した物の取戻し）","u":0},{"k":"476","t":"第四百七十六条","c":"（弁済として引き渡した物の消費又は譲渡がされた場合の弁済の効力等）","u":0},{"k":"477","t":"第四百七十七条","c":"（預金又は貯金の口座に対する払込みによる弁済）","u":0},{"k":"478","t":"第四百七十八条","c":"（受領権者としての外観を有する者に対する弁済）","u":0},{"k":"479","t":"第四百七十九条","c":"（受領権者以外の者に対する弁済）","u":0},{"k":"480","t":"第四百八十条","c":"","u":2},{"k":"481","t":"第四百八十一条","c":"（差押えを受けた債権の第三債務者の弁済）","u":0},{"k":"482","t":"第四百八十二条","c":"（代物弁済）","u":0},{"k":"483","t":"第四百八十三条","c":"（特定物の現状による引渡し）","u":0},{"k":"484","t":"第四百八十四条","c":"（弁済の場所及び時間）","u":0},{"k":"485","t":"第四百八十五条","c":"（弁済の費用）","u":0},{"k":"486","t":"第四百八十六条","c":"（受取証書の交付請求等）","u":0},{"k":"487","t":"第四百八十七条","c":"（債権証書の返還請求）","u":0},{"k":"488","t":"第四百八十八条","c":"（同種の給付を目的とする数個の債務がある場合の充当）","u":0},{"k":"489","t":"第四百八十九条","c":"（元本、利息及び費用を支払うべき場合の充当）","u":0},{"k":"490","t":"第四百九十条","c":"（合意による弁済の充当）","u":0},{"k":"491","t":"第四百九十一条","c":"（数個の給付をすべき場合の充当）","u":0},{"k":"492","t":"第四百九十二条","c":"（弁済の提供の効果）","u":0},{"k":"493","t":"第四百九十三条","c":"（弁済の提供の方法）","u":0},{"k":"494","t":"第四百九十四条","c":"（供託）","u":0},{"k":"495","t":"第四百九十五条","c":"（供託の方法）","u":0},{"k":"496","t":"第四百九十六条","c":"（供託物の取戻し）","u":0},{"k":"497","t":"第四百九十七条","c":"（供託に適しない物等）","u":0},{"k":"498","t":"第四百九十八条","c":"（供託物の還付請求等）","u":0},{"k":"499","t":"第四百九十九条","c":"（弁済による代位の要件）","u":0},{"k":"500","t":"第五百条","c":"","u":0},{"k":"501","t":"第五百一条","c":"（弁済による代位の効果）","u":0},{"k":"502","t":"第五百二条","c":"（一部弁済による代位）","u":0},{"k":"503","t":"第五百三条","c":"（債権者による債権証書の交付等）","u":0},{"k":"504","t":"第五百四条","c":"（債権者による担保の喪失等）","u":0},{"k":"505","t":"第五百五条","c":"（相殺の要件等）","u":0},{"k":"506","t":"第五百六条","c":"（相殺の方法及び効力）","u":0},{"k":"507","t":"第五百七条","c":"（履行地の異なる債務の相殺）","u":0},{"k":"508","t":"第五百八条","c":"（時効により消滅した債権を自働債権とする相殺）","u":0},{"k":"509","t":"第五百九条","c":"（不法行為等により生じた債権を受働債権とする相殺の禁止）","u":0},{"k":"510","t":"第五百十条","c":"（差押禁止債権を受働債権とする相殺の禁止）","u":0},{"k":"511","t":"第五百十一条","c":"（差押えを受けた債権を受働債権とする相殺の禁止）","u":0},{"k":"512","t":"第五百十二条","c":"（相殺の充当）","u":0},{"k":"512_2","t":"第五百十二条の二","c":"","u":0},{"k":"513","t":"第五百十三条","c":"（更改）","u":0},{"k":"514","t":"第五百十四条","c":"（債務者の交替による更改）","u":0},{"k":"515","t":"第五百十五条","c":"（債権者の交替による更改）","u":0},{"k":"516:517","t":"第五百十六条及び第五百十七条","c":"","u":2},{"k":"518","t":"第五百十八条","c":"（更改後の債務への担保の移転）","u":0},{"k":"519","t":"第五百十九条","c":"","u":0},{"k":"520","t":"第五百二十条","c":"","u":0},{"k":"520_2","t":"第五百二十条の二","c":"（指図証券の譲渡）","u":0},{"k":"520_3","t":"第五百二十条の三","c":"（指図証券の裏書の方式）","u":0},{"k":"520_4","t":"第五百二十条の四","c":"（指図証券の所持人の権利の推定）","u":0},{"k":"520_5","t":"第五百二十条の五","c":"（指図証券の善意取得）","u":0},{"k":"520_6","t":"第五百二十条の六","c":"（指図証券の譲渡における債務者の抗弁の制限）","u":0},{"k":"520_7","t":"第五百二十条の七","c":"（指図証券の質入れ）","u":0},{"k":"520_8","t":"第五百二十条の八","c":"（指図証券の弁済の場所）","u":0},{"k":"520_9","t":"第五百二十条の九","c":"（指図証券の提示と履行遅滞）","u":0},{"k":"520_10","t":"第五百二十条の十","c":"（指図証券の債務者の調査の権利等）","u":0},{"k":"520_11","t":"第五百二十条の十一","c":"（指図証券の喪失）","u":0},{"k":"520_12","t":"第五百二十条の十二","c":"（指図証券喪失の場合の権利行使方法）","u":0},{"k":"520_13","t":"第五百二十条の十三","c":"（記名式所持人払証券の譲渡）","u":0},{"k":"520_14","t":"第五百二十条の十四","c":"（記名式所持人払証券の所持人の権利の推定）","u":0},{"k":"520_15","t":"第五百二十条の十五","c":"（記名式所持人払証券の善意取得）","u":0},{"k":"520_16","t":"第五百二十条の十六","c":"（記名式所持人払証券の譲渡における債務者の抗弁の制限）","u":0},{"k":"520_17","t":"第五百二十条の十七","c":"（記名式所持人払証券の質入れ）","u":0},{"k":"520_18","t":"第五百二十条の十八","c":"（指図証券の規定の準用）","u":0},{"k":"520_19","t":"第五百二十条の十九","c":"","u":0},{"k":"520_20","t":"第五百二十条の二十","c":"","u":0}]},{"t":"第三編　債権 第二章　契約","a":[{"k":"521","t":"第五百二十一条","c":"（契約の締結及び内容の自由）","u":0},{"k":"522","t":"第五百二十二条","c":"（契約の成立と方式）","u":0},{"k":"523","t":"第五百二十三条","c":"（承諾の期間の定めのある申込み）","u":0},{"k":"524","t":"第五百二十四条","c":"（遅延した承諾の効力）","u":0},{"k":"525","t":"第五百二十五条","c":"（承諾の期間の定めのない申込み）","u":0},{"k":"526","t":"第五百二十六条","c":"（申込者の死亡等）","u":0},{"k":"527","t":"第五百二十七条","c":"（承諾の通知を必要としない場合における契約の成立時期）","u":0},{"k":"528","t":"第五百二十八条","c":"（申込みに変更を加えた承諾）","u":0},{"k":"529","t":"第五百二十九条","c":"（懸賞広告）","u":0},{"k":"529_2","t":"第五百二十九条の二","c":"（指定した行為をする期間の定めのある懸賞広告）","u":0},{"k":"529_3","t":"第五百二十九条の三","c":"（指定した行為をする期間の定めのない懸賞広告）","u":0},{"k":"530","t":"第五百三十条","c":"（懸賞広告の撤回の方法）","u":0},{"k":"531","t":"第五百三十一条","c":"（懸賞広告の報酬を受ける権利）","u":0},{"k":"532","t":"第五百三十二条","c":"（優等懸賞広告）","u":0},{"k":"533","t":"第五百三十三条","c":"（同時履行の抗弁）","u":0},{"k":"534:535","t":"第五百三十四条及び第五百三十五条","c":"","u":2},{"k":"536","t":"第五百三十六条","c":"（債務者の危険負担等）","u":0},{"k":"537","t":"第五百三十七条","c":"（第三者のためにする契約）","u":0},{"k":"538","t":"第五百三十八条","c":"（第三者の権利の確定）","u":0},{"k":"539","t":"第五百三十九条","c":"（債務者の抗弁）","u":0},{"k":"539_2","t":"第五百三十九条の二","c":"","u":0},{"k":"540","t":"第五百四十条","c":"（解除権の行使）","u":0},{"k":"541","t":"第五百四十一条","c":"（催告による解除）","u":0},{"k":"542","t":"第五百四十二条","c":"（催告によらない解除）","u":0},{"k":"543","t":"第五百四十三条","c":"（債権者の責めに帰すべき事由による場合）","u":0},{"k":"544","t":"第五百四十四条","c":"（解除権の不可分性）","u":0},{"k":"545","t":"第五百四十五条","c":"（解除の効果）","u":0},{"k":"546","t":"第五百四十六条","c":"（契約の解除と同時履行）","u":0},{"k":"547","t":"第五百四十七条","c":"（催告による解除権の消滅）","u":0},{"k":"548","t":"第五百四十八条","c":"（解除権者の故意による目的物の損傷等による解除権の消滅）","u":0},{"k":"548_2","t":"第五百四十八条の二","c":"（定型約款の合意）","u":0},{"k":"548_3","t":"第五百四十八条の三","c":"（定型約款の内容の表示）","u":0},{"k":"548_4","t":"第五百四十八条の四","c":"（定型約款の変更）","u":0},{"k":"549","t":"第五百四十九条","c":"（贈与）","u":0},{"k":"550","t":"第五百五十条","c":"（書面によらない贈与の解除）","u":0},{"k":"551","t":"第五百五十一条","c":"（贈与者の引渡義務等）","u":0},{"k":"552","t":"第五百五十二条","c":"（定期贈与）","u":0},{"k":"553","t":"第五百五十三条","c":"（負担付贈与）","u":0},{"k":"554","t":"第五百五十四条","c":"（死因贈与）","u":0},{"k":"555","t":"第五百五十五条","c":"（売買）","u":0},{"k":"556","t":"第五百五十六条","c":"（売買の一方の予約）","u":0},{"k":"557","t":"第五百五十七条","c":"（手付）","u":0},{"k":"558","t":"第五百五十八条","c":"（売買契約に関する費用）","u":0},{"k":"559","t":"第五百五十九条","c":"（有償契約への準用）","u":0},{"k":"560","t":"第五百六十条","c":"（権利移転の対抗要件に係る売主の義務）","u":0},{"k":"561","t":"第五百六十一条","c":"（他人の権利の売買における売主の義務）","u":0},{"k":"562","t":"第五百六十二条","c":"（買主の追完請求権）","u":0},{"k":"563","t":"第五百六十三条","c":"（買主の代金減額請求権）","u":0},{"k":"564","t":"第五百六十四条","c":"（買主の損害賠償請求及び解除権の行使）","u":0},{"k":"565","t":"第五百六十五条","c":"（移転した権利が契約の内容に適合しない場合における売主の担保責任）","u":0},{"k":"566","t":"第五百六十六条","c":"（目的物の種類又は品質に関する担保責任の期間の制限）","u":0},{"k":"567","t":"第五百六十七条","c":"（目的物の滅失等についての危険の移転）","u":0},{"k":"568","t":"第五百六十八条","c":"（競売における担保責任等）","u":0},{"k":"569","t":"第五百六十九条","c":"（債権の売主の担保責任）","u":0},{"k":"570","t":"第五百七十条","c":"（抵当権等がある場合の買主による費用の償還請求）","u":0},{"k":"571","t":"第五百七十一条","c":"","u":2},{"k":"572","t":"第五百七十二条","c":"（担保責任を負わない旨の特約）","u":0},{"k":"573","t":"第五百七十三条","c":"（代金の支払期限）","u":0},{"k":"574","t":"第五百七十四条","c":"（代金の支払場所）","u":0},{"k":"575","t":"第五百七十五条","c":"（果実の帰属及び代金の利息の支払）","u":0},{"k":"576","t":"第五百七十六条","c":"（権利を取得することができない等のおそれがある場合の買主による代金の支払の拒絶）","u":0},{"k":"577","t":"第五百七十七条","c":"（抵当権等の登記がある場合の買主による代金の支払の拒絶）","u":0},{"k":"578","t":"第五百七十八条","c":"（売主による代金の供託の請求）","u":0},{"k":"579","t":"第五百七十九条","c":"（買戻しの特約）","u":0},{"k":"580","t":"第五百八十条","c":"（買戻しの期間）","u":0},{"k":"581","t":"第五百八十一条","c":"（買戻しの特約の対抗力）","u":0},{"k":"582","t":"第五百八十二条","c":"（買戻権の代位行使）","u":0},{"k":"583","t":"第五百八十三条","c":"（買戻しの実行）","u":0},{"k":"584","t":"第五百八十四条","c":"（共有持分の買戻特約付売買）","u":0},{"k":"585","t":"第五百八十五条","c":"","u":0},{"k":"586","t":"第五百八十六条","c":"","u":0},{"k":"587","t":"第五百八十七条","c":"（消費貸借）","u":0},{"k":"587_2","t":"第五百八十七条の二","c":"（書面でする消費貸借等）","u":0},{"k":"588","t":"第五百八十八条","c":"（準消費貸借）","u":0},{"k":"589","t":"第五百八十九条","c":"（利息）","u":0},{"k":"590","t":"第五百九十条","c":"（貸主の引渡義務等）","u":0},{"k":"591","t":"第五百九十一条","c":"（返還の時期）","u":0},{"k":"592","t":"第五百九十二条","c":"（価額の償還）","u":0},{"k":"593","t":"第五百九十三条","c":"（使用貸借）","u":0},{"k":"593_2","t":"第五百九十三条の二","c":"（借用物受取り前の貸主による使用貸借の解除）","u":0},{"k":"594","t":"第五百九十四条","c":"（借主による使用及び収益）","u":0},{"k":"595","t":"第五百九十五条","c":"（借用物の費用の負担）","u":0},{"k":"596","t":"第五百九十六条","c":"（貸主の引渡義務等）","u":0},{"k":"597","t":"第五百九十七条","c":"（期間満了等による使用貸借の終了）","u":0},{"k":"598","t":"第五百九十八条","c":"（使用貸借の解除）","u":0},{"k":"599","t":"第五百九十九条","c":"（借主による収去等）","u":0},{"k":"600","t":"第六百条","c":"（損害賠償及び費用の償還の請求権についての期間の制限）","u":0},{"k":"601","t":"第六百一条","c":"（賃貸借）","u":0},{"k":"602","t":"第六百二条","c":"（短期賃貸借）","u":0},{"k":"603","t":"第六百三条","c":"（短期賃貸借の更新）","u":0},{"k":"604","t":"第六百四条","c":"（賃貸借の存続期間）","u":0},{"k":"605","t":"第六百五条","c":"（不動産賃貸借の対抗力）","u":0},{"k":"605_2","t":"第六百五条の二","c":"（不動産の賃貸人たる地位の移転）","u":0},{"k":"605_3","t":"第六百五条の三","c":"（合意による不動産の賃貸人たる地位の移転）","u":0},{"k":"605_4","t":"第六百五条の四","c":"（不動産の賃借人による妨害の停止の請求等）","u":0},{"k":"606","t":"第六百六条","c":"（賃貸人による修繕等）","u":0},{"k":"607","t":"第六百七条","c":"（賃借人の意思に反する保存行為）","u":0},{"k":"607_2","t":"第六百七条の二","c":"（賃借人による修繕）","u":0},{"k":"608","t":"第六百八条","c":"（賃借人による費用の償還請求）","u":0},{"k":"609","t":"第六百九条","c":"（減収による賃料の減額請求）","u":0},{"k":"610","t":"第六百十条","c":"（減収による解除）","u":0},{"k":"611","t":"第六百十一条","c":"（賃借物の一部滅失等による賃料の減額等）","u":0},{"k":"612","t":"第六百十二条","c":"（賃借権の譲渡及び転貸の制限）","u":0},{"k":"613","t":"第六百十三条","c":"（転貸の効果）","u":0},{"k":"614","t":"第六百十四条","c":"（賃料の支払時期）","u":0},{"k":"615","t":"第六百十五条","c":"（賃借人の通知義務）","u":0},{"k":"616","t":"第六百十六条","c":"（賃借人による使用及び収益）","u":0},{"k":"616_2","t":"第六百十六条の二","c":"（賃借物の全部滅失等による賃貸借の終了）","u":0},{"k":"617","t":"第六百十七条","c":"（期間の定めのない賃貸借の解約の申入れ）","u":0},{"k":"618","t":"第六百十八条","c":"（期間の定めのある賃貸借の解約をする権利の留保）","u":0},{"k":"619","t":"第六百十九条","c":"（賃貸借の更新の推定等）","u":0},{"k":"620","t":"第六百二十条","c":"（賃貸借の解除の効力）","u":0},{"k":"621","t":"第六百二十一条","c":"（賃借人の原状回復義務）","u":0},{"k":"622","t":"第六百二十二条","c":"（使用貸借の規定の準用）","u":0},{"k":"622_2","t":"第六百二十二条の二","c":"","u":0},{"k":"623","t":"第六百二十三条","c":"（雇用）","u":0},{"k":"624","t":"第六百二十四条","c":"（報酬の支払時期）","u":0},{"k":"624_2","t":"第六百二十四条の二","c":"（履行の割合に応じた報酬）","u":0},{"k":"625","t":"第六百二十五条","c":"（使用者の権利の譲渡の制限等）","u":0},{"k":"626","t":"第六百二十六条","c":"（期間の定めのある雇用の解除）","u":0},{"k":"627","t":"第六百二十七条","c":"（期間の定めのない雇用の解約の申入れ）","u":0},{"k":"628","t":"第六百二十八条","c":"（やむを得ない事由による雇用の解除）","u":0},{"k":"629","t":"第六百二十九条","c":"（雇用の更新の推定等）","u":0},{"k":"630","t":"第六百三十条","c":"（雇用の解除の効力）","u":0},{"k":"631","t":"第六百三十一条","c":"（使用者についての破産手続の開始による解約の申入れ）","u":0},{"k":"632","t":"第六百三十二条","c":"（請負）","u":0},{"k":"633","t":"第六百三十三条","c":"（報酬の支払時期）","u":0},{"k":"634","t":"第六百三十四条","c":"（注文者が受ける利益の割合に応じた報酬）","u":0},{"k":"635","t":"第六百三十五条","c":"","u":2},{"k":"636","t":"第六百三十六条","c":"（請負人の担保責任の制限）","u":0},{"k":"637","t":"第六百三十七条","c":"（目的物の種類又は品質に関する担保責任の期間の制限）","u":0},{"k":"638:640","t":"第六百三十八条から第六百四十条まで","c":"","u":2},{"k":"641","t":"第六百四十一条","c":"（注文者による契約の解除）","u":0},{"k":"642","t":"第六百四十二条","c":"（注文者についての破産手続の開始による解除）","u":0},{"k":"643","t":"第六百四十三条","c":"（委任）","u":0},{"k":"644","t":"第六百四十四条","c":"（受任者の注意義務）","u":0},{"k":"644_2","t":"第六百四十四条の二","c":"（復受任者の選任等）","u":0},{"k":"645","t":"第六百四十五条","c":"（受任者による報告）","u":0},{"k":"646","t":"第六百四十六条","c":"（受任者による受取物の引渡し等）","u":0},{"k":"647","t":"第六百四十七条","c":"（受任者の金銭の消費についての責任）","u":0},{"k":"648","t":"第六百四十八条","c":"（受任者の報酬）","u":0},{"k":"648_2","t":"第六百四十八条の二","c":"（成果等に対する報酬）","u":0},{"k":"649","t":"第六百四十九条","c":"（受任者による費用の前払請求）","u":0},{"k":"650","t":"第六百五十条","c":"（受任者による費用等の償還請求等）","u":0},{"k":"651","t":"第六百五十一条","c":"（委任の解除）","u":0},{"k":"652","t":"第六百五十二条","c":"（委任の解除の効力）","u":0},{"k":"653","t":"第六百五十三条","c":"（委任の終了事由）","u":0},{"k":"654","t":"第六百五十四条","c":"（委任の終了後の処分）","u":0},{"k":"655","t":"第六百五十五条","c":"（委任の終了の対抗要件）","u":0},{"k":"656","t":"第六百五十六条","c":"（準委任）","u":0},{"k":"657","t":"第六百五十七条","c":"（寄託）","u":0},{"k":"657_2","t":"第六百五十七条の二","c":"（寄託物受取り前の寄託者による寄託の解除等）","u":0},{"k":"658","t":"第六百五十八条","c":"（寄託物の使用及び第三者による保管）","u":0},{"k":"659","t":"第六百五十九条","c":"（無報酬の受寄者の注意義務）","u":0},{"k":"660","t":"第六百六十条","c":"（受寄者の通知義務等）","u":0},{"k":"661","t":"第六百六十一条","c":"（寄託者による損害賠償）","u":0},{"k":"662","t":"第六百六十二条","c":"（寄託者による返還請求等）","u":0},{"k":"663","t":"第六百六十三条","c":"（寄託物の返還の時期）","u":0},{"k":"664","t":"第六百六十四条","c":"（寄託物の返還の場所）","u":0},{"k":"664_2","t":"第六百六十四条の二","c":"（損害賠償及び費用の償還の請求権についての期間の制限）","u":0},{"k":"665","t":"第六百六十五条","c":"（委任の規定の準用）","u":0},{"k":"665_2","t":"第六百六十五条の二","c":"（混合寄託）","u":0},{"k":"666","t":"第六百六十六条","c":"（消費寄託）","u":0},{"k":"667","t":"第六百六十七条","c":"（組合契約）","u":0},{"k":"667_2","t":"第六百六十七条の二","c":"（他の組合員の債務不履行）","u":0},{"k":"667_3","t":"第六百六十七条の三","c":"（組合員の一人についての意思表示の無効等）","u":0},{"k":"668","t":"第六百六十八条","c":"（組合財産の共有）","u":0},{"k":"669","t":"第六百六十九条","c":"（金銭出資の不履行の責任）","u":0},{"k":"670","t":"第六百七十条","c":"（業務の決定及び執行の方法）","u":0},{"k":"670_2","t":"第六百七十条の二","c":"（組合の代理）","u":0},{"k":"671","t":"第六百七十一条","c":"（委任の規定の準用）","u":0},{"k":"672","t":"第六百七十二条","c":"（業務執行組合員の辞任及び解任）","u":0},{"k":"673","t":"第六百七十三条","c":"（組合員の組合の業務及び財産状況に関する検査）","u":0},{"k":"674","t":"第六百七十四条","c":"（組合員の損益分配の割合）","u":0},{"k":"675","t":"第六百七十五条","c":"（組合の債権者の権利の行使）","u":0},{"k":"676","t":"第六百七十六条","c":"（組合員の持分の処分及び組合財産の分割）","u":0},{"k":"677","t":"第六百七十七条","c":"（組合財産に対する組合員の債権者の権利の行使の禁止）","u":0},{"k":"677_2","t":"第六百七十七条の二","c":"（組合員の加入）","u":0},{"k":"678","t":"第六百七十八条","c":"（組合員の脱退）","u":0},{"k":"679","t":"第六百七十九条","c":"","u":0},{"k":"680","t":"第六百八十条","c":"（組合員の除名）","u":0},{"k":"680_2","t":"第六百八十条の二","c":"（脱退した組合員の責任等）","u":0},{"k":"681","t":"第六百八十一条","c":"（脱退した組合員の持分の払戻し）","u":0},{"k":"682","t":"第六百八十二条","c":"（組合の解散事由）","u":0},{"k":"683","t":"第六百八十三条","c":"（組合の解散の請求）","u":0},{"k":"684","t":"第六百八十四条","c":"（組合契約の解除の効力）","u":0},{"k":"685","t":"第六百八十五条","c":"（組合の清算及び清算人の選任）","u":0},{"k":"686","t":"第六百八十六条","c":"（清算人の業務の決定及び執行の方法）","u":0},{"k":"687","t":"第六百八十七条","c":"（組合員である清算人の辞任及び解任）","u":0},{"k":"688","t":"第六百八十八条","c":"（清算人の職務及び権限並びに残余財産の分割方法）","u":0},{"k":"689","t":"第六百八十九条","c":"（終身定期金契約）","u":0},{"k":"690","t":"第六百九十条","c":"（終身定期金の計算）","u":0},{"k":"691","t":"第六百九十一条","c":"（終身定期金契約の解除）","u":0},{"k":"692","t":"第六百九十二条","c":"（終身定期金契約の解除と同時履行）","u":0},{"k":"693","t":"第六百九十三条","c":"（終身定期金債権の存続の宣告）","u":0},{"k":"694","t":"第六百九十四条","c":"（終身定期金の遺贈）","u":0},{"k":"695","t":"第六百九十五条","c":"（和解）","u":0},{"k":"696","t":"第六百九十六条","c":"（和解の効力）","u":0}]},{"t":"第三編　債権 第三章　事務管理","a":[{"k":"697","t":"第六百九十七条","c":"（事務管理）","u":0},{"k":"698","t":"第六百九十八条","c":"（緊急事務管理）","u":0},{"k":"699","t":"第六百九十九条","c":"（管理者の通知義務）","u":0},{"k":"700","t":"第七百条","c":"（管理者による事務管理の継続）","u":0},{"k":"701","t":"第七百一条","c":"（委任の規定の準用）","u":0},{"k":"702","t":"第七百二条","c":"（管理者による費用の償還請求等）","u":0}]},{"t":"第三編　債権 第四章　不当利得","a":[{"k":"703","t":"第七百三条","c":"（不当利得の返還義務）","u":0},{"k":"704","t":"第七百四条","c":"（悪意の受益者の返還義務等）","u":0},{"k":"705","t":"第七百五条","c":"（債務の不存在を知ってした弁済）","u":0},{"k":"706","t":"第七百六条","c":"（期限前の弁済）","u":0},{"k":"707","t":"第七百七条","c":"（他人の債務の弁済）","u":0},{"k":"708","t":"第七百八条","c":"（不法原因給付）","u":0}]},{"t":"第三編　債権 第五章　不法行為","a":[{"k":"709","t":"第七百九条","c":"（不法行為による損害賠償）","u":0},{"k":"710","t":"第七百十条","c":"（財産以外の損害の賠償）","u":0},{"k":"711","t":"第七百十一条","c":"（近親者に対する損害の賠償）","u":0},{"k":"712","t":"第七百十二条","c":"（責任能力）","u":0},{"k":"713","t":"第七百十三条","c":"","u":0},{"k":"714","t":"第七百十四条","c":"（責任無能力者の監督義務者等の責任）","u":0},{"k":"715","t":"第七百十五条","c":"（使用者等の責任）","u":0},{"k":"716","t":"第七百十六条","c":"（注文者の責任）","u":0},{"k":"717","t":"第七百十七条","c":"（土地の工作物等の占有者及び所有者の責任）","u":0},{"k":"718","t":"第七百十八条","c":"（動物の占有者等の責任）","u":0},{"k":"719","t":"第七百十九条","c":"（共同不法行為者の責任）","u":0},{"k":"720","t":"第七百二十条","c":"（正当防衛及び緊急避難）","u":0},{"k":"721","t":"第七百二十一条","c":"（損害賠償請求権に関する胎児の権利能力）","u":0},{"k":"722","t":"第七百二十二条","c":"（損害賠償の方法、中間利息の控除及び過失相殺）","u":0},{"k":"723","t":"第七百二十三条","c":"（名誉毀損における原状回復）","u":0},{"k":"724","t":"第七百二十四条","c":"（不法行為による損害賠償請求権の消滅時効）","u":0},{"k":"724_2","t":"第七百二十四条の二","c":"（人の生命又は身体を害する不法行為による損害賠償請求権の消滅時効）","u":0}]},{"t":"第四編　親族 第一章　総則","a":[{"k":"725","t":"第七百二十五条","c":"（親族の範囲）","u":0},{"k":"726","t":"第七百二十六条","c":"（親等の計算）","u":0},{"k":"727","t":"第七百二十七条","c":"（縁組による親族関係の発生）","u":0},{"k":"728","t":"第七百二十八条","c":"（離婚等による姻族関係の終了）","u":0},{"k":"729","t":"第七百二十九条","c":"（離縁による親族関係の終了）","u":0},{"k":"730","t":"第七百三十条","c":"（親族間の扶け合い）","u":0}]},{"t":"第四編　親族 第二章　婚姻","a":[{"k":"731","t":"第七百三十一条","c":"（婚姻適齢）","u":0},{"k":"732","t":"第七百三十二条","c":"（重婚の禁止）","u":0},{"k":"733","t":"第七百三十三条","c":"","u":2},{"k":"734","t":"第七百三十四条","c":"（近親者間の婚姻の禁止）","u":0},{"k":"735","t":"第七百三十五条","c":"（直系姻族間の婚姻の禁止）","u":0},{"k":"736","t":"第七百三十六条","c":"（養親子等の間の婚姻の禁止）","u":0},{"k":"737","t":"第七百三十七条","c":"","u":2},{"k":"738","t":"第七百三十八条","c":"（成年被後見人の婚姻）","u":0},{"k":"739","t":"第七百三十九条","c":"（婚姻の届出）","u":0},{"k":"740","t":"第七百四十条","c":"（婚姻の届出の受理）","u":0},{"k":"741","t":"第七百四十一条","c":"（外国に在る日本人間の婚姻の方式）","u":0},{"k":"742","t":"第七百四十二条","c":"（婚姻の無効）","u":0},{"k":"743","t":"第七百四十三条","c":"（婚姻の取消し）","u":0},{"k":"744","t":"第七百四十四条","c":"（不適法な婚姻の取消し）","u":0},{"k":"745","t":"第七百四十五条","c":"（不適齢者の婚姻の取消し）","u":0},{"k":"746","t":"第七百四十六条","c":"","u":2},{"k":"747","t":"第七百四十七条","c":"（詐欺又は強迫による婚姻の取消し）","u":0},{"k":"748","t":"第七百四十八条","c":"（婚姻の取消しの効力）","u":0},{"k":"749","t":"第七百四十九条","c":"（離婚の規定の準用）","u":0},{"k":"750","t":"第七百五十条","c":"（夫婦の氏）","u":0},{"k":"751","t":"第七百五十一条","c":"（生存配偶者の復氏等）","u":0},{"k":"752","t":"第七百五十二条","c":"（同居、協力及び扶助の義務）","u":0},{"k":"753:754","t":"第七百五十三条及び第七百五十四条","c":"","u":2},{"k":"755","t":"第七百五十五条","c":"（夫婦の財産関係）","u":0},{"k":"756","t":"第七百五十六条","c":"（夫婦財産契約の対抗要件）","u":0},{"k":"757","t":"第七百五十七条","c":"","u":2},{"k":"758","t":"第七百五十八条","c":"（夫婦の財産関係の変更の制限等）","u":0},{"k":"759","t":"第七百五十九条","c":"（財産の管理者の変更及び共有財産の分割の対抗要件）","u":0},{"k":"760","t":"第七百六十条","c":"（婚姻費用の分担）","u":0},{"k":"761","t":"第七百六十一条","c":"（日常の家事に関する債務の連帯責任）","u":0},{"k":"762","t":"第七百六十二条","c":"（夫婦間における財産の帰属）","u":0},{"k":"763","t":"第七百六十三条","c":"（協議上の離婚）","u":0},{"k":"764","t":"第七百六十四条","c":"（婚姻の規定の準用）","u":0},{"k":"765","t":"第七百六十五条","c":"（離婚の届出の受理）","u":0},{"k":"766","t":"第七百六十六条","c":"（離婚後の子の監護に関する事項の定め等）","u":1},{"k":"766_2","t":"第七百六十六条の二","c":"（審判による父母以外の親族と子との交流の定め）","u":0},{"k":"766_3","t":"第七百六十六条の三","c":"（子の監護に要する費用の分担の定めがない場合の特例）","u":0},{"k":"767","t":"第七百六十七条","c":"（離婚による復氏等）","u":0},{"k":"768","t":"第七百六十八条","c":"（財産分与）","u":0},{"k":"769","t":"第七百六十九条","c":"（離婚による復氏の際の権利の承継）","u":0},{"k":"770","t":"第七百七十条","c":"（裁判上の離婚）","u":0},{"k":"771","t":"第七百七十一条","c":"（協議上の離婚の規定の準用）","u":0}]},{"t":"第四編　親族 第三章　親子","a":[{"k":"772","t":"第七百七十二条","c":"（嫡出の推定）","u":1},{"k":"773","t":"第七百七十三条","c":"（父を定めることを目的とする訴え）","u":1},{"k":"774","t":"第七百七十四条","c":"（嫡出の否認）","u":1},{"k":"775","t":"第七百七十五条","c":"（嫡出否認の訴え）","u":1},{"k":"776","t":"第七百七十六条","c":"（嫡出の承認）","u":1},{"k":"777","t":"第七百七十七条","c":"（嫡出否認の訴えの出訴期間）","u":1},{"k":"778","t":"第七百七十八条","c":"","u":1},{"k":"778_2","t":"第七百七十八条の二","c":"","u":1},{"k":"778_3","t":"第七百七十八条の三","c":"（子の監護に要した費用の償還の制限）","u":1},{"k":"778_4","t":"第七百七十八条の四","c":"（相続の開始後に新たに子と推定された者の価額の支払請求権）","u":0},{"k":"779","t":"第七百七十九条","c":"（認知）","u":1},{"k":"780","t":"第七百八十条","c":"（認知能力）","u":1},{"k":"781","t":"第七百八十一条","c":"（認知の方式）","u":1},{"k":"782","t":"第七百八十二条","c":"（成年の子の認知）","u":1},{"k":"783","t":"第七百八十三条","c":"（胎児又は死亡した子の認知）","u":1},{"k":"784","t":"第七百八十四条","c":"（認知の効力）","u":1},{"k":"785","t":"第七百八十五条","c":"（認知の取消しの禁止）","u":1},{"k":"786","t":"第七百八十六条","c":"（認知の無効の訴え）","u":1},{"k":"787","t":"第七百八十七条","c":"（認知の訴え）","u":1},{"k":"788","t":"第七百八十八条","c":"（認知後の子の監護に関する事項の定め等）","u":0},{"k":"789","t":"第七百八十九条","c":"（準正）","u":1},{"k":"790","t":"第七百九十条","c":"（子の氏）","u":0},{"k":"791","t":"第七百九十一条","c":"（子の氏の変更）","u":0},{"k":"792","t":"第七百九十二条","c":"（養親となる者の年齢）","u":0},{"k":"793","t":"第七百九十三条","c":"（尊属又は年長者を養子とすることの禁止）","u":0},{"k":"794","t":"第七百九十四条","c":"（後見人が被後見人を養子とする縁組）","u":0},{"k":"795","t":"第七百九十五条","c":"（配偶者のある者が未成年者を養子とする縁組）","u":0},{"k":"796","t":"第七百九十六条","c":"（配偶者のある者の縁組）","u":0},{"k":"797","t":"第七百九十七条","c":"（十五歳未満の者を養子とする縁組）","u":0},{"k":"798","t":"第七百九十八条","c":"（未成年者を養子とする縁組）","u":0},{"k":"799","t":"第七百九十九条","c":"（婚姻の規定の準用）","u":0},{"k":"800","t":"第八百条","c":"（縁組の届出の受理）","u":0},{"k":"801","t":"第八百一条","c":"（外国に在る日本人間の縁組の方式）","u":0},{"k":"802","t":"第八百二条","c":"（縁組の無効）","u":0},{"k":"803","t":"第八百三条","c":"（縁組の取消し）","u":0},{"k":"804","t":"第八百四条","c":"（養親が二十歳未満の者である場合の縁組の取消し）","u":0},{"k":"805","t":"第八百五条","c":"（養子が尊属又は年長者である場合の縁組の取消し）","u":0},{"k":"806","t":"第八百六条","c":"（後見人と被後見人との間の無許可縁組の取消し）","u":0},{"k":"806_2","t":"第八百六条の二","c":"（配偶者の同意のない縁組等の取消し）","u":0},{"k":"806_3","t":"第八百六条の三","c":"（子の監護をすべき者の同意のない縁組等の取消し）","u":0},{"k":"807","t":"第八百七条","c":"（養子が未成年者である場合の無許可縁組の取消し）","u":0},{"k":"808","t":"第八百八条","c":"（婚姻の取消し等の規定の準用）","u":0},{"k":"809","t":"第八百九条","c":"（嫡出子の身分の取得）","u":0},{"k":"810","t":"第八百十条","c":"（養子の氏）","u":0},{"k":"811","t":"第八百十一条","c":"（協議上の離縁等）","u":0},{"k":"811_2","t":"第八百十一条の二","c":"（夫婦である養親と未成年者との離縁）","u":0},{"k":"812","t":"第八百十二条","c":"（婚姻の規定の準用）","u":0},{"k":"813","t":"第八百十三条","c":"（離縁の届出の受理）","u":0},{"k":"814","t":"第八百十四条","c":"（裁判上の離縁）","u":0},{"k":"815","t":"第八百十五条","c":"（養子が十五歳未満である場合の離縁の訴えの当事者）","u":0},{"k":"816","t":"第八百十六条","c":"（離縁による復氏等）","u":0},{"k":"817","t":"第八百十七条","c":"（離縁による復氏の際の権利の承継）","u":0},{"k":"817_2","t":"第八百十七条の二","c":"（特別養子縁組の成立）","u":0},{"k":"817_3","t":"第八百十七条の三","c":"（養親の夫婦共同縁組）","u":0},{"k":"817_4","t":"第八百十七条の四","c":"（養親となる者の年齢）","u":0},{"k":"817_5","t":"第八百十七条の五","c":"（養子となる者の年齢）","u":0},{"k":"817_6","t":"第八百十七条の六","c":"（父母の同意）","u":0},{"k":"817_7","t":"第八百十七条の七","c":"（子の利益のための特別の必要性）","u":0},{"k":"817_8","t":"第八百十七条の八","c":"（監護の状況）","u":0},{"k":"817_9","t":"第八百十七条の九","c":"（実方との親族関係の終了）","u":0},{"k":"817_10","t":"第八百十七条の十","c":"（特別養子縁組の離縁）","u":0},{"k":"817_11","t":"第八百十七条の十一","c":"（離縁による実方との親族関係の回復）","u":0},{"k":"817_12","t":"第八百十七条の十二","c":"（親の責務等）","u":0},{"k":"817_13","t":"第八百十七条の十三","c":"（親子の交流等）","u":0}]},{"t":"第四編　親族 第四章　親権","a":[{"k":"818","t":"第八百十八条","c":"（親権）","u":1},{"k":"819","t":"第八百十九条","c":"（離婚又は認知の場合の親権者）","u":1},{"k":"820","t":"第八百二十条","c":"（監護及び教育の権利義務）","u":1},{"k":"821","t":"第八百二十一条","c":"（子の人格の尊重等）","u":1},{"k":"822","t":"第八百二十二条","c":"（居所の指定）","u":1},{"k":"823","t":"第八百二十三条","c":"（職業の許可）","u":1},{"k":"824","t":"第八百二十四条","c":"（財産の管理及び代表）","u":1},{"k":"824_2","t":"第八百二十四条の二","c":"（親権の行使方法等）","u":1},{"k":"824_3","t":"第八百二十四条の三","c":"（監護者の権利義務）","u":1},{"k":"825","t":"第八百二十五条","c":"（父母の一方が共同の名義でした行為の効力）","u":1},{"k":"826","t":"第八百二十六条","c":"（利益相反行為）","u":1},{"k":"827","t":"第八百二十七条","c":"（財産の管理における注意義務）","u":0},{"k":"828","t":"第八百二十八条","c":"（財産の管理の計算）","u":0},{"k":"829","t":"第八百二十九条","c":"","u":0},{"k":"830","t":"第八百三十条","c":"（第三者が無償で子に与えた財産の管理）","u":0},{"k":"831","t":"第八百三十一条","c":"（委任の規定の準用）","u":0},{"k":"832","t":"第八百三十二条","c":"（財産の管理について生じた親子間の債権の消滅時効）","u":0},{"k":"833","t":"第八百三十三条","c":"（子に代わる親権の行使）","u":0},{"k":"834","t":"第八百三十四条","c":"（親権喪失の審判）","u":1},{"k":"834_2","t":"第八百三十四条の二","c":"（親権停止の審判）","u":1},{"k":"835","t":"第八百三十五条","c":"（管理権喪失の審判）","u":1},{"k":"836","t":"第八百三十六条","c":"（親権喪失、親権停止又は管理権喪失の審判の取消し）","u":1},{"k":"837","t":"第八百三十七条","c":"（親権又は管理権の辞任及び回復）","u":1}]},{"t":"第四編　親族 第五章　後見","a":[{"k":"838","t":"第八百三十八条","c":"","u":0},{"k":"839","t":"第八百三十九条","c":"（未成年後見人の指定）","u":0},{"k":"840","t":"第八百四十条","c":"（未成年後見人の選任）","u":0},{"k":"841","t":"第八百四十一条","c":"（父母による未成年後見人の選任の請求）","u":0},{"k":"842","t":"第八百四十二条","c":"","u":2},{"k":"843","t":"第八百四十三条","c":"（成年後見人の選任）","u":0},{"k":"844","t":"第八百四十四条","c":"（後見人の辞任）","u":0},{"k":"845","t":"第八百四十五条","c":"（辞任した後見人による新たな後見人の選任の請求）","u":0},{"k":"846","t":"第八百四十六条","c":"（後見人の解任）","u":0},{"k":"847","t":"第八百四十七条","c":"（後見人の欠格事由）","u":0},{"k":"848","t":"第八百四十八条","c":"（未成年後見監督人の指定）","u":0},{"k":"849","t":"第八百四十九条","c":"（後見監督人の選任）","u":0},{"k":"850","t":"第八百五十条","c":"（後見監督人の欠格事由）","u":0},{"k":"851","t":"第八百五十一条","c":"（後見監督人の職務）","u":0},{"k":"852","t":"第八百五十二条","c":"（委任及び後見人の規定の準用）","u":0},{"k":"853","t":"第八百五十三条","c":"（財産の調査及び目録の作成）","u":0},{"k":"854","t":"第八百五十四条","c":"（財産の目録の作成前の権限）","u":0},{"k":"855","t":"第八百五十五条","c":"（後見人の被後見人に対する債権又は債務の申出義務）","u":0},{"k":"856","t":"第八百五十六条","c":"（被後見人が包括財産を取得した場合についての準用）","u":0},{"k":"857","t":"第八百五十七条","c":"（未成年被後見人の身上の監護に関する権利義務）","u":0},{"k":"857_2","t":"第八百五十七条の二","c":"（未成年後見人が数人ある場合の権限の行使等）","u":0},{"k":"858","t":"第八百五十八条","c":"（成年被後見人の意思の尊重及び身上の配慮）","u":0},{"k":"859","t":"第八百五十九条","c":"（財産の管理及び代表）","u":0},{"k":"859_2","t":"第八百五十九条の二","c":"（成年後見人が数人ある場合の権限の行使等）","u":0},{"k":"859_3","t":"第八百五十九条の三","c":"（成年被後見人の居住用不動産の処分についての許可）","u":0},{"k":"860","t":"第八百六十条","c":"（利益相反行為）","u":0},{"k":"860_2","t":"第八百六十条の二","c":"（成年後見人による郵便物等の管理）","u":0},{"k":"860_3","t":"第八百六十条の三","c":"","u":0},{"k":"861","t":"第八百六十一条","c":"（支出金額の予定及び後見の事務の費用）","u":0},{"k":"862","t":"第八百六十二条","c":"（後見人の報酬）","u":0},{"k":"863","t":"第八百六十三条","c":"（後見の事務の監督）","u":0},{"k":"864","t":"第八百六十四条","c":"（後見監督人の同意を要する行為）","u":0},{"k":"865","t":"第八百六十五条","c":"","u":0},{"k":"866","t":"第八百六十六条","c":"（被後見人の財産等の譲受けの取消し）","u":0},{"k":"867","t":"第八百六十七条","c":"（未成年被後見人に代わる親権の行使）","u":0},{"k":"868","t":"第八百六十八条","c":"（財産に関する権限のみを有する未成年後見人）","u":0},{"k":"869","t":"第八百六十九条","c":"（委任及び親権の規定の準用）","u":0},{"k":"870","t":"第八百七十条","c":"（後見の計算）","u":0},{"k":"871","t":"第八百七十一条","c":"","u":0},{"k":"872","t":"第八百七十二条","c":"（未成年被後見人と未成年後見人等との間の契約等の取消し）","u":0},{"k":"873","t":"第八百七十三条","c":"（返還金に対する利息の支払等）","u":0},{"k":"873_2","t":"第八百七十三条の二","c":"（成年被後見人の死亡後の成年後見人の権限）","u":0},{"k":"874","t":"第八百七十四条","c":"（委任の規定の準用）","u":0},{"k":"875","t":"第八百七十五条","c":"（後見に関して生じた債権の消滅時効）","u":0}]},{"t":"第四編　親族 第六章　保佐及び補助","a":[{"k":"876","t":"第八百七十六条","c":"（保佐の開始）","u":0},{"k":"876_2","t":"第八百七十六条の二","c":"（保佐人及び臨時保佐人の選任等）","u":0},{"k":"876_3","t":"第八百七十六条の三","c":"（保佐監督人）","u":0},{"k":"876_4","t":"第八百七十六条の四","c":"（保佐人に代理権を付与する旨の審判）","u":0},{"k":"876_5","t":"第八百七十六条の五","c":"（保佐の事務及び保佐人の任務の終了等）","u":0},{"k":"876_6","t":"第八百七十六条の六","c":"（補助の開始）","u":0},{"k":"876_7","t":"第八百七十六条の七","c":"（補助人及び臨時補助人の選任等）","u":0},{"k":"876_8","t":"第八百七十六条の八","c":"（補助監督人）","u":0},{"k":"876_9","t":"第八百七十六条の九","c":"（補助人に代理権を付与する旨の審判）","u":0},{"k":"876_10","t":"第八百七十六条の十","c":"（補助の事務及び補助人の任務の終了等）","u":0}]},{"t":"第四編　親族 第七章　扶養","a":[{"k":"877","t":"第八百七十七条","c":"（扶養義務者）","u":0},{"k":"878","t":"第八百七十八条","c":"（扶養の順位）","u":0},{"k":"879","t":"第八百七十九条","c":"（扶養の程度又は方法）","u":0},{"k":"880","t":"第八百八十条","c":"（扶養に関する協議又は審判の変更又は取消し）","u":0},{"k":"881","t":"第八百八十一条","c":"（扶養請求権の処分の禁止）","u":0}]},{"t":"第五編　相続 第一章　総則","a":[{"k":"882","t":"第八百八十二条","c":"（相続開始の原因）","u":0},{"k":"883","t":"第八百八十三条","c":"（相続開始の場所）","u":0},{"k":"884","t":"第八百八十四条","c":"（相続回復請求権）","u":0},{"k":"885","t":"第八百八十五条","c":"（相続財産に関する費用）","u":0}]},{"t":"第五編　相続 第二章　相続人","a":[{"k":"886","t":"第八百八十六条","c":"（相続に関する胎児の権利能力）","u":0},{"k":"887","t":"第八百八十七条","c":"（子及びその代襲者等の相続権）","u":0},{"k":"888","t":"第八百八十八条","c":"","u":2},{"k":"889","t":"第八百八十九条","c":"（直系尊属及び兄弟姉妹の相続権）","u":0},{"k":"890","t":"第八百九十条","c":"（配偶者の相続権）","u":0},{"k":"891","t":"第八百九十一条","c":"（相続人の欠格事由）","u":0},{"k":"892","t":"第八百九十二条","c":"（推定相続人の廃除）","u":0},{"k":"893","t":"第八百九十三条","c":"（遺言による推定相続人の廃除）","u":0},{"k":"894","t":"第八百九十四条","c":"（推定相続人の廃除の取消し）","u":0},{"k":"895","t":"第八百九十五条","c":"（推定相続人の廃除に関する審判確定前の遺産の管理）","u":0}]},{"t":"第五編　相続 第三章　相続の効力","a":[{"k":"896","t":"第八百九十六条","c":"（相続の一般的効力）","u":0},{"k":"897","t":"第八百九十七条","c":"（祭祀に関する権利の承継）","u":0},{"k":"897_2","t":"第八百九十七条の二","c":"（相続財産の保存）","u":0},{"k":"898","t":"第八百九十八条","c":"（共同相続の効力）","u":0},{"k":"899","t":"第八百九十九条","c":"","u":0},{"k":"899_2","t":"第八百九十九条の二","c":"（共同相続における権利の承継の対抗要件）","u":0},{"k":"900","t":"第九百条","c":"（法定相続分）","u":0},{"k":"901","t":"第九百一条","c":"（代襲相続人の相続分）","u":0},{"k":"902","t":"第九百二条","c":"（遺言による相続分の指定）","u":0},{"k":"902_2","t":"第九百二条の二","c":"（相続分の指定がある場合の債権者の権利の行使）","u":0},{"k":"903","t":"第九百三条","c":"（特別受益者の相続分）","u":0},{"k":"904","t":"第九百四条","c":"","u":0},{"k":"904_2","t":"第九百四条の二","c":"（寄与分）","u":0},{"k":"904_3","t":"第九百四条の三","c":"（期間経過後の遺産の分割における相続分）","u":0},{"k":"905","t":"第九百五条","c":"（相続分の取戻権）","u":0},{"k":"906","t":"第九百六条","c":"（遺産の分割の基準）","u":0},{"k":"906_2","t":"第九百六条の二","c":"（遺産の分割前に遺産に属する財産が処分された場合の遺産の範囲）","u":0},{"k":"907","t":"第九百七条","c":"（遺産の分割の協議又は審判）","u":0},{"k":"908","t":"第九百八条","c":"（遺産の分割の方法の指定及び遺産の分割の禁止）","u":0},{"k":"909","t":"第九百九条","c":"（遺産の分割の効力）","u":0},{"k":"909_2","t":"第九百九条の二","c":"（遺産の分割前における預貯金債権の行使）","u":0},{"k":"910","t":"第九百十条","c":"（相続の開始後に認知された者の価額の支払請求権）","u":0},{"k":"911","t":"第九百十一条","c":"（共同相続人間の担保責任）","u":0},{"k":"912","t":"第九百十二条","c":"（遺産の分割によって受けた債権についての担保責任）","u":0},{"k":"913","t":"第九百十三条","c":"（資力のない共同相続人がある場合の担保責任の分担）","u":0},{"k":"914","t":"第九百十四条","c":"（遺言による担保責任の定め）","u":0}]},{"t":"第五編　相続 第四章　相続の承認及び放棄","a":[{"k":"915","t":"第九百十五条","c":"（相続の承認又は放棄をすべき期間）","u":0},{"k":"916","t":"第九百十六条","c":"","u":0},{"k":"917","t":"第九百十七条","c":"","u":0},{"k":"918","t":"第九百十八条","c":"（相続人による管理）","u":0},{"k":"919","t":"第九百十九条","c":"（相続の承認及び放棄の撤回及び取消し）","u":0},{"k":"920","t":"第九百二十条","c":"（単純承認の効力）","u":0},{"k":"921","t":"第九百二十一条","c":"（法定単純承認）","u":0},{"k":"922","t":"第九百二十二条","c":"（限定承認）","u":0},{"k":"923","t":"第九百二十三条","c":"（共同相続人の限定承認）","u":0},{"k":"924","t":"第九百二十四条","c":"（限定承認の方式）","u":0},{"k":"925","t":"第九百二十五条","c":"（限定承認をしたときの権利義務）","u":0},{"k":"926","t":"第九百二十六条","c":"（限定承認者による管理）","u":0},{"k":"927","t":"第九百二十七条","c":"（相続債権者及び受遺者に対する公告及び催告）","u":0},{"k":"928","t":"第九百二十八条","c":"（公告期間満了前の弁済の拒絶）","u":0},{"k":"929","t":"第九百二十九条","c":"（公告期間満了後の弁済）","u":0},{"k":"930","t":"第九百三十条","c":"（期限前の債務等の弁済）","u":0},{"k":"931","t":"第九百三十一条","c":"（受遺者に対する弁済）","u":0},{"k":"932","t":"第九百三十二条","c":"（弁済のための相続財産の換価）","u":0},{"k":"933","t":"第九百三十三条","c":"（相続債権者及び受遺者の換価手続への参加）","u":0},{"k":"934","t":"第九百三十四条","c":"（不当な弁済をした限定承認者の責任等）","u":0},{"k":"935","t":"第九百三十五条","c":"（公告期間内に申出をしなかった相続債権者及び受遺者）","u":0},{"k":"936","t":"第九百三十六条","c":"（相続人が数人ある場合の相続財産の清算人）","u":0},{"k":"937","t":"第九百三十七条","c":"（法定単純承認の事由がある場合の相続債権者）","u":0},{"k":"938","t":"第九百三十八条","c":"（相続の放棄の方式）","u":0},{"k":"939","t":"第九百三十九条","c":"（相続の放棄の効力）","u":0},{"k":"940","t":"第九百四十条","c":"（相続の放棄をした者による管理）","u":0}]},{"t":"第五編　相続 第五章　財産分離","a":[{"k":"941","t":"第九百四十一条","c":"（相続債権者又は受遺者の請求による財産分離）","u":0},{"k":"942","t":"第九百四十二条","c":"（財産分離の効力）","u":0},{"k":"943","t":"第九百四十三条","c":"（財産分離の請求後の相続財産の管理）","u":0},{"k":"944","t":"第九百四十四条","c":"（財産分離の請求後の相続人による管理）","u":0},{"k":"945","t":"第九百四十五条","c":"（不動産についての財産分離の対抗要件）","u":0},{"k":"946","t":"第九百四十六条","c":"（物上代位の規定の準用）","u":0},{"k":"947","t":"第九百四十七条","c":"（相続債権者及び受遺者に対する弁済）","u":0},{"k":"948","t":"第九百四十八条","c":"（相続人の固有財産からの弁済）","u":0},{"k":"949","t":"第九百四十九条","c":"（財産分離の請求の防止等）","u":0},{"k":"950","t":"第九百五十条","c":"（相続人の債権者の請求による財産分離）","u":0}]},{"t":"第五編　相続 第六章　相続人の不存在","a":[{"k":"951","t":"第九百五十一条","c":"（相続財産法人の成立）","u":0},{"k":"952","t":"第九百五十二条","c":"（相続財産の清算人の選任）","u":0},{"k":"953","t":"第九百五十三条","c":"（不在者の財産の管理人に関する規定の準用）","u":0},{"k":"954","t":"第九百五十四条","c":"（相続財産の清算人の報告）","u":0},{"k":"955","t":"第九百五十五条","c":"（相続財産法人の不成立）","u":0},{"k":"956","t":"第九百五十六条","c":"（相続財産の清算人の代理権の消滅）","u":0},{"k":"957","t":"第九百五十七条","c":"（相続債権者及び受遺者に対する弁済）","u":0},{"k":"958","t":"第九百五十八条","c":"（権利を主張する者がない場合）","u":0},{"k":"958_2","t":"第九百五十八条の二","c":"（特別縁故者に対する相続財産の分与）","u":0},{"k":"959","t":"第九百五十九条","c":"（残余財産の国庫への帰属）","u":0}]},{"t":"第五編　相続 第七章　遺言","a":[{"k":"960","t":"第九百六十条","c":"（遺言の方式）","u":0},{"k":"961","t":"第九百六十一条","c":"（遺言能力）","u":0},{"k":"962","t":"第九百六十二条","c":"","u":0},{"k":"963","t":"第九百六十三条","c":"","u":0},{"k":"964","t":"第九百六十四条","c":"（包括遺贈及び特定遺贈）","u":0},{"k":"965","t":"第九百六十五条","c":"（相続人に関する規定の準用）","u":0},{"k":"966","t":"第九百六十六条","c":"（被後見人の遺言の制限）","u":0},{"k":"967","t":"第九百六十七条","c":"（普通の方式による遺言の種類）","u":0},{"k":"968","t":"第九百六十八条","c":"（自筆証書遺言）","u":0},{"k":"969","t":"第九百六十九条","c":"（公正証書遺言）","u":0},{"k":"969_2","t":"第九百六十九条の二","c":"（公正証書遺言の方式の特則）","u":0},{"k":"970","t":"第九百七十条","c":"（秘密証書遺言）","u":0},{"k":"971","t":"第九百七十一条","c":"（方式に欠ける秘密証書遺言の効力）","u":0},{"k":"972","t":"第九百七十二条","c":"（秘密証書遺言の方式の特則）","u":0},{"k":"973","t":"第九百七十三条","c":"（成年被後見人の遺言）","u":0},{"k":"974","t":"第九百七十四条","c":"（証人及び立会人の欠格事由）","u":0},{"k":"975","t":"第九百七十五条","c":"（共同遺言の禁止）","u":0},{"k":"976","t":"第九百七十六条","c":"（死亡の危急に迫った者の遺言）","u":0},{"k":"977","t":"第九百七十七条","c":"（伝染病隔離者の遺言）","u":0},{"k":"978","t":"第九百七十八条","c":"（在船者の遺言）","u":0},{"k":"979","t":"第九百七十九条","c":"（船舶遭難者の遺言）","u":0},{"k":"980","t":"第九百八十条","c":"（遺言関係者の署名及び押印）","u":0},{"k":"981","t":"第九百八十一条","c":"（署名又は押印が不能の場合）","u":0},{"k":"982","t":"第九百八十二条","c":"（普通の方式による遺言の規定の準用）","u":0},{"k":"983","t":"第九百八十三条","c":"（特別の方式による遺言の効力）","u":0},{"k":"984","t":"第九百八十四条","c":"（外国に在る日本人の遺言の方式）","u":0},{"k":"985","t":"第九百八十五条","c":"（遺言の効力の発生時期）","u":0},{"k":"986","t":"第九百八十六条","c":"（遺贈の放棄）","u":0},{"k":"987","t":"第九百八十七条","c":"（受遺者に対する遺贈の承認又は放棄の催告）","u":0},{"k":"988","t":"第九百八十八条","c":"（受遺者の相続人による遺贈の承認又は放棄）","u":0},{"k":"989","t":"第九百八十九条","c":"（遺贈の承認及び放棄の撤回及び取消し）","u":0},{"k":"990","t":"第九百九十条","c":"（包括受遺者の権利義務）","u":0},{"k":"991","t":"第九百九十一条","c":"（受遺者による担保の請求）","u":0},{"k":"992","t":"第九百九十二条","c":"（受遺者による果実の取得）","u":0},{"k":"993","t":"第九百九十三条","c":"（遺贈義務者による費用の償還請求）","u":0},{"k":"994","t":"第九百九十四条","c":"（受遺者の死亡による遺贈の失効）","u":0},{"k":"995","t":"第九百九十五条","c":"（遺贈の無効又は失効の場合の財産の帰属）","u":0},{"k":"996","t":"第九百九十六条","c":"（相続財産に属しない権利の遺贈）","u":0},{"k":"997","t":"第九百九十七条","c":"","u":0},{"k":"998","t":"第九百九十八条","c":"（遺贈義務者の引渡義務）","u":0},{"k":"999","t":"第九百九十九条","c":"（遺贈の物上代位）","u":0},{"k":"1000","t":"第千条","c":"","u":2},{"k":"1001","t":"第千一条","c":"（債権の遺贈の物上代位）","u":0},{"k":"1002","t":"第千二条","c":"（負担付遺贈）","u":0},{"k":"1003","t":"第千三条","c":"（負担付遺贈の受遺者の免責）","u":0},{"k":"1004","t":"第千四条","c":"（遺言書の検認）","u":0},{"k":"1005","t":"第千五条","c":"（過料）","u":0},{"k":"1006","t":"第千六条","c":"（遺言執行者の指定）","u":0},{"k":"1007","t":"第千七条","c":"（遺言執行者の任務の開始）","u":0},{"k":"1008","t":"第千八条","c":"（遺言執行者に対する就職の催告）","u":0},{"k":"1009","t":"第千九条","c":"（遺言執行者の欠格事由）","u":0},{"k":"1010","t":"第千十条","c":"（遺言執行者の選任）","u":0},{"k":"1011","t":"第千十一条","c":"（相続財産の目録の作成）","u":0},{"k":"1012","t":"第千十二条","c":"（遺言執行者の権利義務）","u":0},{"k":"1013","t":"第千十三条","c":"（遺言の執行の妨害行為の禁止）","u":0},{"k":"1014","t":"第千十四条","c":"（特定財産に関する遺言の執行）","u":0},{"k":"1015","t":"第千十五条","c":"（遺言執行者の行為の効果）","u":0},{"k":"1016","t":"第千十六条","c":"（遺言執行者の復任権）","u":0},{"k":"1017","t":"第千十七条","c":"（遺言執行者が数人ある場合の任務の執行）","u":0},{"k":"1018","t":"第千十八条","c":"（遺言執行者の報酬）","u":0},{"k":"1019","t":"第千十九条","c":"（遺言執行者の解任及び辞任）","u":0},{"k":"1020","t":"第千二十条","c":"（委任の規定の準用）","u":0},{"k":"1021","t":"第千二十一条","c":"（遺言の執行に関する費用の負担）","u":0},{"k":"1022","t":"第千二十二条","c":"（遺言の撤回）","u":0},{"k":"1023","t":"第千二十三条","c":"（前の遺言と後の遺言との抵触等）","u":0},{"k":"1024","t":"第千二十四条","c":"（遺言書又は遺贈の目的物の破棄）","u":0},{"k":"1025","t":"第千二十五条","c":"（撤回された遺言の効力）","u":0},{"k":"1026","t":"第千二十六条","c":"（遺言の撤回権の放棄の禁止）","u":0},{"k":"1027","t":"第千二十七条","c":"（負担付遺贈に係る遺言の取消し）","u":0}]},{"t":"第五編　相続 第八章　配偶者の居住の権利","a":[{"k":"1028","t":"第千二十八条","c":"（配偶者居住権）","u":0},{"k":"1029","t":"第千二十九条","c":"（審判による配偶者居住権の取得）","u":0},{"k":"1030","t":"第千三十条","c":"（配偶者居住権の存続期間）","u":0},{"k":"1031","t":"第千三十一条","c":"（配偶者居住権の登記等）","u":0},{"k":"1032","t":"第千三十二条","c":"（配偶者による使用及び収益）","u":0},{"k":"1033","t":"第千三十三条","c":"（居住建物の修繕等）","u":0},{"k":"1034","t":"第千三十四条","c":"（居住建物の費用の負担）","u":0},{"k":"1035","t":"第千三十五条","c":"（居住建物の返還等）","u":0},{"k":"1036","t":"第千三十六条","c":"（使用貸借及び賃貸借の規定の準用）","u":0},{"k":"1037","t":"第千三十七条","c":"（配偶者短期居住権）","u":0},{"k":"1038","t":"第千三十八条","c":"（配偶者による使用）","u":0},{"k":"1039","t":"第千三十九条","c":"（配偶者居住権の取得による配偶者短期居住権の消滅）","u":0},{"k":"1040","t":"第千四十条","c":"（居住建物の返還等）","u":0},{"k":"1041","t":"第千四十一条","c":"（使用貸借等の規定の準用）","u":0}]},{"t":"第五編　相続 第九章　遺留分","a":[{"k":"1042","t":"第千四十二条","c":"（遺留分の帰属及びその割合）","u":0},{"k":"1043","t":"第千四十三条","c":"（遺留分を算定するための財産の価額）","u":0},{"k":"1044","t":"第千四十四条","c":"","u":0},{"k":"1045","t":"第千四十五条","c":"","u":0},{"k":"1046","t":"第千四十六条","c":"（遺留分侵害額の請求）","u":0},{"k":"1047","t":"第千四十七条","c":"（受遺者又は受贈者の負担額）","u":0},{"k":"1048","t":"第千四十八条","c":"（遺留分侵害額請求権の期間の制限）","u":0},{"k":"1049","t":"第千四十九条","c":"（遺留分の放棄）","u":0}]},{"t":"第五編　相続 第十章　特別の寄与","a":[{"k":"1050","t":"第千五十条","c":"","u":0}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  // '466条2項' '466条1項本文' '509条第1号' '466条の2第1項' '469条2項第1号' '469条2項ただし書' のような形。複数条が「・」で区切られることもある → 最初の条だけ見る
+  const first = String(a).split("・")[0];
+  const m = first.match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(?:第?(\d+)号((?:の\d+)*))?([イロハニホ])?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[4] ? m[4] + (m[5] || "").replace(/の/g, "_") : null, sub: m[6] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para);
+  // 号まで指定があれば、項の本文とその号だけ出す
+  if (r.item) ps = ps.filter(p => p.i.some(it => it.n === r.item));
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const list = r.item ? p.i.filter(it => it.n === r.item) : p.i;
+    const its = list.map(it => `<p class="it">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => r.sub && x.startsWith(r.sub + " ") ? `<br><span class="hit">　${esc(x)}</span>` : `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなくこのアプリの決め事。</p>`;
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+
+// ---------- ここから別ページ（about.html）だけの処理 ----------
+if (location.protocol === "file:") $("back").href = "oyako.html";
+function openHash(){ const d = location.hash && document.getElementById(location.hash.slice(1)); if (d && d.tagName === "DETAILS") d.open = true; }
+openHash(); window.addEventListener("hashchange", openHash);
+
+async function bootAbout(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    // 全条文の地図
+    let C = []; try{ C = JSON.parse(document.getElementById("cover-data").textContent); }catch(e){}
+    const cover = $("cover");
+    C.forEach(ch => {
+      const div = document.createElement("div"); div.className = "cover-ch";
+      div.innerHTML = `<h4>${esc(ch.t)} <span>${ch.a.length}条</span></h4><div class="cells"></div>`;
+      const cells = div.querySelector(".cells");
+      ch.a.forEach(a => {
+        const btn = document.createElement("button"); btn.type = "button";
+        btn.className = `cell u${a.u}`; btn.title = `${a.t}${a.c}`;
+        btn.addEventListener("click", () => {
+          const old = document.getElementById("cover-pick"); if (old) old.remove();
+          const pk = document.createElement("div"); pk.id = "cover-pick";
+          pk.innerHTML = a.u === 1 ? lawHTML(a.k.includes("_") ? a.k.replace("_", "条の").replace(/_/g, "の") : a.k + "条") : `<p class="hint" style="margin-top:6px">${esc(a.t)}${esc(a.c)}${a.u === 2 ? "（削除）" : "（このアプリでは使用しない条）"}</p>`;
+          div.appendChild(pk);
+        });
+        cells.appendChild(btn);
+      });
+      cover.appendChild(div);
+    });
+    const used = C.flatMap(c => c.a).filter(a => a.u === 1).length;
+    const total = C.flatMap(c => c.a).filter(a => a.u !== 2).length;
+    cover.insertAdjacentHTML("afterbegin", `<p class="cover-total">使っている条：${used} / ${total} 条</p>`);
+    // ソース表示
+    const src = $("src");
+    files.forEach(f => {
+      const det = document.createElement("details"); det.className = "srcfile";
+      det.innerHTML = `<summary>${esc(f.dataset.name.replace(/_/g, "/"))}</summary><pre>${esc(f.textContent)}</pre>`;
+      src.appendChild(det);
+    });
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+  }
+}
+
+// 直接クエリ実行
+$("run").addEventListener("click", () => {
+  if (!pl){ $("out").textContent = "まだ読み込み中です。"; return; }
+  const q = $("q").value.trim().replace(/\.$/, "");
+  try{
+    const it = pl.prolog.query(q); const out = [];
+    for (let i = 0; i < 20; i++){
+      const r = it.next();
+      if (!r) break;
+      if (r.error){ out.push("エラー：" + r.message); break; }
+      // 最後の解は done:true に値が付いて返る。done で先に抜けると、その解を捨てて「解なし」に見える
+      if (r.value && r.value.$tag === "bindings"){
+        const { $tag, ...vars } = r.value;
+        out.push(Object.keys(vars).length ? JSON.stringify(vars, null, 2) : "true");
+      }
+      if (r.done) break;
+    }
+    $("out").textContent = out.length ? out.join("\n---\n") : "（解なし）";
+  } catch(e){ $("out").textContent = "エラー：" + e.message; }
+});
+
+if (typeof SWIPL === "function") bootAbout();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; }
+</script>
+
