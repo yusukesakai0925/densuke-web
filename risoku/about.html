@@ -1,0 +1,1024 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="「利息制限法を逆から引く」の収録範囲、全条文の地図、アプリの約束事、Prologのソース全部。">
+<title>収録範囲・仕組み｜利息制限法を逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.step.off{color:var(--muted)}
+.flow{margin:0;padding-left:1.2em}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+.disclaimer-inline{margin-top:10px;font-size:.78rem;color:var(--muted);border-top:1px solid var(--hair);padding-top:8px;line-height:1.65}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border-left:2px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+/* 数字の欄（数字を打つので ▼ を出さない）*/
+.field.num::after{display:none}
+.field input{appearance:textfield;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 10px;min-width:0;width:100%}
+.field input:focus-visible{outline:none}
+</style>
+
+<div class="wrap about">
+  <header class="mast sub">
+    <p class="backlink"><a href="./" id="back">← 判定ページに戻る</a></p>
+    <h1>収録範囲・仕組み</h1>
+    <p class="lead">「利息制限法を逆から引く」で、どの条文をどこまでルールにしたか、アプリが決めたこと、プログラムの中身です。</p>
+  </header>
+
+  <div class="appendix">
+  <details class="box" id="scope-box" open>
+    <summary>収録範囲と、入っていないもの</summary>
+    <div class="scope" id="scope">
+      <p><b>利息制限法の本則の第1条〜第7条をルールにしています。</b></p>
+      <p>借金で起きた事実と、あなたの考えを聞く12個の欄から、第1条〜第7条を同じ入力で全部当てます。どの条の話かを先に選ぶ欄は置いていません。個別のことは法律の専門家に聞いてください。</p>
+      <p id="scope-ban">この XML は2026年11月10日に取得した版で、それ以後の改正と、公布済みで施行前の改正は読んでいません。</p>
+      <p id="scope-hosho">第8条・第9条（業として行う保証の保証料の定め）は、このページに入れていません。</p>
+      <p id="scope-seirei">第6条の政令（カードの再発行の手数料など事務の費用として定めるもの、ATMなど機械の利用料の額）は読んでいません。政令で定めるものか・額の範囲内かは、9の欄であなたの考えを聞きます。</p>
+      <p id="scope-hoka">出資法（刑罰のある上限）・貸金業法（業者の登録・規制）・民法（消費貸借・過払い金の返還）・判例は読んでいません。利息制限法の条文には、刑罰の定めはありません。</p>
+      <p id="scope-keisan">計算は、期間が1年ちょうどの借金だけです。1年未満・日割りの計算は条文に定めが無いので判定しません。金額は円の整数で、1円未満は切り捨てます（条文に端数の定めは無く、このアプリの読みです）。</p>
+      <p id="scope-fusoku">附則（施行期日・経過措置）は読んでいません。</p>
+      <p><b>判定について：</b></p>
+      <ul id="hantei-notes" style="margin:0;padding-left:1.2em">
+        <li id="note-kangae">欄名の後ろに「（あなたの考え）」と書いた2つの欄（1：貸した人は、お金を貸すことを仕事にしているか、9：8の利用料・事務の費用は、政令で定める額の範囲内のもの・政令で定めるものか）は、事情と政令で決まることで、条文だけでは決まりません。このアプリは当たるかを判定せず、選んだあなたの考えのとおりに答えます。</li>
+        <li id="note-hantei">期間が1年ちょうどでない借金・日割りの計算、端数の丸め方の正解、保証料（第8条・第9条）、払い過ぎた利息を返してもらえるか（いわゆる過払い金）、出資法・貸金業法での扱いは、このページでは判定しません。</li>
+        <li id="note-jobun">条文だけを読んでいます。第6条の政令、出資法（刑罰のある上限）、貸金業法（業者の登録・規制）、民法（消費貸借・過払い金の返還）、判例は読んでいません。この法律の条文には、刑罰の定めはありません。</li>
+        <li id="note-yomi">この本の読み：相手が個人で、元本のほかのお金がカードの再発行など頼まれてした事務の費用のときは、第3条本文で利息とみなすと答えます（第6条第1項は業者からの借金だけの定めのため）。全国青年司法書士協議会のQ&amp;A（改正貸金業法完全施行に関するQ＆A Ver.2.0 p14）は、事務の費用を「契約の締結の費用及び債務の弁済の費用でなくても」の側に置いていて、この読みと向きが合います。国民生活センターの解説（「国民生活」2025年1月号 誌上法学講座 p1）は、事務の費用を契約の締結・債務の弁済の費用の中に入れて書いていて、向きが逆に読めます。</li>
+        <li id="note-kankei">関係のない欄（たとえば、4の欄が「無い」のときの5・6の欄、1の欄が「していない」のときの4〜6・9の欄）は、答えを出さないだけで、「この組み合わせはありません」にはしません。空の数の欄は、その欄を使う段を出しません。「この組み合わせはありません」になるのは、1と4と6、2と7、3と7の欄の組です。</li>
+      </ul>
+      <p id="go"><b>語の意味：</b>元本＝借りたお金そのもの（利息を含まない額）。消費貸借＝お金などを借りて、同じ額を返す約束。年利＝1年あたりの利息の割合。天引き＝貸すときに利息を先に差し引いて、残りだけを渡すこと。みなし利息＝手数料・礼金・調査料など、名前が利息でなくても利息として数えるお金（第3条）。賠償額の予定＝返すのが遅れたときに払う額（遅延損害金）を前もって決めておくこと。違約金＝約束を守らなかったときに払うと決めたお金で、第4条第2項で賠償額の予定とみなします。営業的金銭消費貸借＝お金を貸すことを仕事にしている人（業者）からの借金（第5条第1号の「債権者が業として行う」もの）。残元本＝まだ返していない元本。無効＝払う約束として効き目が無いこと。公租公課＝税金など、国や自治体に納めるお金。政令＝内閣が定める決まり（ここでは利息制限法施行令）。これらは条文の語をこのアプリが言い換えたものです。</p>
+      <p>入っていないもの：下の<a href="#notes-box">載せなかったもの</a>をご覧ください。</p>
+    </div>
+  </details>
+
+  <details class="box" id="cover-box">
+    <summary>この法律のどこまでをルールにしたか（全条文の地図）</summary>
+    <p class="hint" style="margin-top:6px">本則の全条文を章ごとに1マスずつ並べました。<span class="cell u1"></span> はプログラムのルールの中で使っている条、<span class="cell u0"></span> は使っていない条です。マスを押すと原文が出ます。</p>
+    <div id="cover"></div>
+  </details>
+
+  <details class="box" id="yaku-box">
+    <summary>アプリの約束事（この法律の条文にないもの）</summary>
+    <p class="hint" style="margin-top:6px">判定のためにこのアプリが決めたことで、条文そのものではありません。論理の木では <span class="yk">アプリの約束事</span> の印が付きます。</p>
+    <ul class="hint" style="margin:8px 0 0;padding-left:1.2em">
+      <li>期間は1年ちょうどとして計算し、金額は円の整数で1円未満を切り捨てる</li>
+    </ul>
+  </details>
+
+  <details class="box" id="notes-box">
+    <summary>載せなかったものと、条文だけで決まらなかった点</summary>
+    <div class="scope">
+      <p><b>載せなかったもの（理由）：</b></p>
+      <ul style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>第8条・第9条（業として行う保証の保証料）：依頼の範囲の外のため</li>
+        <li>第6条の政令（事務の費用・ATMなどの利用料の額）：読んでいないため、政令で定めるものか・額の範囲内かは9の欄であなたの考えを聞きます</li>
+        <li>出資法・貸金業法：別の法律で、読んでいないため</li>
+        <li>払い過ぎた利息を返してもらえるか（いわゆる過払い金）：この法律の条文に書いてなく、民法と判例は読んでいないため判定しません</li>
+        <li>期間が1年ちょうどでない借金・日割りの計算：条文に定めが無いため判定しません</li>
+        <li>「業として」の当てはめ：事情で決まり、条文だけでは決まらないため、1の欄のあなたの考えのとおりに答えます</li>
+        <li>判例・解説書：条文だけを読むアプリのため</li>
+        <li>附則（施行期日・経過措置）：本則の範囲だけを読むため</li>
+      </ul>
+      <p><b>条文だけで決まらなかった点（27点）：</b></p>
+      <ul id="kimaranai" style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>（1）端数 → 金額は円の整数で、1円未満を切り捨てる。上限の利息と契約の利息をそれぞれ切り捨ててから引き、その差を無効の額とする</li>
+        <li>（2）期間 → 1年ちょうどの借金だけを扱い、元本×年利を1年分の利息とする。天引きの額も1年分の利息の天引きとして計算する</li>
+        <li>（3）第1条の比べ方 → 契約の年利が上限の率を超えるかで比べる。率は0.01%まで入力でき、それより細かい入力は判定しない</li>
+        <li>（4）第1条の「その超過部分について、無効」→ 上限までの利息は払う約束として残り、契約が丸ごと無効になるのではないと書く</li>
+        <li>（5）第1条の「以上」「未満」→ ちょうど10万円は年18%、ちょうど100万円は年15%の段</li>
+        <li>（6）第5条 → 段を決める元本の額だけを合計にし、1年分の上限の利息はこの借金の元本で計算する</li>
+        <li>（7）第5条第1号 → 入力の残元本をそのまま足す。残元本がいつの時点の額かは聞かない</li>
+        <li>（8）第5条第2号 → 入力の合計がこの借金の元本より大きいことだけを確かめ、ほかの借金の内訳は聞かない</li>
+        <li>（9）第5条は業者からの借金だけ → 相手が個人のときは、4〜6の欄を読まず、第5条は当たらないと答える</li>
+        <li>（10）第2条の段 → 「受領額を元本として」から、20%・18%・15%の段も受け取った額で決める。業者から重ねて・同時に借りたときも、受け取った額だけで決める（第5条は「第一条の規定の適用については」と第1条だけを名指ししているため。解説は見つからず、条文の文からの読み）</li>
+        <li>（11）第2条 → 天引きが上限を超えた分を元本の返済に充て、残る元本＝元本−超えた分とする</li>
+        <li>（12）名目のお金 → 1年分の額を10の欄で聞き、利息とみなすときは第1条の計算で契約の利息に足して、1年分の利息の額で上限と比べる。契約の利息を1円未満切り捨ててから足す。第2条の天引きの計算には足さない（天引きは7の欄で聞くので、同じお金を2回数えないため）。金融庁・法務省のパブリックコメント回答（2007年11月）「原則として、利息に当該手数料を加えたものを対応する貸付けの金額で除し、これを年率に換算することになるものと考えられます。」に合わせた</li>
+        <li>（13）第6条は業者からの借金だけ → 相手が個人のときは、税金などの公租公課・公の機関の手続の費用・ATMなど機械の利用料は第3条ただし書の「契約の締結及び債務の弁済の費用」に当たり、利息とみなさない。カードの再発行など頼まれてした事務の費用は第3条本文で利息とみなす。9の欄は読まない</li>
+        <li>（14）第6条第2項の「限り」→ 業者からの借金では、3つに当たらない契約の締結・返済の費用は、第3条本文に戻って利息とみなす</li>
+        <li>（15）ATMなどの利用料・カードの再発行の手数料（業者からの借金） → 政令を読んでいないので、政令で定める額の範囲内か・政令で定めるものかは9の欄のあなたの考えのとおりに答える。範囲内・定めるものなら利息とみなさず、そうでなければ第3条本文で利息とみなす</li>
+        <li>（16）第4条の1.46倍 → 入力の元本で第1条の段の率を決め、その率に1.46を掛ける（年26.28%・年29.2%・年21.9%）</li>
+        <li>（17）第7条 → 業者からの借金の損害金は、元本の額にかかわらず年20%まで。第4条第1項の1.46倍は使わない</li>
+        <li>（18）違約金 → 第4条第2項（業者は第7条第2項）で賠償額の予定とみなし、損害金と同じ上限で見る</li>
+        <li>（19）損害金の比べ方 → 率で比べ、金額は出さない</li>
+        <li>（20）語の開き方 → 「元本」「天引き」「みなし利息」「賠償額の予定」「違約金」「営業的金銭消費貸借」「残元本」「無効」「公租公課」を平易に開いた文は、このアプリの言い換え</li>
+        <li>（21）刑罰 → この法律の本則に刑罰の定めが無いと書く。「違法」「罰則」の語は書かない</li>
+        <li>（22）過払い金 → この法律の条文に書いていないので判定しない</li>
+        <li>（23）同時に借りた元本の合計 → 業者から同時に借りたとき、合計がこの借金の元本以下になる組は「この組み合わせはありません」（1と4と6の欄・第5条第2号）。相手が個人のときは6の欄を読まない</li>
+        <li>（24）天引きの額 → 天引きした利息が元本と同じか元本より多い組は「この組み合わせはありません」（2と7の欄・第2条。受け取る額は0円より多い）</li>
+        <li>（25）空の数の欄 → 3の欄が空で、利息とみなす名目のお金も無いなら第1条・第5条の段（3の欄が空で名目のお金を足すときは、契約の利息を0円として第1条の段を出す）、11の欄が空なら第4条・第7条の段を出さない。段を出すのに要る欄が空のとき（業者から重ねて借りて5の欄が空、名目のお金を利息とみなすのに10の欄が空 など）は「判定できませんでした」にする</li>
+        <li>（26）何も決めていない借金 → 利息・天引き・元本のほかのお金・遅れたときの率のどれも無い組は、返すのは元本だけの借金として「利息制限法で無効になる部分はありません」の1段を出す（第1条・第4条第1項）</li>
+        <li>（27）年利と天引き → （2）のとおり天引きは1年分の利息の前払いとして扱うので、3の欄（年利）に値があり、7の欄（天引き）が0円より多い組は「この組み合わせはありません」（3と7の欄・第2条）。両方を決めると、同じ1年分の利息を年利と天引きで2回数えることになるため。年0%も年利を決めた組に入れる</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="box" id="src-box">
+    <summary>プログラムの中身（Prologのソース全部）</summary>
+    <p class="hint" style="margin-top:6px">このページで動いているPrologのプログラムそのものです。ファイルを開くと全文が出ます。</p>
+    <div id="src"></div>
+  </details>
+
+  <details class="box" id="core-box">
+    <summary>仕組みを見る（上級者向け）</summary>
+    <p class="hint" style="margin-top:6px">Prologに直接聞く（最初の20件まで）。率は0.01%単位の整数です（年25% → 2500）：</p>
+    <textarea id="q" spellcheck="false">result(ctx(個人,500000,2500,なし,空,空,0,なし,いいえ,空,空,遅延), R).</textarea>
+    <button type="button" class="btn" id="run">実行</button>
+    <pre id="out"></pre>
+  </details>
+  </div>
+
+  <p class="foot techline"><span>利息制限法／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot">e-Gov法令検索の利息制限法の本則の原文をルールにしたものです。第8条・第9条・第6条の政令・出資法・貸金業法・民法・判例・解説書・附則は含みません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 利息制限法のProlog 共通の型・欄の読み出し・組み合わせなし・計算・木の部品
+%
+% ctx(相手, 元本, 率, ほか, 残元本, 合計, 天引き, 名目, 政令, 名目の額, 損害率, 呼び名)
+%   欄は起きた事実と、あなたの考えを聞く12個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-22 入口の3つ（利息／手数料／損害金）と
+%   「どの話か」の欄（iri）、欄の出し消し、値の「関係なし」、相手が個人のときに名目を選べなくする disabled をやめた）。
+%   引数の順は画面の欄の番号（1〜12）と同じ。同じ入力で第1条〜第7条を全部当てる。
+%   案は ../risoku_form_plan_answer_1122.md の案A（依頼書 task_beaver_risoku_fixed_fields_1122.md の決めたこと1）。teikei-prolog・rentai-prolog と同じ形。
+%   同じ事実を2回聞かない（C1）：前は貸した相手を3回（ait・ait2・ait3）、元本を3回（gan・gan2・gan3）、名目を2回聞いていた。
+%   「あなたの考え」の欄は 1・9 の2つ。本人の考えのとおりに答える。
+%    1 相手     : 個人 | 業者（貸した人は、お金を貸すことを仕事にしているか。業者＝営業的金銭消費貸借。あなたの考え。第5条〜第7条）
+%    2 元本     : 1以上の整数（円。天引きしたなら天引きする前の額。必須。第1条・第2条・第4条）
+%    3 率       : 空 | 0以上の整数（契約で決めた利息の年利。0.01%単位。年25% → 2500、年18.5% → 1850。第1条）
+%    4 ほか     : なし | 残る | 同時（同じ貸し手からの、ほかの借金。残る＝前の借金が残っている中で重ねて借りた、同時＝同時に2つ以上借りた。第5条）
+%    5 残元本   : 空 | 1以上の整数（円。前の借金の残元本。第5条第1号）
+%    6 合計     : 空 | 1以上の整数（円。同時に借りた元本の合計で、この借金の元本も入れる。第5条第2号）
+%    7 天引き   : 0以上の整数（円。貸すときに天引きした利息。無ければ0。必須。第2条。3の欄と両方は決めない＝組み合わせなし ウ）
+%    8 名目     : なし | 手数料 | 礼金 | 調査料 | 費用 | 公租公課 | 公の手続 | 機械 | 事務
+%                （元本のほかに貸した人が受け取るお金の名目。費用＝契約を結ぶ費用・借金を返す費用、機械＝ATMなど機械の利用料、
+%                  事務＝カードの再発行など、頼まれてした事務の費用。第3条・第6条）
+%    9 政令     : いいえ | はい（8の利用料・事務の費用は、政令で定める額の範囲内のもの・政令で定めるものか。あなたの考え。第6条第1項・第2項第3号）
+%   10 名目の額 : 空 | 1以上の整数（円。8のお金の1年分の額。第1条の計算で契約の利息に足す。決めたこと2-2）
+%   11 損害率   : 空 | 0以上の整数（返すのが遅れたときに払うと決めた率。0.01%単位。第4条・第7条）
+%   12 呼び名   : 遅延 | 違約金（11の率で払うと決めたお金の呼び名。第4条第2項・第7条第2項）
+%
+%   関係のない欄（たとえば4の欄が「なし」のときの5・6の欄、相手が個人のときの4〜6・9の欄）は、組み合わせなしにせず、その欄を読まない（teikei-prolog と同じ）。
+%   空の数の欄は、その欄を使う段を出さない（3が空なら第1条の段、11が空なら第4条・第7条の段）。
+%   段を出すのに要る数の欄が空のとき（業者・重ねて借りた・5の欄が空 など）は judge が失敗し、画面は「判定できませんでした」になる。
+%   欄どうしで成り立たない組は 組み合わせなし/4 が欄の番号と一緒に返す（REVIEW_RULES C3）。
+%   期間は1年ちょうどだけを扱い、金額は円の整数で1円未満を切り捨てる（条文に端数の定めは無い。NOTES の読み (1)・(2)）。
+%
+% 書き方のきまり：
+%   ・条番号は '1条2号' '4条1項' '6条2項1号' のような原子。号まで書くときは項も書く（項が1つの条は項を書かない）。
+%   ・段は 段(状態, 文, 条のリスト)。結論ごとの段は s(画面のid, 見出し, 段)。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | and | or | info
+%   ・アプリの約束事の行は 条 を '@約束事' にする。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか・数の欄が範囲か。組の成り立ちは 組み合わせなし/4 で見る）----
+ctx_valid(C) :-
+    functor(C, ctx, 12),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )),
+    forall(数の欄(N, P), ( arg(N, C, V), call(P, V) )).
+
+欄の値(1, [個人, 業者]).
+欄の値(4, [なし, 残る, 同時]).
+欄の値(8, [なし, 手数料, 礼金, 調査料, 費用, 公租公課, 公の手続, 機械, 事務]).
+欄の値(9, [いいえ, はい]).
+欄の値(12, [遅延, 違約金]).
+
+数の欄(2, 円の値).
+数の欄(3, 率の値か空).
+数の欄(5, 円の値か空).
+数の欄(6, 円の値か空).
+数の欄(7, 天引きの値).
+数の欄(10, 円の値か空).
+数の欄(11, 率の値か空).
+
+% 円は1円から1000億円未満、率は0%から年1000%まで（0.01%単位で100000まで）
+円の値(X) :- integer(X), X >= 1, X =< 99999999999.
+天引きの値(X) :- integer(X), X >= 0, X =< 99999999999.
+円の値か空(空) :- !.
+円の値か空(X) :- 円の値(X).
+率の値か空(空) :- !.
+率の値か空(X) :- integer(X), X >= 0, X =< 100000.
+
+%% ---- 欄の読み出し（番号は画面の欄の番号）----
+欄の番号(相手, 1).
+欄の番号(元本, 2).
+欄の番号(率, 3).
+欄の番号(ほか, 4).
+欄の番号(残元本, 5).
+欄の番号(合計, 6).
+欄の番号(天引き, 7).
+欄の番号(名目, 8).
+欄の番号(政令, 9).
+欄の番号(名目の額, 10).
+欄の番号(損害率, 11).
+欄の番号(呼び名, 12).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+%% ---- 成り立たない組（REVIEW_RULES C3。依頼書 決めたこと1。根拠は rules/a_genbun.pl の原文の行で確かめた）----
+% 組み合わせなし(C, 欄の番号のリスト, 理由の文, 根拠のリスト)
+% 既定の値（1=個人・2=500000・3=18%・4=なし・5=600000・6=1100000・7=0・8=なし・9=いいえ・10=10000・11=30%・12=遅延）はどの組にも当たらない（7=0 なのでウにも当たらない）。
+% ア：5条2号「同時に二以上の営業的金銭消費貸借による貸付けを受けた場合」「当該二以上の貸付けを受けた元本の額の合計額」。
+%     2つ以上の元本の合計は、この借金の元本より大きい。第5条は業者からの借金だけの定めなので、相手が個人のときは6の欄を読まない（NOTES の読み (9)・(23)）
+%     2026-11-22 結論の箱の「この借金の元本」は初見の人にどれか分からないので「2の欄の元本」にした（LLMレビューの直し）
+組み合わせなし(C, [1, 4, 6], '同時に2つ以上借りた元本の合計は、2の欄の元本より大きいので、合計が2の欄の元本以下になることはありません', ['5条2号']) :-
+    欄(相手, C, 業者), 欄(ほか, C, 同時), 欄(合計, C, T), T \== 空, 欄(元本, C, G), T =< G.
+% イ：2条「天引額が債務者の受領額を元本として」。天引きした後に受け取る額（受領額）は0円より多い（NOTES の読み (24)）
+組み合わせなし(C, [2, 7], '天引きした後に受け取る額は0円より多いので、天引きした利息が元本と同じか元本より多いことはありません', ['2条']) :-
+    欄(天引き, C, T), 欄(元本, C, G), T >= G.
+% ウ：天引きは1年分の利息の前払いとして扱う（NOTES の読み (2)・(27)）ので、年利と天引きを両方は決めない。
+%     両方を決めると、同じ1年分の利息を第1条（年利の1年分）と第2条（天引き）で2回数える（2026-11-22 LLMレビューの直し。前は例23〜25が年18%と天引きを両方決めていた）。
+%     年0%も3の欄に値があるので、この組に入れる
+組み合わせなし(C, [3, 7], '天引きした利息は1年分の利息の前払いとして扱うので、年利と天引きを両方決めることはありません', ['2条']) :-
+    欄(率, C, R), R \== 空, 欄(天引き, C, T), T > 0.
+
+組み合わせなしがある(C) :- 組み合わせなし(C, _, _, _), !.
+
+%% ---- 第1条の段（元本の額で3段。「未満」「以上」）----
+% 第1条の段(元本, 率, 条, 号の数, 段の言い方)
+第1条の段(G, 2000, '1条1号', 1, '10万円未満') :- G < 100000, !.
+第1条の段(G, 1800, '1条2号', 2, '10万円以上100万円未満') :- G < 1000000, !.
+第1条の段(_, 1500, '1条3号', 3, '100万円以上').
+
+%% ---- 数の書き方 ----
+円の表記(N, A) :- format(atom(A), '~D円', [N]).
+% 0.01%単位の整数を「年18%」「年26.28%」「年29.2%」「年18.05%」にする
+率の表記(R, A) :-
+    I is R // 100, F is R mod 100,
+    (   F =:= 0 -> format(atom(A), '年~d%', [I])
+    ;   F mod 10 =:= 0 -> F1 is F // 10, format(atom(A), '年~d.~d%', [I, F1])
+    ;   F < 10 -> format(atom(A), '年~d.0~d%', [I, F])
+    ;   format(atom(A), '年~d.~d%', [I, F])
+    ).
+% 1年分の利息：元本 × 率 を1円未満切り捨て。式の文も返す
+掛け算(G, R, Amt, S) :-
+    Amt is G * R // 10000,
+    円の表記(G, GY), 率の表記(R, RY), 円の表記(Amt, AY),
+    ( G * R mod 10000 =:= 0 -> Tail = '' ; Tail = '（1円未満は切り捨て）' ),
+    format(atom(S), '~w × ~w = ~w~w', [GY, RY, AY, Tail]).
+
+%% ---- 木の部品 ----
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+原文規定(Art, X) :- 原文(Art, W), 規定(Art, W, X).
+約束(X, t(ok, X, '@約束事', [])).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（利息制限法の条文にないもの）
+%
+%   期間は1年ちょうどとして計算し、金額は円の整数で1円未満を切り捨てる。第1条・第2条の木にだけ付ける。
+%   2026-11-22 「業として」に当たるか・政令で定めるものかは判定しない、とした 評価の約束 を消した
+%   （1・9の欄で「あなたの考え」として聞くので約束事ではなくなった。断り書きは about の「判定について」へ。REVIEW_RULES A5）。
+
+計算の約束(X) :-
+    約束('期間は1年ちょうどとして計算し、金額は円の整数で1円未満を切り捨てる', X).
+</script>
+<script type="text/prolog" data-name="rules_a_genbun.pl">% rules/a_genbun.pl — 判定に使う条文の原文（law/risoku.xml の本則のまま）
+%
+%   原文(条, 文)。test/page_test.mjs が XML を別に読み、全行が一字一句一致するかを確かめる。
+%   号の行（'1条2号' '5条1号' '6条2項1号' など）は、項の柱書き（号の前の文）に号の文を続けて書いた。
+%   第1条・第5条の号は表の2つの欄（Column）でできていて、欄の間を全角の空白1つでつないだ（build.py の text() と同じつなぎ方）。
+%   第3条は Sentence が2つ（本文とただし書き）で、続けて書いた（XML を読んで確かめた）。
+%   本則は第1章（第1条〜第4条）と第2章（第5条〜第9条）。第8条・第9条（保証料）と附則は入れていない。
+
+原文('1条', '金銭を目的とする消費貸借における利息の契約は、その利息が次の各号に掲げる場合に応じ当該各号に定める利率により計算した金額を超えるときは、その超過部分について、無効とする。').
+原文('1条1号', '金銭を目的とする消費貸借における利息の契約は、その利息が次の各号に掲げる場合に応じ当該各号に定める利率により計算した金額を超えるときは、その超過部分について、無効とする。元本の額が十万円未満の場合　年二割').
+原文('1条2号', '金銭を目的とする消費貸借における利息の契約は、その利息が次の各号に掲げる場合に応じ当該各号に定める利率により計算した金額を超えるときは、その超過部分について、無効とする。元本の額が十万円以上百万円未満の場合　年一割八分').
+原文('1条3号', '金銭を目的とする消費貸借における利息の契約は、その利息が次の各号に掲げる場合に応じ当該各号に定める利率により計算した金額を超えるときは、その超過部分について、無効とする。元本の額が百万円以上の場合　年一割五分').
+原文('2条', '利息の天引きをした場合において、天引額が債務者の受領額を元本として前条に規定する利率により計算した金額を超えるときは、その超過部分は、元本の支払に充てたものとみなす。').
+原文('3条', '前二条の規定の適用については、金銭を目的とする消費貸借に関し債権者の受ける元本以外の金銭は、礼金、割引金、手数料、調査料その他いかなる名義をもってするかを問わず、利息とみなす。ただし、契約の締結及び債務の弁済の費用は、この限りでない。').
+原文('4条1項', '金銭を目的とする消費貸借上の債務の不履行による賠償額の予定は、その賠償額の元本に対する割合が第一条に規定する率の一・四六倍を超えるときは、その超過部分について、無効とする。').
+原文('4条2項', '前項の規定の適用については、違約金は、賠償額の予定とみなす。').
+原文('5条', '次の各号に掲げる利息に関する第一条の規定の適用については、当該各号に定める額を同条に規定する元本の額とみなす。').
+原文('5条1号', '次の各号に掲げる利息に関する第一条の規定の適用については、当該各号に定める額を同条に規定する元本の額とみなす。営業的金銭消費貸借（債権者が業として行う金銭を目的とする消費貸借をいう。以下同じ。）上の債務を既に負担している債務者が同一の債権者から重ねて営業的金銭消費貸借による貸付けを受けた場合における当該貸付けに係る営業的金銭消費貸借上の利息　当該既に負担している債務の残元本の額と当該貸付けを受けた元本の額との合計額').
+原文('5条2号', '次の各号に掲げる利息に関する第一条の規定の適用については、当該各号に定める額を同条に規定する元本の額とみなす。債務者が同一の債権者から同時に二以上の営業的金銭消費貸借による貸付けを受けた場合におけるそれぞれの貸付けに係る営業的金銭消費貸借上の利息　当該二以上の貸付けを受けた元本の額の合計額').
+原文('6条1項', '営業的金銭消費貸借に関し債権者の受ける元本以外の金銭のうち、金銭の貸付け及び弁済に用いるため債務者に交付されたカードの再発行の手数料その他の債務者の要請により債権者が行う事務の費用として政令で定めるものについては、第三条本文の規定は、適用しない。').
+原文('6条2項', '営業的金銭消費貸借においては、次に掲げる契約の締結及び債務の弁済の費用に限り、第三条ただし書の規定の適用があるものとする。').
+原文('6条2項1号', '営業的金銭消費貸借においては、次に掲げる契約の締結及び債務の弁済の費用に限り、第三条ただし書の規定の適用があるものとする。公租公課の支払に充てられるべきもの').
+原文('6条2項2号', '営業的金銭消費貸借においては、次に掲げる契約の締結及び債務の弁済の費用に限り、第三条ただし書の規定の適用があるものとする。強制執行の費用、担保権の実行としての競売の手続の費用その他公の機関が行う手続に関してその機関に支払うべきもの').
+原文('6条2項3号', '営業的金銭消費貸借においては、次に掲げる契約の締結及び債務の弁済の費用に限り、第三条ただし書の規定の適用があるものとする。債務者が金銭の受領又は弁済のために利用する現金自動支払機その他の機械の利用料（政令で定める額の範囲内のものに限る。）').
+原文('7条1項', '第四条第一項の規定にかかわらず、営業的金銭消費貸借上の債務の不履行による賠償額の予定は、その賠償額の元本に対する割合が年二割を超えるときは、その超過部分について、無効とする。').
+原文('7条2項', '第四条第二項の規定は、前項の賠償額の予定について準用する。').
+</script>
+<script type="text/prolog" data-name="rules_b_risoku.pl">% rules/b_risoku.pl — 利息は何%まで・いくらまでか（第1条・第5条）
+%
+%   第1条：元本の額で3段（10万円未満＝年20%／10万円以上100万円未満＝年18%／100万円以上＝年15%）。
+%           上限を超えた契約は丸ごと無効ではなく、超えた部分だけ無効（「その超過部分について、無効とする」）。
+%   第5条：業者（営業的金銭消費貸借）からの借金だけ。残っている借金に重ねて借りたら残元本＋新しい元本、
+%           同時に2つ以上借りたらその合計で第1条の段を決める。1年分の上限の利息は、この借金の元本で計算する（NOTES の読み (6)）。
+%   第3条：8の名目を利息とみなすときは、10の欄（名目のお金の1年分の額）を契約の利息に足して第1条の上限と比べる
+%           （決めたこと2-2。NOTES の読み (12)。金融庁・法務省のパブリックコメント回答「利息に当該手数料を加えたもの」）。
+%   2026-11-22 入口をやめて12欄にした。3の欄が空で、名目のお金も足さないときは第1条・第5条の段を出さない。
+%   前は第5条の段に「無いと入力されたので、」と書いていた（REVIEW_RULES A2）。
+%   2026-11-22 段の文の「この借金の元本」を「2の欄の元本」にした（初見の人にはどの借金か分からない。LLMレビューの直し）。
+%   3の欄と7の欄（天引き）を両方決めた組は schema.pl の 組み合わせなし ウ で止める。天引きありで判定する組は3の欄が空なので、
+%   名目のお金も足さなければ第1条の段は出ず、「1年分の利息◯円は、全部が払う約束として残ります」の行も出ない（前提の無い文を並べない）。
+%   段の答え：利息の段(段のid, C, 状態, 文, 条のリスト, 結論の箱の答え)。結論の箱に出さない段は答えを なし にする。
+
+%% ---- 第1条の段を出すか ----
+% 3の欄（契約の利息の年利）が空でないか、8の名目を利息とみなして10の欄が空でないとき
+第1条を見る(C) :- 欄(率, C, R), R \== 空, !.
+第1条を見る(C) :- 名目の足し(C, F), integer(F), F > 0.
+
+% 第1条の計算で契約の利息に足す名目のお金。8の名目を利息とみなさないときは0、みなすのに10の欄が空なら 空
+名目の足し(C, F) :- 名目をみなす(C), !, 欄(名目の額, C, F).
+名目の足し(_, 0).
+
+% 段を出すのに要る数の欄がそろっているか（そろわなければ judge が失敗し、画面は「判定できませんでした」）
+数がそろう(C) :- 第1条を見る(C), !, 第1条の計算(C, _).
+数がそろう(_).
+
+% 第1条の計算に使う値をまとめる。k(元本, 契約の率か空, 足す名目のお金, 段を決める元本, 第5条の段)
+第1条の計算(C, k(G, R, F, B, S5)) :-
+    第1条を見る(C),
+    欄(元本, C, G), 欄(率, C, R),
+    名目の足し(C, F), F \== 空,
+    欄(相手, C, A), 欄(ほか, C, K), 欄(残元本, C, Z), 欄(合計, C, T),
+    段の元本(A, K, G, Z, T, B, S5).
+
+利息の段(motohon, C, St, M, As, W) :- 第1条の計算(C, k(_, _, _, _, a(St, M, As, W))).
+利息の段(jogen, C, St, M, As, W) :- 第1条の計算(C, k(G, _, _, B, _)), 上限の段(B, G, _, _, a(St, M, As, W)).
+利息の段(mukou, C, St, M, As, W) :-
+    第1条の計算(C, k(G, R, F, B, _)),
+    上限の段(B, G, Lim, LimAmt, _),
+    無効の段(C, G, R, F, Lim, LimAmt, a(St, M, As, W)).
+
+%% ---- 第5条 段を決める元本の額 ----
+% 相手が個人のときは4〜6の欄を読まない（第5条は業者からの借金だけの定め。NOTES の読み (9)）。この段は結論の箱に出さない
+段の元本(個人, _, G, _, _, G, a(足りる, M, ['5条'], なし)) :- !,
+    円の表記(G, GY),
+    format(atom(M), '貸した人はお金を貸すことを仕事にしていない人（個人）なので、第5条（業者からの借金だけの定め）は当たらず、2の欄の元本の額~wで第1条の段を決めます。', [GY]).
+段の元本(業者, なし, G, _, _, G, a(足りる, M, ['5条'], なし)) :- !,
+    円の表記(G, GY),
+    format(atom(M), '同じ業者に残っている借金も、同時に借りた別の借金も無いので、第5条は当たらず、2の欄の元本の額~wで第1条の段を決めます。', [GY]).
+段の元本(業者, 残る, G, Z, _, B, a(みなす, M, ['5条1号'], W)) :- !,
+    Z \== 空,
+    B is Z + G,
+    円の表記(Z, ZY), 円の表記(G, GY), 円の表記(B, BY),
+    format(atom(M), '同じ業者への借金が残っている中で重ねて借りたので、第5条第1号により、残元本（まだ返していない元本）~w + 2の欄の元本~w = ~wを元本の額とみなして、第1条の段を決めます。', [ZY, GY, BY]),
+    format(atom(W), '第1条の段を決める元本の額は、残元本との合計の~wとみなします', [BY]).
+段の元本(業者, 同時, _, _, T, T, a(みなす, M, ['5条2号'], W)) :-
+    T \== 空,
+    円の表記(T, TY),
+    format(atom(M), '同じ業者から同時に2つ以上借りたので、第5条第2号により、同時に借りた元本の合計~wを元本の額とみなして、第1条の段を決めます。', [TY]),
+    format(atom(W), '第1条の段を決める元本の額は、同時に借りた元本の合計の~wとみなします', [TY]).
+
+%% ---- 第1条 上限の率と1年分の上限 ----
+上限の段(B, G, Lim, Amt, a(答え, M, [Art], W)) :-
+    第1条の段(B, Lim, Art, N, Han),
+    率の表記(Lim, LY), 円の表記(B, BY),
+    掛け算(G, Lim, Amt, Shiki), 円の表記(Amt, AY),
+    (   B =:= G
+    ->  format(atom(M), '利息の上限は~wです。元本の額~wは~wなので、第1条第~w号の段に当たります。1年分の上限は、~wです。', [LY, BY, Han, N, Shiki])
+    ;   format(atom(M), '利息の上限は~wです。段を決める元本の額~wは~wなので、第1条第~w号の段に当たります。1年分の上限は、2の欄の元本で~wです。', [LY, BY, Han, N, Shiki])
+    ),
+    format(atom(W), '利息の上限は~wで、1年分の上限は~wです', [LY, AY]).
+
+%% ---- 第1条 超えた部分だけ無効 ----
+% 名目のお金を足さないとき（F=0）は、契約の年利が上限の率を超えるかで比べる（NOTES の読み (3)）
+無効の段(_, G, R, 0, Lim, LimAmt, a(答え, M, ['1条'], W)) :- !,
+    率の表記(R, RY), 率の表記(Lim, LY),
+    掛け算(G, R, Amt, Shiki), 円の表記(LimAmt, LA), 円の表記(Amt, AY),
+    (   R > Lim
+    ->  X is Amt - LimAmt, 円の表記(X, XY),
+        format(atom(M), '契約の~wのうち、上限の~wを超えた部分だけが無効（払う約束として効き目が無いこと）で、1年分では~wが無効です。契約の1年分の利息~wから、上限の~wを引いた額です。上限までの~wは払う約束として残り、契約が丸ごと無効になるのではありません。', [RY, LY, XY, Shiki, LA, LA]),
+        format(atom(W), '1年分の利息のうち、上限を超えた~wが無効で、上限までの~wは払う約束として残ります', [XY, LA])
+    ;   format(atom(M), '契約の~wは上限の~w以下なので、無効になる部分はありません。契約の1年分の利息は、~wです。', [RY, LY, Shiki]),
+        format(atom(W), '1年分の利息~wは、全部が払う約束として残ります', [AY])
+    ).
+% 名目のお金を利息とみなして足すとき（F>0）は、1年分の利息の額で上限の額と比べる（NOTES の読み (12)）。
+% 契約の利息は1円未満を切り捨ててから足す（名目のお金は円の整数なので、足す順で答えは変わらない）
+無効の段(C, G, R, F, _, LimAmt, a(答え, M, ['1条', '3条'], W)) :-
+    欄(名目, C, X), 名目の呼び方(X, XN),
+    円の表記(F, FY), 円の表記(LimAmt, LA),
+    (   R == 空
+    ->  Amt = 0, Total = F,
+        format(atom(P), '利息とみなす「~w」の1年分~wが、1年分の利息です。', [XN, FY])
+    ;   掛け算(G, R, Amt, Shiki), Total is Amt + F, 円の表記(Amt, AY), 円の表記(Total, TY),
+        format(atom(P), '契約の1年分の利息~wに、第3条本文で利息とみなす「~w」の1年分~wを足して、1年分の利息は~w + ~w = ~wです。', [Shiki, XN, FY, AY, FY, TY])
+    ),
+    円の表記(Total, TY2),
+    (   Total > LimAmt
+    ->  Y is Total - LimAmt, 円の表記(Y, YY),
+        format(atom(M), '~w上限の~wを超えた~wが無効（払う約束として効き目が無いこと）です。上限までの~wは払う約束として残り、契約が丸ごと無効になるのではありません。', [P, LA, YY, LA]),
+        format(atom(W), '「~w」を足した1年分の利息~wのうち、上限を超えた~wが無効で、上限までの~wは払う約束として残ります', [XN, TY2, YY, LA])
+    ;   format(atom(M), '~w上限の~w以下なので、無効になる部分はありません。', [P, LA]),
+        format(atom(W), '「~w」を足した1年分の利息~wは、全部が払う約束として残ります', [XN, TY2])
+    ).
+</script>
+<script type="text/prolog" data-name="rules_c_tesuryo.pl">% rules/c_tesuryo.pl — 天引き・元本のほかのお金は利息に入るか（第2条・第3条・第6条）
+%
+%   第2条：天引きしたら、受け取った額を元本として第1条の率で計算し、天引き額がそれを超えた分は元本の返済に充てたとみなす（返ってくるのではない）。
+%           段（20%・18%・15%）も受け取った額で決める（「受領額を元本として前条に規定する利率により」。NOTES の読み (10)）。
+%           業者から重ねて・同時に借りたときも、段は受け取った額だけで決める（第5条は「第一条の規定の適用については」と第1条だけを名指しする。
+%           解説は見つからず、条文の文からの読み。決めたこと2-3。NOTES の読み (10)）。名目のお金（10の欄）は天引きの計算に足さない（決めたこと2-2）。
+%   第3条：元本以外に受け取る金銭は、名前が何でも利息とみなす。ただし契約の締結と返済の費用は除く。
+%   第6条：業者（営業的金銭消費貸借）では、除かれる費用は第2項の3つ（公租公課・公の機関の手続の費用・ATMなどの利用料で政令の額まで）に限る。
+%           カードの再発行の手数料など政令で定める事務の費用には第3条本文が当たらない（第1項）。政令で定めるものか・額の範囲内かは9の欄（あなたの考え）で聞く。
+%   相手が個人のとき（決めたこと2-4。NOTES の読み (13)）：公租公課・公の手続・機械の利用料は第3条ただし書の費用で利息とみなさない。
+%           事務の費用は第3条本文で利息とみなす（第6条第1項は業者からの借金だけの定め）。9の欄は読まない。
+%   2026-11-22 入口をやめて12欄にした。天引き0円なら第2条の段、名目が「なし」なら第3条・第6条の段を出さない。
+%   前の 判定しない の段（ATMなどの利用料・カードの再発行の手数料。政令を読んでいないので判定しない）は、9の欄の値で答える段にした。
+
+手数料の段(tenbiki, C, 答え, M, ['2条', Art], W) :-
+    欄(天引き, C, T), T > 0,
+    欄(元本, C, G),
+    天引きの話(T, G, Art, M, W).
+手数料の段(minashi, C, St, M, As, W) :-
+    欄(名目, C, X), X \== なし,
+    欄(相手, C, A), 欄(政令, C, P),
+    名目の判定(A, X, P, St, M, As),
+    名目の呼び方(X, XN),
+    ( St == みなす -> format(atom(W), '「~w」は利息とみなします', [XN]) ; format(atom(W), '「~w」は利息とみなしません', [XN]) ).
+
+% 8の名目を利息とみなすか（b_risoku.pl の第1条の計算から呼ぶ）
+名目をみなす(C) :-
+    欄(名目, C, X), X \== なし,
+    欄(相手, C, A), 欄(政令, C, P),
+    名目の判定(A, X, P, みなす, _, _).
+
+名目の呼び方(手数料, '手数料').
+名目の呼び方(礼金, '礼金').
+名目の呼び方(調査料, '調査料').
+名目の呼び方(費用, '契約を結ぶ費用・借金を返す費用').
+名目の呼び方(公租公課, '税金などの公租公課').
+名目の呼び方(公の手続, '公の機関の手続の費用').
+名目の呼び方(機械, 'ATMなど機械の利用料').
+名目の呼び方(事務, '頼まれてした事務の費用').
+
+%% ---- 第2条 天引き ----
+天引きの話(T, G, Art, M, W) :-
+    U is G - T,
+    第1条の段(U, Lim, Art, N, Han),
+    掛け算(U, Lim, Amt, Shiki),
+    率の表記(Lim, LY), 円の表記(G, GY), 円の表記(T, TY), 円の表記(U, UY),
+    format(atom(Keisan), '元本~wから利息として~wを先に差し引いた（天引きした）ので、受け取った額は~wです。第2条は、この受け取った額を元本として第1条の率で計算します。~wは~wなので第1条第~w号の~wで、上限は~wです。', [GY, TY, UY, UY, Han, N, LY, Shiki]),
+    (   T > Amt
+    ->  X is T - Amt, Rest is G - X, 円の表記(X, XY), 円の表記(Rest, RY),
+        format(atom(M), '天引きの~wのうち~wは、第2条により元本の返済に充てたとみなします（返ってくるのではありません）。残る元本は、~w − ~w = ~wです。~w天引きの~wは、これを~w超えます。', [TY, XY, GY, XY, RY, Keisan, TY, XY]),
+        format(atom(W), '天引きの~wのうち~wは元本の返済に充てたとみなし、残る元本は~wです', [TY, XY, RY])
+    ;   format(atom(M), '天引きの~wは第2条の上限以下なので、元本の返済に充てたとみなす分はありません。残る元本は~wのままです。~w', [TY, GY, Keisan]),
+        format(atom(W), '天引きの~wは第2条の上限の範囲内で、残る元本は~wのままです', [TY, GY])
+    ).
+
+%% ---- 第3条・第6条 利息とみなすか ----
+% 名目の判定(相手, 名目, 政令（9の欄）, 状態, 文, 条のリスト)
+名目の判定(_, X, _, みなす, M, ['3条']) :-
+    memberchk(X, [手数料, 礼金, 調査料]), !,
+    format(atom(M), '「~w」は利息とみなします（みなし利息）。第3条本文により、貸した人が元本のほかに受け取るお金は、礼金・割引金・手数料・調査料など名前が何であっても、利息として数えます。', [X]).
+名目の判定(個人, 費用, _, みなさない, '契約を結ぶ費用と借金を返す費用（契約の締結及び債務の弁済の費用）は、第3条ただし書により、利息とみなしません。', ['3条']) :- !.
+名目の判定(業者, 費用, _, みなす, '契約を結ぶ費用と借金を返す費用（契約の締結及び債務の弁済の費用）でも、第6条第2項の3つ（税金などの公租公課・強制執行など公の機関の手続の費用・ATMなどの利用料で政令の額まで）に当たらないものは、利息とみなします。業者からの借金（営業的金銭消費貸借＝お金を貸すことを仕事にしている人からの借金）では、第6条第2項により、第3条ただし書で利息から除かれる費用がこの3つに限られるためです。', ['3条', '6条2項']) :- !.
+% 相手が個人のとき、第6条第2項の3つは第3条ただし書の「契約の締結及び債務の弁済の費用」に当たる（決めたこと2-4 (a)）
+名目の判定(個人, 公租公課, _, みなさない, '税金などの公租公課（国や自治体に納めるお金）の支払に充てるものは、契約を結ぶ費用・借金を返す費用（契約の締結及び債務の弁済の費用）に当たり、第3条ただし書により、利息とみなしません。', ['3条']) :- !.
+名目の判定(個人, 公の手続, _, みなさない, '強制執行や競売など、公の機関が行う手続でその機関に払う費用は、契約を結ぶ費用・借金を返す費用（契約の締結及び債務の弁済の費用）に当たり、第3条ただし書により、利息とみなしません。', ['3条']) :- !.
+名目の判定(個人, 機械, _, みなさない, 'ATMなど、お金を受け取ったり返したりするときに使う機械の利用料は、契約を結ぶ費用・借金を返す費用（契約の締結及び債務の弁済の費用）に当たり、第3条ただし書により、利息とみなしません。', ['3条']) :- !.
+% 相手が個人のとき、事務の費用は第3条本文で利息とみなす（第6条第1項は営業的金銭消費貸借だけの定め。決めたこと2-4 (b)）
+名目の判定(個人, 事務, _, みなす, 'カードの再発行など、借りた人に頼まれて貸した人が行う事務の費用は、第3条本文により、利息とみなします。第6条第1項（政令で定める事務の費用に第3条本文を当てない定め）は、業者からの借金だけの定めです。', ['3条']) :- !.
+名目の判定(業者, 公租公課, _, みなさない, '税金などの公租公課（国や自治体に納めるお金）の支払に充てるものは、利息とみなしません。業者からの借金でも、第6条第2項第1号に当たり、第3条ただし書（契約の締結と返済の費用は除く）が当たるためです。', ['3条', '6条2項1号']) :- !.
+名目の判定(業者, 公の手続, _, みなさない, '強制執行や競売など、公の機関が行う手続でその機関に払う費用は、利息とみなしません。業者からの借金でも、第6条第2項第2号に当たり、第3条ただし書（契約の締結と返済の費用は除く）が当たるためです。', ['3条', '6条2項2号']) :- !.
+名目の判定(業者, 機械, はい, みなさない, 'ATMなど、お金を受け取ったり返したりするときに使う機械の利用料で、政令で定める額の範囲内のものは、利息とみなしません。業者からの借金でも、第6条第2項第3号に当たり、第3条ただし書（契約の締結と返済の費用は除く）が当たるためです。', ['3条', '6条2項3号']) :- !.
+名目の判定(業者, 機械, いいえ, みなす, 'ATMなど、お金を受け取ったり返したりするときに使う機械の利用料でも、政令で定める額の範囲を超えるものは、利息とみなします。第6条第2項第3号は政令で定める額の範囲内のものに限り、業者からの借金では第3条ただし書で利息から除かれる費用が第6条第2項の3つに限られるので、第3条本文が当たるためです。', ['3条', '6条2項3号']) :- !.
+名目の判定(業者, 事務, はい, みなさない, 'カードの再発行など、借りた人に頼まれて業者が行う事務の費用のうち政令で定めるものは、第6条第1項により第3条本文が当たらず、利息とみなしません。', ['6条1項']) :- !.
+名目の判定(業者, 事務, いいえ, みなす, 'カードの再発行など、借りた人に頼まれて業者が行う事務の費用でも、政令で定めるものでないものは、第6条第1項に当たらず、第3条本文により利息とみなします。', ['3条', '6条1項']).
+</script>
+<script type="text/prolog" data-name="rules_d_songai.pl">% rules/d_songai.pl — 遅れたときの損害金は何%までか（第4条・第7条）
+%
+%   第4条第1項：賠償額の予定（遅れたときの損害金）は、第1条の率の1.46倍まで。超えた部分だけ無効。
+%   第4条第2項：違約金も賠償額の予定とみなす。
+%   第7条第1項：業者（営業的金銭消費貸借）からの借金は、第4条第1項にかかわらず一律に年20%まで。第2項で第4条第2項を当てはめる。
+%   率で比べる。金額は出さない（NOTES の読み (19)）。
+%   2026-11-22 入口をやめて12欄にした。11の欄（遅れたときに払うと決めた率）が空なら、この3つの段を出さない。
+%   11の欄は前もって決めた率を聞くので、返すのが遅れたかは聞かない。段の文も「遅れたときに払うと決めた」と書き、遅れたとは言わない（依頼書 ①・②）。
+
+損害金の段(sjogen, C, 答え, M, As, W) :-
+    損害金の値(C, G, A, _, _),
+    損害金の上限(A, G, _, _, M, As, W).
+損害金の段(skekka, C, 答え, M, [Art], W) :-
+    損害金の値(C, G, A, R, X),
+    損害金の上限(A, G, Lim, Art, _, _, _),
+    超えるかの段(X, R, Lim, M, W).
+損害金の段(iyaku, C, 足りる, M, As, W) :-
+    損害金の値(C, _, A, _, 違約金),
+    違約金の話(A, M, As, W).
+
+損害金の値(C, G, A, R, X) :-
+    欄(損害率, C, R), R \== 空,
+    欄(元本, C, G), 欄(相手, C, A), 欄(呼び名, C, X).
+
+%% ---- 上限の率 ----
+損害金の上限(個人, G, Lim, '4条1項', M, ['4条1項', Art], W) :-
+    第1条の段(G, R1, Art, N, Han),
+    Lim is R1 * 146 // 100,
+    率の表記(R1, RY), 率の表記(Lim, LY), 円の表記(G, GY),
+    format(atom(M), '損害金の上限は~wです。元本の額~wは~wなので第1条第~w号の~wで、第4条第1項によりその1.46倍、~w × 1.46 = ~wまでです。', [LY, GY, Han, N, RY, RY, LY]),
+    format(atom(W), '損害金の上限は~wです', [LY]).
+損害金の上限(業者, G, 2000, '7条1項', M, ['7条1項'], '損害金の上限は年20%です') :-
+    第1条の段(G, R1, _, _, _),
+    L146 is R1 * 146 // 100,
+    率の表記(R1, RY), 率の表記(L146, L146Y),
+    format(atom(M), '損害金の上限は年20%です。お金を貸すことを仕事にしている業者からの借金（営業的金銭消費貸借）なので、第7条第1項により、元本の額にかかわらず年20%までです。第4条第1項の1.46倍の計算（この元本なら~w × 1.46 = ~w）は使いません。', [RY, L146Y]).
+
+%% ---- 超えた部分だけ無効 ----
+超えるかの段(X, R, Lim, M, W) :-
+    損害金の呼び方(X, XN), 率の表記(R, RY), 率の表記(Lim, LY),
+    (   R > Lim
+    ->  format(atom(M), '決めた~wの~wのうち、上限の~wを超えた部分は無効（払う約束として効き目が無いこと）です。上限の~wまでの部分は、払う約束として残ります。', [XN, RY, LY, LY]),
+        format(atom(W), '決めた~wの~wのうち、上限の~wを超えた部分は無効で、上限までの部分は払う約束として残ります', [XN, RY, LY])
+    ;   format(atom(M), '決めた~wの~wは上限の~w以下なので、無効になる部分はありません。', [XN, RY, LY]),
+        format(atom(W), '決めた~wの~wは、全部が払う約束として残ります', [XN, RY])
+    ).
+
+損害金の呼び方(遅延, '損害金').
+損害金の呼び方(違約金, '違約金').
+
+%% ---- 違約金は賠償額の予定とみなす ----
+違約金の話(個人, '違約金と決めたものも、第4条第2項により賠償額の予定（返すのが遅れたときに払う額を前もって決めておくこと）とみなし、損害金と同じ上限で見ます。', ['4条2項'], '違約金は賠償額の予定とみなし、損害金と同じ上限で見ます') :- !.
+違約金の話(業者, '違約金と決めたものも、第7条第2項で第4条第2項を当てはめるので、賠償額の予定（返すのが遅れたときに払う額を前もって決めておくこと）とみなし、第7条第1項の上限で見ます。', ['7条2項', '4条2項'], '違約金は賠償額の予定とみなし、損害金と同じ上限で見ます').
+</script>
+<script type="text/prolog" data-name="rules_g_hantei.pl">% rules/g_hantei.pl — 段をまとめ、見出し・根拠条文・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 条のリスト)　結論ごとの段 = s(画面のid, 見出し, 段)
+%   形は teikei-prolog の g_hantei.pl と同じ（2026-11-22。入口の3つ（利息／手数料／損害金）と「どの話か」をやめ、
+%   結論の箱を箇条書きにし、結論1つにつき木1本にした。REVIEW_RULES A7・B5）。
+%   前の見出しは段の答えを全部つないでいた（atomic_list_concat(Ws, '', S)）。前の木は全部の段を「次のすべてが成り立つ」の下にぶら下げた1本で、
+%   全部の段に 評価の約束・計算の約束 を付けていた。
+%   結果の段に出していた補足（betsu・go）と 判定しない の段は消し、断り書きは about.html の「判定について」と語の表へ移した（A5）。
+%   組の番号/2 は木の印（止まった段か）を決めるのに使い、知らない状態なら throw で止める（書き損じを見落とさない）。
+
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 成り立たない組があれば、その組だけを段にする（REVIEW_RULES C3。ほかの段は出さない。依頼書 ⑥）。
+% 無ければ第1条〜第7条を同じ入力で全部当てる（REVIEW_RULES C4・C5）。段を出すのに要る数の欄が空なら失敗する（数がそろう/1。b_risoku.pl）。
+% どの段も立たない（3と11の欄が空・7の欄が0・8の欄が「なし」）ときは nashi の1段だけを出す。
+% 同じ述語を別のファイルに分けて書くと後の読み込みで消えるので、まとめはここに1つだけ置く
+全部の段(C, Steps) :- 組み合わせなしがある(C), !, 組み合わせなしの段(C, Steps).
+全部の段(C, Steps) :-
+    数がそろう(C),
+    条文の段(C, Steps0),
+    ( Steps0 == [] -> 何も無い段(Steps) ; Steps = Steps0 ).
+
+% 段の並び＝結論の箱の並び：条の順（第5条→第1条→第2条→第3条・第6条→第4条・第7条）。
+% 第5条は第1条の段を決める元本の額なので、第1条の前に置く
+段の一覧([
+    motohon-'段を決める元本の額（第5条）', jogen-'利息の上限（第1条）', mukou-'無効になる部分（第1条）',
+    tenbiki-'天引き（第2条）', minashi-'利息とみなすか（第3条・第6条）',
+    sjogen-'損害金の上限（第4条・第7条）', skekka-'損害金の無効になる部分（第4条・第7条）', iyaku-'違約金（第4条第2項・第7条第2項）'
+]).
+
+条文の段(C, Steps) :-
+    段の一覧(L),
+    findall(s(Id, T, 段(St, M, As)), ( member(Id-T, L), 段の答え(Id, C, St, M, As, _) ), Steps).
+
+% 段のidで、どのファイルの段かを振り分ける（各ファイルの述語は名前を分けてある）
+段の答え(Id, C, St, M, As, W) :- memberchk(Id, [motohon, jogen, mukou]), !, 利息の段(Id, C, St, M, As, W).
+段の答え(Id, C, St, M, As, W) :- memberchk(Id, [tenbiki, minashi]), !, 手数料の段(Id, C, St, M, As, W).
+段の答え(Id, C, St, M, As, W) :- memberchk(Id, [sjogen, skekka, iyaku]), !, 損害金の段(Id, C, St, M, As, W).
+段の答え(nashi, _, 足りる, M, ['1条', '4条1項'], W) :- 何も無い段の文(M, W).
+
+% 利息・天引き・元本のほかのお金・損害金のどれも決めていない借金（依頼書 ⑤：要件の否定で写さず、借金を主語に立てて書く）
+何も無い段([s(nashi, '利息制限法で無効になる部分', 段(足りる, M, ['1条', '4条1項']))]) :- 何も無い段の文(M, _).
+何も無い段の文('返すのは元本だけの借金で、第1条の利息の上限も、第4条第1項の賠償額の予定の上限も、超える部分がありません。',
+               '返すのは元本だけの借金で、利息制限法で無効になる部分はありません').
+
+組み合わせなしの段(C, Steps) :-
+    組み合わせなしの一覧(C, L),
+    findall(s(Id, 'この組み合わせはありません', 段(組み合わせなし, M, As)),
+            ( nth1(I, L, _-M-As), atom_concat(mujun, I, Id) ), Steps).
+
+組み合わせなしの一覧(C, L) :- findall(Ns-M-As, 組み合わせなし(C, Ns, M, As), L).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、答えだけを短く出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」を付けない）。
+% 段の文（長い文）は理由として論理の木にだけ出す。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(C, Steps, Ws) :-
+    結論の段(C, Steps, Ps),
+    findall(W, member(_-_-W, Ps), Ws).
+
+% 結論の箱に出す段を 段のid-段-答え の組で、箱の並びのまま返す（論理の木も同じ並びで結論1つにつき1本立てる。REVIEW_RULES B5）
+% 第5条の段は、第5条が当たらないとき（相手が個人・ほかの借金なし）は答えを なし にして箱に出さない（第1条の段を支える文なので、節にだけ出す）。
+% どの段も立たないときは nashi の段が立つので、下の どれにも当たらない は今の欄では出ない（空の箱を出さないための受け皿。teikei-prolog と同じ形）。
+結論の段(C, Steps, Ps) :-
+    findall(Id-S-W, ( member(s(Id, _, S), Steps), S = 段(St, _, As), 問いの答え(C, Id, St, As, W) ), Ps0),
+    ( Ps0 == [] -> どれにも当たらない(W0, S0), Ps = [none-S0-W0] ; Ps = Ps0 ).
+
+どれにも当たらない('当てる条がありません', 段(足りる, '当てる条がありません。', [])).
+
+% 根拠の無い段は結論の箱に出さない。答え/4 の書き損じで立っても「（）」を画面に出さない
+% 「;」で書くと、根拠の付いた組み合わせなしで両方の枝が成り立ち、同じ文が結論の箱に2回出た（dairi-prolog 2026-11-19）。「->」で解を1つにする
+問いの答え(C, Id, St, As, W) :-
+    As \== [],
+    答え(C, Id, St, W0), !,
+    ( St == 組み合わせなし -> 組み合わせなしの条(C, Id, S) ; 条の表記(As, S) ),
+    format(atom(W), '~w（~w）', [W0, S]).
+
+% 成り立たない組は「この組み合わせはありません。…（1と4と6の欄・5条2号）」
+組み合わせなしの条(C, Id, S) :-
+    atom_concat(mujun, IA, Id), atom_number(IA, I),
+    組み合わせなしの一覧(C, L), nth1(I, L, Ns-_-As),
+    atomic_list_concat(Ns, 'と', N),
+    条の表記(As, A),
+    format(atom(S), '~wの欄・~w', [N, A]).
+
+% 節の文：答えがあればそれを、無い段（第5条が当たらない段）は段の文をそのまま出す
+節の文(C, Id, 段(St, _, _), W) :- 答え(C, Id, St, W), !.
+節の文(_, _, 段(_, M, _), M0) :- atom_concat(M0, '。', M), !.
+節の文(_, _, 段(_, M, _), M).
+
+% 答え(C, 段のid, 状態, 答えの文)
+% 答えの文には、画面の上で指す先の無い指示語（その・この・同項・当該 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+% 段の答え/6 は状態を縛らずに呼んでから比べる（状態を先に縛ると、別の状態の句へ進んで取り違えるため）
+答え(C, Id, 組み合わせなし, W) :- !,
+    atom_concat(mujun, IA, Id), atom_number(IA, I),
+    組み合わせなしの一覧(C, L), nth1(I, L, _-M-_),
+    atomic_list_concat(['この組み合わせはありません。', M], W).
+答え(C, Id, St, W) :- 段の答え(Id, C, St0, _, _, W), !, St0 == St, W \== なし.
+
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---- 根拠条文 ----
+% 段の順に並べ、重複は1つに
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As), Ss), member(A, As) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5。結論をつないだ行と「次のすべてが成り立つ」の節は置かない）。
+% 並びは結論の箱と同じ。一番上の行は結論の箱の文で、その下にその段の木を1つだけ置く
+木(C, Steps, Trees) :-
+    結論の段(C, Steps, Ps),
+    findall(t(K, W, '', [X]), ( member(Id-S-W, Ps), 段の木(Id, S, X), 印(S, K) ), Trees).
+
+% 止まった段（組み合わせなし）は info、そのほかは ok（木ごとに、その段で決める）
+印(段(St, _, _), K) :- 組の番号(St, N), ( N =:= 1 -> K = info ; K = ok ).
+
+% 組の番号(状態, 1=止まった段 | 2=答えの段 | 3=答えを支える段)。状態は全部名前で書き、知らない状態は止める（依頼書）。
+% 2026-11-22 前の 判定しない（ATMなどの利用料・カードの再発行の手数料）は、9の欄（あなたの考え）で答えるようにしたので消した
+組の番号(組み合わせなし, 1) :- !.
+組の番号(答え, 2) :- !.          % 第1条・第2条・第4条・第7条の上限と無効になる部分
+組の番号(みなす, 2) :- !.        % 第5条（元本の額とみなす）・第3条本文（利息とみなす）
+組の番号(みなさない, 2) :- !.    % 第3条ただし書・第6条第1項・第6条第2項
+組の番号(足りる, 3) :- !.        % 第5条が当たらない段・違約金・何も決めていない借金
+組の番号(St, _) :- throw(知らない状態(St)).
+
+% 号の行は柱書き（号の前の文）を続けて書いた原文の行なので（rules/a_genbun.pl）、柱書は足さない
+段の木(Id, 段(St, M, Arts), X) :-
+    list_to_set(Arts, As),
+    maplist(原文規定, As, Rs),
+    段の約束(Id, Ys),
+    append(Rs, Ys, Kids),
+    すべて(M, '', Kids, X),
+    組の番号(St, _).
+
+% 葉に置く約束事は、計算をする第1条・第2条の段だけ（1年ちょうど・1円未満切り捨て。D1）。
+% 断り書き（「業として」・政令の当てはめは判定しない 等）は about の「判定について」に置く（REVIEW_RULES A5。前は全部の段に 評価の約束 を付けていた）
+段の約束(Id, [Z]) :- memberchk(Id, [jogen, mukou, tenbiki]), !, 計算の約束(Z).
+段の約束(_, []).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は teikei-prolog の web.pl と同じ（2026-11-22）。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(C, Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+</script>
+<script type="application/json" id="law">{"1":{"t":"第一条","c":"（利息の制限）","p":[{"n":"1","s":"金銭を目的とする消費貸借における利息の契約は、その利息が次の各号に掲げる場合に応じ当該各号に定める利率により計算した金額を超えるときは、その超過部分について、無効とする。","i":[{"n":"1","t":"一","s":"元本の額が十万円未満の場合　年二割","sub":[]},{"n":"2","t":"二","s":"元本の額が十万円以上百万円未満の場合　年一割八分","sub":[]},{"n":"3","t":"三","s":"元本の額が百万円以上の場合　年一割五分","sub":[]}]}]},"2":{"t":"第二条","c":"（利息の天引き）","p":[{"n":"1","s":"利息の天引きをした場合において、天引額が債務者の受領額を元本として前条に規定する利率により計算した金額を超えるときは、その超過部分は、元本の支払に充てたものとみなす。","i":[]}]},"3":{"t":"第三条","c":"（みなし利息）","p":[{"n":"1","s":"前二条の規定の適用については、金銭を目的とする消費貸借に関し債権者の受ける元本以外の金銭は、礼金、割引金、手数料、調査料その他いかなる名義をもってするかを問わず、利息とみなす。ただし、契約の締結及び債務の弁済の費用は、この限りでない。","i":[]}]},"4":{"t":"第四条","c":"（賠償額の予定の制限）","p":[{"n":"1","s":"金銭を目的とする消費貸借上の債務の不履行による賠償額の予定は、その賠償額の元本に対する割合が第一条に規定する率の一・四六倍を超えるときは、その超過部分について、無効とする。","i":[]},{"n":"2","s":"前項の規定の適用については、違約金は、賠償額の予定とみなす。","i":[]}]},"5":{"t":"第五条","c":"（元本額の特則）","p":[{"n":"1","s":"次の各号に掲げる利息に関する第一条の規定の適用については、当該各号に定める額を同条に規定する元本の額とみなす。","i":[{"n":"1","t":"一","s":"営業的金銭消費貸借（債権者が業として行う金銭を目的とする消費貸借をいう。以下同じ。）上の債務を既に負担している債務者が同一の債権者から重ねて営業的金銭消費貸借による貸付けを受けた場合における当該貸付けに係る営業的金銭消費貸借上の利息　当該既に負担している債務の残元本の額と当該貸付けを受けた元本の額との合計額","sub":[]},{"n":"2","t":"二","s":"債務者が同一の債権者から同時に二以上の営業的金銭消費貸借による貸付けを受けた場合におけるそれぞれの貸付けに係る営業的金銭消費貸借上の利息　当該二以上の貸付けを受けた元本の額の合計額","sub":[]}]}]},"6":{"t":"第六条","c":"（みなし利息の特則）","p":[{"n":"1","s":"営業的金銭消費貸借に関し債権者の受ける元本以外の金銭のうち、金銭の貸付け及び弁済に用いるため債務者に交付されたカードの再発行の手数料その他の債務者の要請により債権者が行う事務の費用として政令で定めるものについては、第三条本文の規定は、適用しない。","i":[]},{"n":"2","s":"営業的金銭消費貸借においては、次に掲げる契約の締結及び債務の弁済の費用に限り、第三条ただし書の規定の適用があるものとする。","i":[{"n":"1","t":"一","s":"公租公課の支払に充てられるべきもの","sub":[]},{"n":"2","t":"二","s":"強制執行の費用、担保権の実行としての競売の手続の費用その他公の機関が行う手続に関してその機関に支払うべきもの","sub":[]},{"n":"3","t":"三","s":"債務者が金銭の受領又は弁済のために利用する現金自動支払機その他の機械の利用料（政令で定める額の範囲内のものに限る。）","sub":[]}]}]},"7":{"t":"第七条","c":"（賠償額の予定の特則）","p":[{"n":"1","s":"第四条第一項の規定にかかわらず、営業的金銭消費貸借上の債務の不履行による賠償額の予定は、その賠償額の元本に対する割合が年二割を超えるときは、その超過部分について、無効とする。","i":[]},{"n":"2","s":"第四条第二項の規定は、前項の賠償額の予定について準用する。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"第一章　利息等の制限","a":[{"k":"1","t":"第一条","c":"（利息の制限）","u":1},{"k":"2","t":"第二条","c":"（利息の天引き）","u":1},{"k":"3","t":"第三条","c":"（みなし利息）","u":1},{"k":"4","t":"第四条","c":"（賠償額の予定の制限）","u":1}]},{"t":"第二章　営業的金銭消費貸借の特則","a":[{"k":"5","t":"第五条","c":"（元本額の特則）","u":1},{"k":"6","t":"第六条","c":"（みなし利息の特則）","u":1},{"k":"7","t":"第七条","c":"（賠償額の予定の特則）","u":1},{"k":"8","t":"第八条","c":"（保証料の制限等）","u":0},{"k":"9","t":"第九条","c":"（保証がある場合における利息の制限の特則）","u":0}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  // '466条2項' '466条1項本文' '509条第1号' '466条の2第1項' '469条2項第1号' '469条2項ただし書' のような形。複数条が「・」で区切られることもある → 最初の条だけ見る
+  const first = String(a).split("・")[0];
+  const m = first.match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(?:第?(\d+)号((?:の\d+)*))?([イロハニホ])?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[4] ? m[4] + (m[5] || "").replace(/の/g, "_") : null, sub: m[6] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para);
+  // 号まで指定があれば、項の本文とその号だけ出す
+  if (r.item) ps = ps.filter(p => p.i.some(it => it.n === r.item));
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const list = r.item ? p.i.filter(it => it.n === r.item) : p.i;
+    const its = list.map(it => `<p class="it">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => r.sub && x.startsWith(r.sub + " ") ? `<br><span class="hit">　${esc(x)}</span>` : `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなくこのアプリの決め事。</p>`;
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+
+// ---------- ここから別ページ（about.html）だけの処理 ----------
+if (location.protocol === "file:") $("back").href = "risoku.html";
+function openHash(){ const d = location.hash && document.getElementById(location.hash.slice(1)); if (d && d.tagName === "DETAILS") d.open = true; }
+openHash(); window.addEventListener("hashchange", openHash);
+
+async function bootAbout(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    // 全条文の地図
+    let C = []; try{ C = JSON.parse(document.getElementById("cover-data").textContent); }catch(e){}
+    const cover = $("cover");
+    C.forEach(ch => {
+      const div = document.createElement("div"); div.className = "cover-ch";
+      div.innerHTML = `<h4>${esc(ch.t)} <span>${ch.a.length}条</span></h4><div class="cells"></div>`;
+      const cells = div.querySelector(".cells");
+      ch.a.forEach(a => {
+        const btn = document.createElement("button"); btn.type = "button";
+        btn.className = `cell u${a.u}`; btn.title = `${a.t}${a.c}`;
+        btn.addEventListener("click", () => {
+          const old = document.getElementById("cover-pick"); if (old) old.remove();
+          const pk = document.createElement("div"); pk.id = "cover-pick";
+          pk.innerHTML = a.u === 1 ? lawHTML(a.k.includes("_") ? a.k.replace("_", "条の").replace(/_/g, "の") : a.k + "条") : `<p class="hint" style="margin-top:6px">${esc(a.t)}${esc(a.c)}${a.u === 2 ? "（削除）" : "（このアプリでは使用しない条）"}</p>`;
+          div.appendChild(pk);
+        });
+        cells.appendChild(btn);
+      });
+      cover.appendChild(div);
+    });
+    const used = C.flatMap(c => c.a).filter(a => a.u === 1).length;
+    const total = C.flatMap(c => c.a).filter(a => a.u !== 2).length;
+    cover.insertAdjacentHTML("afterbegin", `<p class="cover-total">使っている条：${used} / ${total} 条</p>`);
+    // ソース表示
+    const src = $("src");
+    files.forEach(f => {
+      const det = document.createElement("details"); det.className = "srcfile";
+      det.innerHTML = `<summary>${esc(f.dataset.name.replace(/_/g, "/"))}</summary><pre>${esc(f.textContent)}</pre>`;
+      src.appendChild(det);
+    });
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+  }
+}
+
+// 直接クエリ実行
+$("run").addEventListener("click", () => {
+  if (!pl){ $("out").textContent = "まだ読み込み中です。"; return; }
+  const q = $("q").value.trim().replace(/\.$/, "");
+  try{
+    const it = pl.prolog.query(q); const out = [];
+    for (let i = 0; i < 20; i++){
+      const r = it.next();
+      if (!r) break;
+      if (r.error){ out.push("エラー：" + r.message); break; }
+      // 最後の解は done:true に値が付いて返る。done で先に抜けると、その解を捨てて「解なし」に見える
+      if (r.value && r.value.$tag === "bindings"){
+        const { $tag, ...vars } = r.value;
+        out.push(Object.keys(vars).length ? JSON.stringify(vars, null, 2) : "true");
+      }
+      if (r.done) break;
+    }
+    $("out").textContent = out.length ? out.join("\n---\n") : "（解なし）";
+  } catch(e){ $("out").textContent = "エラー：" + e.message; }
+});
+
+if (typeof SWIPL === "function") bootAbout();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; }
+</script>
