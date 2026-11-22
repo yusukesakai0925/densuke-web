@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>太陽系の外にある惑星探しを、論文どおりにやり直した</title>
+<style>
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;min-height:100vh;background:linear-gradient(135deg,#1f2933 0%,#323f4b 100%);color:#fff;font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;display:flex;align-items:center;justify-content:center;padding:32px 18px}
+main{width:100%;max-width:960px}
+h1{font-size:clamp(26px,4.2vw,42px);line-height:1.4;margin:0 0 12px}
+.lead{font-size:clamp(16px,2vw,20px);line-height:1.7;color:#cbd2d9;margin:0 0 34px}
+.pick{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media (max-width:700px){.pick{grid-template-columns:1fr}}
+a.btn{display:block;text-decoration:none;color:#1f2933;background:#fff;border-radius:14px;padding:26px 26px 24px;box-shadow:0 6px 24px rgba(0,0,0,.35);transition:transform .1s}
+a.btn:hover{transform:translateY(-3px)}
+a.btn .k{display:inline-block;font-size:15px;font-weight:700;color:#fff;padding:3px 12px;border-radius:4px;margin-bottom:12px}
+a.btn.easy .k{background:#2f9e6e}
+a.btn.acad .k{background:#2f6fdf}
+a.btn b{display:block;font-size:26px;margin-bottom:10px}
+a.btn p{margin:0;font-size:17px;line-height:1.65;color:#52606d}
+a.btn .go{display:block;margin-top:16px;font-size:18px;font-weight:800}
+a.btn.easy .go{color:#2f9e6e}
+a.btn.acad .go{color:#2f6fdf}
+.foot{margin-top:28px;font-size:14px;color:#9aa5b1;line-height:1.6}
+</style></head>
+<body><main>
+<h1>太陽系の外にある惑星探しを、<br>論文どおりにやり直した</h1>
+<p class="lead">2024年に発表された「太陽系の外にある新しい惑星の候補9個」の論文を、同じ公開データと同じやり方で探し直した結果です。読む方に合わせて、どちらかを選んでください。</p>
+<div class="pick">
+ <a class="btn easy" href="easy_slides_1122.html"><span class="k">簡単版</span><b>科学の予備知識がない方へ</b><p>惑星の見つけ方から、何をやって何が分かったかまでを、専門用語を使わずに説明します（9枚）。</p><span class="go">簡単版を開く →</span></a>
+ <a class="btn acad" href="repro_slides_1118.html"><span class="k">アカデミア向け版</span><b>研究者・専門の方へ</b><p>論文の構成で、手順・論文との違い・判定の基準・数字の内訳まで載せています（本編17枚＋付録10枚）。</p><span class="go">アカデミア向け版を開く →</span></a>
+</div>
+<p class="foot">対象の論文: Eschen &amp; Kunimoto 2024, MNRAS, “Nine new M dwarf planet candidates from TESS including five gas giants”</p>
+</main></body></html>

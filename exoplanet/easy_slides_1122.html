@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>太陽系の外にある惑星探しを、論文どおりにやり直した（簡単版）</title>
+<style>
+:root{--ink:#1f2933;--sub:#52606d;--line:#cbd2d9;--paper:#f5f7fa;--a:#2f6fdf;--a2:#dbe7fb;--ok:#2f9e6e;--ok2:#d7f0e4;--r:#d64545;--r2:#f9dede;--o:#e07a2e;--o2:#fbe6d6}
+*{box-sizing:border-box}
+html,body{margin:0;background:#3e4c59;font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;color:var(--ink)}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.deck{display:flex;flex-direction:column;align-items:center;gap:28px;padding:28px 0}
+@media (max-width:1300px){.deck{gap:12px;padding:8px 0}}
+.slide{width:1280px;height:720px;background:#fff;position:relative;padding:44px 64px 40px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+.ttl{display:flex;align-items:center;gap:14px;font-size:22px;font-weight:800;padding-bottom:6px;margin-bottom:12px;border-bottom:2px solid var(--line)}
+.ttl .pt{font-size:15px;font-weight:700;color:#fff;background:var(--a);padding:3px 10px;border-radius:4px}
+h2.msg{font-size:30px;line-height:1.4;margin:0 0 18px;font-weight:800}
+p,li{font-size:22px;line-height:1.55}
+p{margin:0 0 10px}
+ul{margin:0;padding-left:1.2em}
+.pg{position:absolute;right:28px;bottom:16px;font-size:16px;color:var(--sub)}
+.src{position:absolute;left:64px;bottom:16px;font-size:14px;color:var(--sub)}
+.cover{background:linear-gradient(135deg,#1f2933 0%,#323f4b 100%);color:#fff}
+.cover .pg{color:#9aa5b1}
+.cover h1{font-size:46px;line-height:1.35;margin:170px 0 26px}
+.cover .who{font-size:24px;color:#cbd2d9}
+table.t{border-collapse:collapse;width:100%;font-size:19px}
+table.t th,table.t td{border:1px solid var(--line);padding:7px 12px;text-align:left;vertical-align:top;line-height:1.4}
+table.t th{background:var(--paper)}
+table.t td.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+table.t.s{font-size:17px}
+table.t.s th,table.t.s td{padding:5px 10px}
+.nw{white-space:nowrap}
+.okc{color:var(--ok);font-weight:800}
+.ngc{color:var(--r);font-weight:800}
+.dim{color:var(--sub)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+.card{border:1px solid var(--line);border-radius:10px;padding:14px 18px;background:#fff}
+.card h3{margin:0 0 8px;font-size:20px;color:var(--sub)}
+.card p,.card li{font-size:19px;line-height:1.5}
+.fill{background:var(--paper);border:none}
+.num{font-size:58px;font-weight:800;line-height:1.1;color:var(--a)}
+.num.ok{color:var(--ok)}
+.num small{font-size:24px;color:var(--ink);font-weight:700;margin-left:6px}
+.numlab{font-size:18px;color:var(--sub);font-weight:700}
+/* 矢羽根 */
+.chev{display:flex;gap:0;margin:6px 0 14px}
+.chev>div{flex:1;background:var(--a2);padding:12px 22px 12px 34px;clip-path:polygon(0 0,calc(100% - 20px) 0,100% 50%,calc(100% - 20px) 100%,0 100%,20px 50%);margin-left:-12px;min-height:96px;display:flex;flex-direction:column;justify-content:center}
+.chev>div:first-child{clip-path:polygon(0 0,calc(100% - 20px) 0,100% 50%,calc(100% - 20px) 100%,0 100%);margin-left:0;padding-left:18px}
+.chev b{font-size:20px;display:block}
+.chev span{font-size:16px;line-height:1.35;color:var(--ink)}
+.chev>div.dark{background:var(--a);color:#fff}.chev>div.dark span{color:#fff}
+.chev>div.gray{background:#e4e7eb}
+.chevn{display:flex;margin:0 0 6px}
+.chevn>div{flex:1;text-align:center;font-size:26px;font-weight:800;color:var(--a)}
+.chevn>div small{display:block;font-size:15px;color:var(--sub);font-weight:700}
+/* 棒 */
+.bars{display:flex;flex-direction:column;gap:12px;margin:4px 0 14px}
+.bar{display:flex;align-items:center;gap:14px;font-size:19px}
+.bar .lab{width:270px;flex:none;font-weight:700}
+.bar .tr{flex:1;height:34px;background:#eef1f4;border-radius:4px;overflow:hidden}
+.bar .tr span{display:block;height:100%}
+.bar .v{width:120px;flex:none;font-weight:800;font-size:22px;text-align:right}
+.figrow{display:flex;align-items:center;gap:6px}
+.figrow figure{margin:0;flex:1;text-align:center}
+.figrow img{width:100%;border:1px solid var(--line)}
+.figrow figcaption{font-size:16px;line-height:1.4;color:var(--ink);margin-top:4px;text-align:left}
+.figrow .arr{font-size:34px;color:var(--sub);flex:none}
+.q{background:var(--paper);border-radius:10px;padding:16px 22px;font-size:24px;font-weight:800;line-height:1.5}
+dl.g{display:grid;grid-template-columns:200px 1fr;gap:6px 18px;margin:0}
+dl.g dt{font-weight:800;font-size:19px}
+dl.g dd{margin:0;font-size:18px;line-height:1.45}
+.chip{display:inline-block;font-size:15px;font-weight:700;color:#fff;background:var(--a);padding:3px 10px;border-radius:4px}
+.chev>div.diff{background:var(--o2)}
+.chev>div.none{background:var(--r2)}
+.lg{font-size:16px;color:var(--sub);margin:0 0 10px}
+.lg i{display:inline-block;width:16px;height:16px;border-radius:3px;vertical-align:-2px;margin:0 6px 0 16px}
+.ans{background:var(--ink);color:#fff;border-radius:10px;padding:14px 22px;font-size:26px;font-weight:800;line-height:1.45}
+.roots{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;position:relative;padding-top:26px}
+.roots::before{content:"";position:absolute;top:12px;left:16.6%;right:16.6%;height:14px;border:2px solid var(--line);border-bottom:none}
+.roots::after{content:"";position:absolute;top:0;left:50%;height:12px;border-left:2px solid var(--line)}
+.roots .card p{font-size:17px;line-height:1.45;margin:6px 0 0}
+.down{text-align:center;color:var(--sub);font-size:22px;line-height:1;margin:4px 0}
+.fun{display:flex;flex-direction:column;align-items:center;gap:4px}
+.fun>div{background:var(--a2);text-align:center;padding:6px 40px;clip-path:polygon(0 0,100% 0,calc(100% - 16px) 100%,16px 100%)}
+.fun>div:last-child{background:var(--a);color:#fff}.fun>div:last-child b{color:#fff}
+.fun b{font-size:24px;color:var(--a);margin-right:10px}
+.fun span{font-size:17px}
+.nest{display:flex;align-items:center;gap:18px;border:2px solid var(--a);border-radius:10px;padding:14px 16px;background:#fff}
+.nest .nest{flex:1;min-width:0;background:var(--a2);border-color:var(--a2)}
+.nest .nest .nest{background:#fff;border-color:var(--a)}
+.nest .nl{flex:none;width:250px}
+.nest .nl p{font-size:17px;line-height:1.45;margin:4px 0 0}
+.tree ul{display:flex;flex-direction:column;justify-content:center;list-style:none;margin:0;padding:0 0 0 22px;position:relative}
+.tree ul::before{content:"";position:absolute;left:0;top:50%;width:22px;border-top:2px solid var(--line)}
+.tree li{display:flex;align-items:center;position:relative;padding:4px 0 4px 18px;font-size:16px;line-height:1.35}
+.tree li::before{content:"";position:absolute;left:0;top:50%;width:18px;border-top:2px solid var(--line)}
+.tree li::after{content:"";position:absolute;left:0;top:0;bottom:0;border-left:2px solid var(--line)}
+.tree li:first-child::after{top:50%}
+.tree li:last-child::after{bottom:50%}
+.tree li:only-child::after{display:none}
+.tree>ul{padding-left:0}.tree>ul::before{display:none}
+.tree>ul>li{padding-left:0}.tree>ul>li::before,.tree>ul>li::after{display:none}
+.tree .nd{flex:none;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:#fff}
+.tree .nd b{font-size:20px;color:var(--a);margin-right:6px}
+.tree .nd.root{background:var(--ink);color:#fff;border-color:var(--ink)}.tree .nd.root b{color:#fff}
+.tree .nd.key{background:var(--a2);border-color:var(--a)}
+.mx{display:grid;grid-template-columns:150px 1fr 1fr 1fr;gap:8px}
+.mx>div{font-size:17px;line-height:1.45;padding:10px 12px;border:1px solid var(--line);border-radius:8px}
+.mx>.hd{border:none;border-radius:0;font-weight:800;font-size:18px;text-align:center;padding:12px 26px;clip-path:polygon(0 0,calc(100% - 18px) 0,100% 50%,calc(100% - 18px) 100%,0 100%,18px 50%)}
+.mx>.rl{font-weight:800;font-size:18px;display:flex;align-items:center;border:none}
+body.present{background:#000;overflow:hidden}
+body.present .deck{padding:0;gap:0;height:100vh;justify-content:center}
+body.present .slide{display:none;box-shadow:none;transform-origin:center center}
+body.present .slide.on{display:block}
+@media print{html,body{background:#fff}.deck{padding:0;gap:0}.slide{box-shadow:none;break-after:page}@page{size:1280px 720px;margin:0}}
+</style><style>
+.back{position:absolute;right:64px;top:30px;font-size:18px;color:#cbd2d9}
+.back a{color:#fff}
+.easy p,.easy li{font-size:24px;line-height:1.6}
+.big3 .card{text-align:center;padding:22px 18px}
+.big3 .num{font-size:64px}
+.big3 p{font-size:21px;text-align:left;margin-top:10px}
+.cap{font-size:19px;line-height:1.5;color:var(--ink)}
+.chev.tall>div{min-height:150px}
+.chev.tall b{font-size:23px}
+.chev.tall span{font-size:18px;line-height:1.45}
+.bar .lab{width:330px}
+.tight li{font-size:21px;line-height:1.5}
+</style></head>
+<body>
+<div class="deck easy">
+<section class="slide cover"><div class="back"><a href="index.html">版を選ぶページへ戻る</a></div>
+<h1>太陽系の外にある惑星探しを、<br>論文どおりにやり直した</h1>
+<div class="who">簡単版（科学の予備知識がなくても読める版）<br>2026年11月22日</div><div class="pg"></div></section>
+<section class="slide"><div class="ttl">この資料で言いたいこと</div>
+<h2 class="msg">2024年に発表された「太陽系の外にある新しい惑星の候補9個」を、同じデータと同じやり方で探し直し、9個中7個を見つけた</h2>
+<div class="grid3 big3">
+<div class="card fill"><div class="num ok">7<small>個／9個</small></div><p>論文が見つけた新しい惑星の候補のうち、私たちも論文と同じ「くり返し暗くなる間隔」で見つけたもの</p></div>
+<div class="card fill"><div class="num">94<small>個／152個</small></div><p>論文が調べたのと同じ種類の星（小さく赤い星）を回り、すでに惑星だと分かっている152個のうち、同じやり方で見つけたもの。答えの分かっている問題で、同じやり方がどこまで見つけられるかを数えた</p></div>
+<div class="card fill"><div class="num" style="color:var(--r);font-size:40px;line-height:1.6">人の目の確認<small>はまだ</small></div><p>最後に人が目で見て、惑星以外の原因で暗くなったものを外す確認はしていない。だから今回は「やり方を再現できた」までで、新しい惑星を見つけたとはまだ言えない</p></div>
+</div><div class="pg"></div></section>
+<section class="slide"><div class="ttl">惑星の見つけ方</div>
+<h2 class="msg">太陽以外の星を回る惑星（系外惑星）は、遠すぎてほとんどが直接は見えない。その星の前を惑星が横切ると、星がほんの少し暗くなる。決まった間隔でくり返し暗くなれば、惑星が回っていると考えられる</h2>
+<svg viewBox="0 0 1150 330" width="1150" height="330" style="display:block">
+ <defs><radialGradient id="st"><stop offset="0" stop-color="#ffd08a"/><stop offset="1" stop-color="#e0662e"/></radialGradient></defs>
+ <circle cx="170" cy="150" r="120" fill="url(#st)"/>
+ <circle cx="190" cy="165" r="26" fill="#1f2933"/>
+ <line x1="40" y1="165" x2="300" y2="165" stroke="#52606d" stroke-width="2" stroke-dasharray="6 6"/>
+ <text x="170" y="305" font-size="22" text-anchor="middle" fill="#1f2933">星（手前の黒い丸が惑星）</text>
+ <text x="380" y="160" font-size="44" fill="#9aa5b1">▶</text>
+ <line x1="470" y1="40" x2="470" y2="250" stroke="#9aa5b1" stroke-width="2"/>
+ <line x1="470" y1="250" x2="1130" y2="250" stroke="#9aa5b1" stroke-width="2"/>
+ <text x="455" y="60" font-size="20" text-anchor="end" fill="#52606d">明るい</text>
+ <text x="455" y="245" font-size="20" text-anchor="end" fill="#52606d">暗い</text>
+ <polyline fill="none" stroke="#2f6fdf" stroke-width="4" points="480,90 600,90 615,170 655,170 670,90 800,90 815,170 855,170 870,90 1000,90 1015,170 1055,170 1070,90 1125,90"/>
+ <text x="800" y="290" font-size="22" text-anchor="middle" fill="#1f2933">時間 →</text>
+ <text x="635" y="205" font-size="20" text-anchor="middle" fill="#d64545">暗くなる</text>
+ <line x1="635" y1="62" x2="835" y2="62" stroke="#d64545" stroke-width="2"/>
+ <line x1="635" y1="54" x2="635" y2="70" stroke="#d64545" stroke-width="2"/><line x1="835" y1="54" x2="835" y2="70" stroke="#d64545" stroke-width="2"/>
+ <text x="735" y="50" font-size="20" text-anchor="middle" fill="#d64545">同じ間隔（周期）</text>
+</svg>
+<p class="cap" style="font-size:22px">望遠鏡で星の明るさを測り続け、その記録の中から「くり返し暗くなる跡」を探す。この探し方を<b>トランジット法</b>と呼ぶ。暗くなる量は惑星が大きいほど大きく、くり返す間隔は惑星が星を1周する日数を表す。</p><div class="pg"></div></section>
+<section class="slide"><div class="ttl">小さい星ほど見つけやすい</div>
+<h2 class="msg">同じ大きさの惑星でも、小さく赤い星の前を横切ると、太陽の前を横切るときの16倍暗くなる</h2>
+<p class="dim" style="font-size:20px">地球と同じ大きさの惑星が星の前を横切ったときに、星の明るさが何％下がるか</p>
+<div class="bars" style="margin-top:18px">
+ <div class="bar"><div class="lab">太陽</div><div class="tr"><span style="width:6.3%;background:var(--o)"></span></div><div class="v">0.0084%</div></div>
+ <div class="bar"><div class="lab">小さく赤い星<br><span class="dim" style="font-size:16px">論文の候補が回る星の1つ。半径は太陽の<span class="nw">4分の1</span></span></div><div class="tr"><span style="width:100%;background:var(--r)"></span></div><div class="v">0.1331%</div></div>
+</div>
+<div class="grid2" style="margin-top:26px">
+ <div class="card fill"><p style="font-size:21px">暗くなる量は、星の面のうち惑星が隠す面積の割合で決まる。星の半径が太陽の4分の1なら面積は16分の1になり、同じ惑星が隠す割合は16倍になる。</p></div>
+ <div class="card fill"><p style="font-size:21px">小さく赤い星（専門用語で M型矮星）は、天の川銀河の星の約7割を占める。数が多く、惑星を探す相手として向いている。</p></div>
+</div>
+<div class="src">星の割合: Henry ほか 2018（論文 第1節の引用）。星の半径: 論文 Table 2（候補が回る星の1つ・太陽の0.251倍）</div><div class="pg"></div></section>
+<section class="slide"><div class="ttl">元の論文がやったこと</div>
+<h2 class="msg">元の論文は、小さく赤い星約10万個の記録から、NASA の観測チームの一覧にまだ載っていない惑星の候補を9個見つけた</h2>
+<div class="grid2" style="grid-template-columns:1.25fr 1fr;align-items:center">
+<div class="fun">
+ <div style="width:650px"><b>107,303個</b><span>明るさの記録がある、小さく赤い星</span></div>
+ <div style="width:610px"><b>13,642本</b><span>見つかった「くり返し暗くなる跡」</span></div>
+ <div style="width:570px;padding:6px 24px"><b>113本</b><span>偽物（惑星以外の原因で暗くなったもの）を<br>落とす機械の確認を通った跡</span></div>
+ <div style="width:530px;padding:6px 24px"><b>28本</b><span>そのうち一覧に無いものを人が目で見た</span></div>
+ <div style="width:450px;padding:6px 24px;background:var(--a);color:#fff"><b style="color:#fff">9個</b><span>人が見て偽物を外し、<br>残った新しい惑星の候補</span></div>
+ <p class="dim" style="font-size:16px;margin:6px 0 0">星は「個」、1つの星から複数見つかることがある暗くなる跡は「本」で数える</p>
+</div>
+<div class="card fill">
+ <h3>なぜ探すのか</h3>
+ <p>9個のうち5個は、木星のような大きなガスの惑星の候補だった。小さく赤い星の周りでは、こうした惑星は珍しい。どうやってできたかを今の理論ではうまく説明できず、見つかる数を増やすことが、でき方を調べる材料になる。</p>
+</div>
+</div>
+<div class="src">Eschen と Kunimoto（米国マサチューセッツ工科大学）, 2024年6月, 英国の天文学の論文誌 MNRAS</div><div class="pg"></div></section>
+<section class="slide"><div class="ttl">私たちがやったこと</div>
+<h2 class="msg">論文と同じ公開データを使い、くり返し暗くなる跡をコンピュータで探し、偽物を機械で落とした</h2>
+<div class="chev tall">
+ <div><b>① データを取る</b><span>NASA の宇宙望遠鏡 TESS が2018年から測っている星の明るさの記録。誰でも取れる</span></div>
+ <div><b>② 間隔を探す</b><span>0.5日から少しずつ間隔を変えて、くり返し暗くなる間隔をコンピュータで探す</span></div>
+ <div class="dark"><b>③ 偽物を落とす</b><span>2つの星が互いに隠し合って暗くなる場合などを、論文の著者が公開している道具で落とす</span></div>
+</div>
+<div class="grid2" style="margin-top:10px">
+ <div class="card"><h3>試したもの1：論文の新しい候補 9個</h3><p>論文と同じ間隔が出るかを見た</p></div>
+ <div class="card"><h3>試したもの2：すでに惑星と分かっているもの 152個</h3><p>答えの分かっている問題で、このやり方がどれだけ見つけられるかを測った</p></div>
+</div>
+<p class="cap" style="margin-top:16px">論文との違い：10万個の星すべてではなく、試したもの1・2の惑星が回る星137個だけを調べた（1つの星を2つ以上の惑星が回ることがあるので、惑星161個に対して星は137個）。人の目の確認と、望遠鏡の画像で「暗くなったのが狙った星か、隣の星か」を見分ける確認はしていない。</p><div class="pg"></div></section>
+<section class="slide"><div class="ttl">実際の例</div>
+<h2 class="msg">候補の1つで、1.48日ごとに約2.4%暗くなる跡を、論文と同じ間隔で見つけた</h2>
+<div class="figrow">
+ <figure style="flex:1.25"><img src="out/slides_1118/fig_lc.png" alt="星の明るさの記録"><figcaption>約27日ずつ2回測った明るさの記録（「セクター」は約27日の観測1回分。横軸の BTJD は TESS で使う日付の数え方で、単位は日）。縦軸はふだんの明るさを1.00とした値。上は測ったまま、下は星のゆっくりした明るさの変化を取り除いたもの。赤い縦線は暗くなるはずの時刻。1回ごとの暗くなりは、ばらつきに埋もれて見分けにくい</figcaption></figure>
+ <div class="arr">▶</div>
+ <figure style="flex:1"><img src="out/slides_1118/fig_fold.png" alt="1.48日ごとに重ねた記録"><figcaption>記録を1.48日ごとに切り、暗くなる時刻をそろえて重ねた（横軸の「減光」は暗くなること）。赤い線（重ねた点の中ほどの値）が真ん中で約0.976まで、つまり約2.4%下がる＝同じ間隔でくり返し暗くなっている</figcaption></figure>
+</div>
+<div class="src">星は TIC 12999193（TESS が星につけた番号）。論文の間隔 1.482641日、私たち 1.482650日</div><div class="pg"></div></section>
+<section class="slide"><div class="ttl">結果</div>
+<h2 class="msg">論文の候補9個中7個を、論文と同じ間隔で見つけた。残る2個は、暗くなった回数が決まりに届かなかった</h2>
+<div class="grid2 tight">
+<div class="card">
+ <h3>論文の新しい候補</h3>
+ <div class="num ok">7<small>個／9個 を見つけた</small></div>
+ <ul style="margin-top:10px">
+  <li>見つけた7個は、間隔が論文と0.002%以内で一致した</li>
+  <li>見つからなかった2個は、記録の中で暗くなったのが2回だけで、論文と同じ決まり「3回以上暗くなる」に届かなかった</li>
+  <li>見つけた7個のうち6個は、偽物を落とす機械の確認も通った。落ちた1個は、探す段階では9回暗くなっていたが、確認の段階で記録の質が悪い回を除くと2回しか残らず、「3回以上」に届かなくなった</li>
+ </ul>
+</div>
+<div class="card">
+ <h3>すでに惑星と分かっているもの</h3>
+ <div class="num">94<small>個／152個 を見つけた</small></div>
+ <ul style="margin-top:10px">
+  <li>見つけた94個のうち88個は、機械の確認も通った</li>
+  <li>見つからなかった58個のうち22個は、正しい間隔は出たが、暗くなる深さが論文と同じ決まり「ふだんの明るさの揺れの9倍を超える」に届かなかった。30個は、別の間隔でくり返し暗くなる跡のほうがはっきり出て、正しい間隔にたどり着かなかった。4個は、正しい間隔が探した間隔の上限（記録の長さから星ごとに決めた）より長かった。2個は、正しい間隔の半分か2倍の間隔で出た</li>
+ </ul>
+</div>
+</div><div class="pg"></div></section>
+<section class="slide"><div class="ttl">言えること・言えないこと・次にやること</div>
+<h2 class="msg">今回言えるのは「論文のやり方を再現できた」まで。新しい惑星を見つけたとはまだ言えない</h2>
+<div class="grid2">
+ <div class="card"><h3 class="okc">言えること</h3><p style="font-size:20px">誰でも取れる公開データと論文のやり方で、論文の候補の大半（9個中7個）を見つけ直せる</p></div>
+ <div class="card"><h3 class="ngc">言えないこと</h3><p style="font-size:20px">10万個の星すべてから候補を絞り込めるか（今回は論文の候補と、すでに分かっている惑星が回る星だけを調べた）。見つけた候補が本当に惑星か（人の目と画像の確認をしていない）。すでに分かっている惑星152個中94個が多いか少ないか（論文は、すでに分かっている惑星を何個見つけたかを出していない）</p></div>
+</div>
+<p style="font-size:21px;font-weight:800;margin:20px 0 6px">次にやること</p>
+<div class="chev">
+ <div><b>データを取る</b><span>論文が使ったより後に観測された記録</span></div>
+ <div><b>探す</b><span>今回と同じやり方</span></div>
+ <div><b>一覧と照らす</b><span>NASA の観測チーム・ほかの研究者・個人が公表した候補の一覧<span class="nw">3つ</span>のどれにも無いものだけ残す</span></div>
+ <div class="dark"><b>確かめる</b><span>残ったものを人の目と画像で確かめる</span></div>
+</div>
+<div class="src">専門的な手順・論文との違い・数字の内訳は<a href="repro_slides_1118.html">アカデミア向け版</a>に載せている</div><div class="pg"></div></section>
+</div>
+<script>
+(function(){
+  const slides=[...document.querySelectorAll('.slide')];
+  slides.forEach((el,k)=>{const p=el.querySelector('.pg');if(p)p.textContent=k+1;});
+  let i=0;
+  function fit(){
+    if(!document.body.classList.contains('present')){
+      const z=Math.min(1,(document.documentElement.clientWidth-16)/1280);
+      slides.forEach(el=>el.style.zoom=z<1?z:'');
+      return;
+    }
+    slides.forEach(el=>el.style.zoom='');
+    const s=Math.min(innerWidth/1280,innerHeight/720);
+    slides.forEach(el=>el.style.transform='scale('+s+')');
+  }
+  fit();
+  function show(n){i=Math.max(0,Math.min(slides.length-1,n));slides.forEach((el,k)=>el.classList.toggle('on',k===i));fit();}
+  document.addEventListener('keydown',ev=>{
+    const k=ev.key;
+    if(k==='p'||k==='P'){document.body.classList.add('present');show(i);}
+    else if(k==='Escape'){document.body.classList.remove('present');slides.forEach(el=>el.style.transform='');fit();slides[i].scrollIntoView();}
+    else if(document.body.classList.contains('present')){
+      if(k==='ArrowRight'||k===' '||k==='PageDown')show(i+1);
+      if(k==='ArrowLeft'||k==='PageUp')show(i-1);
+    }
+  });
+  addEventListener('resize',fit);
+})();
+</script>
+</body></html>
