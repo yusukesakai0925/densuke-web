@@ -1,0 +1,939 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="役所の仕事で損害を受けたとき、起きたことを入れると、国家賠償法のどの条で誰が賠償する責任を負うのかを、条文番号つきでPrologが判定します。">
+<title>国・公共団体の賠償を逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+.input{display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.input input{font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 10px;min-width:0;width:100%}
+.input input:focus-visible{outline:none}
+.input:hover{border-color:var(--blue)}
+.input:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.step.off{color:var(--muted)}
+.flow{margin:0;padding-left:1.2em}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+.disclaimer-inline{margin-top:10px;font-size:.78rem;color:var(--muted);border-top:1px solid var(--hair);padding-top:8px;line-height:1.65}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border-left:2px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <h1>国・公共団体の賠償を<span class="ao">逆から引く</span></h1>
+    <div class="judge-plate"><span class="jp-k">判定</span><img src="densuke_icon.svg" width="64" height="64" alt="でんすけのアイコン"><span class="jp-v">でんすけ<small>秘書AI</small></span></div>
+    <p class="lead">役所の仕事で損害を受けたとき、起きたことを入れると、でんすけが国家賠償法の条文から、どの条で誰が賠償する責任を負うのかを判定します。</p>
+    <p class="caution" role="note"><b>注意</b><span>条文をルールにして、論理的にそのまま演算した結果です。裁判所の判断とは異なる場合があります。<a class="aboutlink" href="about.html">収録範囲・仕組み →</a></span></p>
+  </header>
+
+  <section class="ask">
+    <div>
+      <p class="sec-h">例から選ぶ（名前はすべて条文の語です）</p>
+      <div class="presets" id="presets"></div>
+    </div>
+    <div class="slots" id="slots">
+    <!-- 欄は起きた事実と、あなたの考えを聞く15個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-23 「何で損害を受けたか」の欄（iri）、
+         欄を出し消しする関数（SLOTS・updateSlots）、隠れた欄を「関係なし」で渡す関数（shown）、入口で欄名を変える費用の欄（hiy・LABEL_HIY）をやめた）。
+         並びは schema.pl の ctx の引数の順（1〜15）。番号は Prolog の「この組み合わせはありません（1と12の欄）」と同じ。
+         同じ事実は1回だけ聞く（C1）：前の「他人に損害を加えたか」（son）と「そのために他人に損害を生じたか」（son2）は1の欄にした。
+         前の費用の欄（hiy）は、入口によって別の事実を聞いていたので、10（公務員の組）と11（営造物の組）に分けた（読み (a)）。
+         「あなたの考え」の欄は 3・5・6・8・15 の5つで、欄名の後ろに書く。説明（desc）は語の意味だけ。
+         関係のない欄は、Prolog がその欄の段を出さないだけで、欄は消さない -->
+    <div class="slots" id="slots">
+      <div class="slot full-slot" id="s-son"><label for="son">あなたは損害を受けたか</label><span class="field"><select id="son">
+        <option value="受けた">受けた</option><option value="受けていない">受けていない</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-kom"><label for="kom">損害のもとになった公務員の行為</label><span class="field"><select id="kom">
+        <option value="無い">無い</option><option value="公務員">国又は公共団体の公務員の行為</option><option value="公務員でない">国又は公共団体の公務員でない人の行為</option>
+      </select></span><p class="desc">公共団体＝都道府県・市町村など</p></div>
+      <div class="slot full-slot" id="s-kou"><label for="kou">2の公務員は、公権力の行使に当る公務員か（あなたの考え）</label><span class="field"><select id="kou">
+        <option value="はい">はい</option><option value="いいえ">いいえ</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-sho"><label for="sho">2の行為は、公務員が職務を行うについてしたものか</label><span class="field"><select id="sho">
+        <option value="はい">はい</option><option value="いいえ">いいえ</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-koi"><label for="koi">2の公務員の故意又は過失（あなたの考え）</label><span class="field"><select id="koi">
+        <option value="重大でない過失">過失はあるが重大でない</option><option value="重大な過失">重大な過失がある</option><option value="故意">故意がある</option><option value="なし">故意も過失も無い</option>
+      </select></span><p class="desc">故意＝わざと。過失＝不注意</p></div>
+      <div class="slot full-slot" id="s-ihou"><label for="ihou">2の行為は違法か（あなたの考え）</label><span class="field"><select id="ihou">
+        <option value="はい">はい</option><option value="いいえ">いいえ</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-eizo"><label for="eizo">損害のもとになった物</label><span class="field"><select id="eizo">
+        <option value="無い">無い</option><option value="道路">道路</option><option value="河川">河川</option><option value="その他">その他の公の営造物</option><option value="でない">公の営造物でない物</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-kashi"><label for="kashi">7の物の設置又は管理に瑕疵があったか（あなたの考え）</label><span class="field"><select id="kashi">
+        <option value="はい">はい</option><option value="いいえ">いいえ</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-ta"><label for="ta">損害の原因について、ほかに責に任ずべき者がいるか</label><span class="field"><select id="ta">
+        <option value="いない">いない</option><option value="いる">いる</option>
+      </select></span><p class="desc">責に任ずべき者＝責任を負うべき者</p></div>
+      <div class="slot full-slot" id="s-hiy1"><label for="hiy1">2の公務員の選任・監督に当る者と、俸給・給与その他の費用を負担する者</label><span class="field"><select id="hiy1">
+        <option value="同じ">同じ</option><option value="異なる">異なる</option>
+      </select></span><p class="desc">選任＝選んで任じること。俸給＝給料</p></div>
+      <div class="slot full-slot" id="s-hiy2"><label for="hiy2">7の物の設置・管理に当る者と、設置・管理の費用を負担する者</label><span class="field"><select id="hiy2">
+        <option value="同じ">同じ</option><option value="異なる">異なる</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-bai"><label for="bai">損害を賠償した者がいるか</label><span class="field"><select id="bai">
+        <option value="いない">いない</option><option value="いる">いる</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-bet"><label for="bet">民法以外の他の法律に、別段の定があると分かっているか</label><span class="field"><select id="bet">
+        <option value="分かっていない">分かっていない</option><option value="分かっている">分かっている</option>
+      </select></span><p class="desc">別段の定＝別の決まり</p></div>
+      <div class="slot full-slot" id="s-hig"><label for="hig">被害者（あなた）は外国人か</label><span class="field"><select id="hig">
+        <option value="いいえ">いいえ</option><option value="はい">はい</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-sog"><label for="sog">あなたの国と日本の間に、相互の保証があるか（あなたの考え）</label><span class="field"><select id="sog">
+        <option value="ある">ある</option><option value="ない">ない</option>
+      </select></span><p class="desc">相互の保証＝あなたの国でも、日本人が同じように国や公共団体の賠償を受けられること</p></div>
+    </div>
+    <div class="qline" id="qline"></div>
+  </section>
+
+  <section id="answer" aria-live="polite"><p class="loading">でんすけが条文のルール（Prolog）を読み込んでいます…</p></section>
+
+  <p class="foot techline"><span>国家賠償法／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot" id="foot">e-Gov法令検索の国家賠償法（昭和二十二年法律第百二十五号）の本則の原文（1条〜6条）をルールにしたものです。附則、判例の基準、民法の条文の中身、訴訟の形、国家賠償以外の補償は含みません。国家賠償法の条文は2026年11月2日までに取得した版で、それ以後の改正と、公布済みで施行前の改正は読んでいません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 国家賠償法Prolog 共通の型・欄の読み出し・組み合わせなし・木の部品
+%
+% ctx(損害, 公務員, 公権力, 職務, 故意過失, 違法, 物, 瑕疵, 他の者, 費用一, 費用二, 賠償, 別段, 外国人, 相互)
+%   欄は起きた事実と、あなたの考えを聞く15個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-23 入口の2つ（公務員／営造物）の欄（iri）、
+%   欄の出し消し（SLOTS・updateSlots）、値の「関係なし」、入口で欄名を変える費用の欄（hiy）をやめた）。
+%   引数の順は画面の欄の番号（1〜15）と同じ。同じ入力で1条〜6条を全部当てる。
+%   案は ../kokubai_form_plan_answer_1123.md の案A（依頼書 task_beaver_kokubai_fixed_fields_1123.md の決めたこと1）。sorin-prolog・risoku-prolog・teikei-prolog と同じ形。
+%   同じ事実を2回聞かない（C1）：前の「他人に損害を加えたか」（1条）と「そのために他人に損害を生じたか」（2条）は1の欄の1つにした。
+%   前の「国又は公共団体の公務員か」は2の欄の値に、「公の営造物でない」は7の欄の値に入れた。
+%   前の費用の欄（hiy）は、1つの欄が入口によって別の事実を聞いていたので、10（公務員の組）と11（営造物の組）の2つに分けた（読み (a)）。
+%   頭の欄（2・7）が「無い」なら、その条の段を出さない。2も7も「無い」で、5条・6条の段も出ないなら nashi の1段だけを出す（決めたこと3）。
+%   「あなたの考え」の欄は 3・5・6・8・15 の5つ。本人の考えのとおりに答える。
+%    1 損害     : 受けた | 受けていない（あなたは損害を受けたか。1条1項「他人に損害を加えた」・2条1項「他人に損害を生じた」）
+%    2 公務員   : 無い | 公務員 | 公務員でない（損害のもとになった公務員の行為。公務員＝国又は公共団体の公務員の行為。1条1項）
+%    3 公権力   : はい | いいえ（2の公務員は、公権力の行使に当る公務員か。あなたの考え。1条1項）
+%    4 職務     : はい | いいえ（2の行為は、公務員が職務を行うについてしたものか。1条1項）
+%    5 故意過失 : 重大でない過失 | 重大な過失 | 故意 | なし（2の公務員の故意又は過失。あなたの考え。1条1項・2項。読み (d)）
+%    6 違法     : はい | いいえ（2の行為は違法か。あなたの考え。1条1項）
+%    7 物       : 無い | 道路 | 河川 | その他 | でない（損害のもとになった物。その他＝その他の公の営造物、でない＝公の営造物でない物。2条1項）
+%    8 瑕疵     : はい | いいえ（7の物の設置又は管理に瑕疵があったか。あなたの考え。2条1項）
+%    9 他の者   : いない | いる（損害の原因について、ほかに責に任ずべき者がいるか。2条2項）
+%   10 費用一   : 同じ | 異なる（2の公務員の選任・監督に当る者と、俸給・給与その他の費用を負担する者。3条1項）
+%   11 費用二   : 同じ | 異なる（7の物の設置・管理に当る者と、設置・管理の費用を負担する者。3条1項）
+%   12 賠償     : いない | いる（損害を賠償した者がいるか。3条2項）
+%   13 別段     : 分かっていない | 分かっている（民法以外の他の法律に、別段の定があると分かっているか。5条）
+%   14 外国人   : いいえ | はい（被害者（あなた）は外国人か。6条）
+%   15 相互     : ある | ない（あなたの国と日本の間に、相互の保証があるか。あなたの考え。6条）
+%
+%   関係のない欄（たとえば2の欄が「無い」のときの3〜6・10の欄、7の欄が「無い」のときの8・9・11の欄）は、組み合わせなしにせず、
+%   その欄を使う段を出さない（sorin-prolog と同じ）。欄どうしで成り立たない組は 組み合わせなし/4 が欄の番号と一緒に返す（REVIEW_RULES C3）。
+%
+% 書き方のきまり：
+%   ・条番号は '1条1項' '4条' のような原子。
+%   ・段は 段(状態, 文, 条のリスト)。結論ごとの段は s(画面のid, 見出し, 段)。段の文は、末尾の「。」を外して結論の箱にも出す。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | and | or | info
+%   ・アプリの約束事の行は 条 を '@約束事' にする。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか。組の成り立ちは 組み合わせなし/4 で見る）----
+ctx_valid(C) :-
+    functor(C, ctx, 15),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )).
+
+欄の値(1, [受けた, 受けていない]).
+欄の値(2, [無い, 公務員, 公務員でない]).
+欄の値(3, [はい, いいえ]).
+欄の値(4, [はい, いいえ]).
+欄の値(5, [重大でない過失, 重大な過失, 故意, なし]).
+欄の値(6, [はい, いいえ]).
+欄の値(7, [無い, 道路, 河川, その他, でない]).
+欄の値(8, [はい, いいえ]).
+欄の値(9, [いない, いる]).
+欄の値(10, [同じ, 異なる]).
+欄の値(11, [同じ, 異なる]).
+欄の値(12, [いない, いる]).
+欄の値(13, [分かっていない, 分かっている]).
+欄の値(14, [いいえ, はい]).
+欄の値(15, [ある, ない]).
+
+%% ---- 欄の読み出し（番号は画面の欄の番号）----
+欄の番号(損害, 1).
+欄の番号(公務員, 2).
+欄の番号(公権力, 3).
+欄の番号(職務, 4).
+欄の番号(故意過失, 5).
+欄の番号(違法, 6).
+欄の番号(物, 7).
+欄の番号(瑕疵, 8).
+欄の番号(他の者, 9).
+欄の番号(費用一, 10).
+欄の番号(費用二, 11).
+欄の番号(賠償, 12).
+欄の番号(別段, 13).
+欄の番号(外国人, 14).
+欄の番号(相互, 15).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+%% ---- 1条1項・2条1項の語がそろっているか（2条2項・3条・4条の段を出すかをここで決める）----
+一条の前提(C) :-
+    欄(公務員, C, 公務員), 欄(公権力, C, はい), 欄(職務, C, はい),
+    欄(故意過失, C, K), K \== なし,
+    欄(違法, C, はい), 欄(損害, C, 受けた).
+二条の前提(C) :-
+    欄(物, C, M), memberchk(M, [道路, 河川, その他]),
+    欄(瑕疵, C, はい), 欄(損害, C, 受けた).
+
+% 6条：外国人が被害者で、相互の保証がないとき（読み (c)。6条の段だけを出す）
+適用しない(C) :- 欄(外国人, C, はい), 欄(相互, C, ない).
+
+%% ---- 成り立たない組（REVIEW_RULES C3。依頼書 決めたこと2-6。根拠は rules/a_genbun.pl の原文の行で確かめた）----
+% 組み合わせなし(C, 欄の番号のリスト, 理由の文, 根拠のリスト)
+% 既定の値（各欄の最初の値。1=受けた・9=いない・12=いない）はどの組にも当たらない。
+% ア：3条2項「損害を賠償した者は、内部関係でその損害を賠償する責任ある者に対して求償権を有する」。
+%     損害を賠償した者は、損害があるときにだけいると読む（条文の文からの読みで、解説・判例とは照らしていない。NOTES の読み (h)）
+組み合わせなし(C, [1, 12], '損害を賠償した者は、損害があるときにだけいるので、損害を受けていないときに、損害を賠償した者はいません', ['3条2項']) :-
+    欄(損害, C, 受けていない), 欄(賠償, C, いる).
+% イ：2条2項「他に損害の原因について責に任ずべき者があるときは」。
+%     損害の原因について責に任ずべき者は、損害があるときにだけいると読む（同上。NOTES の読み (h)）
+組み合わせなし(C, [1, 9], '損害の原因について責に任ずべき者は、損害があるときにだけいるので、損害を受けていないときに、損害の原因について責に任ずべき者はいません', ['2条2項']) :-
+    欄(損害, C, 受けていない), 欄(他の者, C, いる).
+
+組み合わせなしがある(C) :- 組み合わせなし(C, _, _, _), !.
+
+%% ---- 理由の語をつなぐ ----
+% 2つは「AうえB」、3つ以上は「うえ」が続いて読めないので読点で並べる
+理由をつなぐ([A], A) :- !.
+理由をつなぐ([A, B], S) :- !, atomic_list_concat([A, B], 'うえ、', S).
+理由をつなぐ(Rs, S) :- atomic_list_concat(Rs, '、', S).
+
+%% ---- 木の部品 ----
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+原文規定(Art, X) :- 原文(Art, W), 規定(Art, W, X).
+約束(X, t(ok, X, '@約束事', [])).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（国家賠償法の条文にないもの）
+%
+%   条の場面の外にある段（状態 当たらない）にだけ付ける。文は sorin-prolog の 場面外の約束 と同じ。
+%   前の「ほかの条文（4条の民法など）で賠償されないとは言っていません」は、この約束事が受け持つ。
+%   2026-11-23 前の約束事5つ（評価の約束・民法の約束・別段の約束・保証の約束・内部の約束）を消した。5つとも「判定しない・出さない・読まない」の
+%   断りで、条文に無い決めごとではないため（REVIEW_RULES A5・D1）。公権力・故意又は過失・違法・瑕疵・相互の保証は欄名に「（あなたの考え）」と書いて聞き、
+%   断り書きは about の「判定について」へ移した（依頼書 決めたこと4）。
+
+場面外の約束(X) :-
+    約束('条の場面の外にあるという答えは、反対の結論を言うものではない', X).
+</script>
+<script type="text/prolog" data-name="rules_a_genbun.pl">% rules/a_genbun.pl — 判定に使う条文の原文（law/kokubai.xml の本則のまま。旧仮名も原文のまま）
+%
+%   原文(条, 文)。test/page_test.mjs が XML を別に読み、全行が一字一句一致するかを確かめる。
+
+原文('1条1項', '国又は公共団体の公権力の行使に当る公務員が、その職務を行うについて、故意又は過失によつて違法に他人に損害を加えたときは、国又は公共団体が、これを賠償する責に任ずる。').
+原文('1条2項', '前項の場合において、公務員に故意又は重大な過失があつたときは、国又は公共団体は、その公務員に対して求償権を有する。').
+原文('2条1項', '道路、河川その他の公の営造物の設置又は管理に瑕疵があつたために他人に損害を生じたときは、国又は公共団体は、これを賠償する責に任ずる。').
+原文('2条2項', '前項の場合において、他に損害の原因について責に任ずべき者があるときは、国又は公共団体は、これに対して求償権を有する。').
+原文('3条1項', '前二条の規定によつて国又は公共団体が損害を賠償する責に任ずる場合において、公務員の選任若しくは監督又は公の営造物の設置若しくは管理に当る者と公務員の俸給、給与その他の費用又は公の営造物の設置若しくは管理の費用を負担する者とが異なるときは、費用を負担する者もまた、その損害を賠償する責に任ずる。').
+原文('3条2項', '前項の場合において、損害を賠償した者は、内部関係でその損害を賠償する責任ある者に対して求償権を有する。').
+原文('4条', '国又は公共団体の損害賠償の責任については、前三条の規定によるの外、民法の規定による。').
+原文('5条', '国又は公共団体の損害賠償の責任について民法以外の他の法律に別段の定があるときは、その定めるところによる。').
+原文('6条', 'この法律は、外国人が被害者である場合には、相互の保証があるときに限り、これを適用する。').
+</script>
+<script type="text/prolog" data-name="rules_b_komuin.pl">% rules/b_komuin.pl — 公務員の行為（1条）：1〜6の欄
+%
+%   2026-11-23 入口の「公務員」をやめ、2の欄（損害のもとになった公務員の行為）に「無い」を置いて見る形にした（REVIEW_RULES C4・C5。案A）。
+%   2の欄が「無い」なら、1条の段を出さない。「国又は公共団体の公務員でない人の行為」なら、3〜6の欄（2の公務員の話）は読まない（依頼書 ③）。
+%   公権力（3）・故意又は過失（5）・違法（6）は、あなたの考えのとおりに答える（決めたこと2-1。条文の効果を言い切る）。
+%   1条2項は「前項の場合において」の定めなので、1条1項に当たるときだけ段を出す（読み (e)）。
+%   1条2項の「故意又は重大な過失があつたときは」は5の欄で読み、重大でない過失なら求償権を持たないと答える（依頼書 ④・読み (d)）。
+%   前の「ほかの条文（4条の民法など）で賠償されないとは言っていません」「という入力です」「認められるかは判定しません」は、
+%   段の文から外し、木の葉の 場面外の約束 と about の「判定について」へ移した（A1・A2・A5）。段の文には指示語を置かない（A6）。
+
+公務員の段(C, []) :- 欄(公務員, C, 無い), !.
+公務員の段(C, L) :-
+    段公務員(C, S1),
+    公務員求償の段(C, L2),
+    append([s(ichijo, '公務員の行為（1条1項）', S1)], L2, L).
+
+%% ---- 公務員の行為（1条1項）----
+段公務員(C, 段(当たる, '国又は公共団体が、損害を賠償する責任を負います。', ['1条1項'])) :-
+    一条の前提(C), !.
+% 当たらない の文は要件の否定で写さず、行為・公務員を主語に立てて書く（依頼書 ⑤）
+段公務員(C, 段(当たらない, M, ['1条1項'])) :-
+    findall(W, 欠けた語(C, W), Ws),
+    理由をつなぐ(Ws, S),
+    format(atom(M), '~wので、国又は公共団体は、1条1項による賠償の責任を負いません。', [S]).
+
+% 2の欄が「公務員でない」なら、3〜6の欄（2の公務員の話）は読まない
+欠けた語(C, '損害のもとになった行為は、国又は公共団体の公務員の行為ではない') :- 欄(公務員, C, 公務員でない).
+欠けた語(C, '公務員は、公権力の行使に当る公務員ではない') :- 欄(公務員, C, 公務員), 欄(公権力, C, いいえ).
+欠けた語(C, '公務員の行為は、職務を行うについてしたものではない') :- 欄(公務員, C, 公務員), 欄(職務, C, いいえ).
+欠けた語(C, '公務員には故意も過失も無い') :- 欄(公務員, C, 公務員), 欄(故意過失, C, なし).
+欠けた語(C, '公務員の行為は違法ではない') :- 欄(公務員, C, 公務員), 欄(違法, C, いいえ).
+欠けた語(C, 'あなたは損害を受けていない') :- 欄(損害, C, 受けていない).
+
+%% ---- 公務員への求償（1条2項）----
+公務員求償の段(C, []) :- \+ 一条の前提(C), !.
+公務員求償の段(C, [s(kyusho1, '公務員への求償（1条2項）', 段(St, M, ['1条2項']))]) :-
+    欄(故意過失, C, K),
+    求償の結論(K, St, M).
+
+求償の結論(故意, 公務員求償, '公務員に故意があったので、国又は公共団体は、公務員に対して求償権を有します。').
+求償の結論(重大な過失, 公務員求償, '公務員に重大な過失があったので、国又は公共団体は、公務員に対して求償権を有します。').
+求償の結論(重大でない過失, 当たらない, '公務員の過失は重大な過失ではなく、公務員に故意も無いので、国又は公共団体は、公務員に対して1条2項の求償権を持ちません。').
+</script>
+<script type="text/prolog" data-name="rules_c_eizobutsu.pl">% rules/c_eizobutsu.pl — 公の営造物の設置又は管理（2条）：1・7〜9の欄
+%
+%   2026-11-23 入口の「営造物」をやめ、7の欄（損害のもとになった物）に「無い」を置いて見る形にした（REVIEW_RULES C4・C5。案A）。
+%   7の欄が「無い」なら、2条の段を出さない。「公の営造物でない物」なら、8の欄（瑕疵）は読まない（依頼書 ③）。
+%   瑕疵（8）は、あなたの考えのとおりに答える（決めたこと2-1）。
+%   2条2項は「前項の場合において」の定めなので、2条1項に当たり、9の欄が「いる」ときだけ段を出す（決めたこと2-5。「いない」人への求償の答えは無い）。
+%   前の「ほかの条文（4条の民法など）で賠償されないとは言っていません」「という入力です」「認められるかは判定しません」は、
+%   段の文から外し、木の葉の 場面外の約束 と about の「判定について」へ移した（A1・A2・A5）。原文の「これに対して」は指すものの名詞で書く（A6）。
+
+営造物の段(C, []) :- 欄(物, C, 無い), !.
+営造物の段(C, L) :-
+    段営造物(C, S1),
+    他者求償の段(C, L2),
+    append([s(nijo, '公の営造物の設置又は管理（2条1項）', S1)], L2, L).
+
+%% ---- 公の営造物の設置又は管理（2条1項）----
+段営造物(C, 段(当たる, M, ['2条1項'])) :-
+    二条の前提(C), !,
+    欄(物, C, K), 種類の語(K, W),
+    format(atom(M), '国又は公共団体が、~wの設置又は管理の瑕疵による損害を賠償する責任を負います。', [W]).
+% 当たらない の文は要件の否定で写さず、物を主語に立てて書く（依頼書 ⑤）
+段営造物(C, 段(当たらない, M, ['2条1項'])) :-
+    findall(W, 欠けた語二(C, W), Ws),
+    理由をつなぐ(Ws, S),
+    format(atom(M), '~wので、国又は公共団体は、2条1項による賠償の責任を負いません。', [S]).
+
+% 種類の語(7の欄の値, 文の語)。「その他」は原文の「道路、河川その他の公の営造物」の「その他の」を外して「公の営造物」と書く
+種類の語(道路, '道路').
+種類の語(河川, '河川').
+種類の語(その他, '公の営造物').
+
+% 7の欄が「でない」なら、8の欄（7の物の瑕疵）は読まない
+欠けた語二(C, '損害のもとになった物は、公の営造物ではない') :- 欄(物, C, でない).
+欠けた語二(C, W) :-
+    欄(物, C, K), 種類の語(K, W0), 欄(瑕疵, C, いいえ),
+    format(atom(W), '~wの設置又は管理に瑕疵は無い', [W0]).
+欠けた語二(C, 'あなたは損害を受けていない') :- 欄(損害, C, 受けていない).
+
+%% ---- 他に責に任ずべき者への求償（2条2項）----
+他者求償の段(C, []) :- \+ 二条の前提(C), !.
+他者求償の段(C, []) :- 欄(他の者, C, いない), !.
+他者求償の段(_, [s(kyusho2, '他に責に任ずべき者への求償（2条2項）', 段(他者求償, '他に損害の原因について責に任ずべき者がいるので、国又は公共団体は、損害の原因について責に任ずべき者に対して求償権を有します。', ['2条2項']))]).
+</script>
+<script type="text/prolog" data-name="rules_d_kyotsu.pl">% rules/d_kyotsu.pl — 3条〜6条：10〜15の欄
+%
+%   2026-11-23 入口ごとに出していた「共通の段」を、出すときを決めて出す形にした（REVIEW_RULES C4・C5。案A）。
+%   3条1項は「前二条の規定によつて国又は公共団体が損害を賠償する責に任ずる場合において」の定めなので、
+%   1条1項に当たるときは公務員の組（10の欄・hiyo1）、2条1項に当たるときは営造物の組（11の欄・hiyo2）の段を出す（読み (a)・(e)）。
+%   3条2項は「前項の場合において」の定めなので、3条1項の 費用者も が1つでもあり、12の欄が「いる」ときだけ段を出す（決めたこと2-5）。
+%   4条は、1条1項か2条1項の段（当たる・当たらないのどちらでも）が出るときに出す（決めたこと2-3）。
+%   5条は13の欄が「分かっている」ときだけ、6条は14の欄が「はい」のときだけ段を出す。6条で適用しないときは、
+%   e_hantei.pl の 全部の段 が6条の段だけを出す（読み (c)・依頼書 ⑥）。5条の段が出るときは、5条と6条の段だけを出す（読み (b)）。
+%   前の「民法の条文の中身は、このアプリでは出しません」「定めの中身は、このアプリでは読みません」「この法律の外のことは判定しないので…」と
+%   「という入力です」は段の文から外し、about の「判定について」へ移した（A1・A2・A5）。原文の「前三条」「その定めるところ」「この法律」は
+%   指すものの名詞（1条〜3条・別段の定・国家賠償法）で書く（A6）。
+
+%% ---- 費用を負担する者（3条1項）----
+費用の段(C, L) :-
+    findall(S, 費用の組の段(C, S), L).
+
+費用の組の段(C, s(hiyo1, '費用を負担する者・公務員（3条1項）', 段(St, M, ['3条1項']))) :-
+    一条の前提(C),
+    欄(費用一, C, H),
+    費用の結論(H, '公務員の選任若しくは監督に当る者', '公務員の俸給、給与その他の費用', St, M).
+費用の組の段(C, s(hiyo2, '費用を負担する者・公の営造物（3条1項）', 段(St, M, ['3条1項']))) :-
+    二条の前提(C),
+    欄(物, C, K), 種類の語(K, W),
+    欄(費用二, C, H),
+    format(atom(A), '~wの設置若しくは管理に当る者', [W]),
+    format(atom(B), '~wの設置若しくは管理の費用', [W]),
+    費用の結論(H, A, B, St, M).
+
+費用の結論(異なる, A, B, 費用者も, M) :-
+    format(atom(M), '~wと、~wを負担する者とが異なるので、費用を負担する者も、損害を賠償する責任を負います。', [A, B]).
+% 当たらない の文は要件の否定で写さず、当る者と費用を負担する者が同じことを主語に立てて書く（依頼書 ⑤）。
+% 2026-11-23 前の「…も負担しているので、3条1項で別に損害を賠償する責任を負う、費用を負担する者はいません」は読点で文が切れ、
+% 何が「いない」のか読めなかったので、異なる の文と同じ並びにした（task_beaver_kokubai_llmfix_1123.md ②）
+費用の結論(同じ, A, B, 当たらない, M) :-
+    format(atom(M), '~wと、~wを負担する者が同じなので、3条1項で別に賠償の責任を負う者はいません。', [A, B]).
+
+%% ---- 賠償した者の求償（3条2項）----
+内部の段(Hs, C, [s(naibu, '賠償した者の求償（3条2項）', 段(内部求償, '損害を賠償した者は、内部関係で損害を賠償する責任ある者に対して求償権を有します。', ['3条2項']))]) :-
+    member(s(_, _, 段(費用者も, _, _)), Hs),
+    欄(賠償, C, いる), !.
+内部の段(_, _, []).
+
+%% ---- 民法（4条）----
+民法の段(C, [s(minpo, '民法（4条）', 段(定め, '国又は公共団体の損害賠償の責任については、1条〜3条の規定によるほか、民法の規定によります。', ['4条']))]) :-
+    ( \+ 欄(公務員, C, 無い) ; \+ 欄(物, C, 無い) ), !.
+民法の段(_, []).
+
+%% ---- 他の法律の別段の定（5条）----
+% 5条の「別段の定があるときは」を落とさない（依頼書 ④）。別段の定の中身は読まないので、1条〜4条の当てはめは出さない
+% （読み (b)。e_hantei.pl の 全部の段 が5条と6条の段だけを出す。2026-11-23 前の「1条〜4条の段は残す」は取り消した）
+別段の段(C, [s(betsudan, '他の法律の別段の定（5条）', 段(別段あり, '民法以外の他の法律に別段の定があるので、国又は公共団体の損害賠償の責任は、別段の定によります。', ['5条']))]) :-
+    欄(別段, C, 分かっている), !.
+別段の段(_, []).
+
+%% ---- 被害者が外国人のとき（6条）----
+% 6条の「相互の保証があるときに限り」を落とさない（依頼書 ④）
+外国人の段(C, [s(gaikoku, '被害者が外国人のとき（6条）', 段(St, M, ['6条']))]) :-
+    欄(外国人, C, はい), !,
+    欄(相互, C, S),
+    外国人の結論(S, St, M).
+外国人の段(_, []).
+
+外国人の結論(ある, 適用する, '被害者は外国人ですが、被害者の国と日本の間に相互の保証があるので、国家賠償法を適用します。').
+外国人の結論(ない, 適用しない, '被害者は外国人で、被害者の国と日本の間に相互の保証がないので、国家賠償法は適用しません。').
+</script>
+<script type="text/prolog" data-name="rules_e_hantei.pl">% rules/e_hantei.pl — 段をまとめ、見出し・根拠条文・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 条のリスト)　結論ごとの段 = s(画面のid, 見出し, 段)
+%   形は sorin-prolog・risoku-prolog・teikei-prolog の g_hantei.pl と同じ（2026-11-23。入口の2つ（公務員／営造物）をやめ、
+%   結論の箱を箇条書きにし、結論1つにつき木1本にした。REVIEW_RULES A7・B5）。
+%   前の見出しは 見出しの順/1 の11行から1つだけ選び、問いの答え/3 の別の文（「認められるかは判定しません」「という入力です」）を出していた。
+%   前の木は全部の段を「次のすべてが成り立つ」の下にぶら下げた1本で、段ごとに 評価の約束 などの断りを付けていた。
+%   前の「判定していません」の段（1条1項・2条1項に当たらないときの1条2項・2条2項・3条、6条で適用しないときの1条〜5条）は消し、段を出さない形にした（A5）。
+%   組の番号/2 は箱の並びを決めるのに使い、知らない状態なら throw で止める（書き損じを見落とさない）。
+%   段の文は、末尾の「。」を外して、そのまま結論の箱と番号つきの節に出す（段と箱で文が食い違わないように）。
+
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 成り立たない組があれば、その組だけを段にする（REVIEW_RULES C3。ほかの段は出さない）。
+% 6条で適用しないときは、6条の段だけを出す（読み (c)。依頼書 ⑥：結論が決まったら、食い違う1条〜5条の段を出さない）。
+% 13の欄が「分かっている」ときは、5条の段と、6条で適用するときの6条の段だけを出す（読み (b)）。
+%   2026-11-23 前は1条〜4条の段も残していた（決めたこと2-4）が取り消した。5条の典型の失火責任法は「重大な過失」が無ければ責任を負わない
+%   ので、別段の定の中身を読まずに1条1項の「責任を負います」を言い切ると判定が外れる（task_beaver_kokubai_llmfix_1123.md ①）。
+% どちらでもなければ1条〜4条と6条を同じ入力で全部当てる（REVIEW_RULES C4・C5）。並びは条の順。
+% 2も7も「無い」で、6条の段も出ないときは nashi の1段だけを出す（決めたこと3）。
+% 同じ述語を別のファイルに分けて書くと後の読み込みで消えるので、まとめはここに1つだけ置く
+全部の段(C, Steps) :- 組み合わせなしがある(C), !, 組み合わせなしの段(C, Steps).
+全部の段(C, Steps) :- 適用しない(C), !, 外国人の段(C, Steps).
+全部の段(C, Steps) :-
+    別段の段(C, L6), L6 \== [], !,
+    外国人の段(C, L7),
+    append(L6, L7, Steps).
+全部の段(C, Steps) :-
+    公務員の段(C, L1),
+    営造物の段(C, L2),
+    費用の段(C, L3),
+    内部の段(L3, C, L4),
+    民法の段(C, L5),
+    外国人の段(C, L7),
+    append([L1, L2, L3, L4, L5, L7], Steps1),
+    ( Steps1 == [] -> 何も無い段(Steps) ; Steps = Steps1 ).
+
+% 依頼書 ⑤：要件の否定で写さず、入っていない話を主語に立てて書く（文は決めたこと3のまま）
+何も無い段([s(nashi, '答える条', 段(当たらない, '損害のもとになった公務員の行為も、公の営造物も入っていないので、答える条はありません。', []))]).
+
+組み合わせなしの段(C, Steps) :-
+    組み合わせなしの一覧(C, L),
+    findall(s(Id, 'この組み合わせはありません', 段(組み合わせなし, M, As)),
+            ( nth1(I, L, _-M-As), atom_concat(mujun, I, Id) ), Steps).
+
+組み合わせなしの一覧(C, L) :- findall(Ns-M-As, 組み合わせなし(C, Ns, M, As), L).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、段の文だけを出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」を付けない）。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(C, Steps, Ws) :-
+    結論の段(C, Steps, Ps),
+    findall(W, member(_-_-W, Ps), Ws).
+
+% 結論の箱に出す段を 段のid-段-答え の組で、箱の並びのまま返す（論理の木も同じ並びで結論1つにつき1本立てる。REVIEW_RULES B5）
+% nashi の段がいつも立つので、下の どれにも当たらない は今の欄では出ない（空の箱を出さないための受け皿。sorin-prolog と同じ形）。
+結論の段(C, Steps, Ps) :-
+    findall(Id-S-W, ( member(s(Id, _, S), Steps), 問いの答え(C, Id, S, W) ), Ps0),
+    ( Ps0 == [] -> どれにも当たらない(W0, S0), Ps = [none-S0-W0] ; Ps = Ps0 ).
+
+どれにも当たらない('当てる条がありません', 段(当たらない, '当てる条がありません。', [])).
+
+% 根拠の無い段は結論の箱に出さない（nashi だけは条が無いまま出す）。答え/4 の書き損じで立っても「（）」を画面に出さない
+% 「;」で書くと、根拠の付いた組み合わせなしで両方の枝が成り立ち、同じ文が結論の箱に2回出た（dairi-prolog 2026-11-19）。「->」で解を1つにする
+問いの答え(C, nashi, S, W) :- !, 答え(C, nashi, S, W).
+問いの答え(C, Id, S, W) :-
+    S = 段(St, _, As),
+    As \== [],
+    答え(C, Id, S, W0), !,
+    ( St == 組み合わせなし -> 組み合わせなしの条(C, Id, A) ; 条の表記(As, A) ),
+    format(atom(W), '~w（~w）', [W0, A]).
+
+% 成り立たない組は「この組み合わせはありません。…（1と12の欄・3条2項）」
+組み合わせなしの条(C, Id, S) :-
+    atom_concat(mujun, IA, Id), atom_number(IA, I),
+    組み合わせなしの一覧(C, L), nth1(I, L, Ns-_-As),
+    atomic_list_concat(Ns, 'と', N),
+    条の表記(As, A),
+    format(atom(S), '~wの欄・~w', [N, A]).
+
+% 節の文：答えの文（条を付けない）
+節の文(C, Id, S, W) :- 答え(C, Id, S, W).
+
+% 答え(C, 段のid, 段, 答えの文)：段の文の末尾の「。」を外す。組み合わせなしは頭に「この組み合わせはありません。」を付ける。
+% 段の文には、画面の上で指す先の無い指示語（その・この・同項・当該 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6。rules/*.pl の段の文で守る）
+答え(_, _, 段(St, M, _), W) :-
+    ( atom_concat(M0, '。', M) -> true ; M0 = M ),
+    ( St == 組み合わせなし -> atomic_list_concat(['この組み合わせはありません。', M0], W) ; W = M0 ).
+
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---- 根拠条文 ----
+% 段の順に並べ、重複は1つに
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As), Ss), member(A, As) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5。結論をつないだ行と「次のすべてが成り立つ」の節は置かない）。
+% 並びは結論の箱と同じ。一番上の行は結論の箱の文で、その下に段の条の原文（と約束事）を置く。
+% 段の文は結論の箱の文と同じなので、木に2回書かない（B4・B6）
+木(C, Steps, Trees) :-
+    結論の段(C, Steps, Ps),
+    findall(T, ( member(Id-S-W, Ps), 段の木(Id, S, W, T) ), Trees).
+
+段の木(Id, 段(St, _, Arts), W, t(K, W, A, Cs)) :-
+    list_to_set(Arts, As),
+    maplist(原文規定, As, Rs),
+    段の約束(Id, St, Ys),
+    append(Rs, Ys, Kids),
+    すべて(W, '', Kids, t(_, W, A, Cs)),
+    印(St, K).
+
+% 止まった段（組み合わせなし・適用しない・当たらない）は info、そのほかは ok（木ごとに、その段で決める）
+印(St, K) :- 組の番号(St, _), ( memberchk(St, [組み合わせなし, 適用しない, 当たらない]) -> K = info ; K = ok ).
+
+% 組の番号(状態, 1=先頭に出す答え | 2=当たった答え | 3=答えを支える文 | 4=当たりません)。状態は全部名前で書き、知らない状態は止める（依頼書 4）。
+% 2026-11-23 前の 場面外・判定しない は、段を出さないか 当たらない に寄せたので消した
+組の番号(組み合わせなし, 1) :- !.
+組の番号(適用しない, 1) :- !.     % 6条（相互の保証がない）
+組の番号(別段あり, 1) :- !.       % 5条（読み (b)。出るときは1条〜4条の段を出さない）
+組の番号(当たる, 2) :- !.         % 1条1項・2条1項
+組の番号(公務員求償, 2) :- !.     % 1条2項
+組の番号(他者求償, 2) :- !.       % 2条2項
+組の番号(費用者も, 2) :- !.       % 3条1項
+組の番号(内部求償, 2) :- !.       % 3条2項
+組の番号(定め, 3) :- !.           % 4条
+組の番号(適用する, 3) :- !.       % 6条（相互の保証がある）
+組の番号(当たらない, 4) :- !.     % 1条1項・2条1項の語が欠ける・1条2項の過失が重大でない・3条1項の当る者が費用も負担・nashi
+組の番号(St, _) :- throw(知らない状態(St)).
+
+% 葉に置くのは結論を支える規則だけ。断り書き（当てはめは判定しない・本人の考えのとおりに答える・民法や別段の定の中身は読まない 等）は
+% about の「判定について」に置く（REVIEW_RULES A5。前は段ごとに 評価の約束・民法の約束・別段の約束・保証の約束・内部の約束 を付けていた）。
+% 「当たらない」の段には 場面外の約束 を付ける（条文に無いアプリの決めごと。D1）。nashi は条が無いので付けない
+段の約束(nashi, _, []) :- !.
+段の約束(_, 当たらない, [Y]) :- !, 場面外の約束(Y).
+段の約束(_, _, []).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は sorin-prolog・risoku-prolog・teikei-prolog の web.pl と同じ（2026-11-23）。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(C, Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+</script>
+<script type="application/json" id="law">{"1":{"t":"第一条","c":"","p":[{"n":"1","s":"国又は公共団体の公権力の行使に当る公務員が、その職務を行うについて、故意又は過失によつて違法に他人に損害を加えたときは、国又は公共団体が、これを賠償する責に任ずる。","i":[]},{"n":"2","s":"前項の場合において、公務員に故意又は重大な過失があつたときは、国又は公共団体は、その公務員に対して求償権を有する。","i":[]}]},"2":{"t":"第二条","c":"","p":[{"n":"1","s":"道路、河川その他の公の営造物の設置又は管理に瑕疵があつたために他人に損害を生じたときは、国又は公共団体は、これを賠償する責に任ずる。","i":[]},{"n":"2","s":"前項の場合において、他に損害の原因について責に任ずべき者があるときは、国又は公共団体は、これに対して求償権を有する。","i":[]}]},"3":{"t":"第三条","c":"","p":[{"n":"1","s":"前二条の規定によつて国又は公共団体が損害を賠償する責に任ずる場合において、公務員の選任若しくは監督又は公の営造物の設置若しくは管理に当る者と公務員の俸給、給与その他の費用又は公の営造物の設置若しくは管理の費用を負担する者とが異なるときは、費用を負担する者もまた、その損害を賠償する責に任ずる。","i":[]},{"n":"2","s":"前項の場合において、損害を賠償した者は、内部関係でその損害を賠償する責任ある者に対して求償権を有する。","i":[]}]},"4":{"t":"第四条","c":"","p":[{"n":"1","s":"国又は公共団体の損害賠償の責任については、前三条の規定によるの外、民法の規定による。","i":[]}]},"5":{"t":"第五条","c":"","p":[{"n":"1","s":"国又は公共団体の損害賠償の責任について民法以外の他の法律に別段の定があるときは、その定めるところによる。","i":[]}]},"6":{"t":"第六条","c":"","p":[{"n":"1","s":"この法律は、外国人が被害者である場合には、相互の保証があるときに限り、これを適用する。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"本則","a":[{"k":"1","t":"第一条","c":"","u":1},{"k":"2","t":"第二条","c":"","u":1},{"k":"3","t":"第三条","c":"","u":1},{"k":"4","t":"第四条","c":"","u":1},{"k":"5","t":"第五条","c":"","u":1},{"k":"6","t":"第六条","c":"","u":1}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+// ==== 共有ここから（別ページでも同じ部品を使う） ====
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  // '2条2項1号' '10条1項ただし書' '12条の2第1項' '5条1号の2' '5条1号イ' のような形。複数条が「・」で区切られることもある → 最初の条だけ見る
+  // 号の枝番は XML では Num="1_2"（5条1号の2）
+  const first = String(a).split("・")[0];
+  const m = first.match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(?:第?(\d+)号((?:の\d+)*))?([イロハニホ])?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[4] ? m[4] + (m[5] || "").replace(/の/g, "_") : null, sub: m[6] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para);
+  // 号まで指定があれば、項の本文とその号だけ出す（5条は号が多いので全部は出さない）
+  if (r.item) ps = ps.filter(p => p.i.some(it => it.n === r.item));
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const list = r.item ? p.i.filter(it => it.n === r.item) : p.i;
+    const its = list.map(it => `<p class="it">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => r.sub && x.startsWith(r.sub + " ") ? `<br><span class="hit">　${esc(x)}</span>` : `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなくこのアプリの決め事。</p>`;
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+// ==== 共有ここまで ====
+
+async function boot(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const need = ["result/2", "explain/2", "heads/2", "answers/2"].filter(p => !once(`current_predicate(${p})`));
+    if (need.length) throw new Error(`Prologの読み込みが不完全です（${need.join("・")} がありません）。${errBuf.slice(-3).join(" ")}`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    renderPresets();
+    ask();
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+    $("answer").innerHTML = `<p class="loading err">エラー：${esc(e.message)}</p>`;
+  }
+}
+
+// ---- 入力 → ctx の文字 ----
+// 欄はいつも全部出し、出し消ししない（REVIEW_RULES C5。2026-11-23 「何で損害を受けたか」の欄（iri）と、欄を出し消しする関数（SLOTS・updateSlots）・
+// 隠れた欄を「関係なし」で渡す関数（shown）・入口で欄名を変える表（LABEL_HIY）をやめた。形は sorin-prolog・risoku-prolog・teikei-prolog と同じ）。
+// 並びは schema.pl の ctx の引数の順（1〜15）。成り立たない組は Prolog が「この組み合わせはありません」と返す（C3）
+const IDS = ["son","kom","kou","sho","koi","ihou","eizo","kashi","ta","hiy1","hiy2","bai","bet","hig","sog"];
+function buildCtx(){
+  return `ctx(${IDS.map(id => atom($(id).value)).join(",")})`;
+}
+
+// ---- 判定と表示 ----
+const HEAD = `<div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div>`;
+const lawBtn = a => a === "@約束事" ? `<span class="yk">アプリの約束事</span>` : (a ? `<button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : "");
+const artsHTML = as => as.map(String).map(lawBtn).join(" ");
+// 断り書き（当てはめは判定しない・本人の考えのとおりに答える・いつまでに・どこへ・いくらは出ない・処分そのものを争う話は別）は
+// about.html の「判定について」に置く（REVIEW_RULES A1・A5。2026-11-23 結果の下に出していた NOTE_HANTEI・NOTE_ITSU・note-next と、
+// 欄の説明の「判定しません」・「判定していません」の段を移した。頭の注意は見本の1文だけ（A3））
+
+// 段(状態, 文, 条のリスト) を1段ぶんの行にする。文は答え（answers/2。段の文から末尾の「。」を外したもの）
+function stepHTML(id, title, s, ans){
+  const [st, , as] = T(s).args;
+  return `<p class="sec">${esc(title)}</p><p class="step" id="${id}" data-st="${esc(st)}">${esc(ans)}。 ${artsHTML(as)}</p>`;
+}
+
+function ask(){
+  const c = buildCtx();
+  $("qline").textContent = `?- result(${c}, R).`;
+  if (!pl) return;
+  try{
+    // 木は結論1つにつき1本（結論の箱と同じ並び）。凡例は最初の木の上に1回だけ（REVIEW_RULES B5）
+    const lr = once(`explain(${c}, Lines)`);
+    const trees = lr ? lr.Lines.map(ls => ls.map(T).map(t => t.args)) : [];
+    const r = once(`result(${c}, r(Head,Steps,Arts))`);
+    if (!r){
+      $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">判定できませんでした</div></div><p class="hint">入力を確かめてください。</p></div>`;
+      return;
+    }
+    const ar = once(`answers(${c}, L)`);
+    const ans = Object.fromEntries((ar ? ar.L : []).map(T).map(t => t.args));
+    const steps = r.Steps.map(T).map(t => t.args).filter(([id]) => ans[id] !== undefined);
+    // 答えが2つ以上なら箇条書き、1つなら1文のまま（REVIEW_RULES A7）。並びは条の順（5条の段が出るときは5条と6条の段だけ）
+    const hr = once(`heads(${c}, L)`);
+    const hs = hr ? hr.L.map(String) : [];
+    const big = hs.length > 1 ? `<ul>${hs.map(h => `<li>${esc(h)}</li>`).join("")}</ul>` : esc(r.Head);
+    $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">${big}</div></div>
+      ${steps.map(([id, title, s], i) => stepHTML("st-" + id, `${i + 1}　${title}`, s, ans[id])).join("")}
+      <p class="sec">根拠条文</p><p class="arts" id="arts">${r.Arts.length ? artsHTML(r.Arts) : "当てはまる条文はありません。"}</p>
+      ${trees.length ? `<p class="sec">なぜそうなるか（論理の木）</p>${trees.map((ls, i) => treeHTML(ls, i === 0)).join("")}` : ""}</div>`;
+  } catch(e){ $("answer").innerHTML = `<p class="hint">エラー：${esc(e.message)}</p>`; }
+}
+
+// ---- 例（名前は条文の語で書く。条文に無い事故・施設の名前を使わない。2条は「道路」「河川」を使ってよい）----
+function presetList(){
+  // 欄の値は DEFAULTS から変えるものだけ書く。K＝国又は公共団体の公務員の行為、E＝道路
+  // 2026-11-23 15欄に直した。前の17個はどれも既定（答える条はありません）と別の答えなので残し、2と7の両方を入れた例を1つ足した（決めたこと3）
+  const K = {kom:"公務員"}, E = {eizo:"道路"};
+  return [
+    ["公権力の行使に当る公務員：違法に損害を加えた", K],
+    ["その職務を行うについてでない", {...K,sho:"いいえ"}],
+    ["故意も過失も無い", {...K,koi:"なし"}],
+    ["違法でない", {...K,ihou:"いいえ"}],
+    ["公務員に重大な過失があった", {...K,koi:"重大な過失"}],
+    ["公務員に故意があった", {...K,koi:"故意"}],
+    ["公務員の俸給を負担する者が異なる", {...K,hiy1:"異なる"}],
+    ["道路の管理に瑕疵があった", E],
+    ["河川の管理に瑕疵があった", {eizo:"河川"}],
+    ["道路に瑕疵がない", {...E,kashi:"いいえ"}],
+    ["公の営造物でない", {eizo:"でない"}],
+    ["他に責に任ずべき者がいる", {...E,ta:"いる"}],
+    ["管理に当る者と費用を負担する者が異なる", {...E,hiy2:"異なる"}],
+    ["費用を負担する者が異なり、損害を賠償した者がいる", {...E,hiy2:"異なる",bai:"いる"}],
+    ["民法以外の他の法律に別段の定がある", {...K,bet:"分かっている"}],
+    ["被害者が外国人：相互の保証がある", {...K,hig:"はい",sog:"ある"}],
+    ["被害者が外国人：相互の保証がない", {...K,hig:"はい",sog:"ない"}],
+    // 2と7の両方を入れた例（決めたこと3・2-8。結論の箱は条の順に並ぶ）
+    ["国又は公共団体の公務員の行為と、道路の設置又は管理の瑕疵", {...K,...E}],
+  ];
+}
+// 例に書いていない欄は既定に戻す（前の例の値を残すと、見出しと違う入力になるため）
+// 既定は各欄の最初の値で、2も7も「無い」。既定のままなら「…入っていないので、答える条はありません」の1段（決めたこと3）。
+// 組み合わせなし（schema.pl のア・イ）には当たらない
+const DEFAULTS = {son:"受けた",kom:"無い",kou:"はい",sho:"はい",koi:"重大でない過失",ihou:"はい",eizo:"無い",kashi:"はい",ta:"いない",hiy1:"同じ",hiy2:"同じ",bai:"いない",bet:"分かっていない",hig:"いいえ",sog:"ある"};
+function setDefaults(p){
+  for (const [id, v] of Object.entries(DEFAULTS)) $(id).value = p[id] !== undefined ? p[id] : v;
+}
+function applyPreset(p){
+  setDefaults(p);
+  ask();
+}
+function renderPresets(){
+  $("presets").innerHTML = presetList().map((p, i) => `<button type="button" data-preset="${i}">${esc(p[0])}</button>`).join("");
+}
+
+// 初期表示（既定の値）
+setDefaults({});
+
+document.addEventListener("change", e => { if (e.target.closest("#slots")) ask(); });
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.preset !== undefined){ applyPreset(presetList()[+b.dataset.preset][1]); $("answer").scrollIntoView?.(); }
+  else if (b.dataset.art && pl){
+    const host = b.closest(".tr") || b.closest("li") || b.parentElement, nx = host.nextElementSibling;
+    if (nx && nx.classList.contains("lawtext") && nx.dataset.for === b.dataset.art) nx.remove();
+    else { host.insertAdjacentHTML("afterend", lawHTML(b.dataset.art)); host.nextElementSibling.dataset.for = b.dataset.art; }
+  }
+});
+
+if (typeof SWIPL === "function") boot();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; $("answer").innerHTML = `<p class="loading err">Prolog（swipl-wasm）を読み込めませんでした。ページを再読み込みしてください。</p>`; }
+</script>
