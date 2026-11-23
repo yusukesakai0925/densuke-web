@@ -1,0 +1,1137 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="「基本手当を逆から引く」の収録範囲、全条文の地図、アプリの約束事、Prologのソース全部。">
+<title>収録範囲・仕組み｜基本手当を逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+/* 欄の上の小見出し（辞めたとき・何日分・いつまで・ハローワークでの手続き・受けている間のこと）。選ばせる欄ではないので番号を数えない */
+.slots .slot-h{margin:0;padding:8px 10px 4px;border-bottom:2px solid var(--line);border-right:2px solid var(--line);background:var(--paper)}
+/* 10の2 の欄（欄10と時点の違う事実を聞く。決め5）は番号を数えず「10の2」と出す。後ろの欄は 11 から続く */
+.slot.sub-slot{counter-increment:none}
+.slot.sub-slot label::before{content:"10の2　"}
+.checks{display:grid;gap:6px;margin:4px 10px 8px}
+.checks label{display:flex;gap:8px;align-items:flex-start;font-size:.84rem;font-weight:400;padding:0;letter-spacing:0;line-height:1.5}
+.checks label::before{content:none}
+.checks input{flex:0 0 auto;margin-top:.25em}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.step.off{color:var(--muted)}
+.flow{margin:0;padding-left:1.2em}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+.disclaimer-inline{margin-top:10px;font-size:.78rem;color:var(--muted);border-top:1px solid var(--hair);padding-top:8px;line-height:1.65}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border-left:2px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+</style>
+
+<div class="wrap about">
+  <header class="mast sub">
+    <p class="backlink"><a href="./" id="back">← 判定ページに戻る</a></p>
+    <h1>収録範囲・仕組み</h1>
+    <p class="lead">「基本手当を逆から引く」で、どの条文をどこまでルールにしたか、アプリが決めたこと、プログラムの中身です。</p>
+  </header>
+
+  <div class="appendix">
+  <details class="box" id="scope-box" open>
+    <summary>収録範囲と、入っていないもの</summary>
+    <div class="scope" id="scope">
+      <p><b>雇用保険法の本則のうち、第10条の4、第13条〜第15条、第19条〜第23条、第32条〜第34条をルールにしています。</b></p>
+      <p>起きたことと、あなたの考えを聞く22個の欄から、同じ入力でこれらの条を全部当てます。話を先に選ばせることはせず、欄を出したり消したりもしません。小見出し（辞めたとき・何日分・いつまで・ハローワークでの手続き・受けている間のこと）は欄の並びの目印です。その話で使わない欄は、判定で見ないだけです（下の「話ごとに見る欄」）。</p>
+      <p><b>判定について：</b></p>
+      <ul id="hantei-notes" style="margin:0;padding-left:1.2em">
+        <li id="note-hantei">「失業」「自己の労働によつて収入を得た」「正当な理由」「自己の責めに帰すべき重大な理由」「やむを得ない理由」「不適当」「偽りその他不正の行為」に当たるか、就職が困難な人か、辞めた理由が第23条第2項各号や特定理由離職者に当たるかは、このアプリでは判定しません。欄名や選択肢に「（あなたの考え）」とあるものは、本人がそう考えたとして答えます。自営や請負、内職が「自己の労働」に当たるかも判定しません。個別のことは公共職業安定所（ハローワーク）に聞いてください。</li>
+        <li id="note-jobun">条文だけを読んでいます。判例と業務取扱要領は載せません。金額（賃金日額・基本手当の日額・第19条の控除額）と、被保険者期間・算定基礎期間の計算はしません。3の欄・6の欄・16の欄は、本人が数えた結果・計算した結果を受けます。</li>
+        <li id="note-shorei">厚生労働省令と附則は読んでいません。条文が「厚生労働省令で定める」と書いている中身と、本則以外の定めは判定に入れていません。延長給付も載せていません。実際の日数はここと違うことがあります。附則第4条に、特定理由離職者の一部を、離職の日によって特定受給資格者とみなす暫定の定めがあります（原文：第十三条第三項に規定する特定理由離職者（厚生労働省令で定める者に限る。）であつて、受給資格に係る離職の日が平成二十一年三月三十一日から令和九年三月三十一日までの間（附則第十一条の三第一項において「特定期間」という。）であるものに係る基本手当の支給については、当該受給資格者（第二十二条第二項に規定する受給資格者を除く。）を第二十三条第二項に規定する特定受給資格者とみなして第二十条、第二十二条及び第二十三条第一項の規定を適用する。）。ハローワークの<a href="https://www.hellowork.mhlw.go.jp/insurance/insurance_benefitdays.html">「基本手当の所定給付日数」</a>は、※補足1で「特定理由離職者のうち「特定理由離職者の範囲」の1に該当する方については、受給資格に係る離職の日が2009年3月31日から2027年3月31日までの間にある方に限り、所定給付日数が特定受給資格者と同様となります。」と書いています。このアプリは本則の日数で答え、1の欄の説明にこのことを書きました。</li>
+        <li id="note-33">第33条第1項の支給しない期間は、条文では「一箇月以上三箇月以内の間で公共職業安定所長の定める期間」で、このアプリは条文どおりこの幅で答えます。ハローワークの<a href="https://www.hellowork.mhlw.go.jp/help/question05.html">「よくあるご質問（雇用保険について）」</a>は「正当な理由のない自己都合によって離職された方の給付制限期間は、離職日が令和７年４月１日以降である場合は原則１か月、同年３月 31日以前である場合は原則２か月となります。ただし、離職日からさかのぼって５年間のうちに２回以上正当な理由なく自己都合離職し受給資格決定を受けた場合または自己の責めに帰すべき重大な理由によって解雇された（いわゆる重責解雇）場合の給付制限期間は３ヵ月となります。」と書いています（業務取扱要領の側の値です）。</li>
+        <li id="note-5i">第23条第1項第5号イ（30歳未満で、算定基礎期間が10年以上）は、条文どおり180日と答えます。ハローワークの「基本手当の所定給付日数」の表では、30歳未満で20年以上の欄は「―」です。範囲の条文にこの組を除く定めは無いので、「この組み合わせはありません」にはしていません。</li>
+        <li id="note-ha">結論の箱には判定だけを書きます。入力した事実（「〜ので」の理由）と、条文の読みは、論理の木の行にだけ置いています。</li>
+      </ul>
+      <p><b>話ごとに見る欄：</b>受給資格の答えはいつも出します。受給資格が無いときは、受給資格の答えだけを出し、ほかの話（第15条・第19条〜第23条・第32条〜第34条・第10条の4）は出しません。どれも受給資格者に当てる条だからです。頭の欄が「無い」側（いいえ・した・7日以上・行けた・得ていない・断っていない・していない）なら、その話の答えを出しません。</p>
+      <div class="tbl"><table id="ran-table">
+        <thead><tr><th>話</th><th>頭の欄</th><th>そのほかに見る欄</th></tr></thead>
+        <tbody>
+          <tr><td>受給資格（第13条）</td><td>（いつも出す）</td><td>1・2・3・4（4は算定対象期間の答え）</td></tr>
+          <tr><td>何日分・いつまで（第20条・第22条・第23条）</td><td>（受給資格があれば出す）・8・9・10</td><td>1（倒産・解雇なら特定受給資格者）・5・6・7</td></tr>
+          <tr><td>ハローワークでの手続き（第15条・第21条）</td><td>11・12・13・14</td><td>14は11が「した」のときだけ見る</td></tr>
+          <tr><td>受けている間のこと（第19条・第32条〜第34条・第10条の4）</td><td>15・17・18・20・1（重大な理由の解雇・自分の都合のとき）</td><td>16（15が「得ていない」以外のとき）・19（1が重大な理由の解雇・自分の都合のとき）・21・10の2（20が「していない」以外のとき）</td></tr>
+        </tbody>
+      </table></div>
+      <p id="scope-nashi">次の3つの組は、条文の上で成り立たないので「この組み合わせはありません」と答えます。どれも11の欄が「していない」（求職の申込みをしていない）組です。13の欄が「行けた」以外（第15条第2項・第15条第4項）。15の欄が「得ていない」以外（第15条第2項・第19条第1項）。12の欄が「7日に足りない」（第15条第2項・第21条）。11の欄が「していない」で14の欄が「していない」の組は、14の欄を見ないだけにしています。</p>
+      <p id="jijitsu-nai"><b>載せたが事実を聞かない条：</b>第15条第3項（失業の認定は、受給資格者が離職後最初に出頭した日から起算して四週間に一回ずつ直前の二十八日の各日について行う）は、利用者に聞く事実が無いので、欄で聞かず、判定にも使っていません。第14条（被保険者期間の数え方）・第15条第1項（基本手当は失業の認定を受けた日について支給する）・第23条第2項（特定受給資格者の定義）・第33条第3項（支給しない期間があるときの受給期間の延長）も、原文は載せていますが答えには使っていません。第14条は3の欄の数え方、第23条第2項は1の欄の選択肢の元で、第33条第3項は日数の計算をしないためです。原文は下の地図のマスで開けます。</p>
+      <p>そのほかに入っていないもの：下の<a href="#notes-box">載せなかったもの</a>をご覧ください。年次有給休暇は<a href="../yukyu/">年次有給休暇のページ</a>で引いてください。</p>
+    </div>
+  </details>
+
+  <details class="box" id="cover-box">
+    <summary>雇用保険法のどこまでをルールにしたか（全条文の地図）</summary>
+    <p class="hint" style="margin-top:6px">本則の全条文を1マスずつ並べました。<span class="cell u1"></span> はプログラムのルールの中で使っている条、<span class="cell u0"></span> は使っていない条です。マスを押すと原文が出ます。</p>
+    <div id="cover"></div>
+  </details>
+
+  <details class="box" id="yaku-box">
+    <summary>アプリの約束事（雇用保険法の条文にないもの）</summary>
+    <p class="hint" style="margin-top:6px">判定のためにこのアプリが決めたことで、条文そのものではありません。論理の木では <span class="yk">アプリの約束事</span> の印が付きます。</p>
+    <ul class="hint" id="yaku-list" style="margin:8px 0 0;padding-left:1.2em">
+      <li>「当たりません」「受給資格はありません」の答えは、条に当たらないと言うだけで、反対の結論を言うものではない</li>
+    </ul>
+  </details>
+
+  <details class="box" id="notes-box">
+    <summary>載せなかったものと、条文だけで決まらなかった点</summary>
+    <div class="scope">
+      <p><b>載せなかったもの（理由）：</b></p>
+      <ul style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>判例と業務取扱要領：条文だけを読むアプリのため</li>
+        <li>厚生労働省令の中身：法律の本則だけを読むため</li>
+        <li>金額の計算（賃金日額・基本手当の日額・第19条の控除額）：入力に金額を持たず、16の欄で本人が計算した結果を受けるため</li>
+        <li>第14条の被保険者期間の計算：3の欄で本人が数えた結果を受けるため</li>
+        <li>第22条第3項〜第5項の算定基礎期間の計算：6の欄で本人が数えた結果を受けるため</li>
+        <li>第33条第3項の受給期間の延長の計算：日数の計算をしないため</li>
+        <li>延長給付（第24条〜第29条・附則）：基本手当の本則の範囲の外のため</li>
+        <li>高年齢・短期雇用特例・日雇（第37条の2以降）：別の給付のため</li>
+        <li>就職促進給付・教育訓練給付・育児休業給付：基本手当ではないため</li>
+        <li>第10条の4第2項の事業主等の連帯：受給する本人に向けたページのため</li>
+      </ul>
+      <p><b>条文だけで決まらなかった点（14点）：</b></p>
+      <ul id="kimaranai" style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>（a）23条1項の括弧の外の特定受給資格者（算定基礎期間1年未満、第5号は5年未満）の日数は23条に書いていない → 22条1項第3号の90日に戻ると読む。これは読みです</li>
+        <li>（b）22条2項と23条2項の関係 → 23条2項の括弧に「前条第二項に規定する受給資格者を除く」とあるので22条2項を先に見る。5の欄が「はい」なら、1の欄が倒産・解雇でも22条2項で答える。これは読みです</li>
+        <li>（c）22条2項と23条1項第1号の年齢の区分に65歳以上が書いていない → 7の欄の選択肢に出さず、高年齢は載せていない。これは読みです</li>
+        <li>（d）33条1項の「一箇月以上三箇月以内の間で公共職業安定所長の定める期間」は何か月になるか書いていない → 数を断定せず原文の幅で答える。ハローワークの解説の値は上の「判定について」に置いた。これは読みです</li>
+        <li>（e）19条3項と34条1項の関係（届け出なかったら不正の行為か）は書いていない → 届け出ていないことは19条3項に当たると答え、34条1項とはつなげない。これは読みです</li>
+        <li>（f）3の欄は、13条の線（離職の日以前2年間で12か月・13条2項の読み替えで1年間で6か月）に合わせた3つの値にした → 12か月以上なら13条2項の括弧で13条1項とする。2年間では足りないが1年間で6か月以上のときは、1の欄が倒産・解雇・期間満了なら13条2項、ほかは13条1項に当たらないと答える。これは読みです</li>
+        <li>（g）22条2項は「算定基礎期間が一年以上の受給資格者にあつては次の各号」と書くので、1年未満の人が20条1項第2号に入るかが語だけでは言い切れない → 1年未満は入らないと読み、20条1項第1号にする。これは読みです</li>
+        <li>（h）15条2項は「しなければならない」とだけ書き、しないときの語が無い → 条文の語のまま「求職の申込みをしなければなりません」と答え、「受けられない」とは書かない。これは読みです</li>
+        <li>（i）15条5項は「確認して行う」とだけ書き、求職活動をしていないときの語が無い → 条文の語のまま「確認して行います」と答える。これは読みです</li>
+        <li>（j）10条の4第1項は「支給を受けた者」で、34条1項の「受けようとした」が無い → 受けようとしただけなら10条の4第1項に当たらないと読む。これは読みです</li>
+        <li>（k）33条1項第2号の括弧「正当な理由がなく自己の都合によつて退職した者に限る。次号において同じ。」→ 重大な理由の解雇で19の欄が離職の前1年・離職の後の訓練なら、除外に当たらず本文に戻す。これは読みです</li>
+        <li>（l）1の欄は1つだけ選ぶ → 「正当な理由のある自己都合」（特定理由離職者の側。「やむを得ない事情で辞めた」の選択肢）と「正当な理由のない自己都合」（33条1項）は、同じ離職について両立しないと読む。これは読みです</li>
+        <li>（m）13条2項は「二年間」「二年に」「十二箇月」だけ読み替え、「四年」を読み替えていない → 読み替えた後も上限は四年間と出す。これは読みです</li>
+        <li>（n）附則第4条で特定受給資格者とみなされる特定理由離職者の日数は本則に書いていない → 判定には入れず本則の日数で答える。1の欄の説明と上の「判定について」に、2027年3月31日までの離職は特定受給資格者と同じ日数になることと出典を置いた。これは読みです</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="box" id="src-box">
+    <summary>プログラムの中身（Prologのソース全部）</summary>
+    <p class="hint" style="margin-top:6px">このページで動いているPrologのプログラムそのものです。ファイルを開くと全文が出ます。</p>
+    <div id="src"></div>
+  </details>
+
+  <details class="box" id="core-box">
+    <summary>仕組みを見る（上級者向け）</summary>
+    <p class="hint" style="margin-top:6px">Prologに直接聞く（最初の20件まで）：</p>
+    <textarea id="q" spellcheck="false">result(ctx(どれでもない,はい,十二以上,いいえ,いいえ,一年以上五年未満,三十歳以上三十五歳未満,いいえ,いいえ,いいえ,いいえ,はい,七日以上,行けた,した,得ていない,計算していない,断っていない,断っていない,受けていない,していない,いいえ), R).</textarea>
+    <button type="button" class="btn" id="run">実行</button>
+    <pre id="out"></pre>
+  </details>
+  </div>
+
+  <p class="foot techline"><span>雇用保険法（基本手当）／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot">e-Gov法令検索の雇用保険法（昭和四十九年法律第百十六号）の本則の原文をルールにしたものです。判例・業務取扱要領・省令・附則・金額の計算は含みません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 雇用保険法の基本手当のProlog 共通の型・欄の読み出し・組み合わせなし・木の部品
+%
+% ctx(理由, 失業, 月数, 賃金, 困難, 期間, 年齢, 加算, 定年, 新資格, 不正後,
+%     申込み, 通算, 出頭, 活動, 収入, 収入額, 紹介, 指導, 訓練, 不正, やむ)
+%   欄は起きた事実と、あなたの考えを聞く22個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-24 案A。
+%   案は ../koyo_form_plan_answer_1124.md の案A、決めは ../koyo_form_plan_decision_1124.md）。
+%   前は ctx(入口, 詳細) で、入口（資格／日数／止まる）と「どの話か」の欄（話）を利用者に先に選ばせ、
+%   画面が欄を出し消しして、隠れた欄を 関係なし で渡していた（形OK/2 が 関係なし を除いた並びを見ていた）。今は使わない欄を判定で見ないだけにした。
+%   同じ事実を2回聞かない（C1）：前は離職の理由を3か所（理由・区分の特定・離職）で、新たな受給資格を2か所（新資格・新た）で聞き、
+%   2つの欄で1つの事実を聞く組（収入＋届出・拒否＋紹介号・指導＋正当・不正＋受給）があった。それぞれ1つの欄にした。
+%   新たな受給資格は、時点の違う2つの条（20条3項は受給期間のうち、34条2項は不正の日以後）なので、欄10と欄10の2に分けた（決め5）。
+%   引数の順は画面の欄の並び（1〜10・10の2・11〜21）と同じ。同じ入力で第10条の4・第13条〜第34条の段を全部当てる。
+%   画面では4つの小見出し（辞めたとき／何日分・いつまで／ハローワークでの手続き／受けている間のこと）の下に並べる。小見出しは欄を出し消ししない。
+%   受給資格が無いときは第13条の段だけを出し、20条〜34条（と15条・19条・21条）の段は出さない（決め4。どれも受給資格者に当てる条のため）。
+%   頭の欄（8・9・10・10の2・11・12・13・14・15・17・18・20）が「無い」側なら、その話の段を出さない。
+%   「あなたの考え」の欄・選択肢は 1・2・5・13の天災・17の正当な理由・18・21。本人の考えのとおりに答える（前の 評価の約束 の代わり）。
+%    1    理由     : 倒産 | 解雇 | 期間満了 | 重大解雇 | 自己都合 | どれでもない（辞めた理由。1つだけ選ぶ。倒産・解雇＝23条2項第1号・第2号、
+%                   期間満了＝13条3項の特定理由離職者、重大解雇・自己都合＝33条1項。決め3）
+%    2    失業     : はい | いいえ（辞めて、今、失業しているか。13条1項）
+%    3    月数     : 十二以上 | 六以上 | 足りない（被保険者期間。十二以上＝離職の日の前2年間に通算12か月以上、
+%                   六以上＝2年間では足りないが1年間に通算6か月以上、足りない＝どちらにも足りない。13条1項・2項）
+%    4    賃金     : いいえ | はい（病気やけがなどで続けて30日以上賃金をもらえなかったか。13条1項の括弧）
+%    5    困難     : いいえ | はい（障害などで就職が難しい人か。22条2項・23条2項の括弧）
+%    6    期間     : 一年未満 | 一年以上五年未満 | 五年以上十年未満 | 十年以上二十年未満 | 二十年以上（算定基礎期間。22条・23条）
+%    7    年齢     : 三十歳未満 | 三十歳以上三十五歳未満 | 三十五歳以上四十五歳未満 | 四十五歳以上六十歳未満 | 六十歳以上六十五歳未満（離職の日の年齢）
+%    8    加算     : いいえ | はい（妊娠・出産・育児などで続けて30日以上働けず、申し出たか。20条1項の括弧）
+%    9    定年     : いいえ | はい（定年などで辞め、求職の申込みをしない期間を申し出たか。20条2項）
+%   10    新資格   : いいえ | はい（受給期間のうちに新たな受給資格（高年齢・特例を含む）を得たか。20条3項）
+%   10の2 不正後   : いいえ | はい（不正のやり方をした日より後に、新たな受給資格を得たか。34条2項。20が「していない」のときは見ない）
+%   11    申込み   : はい | いいえ（求職の申込みをしたか。15条2項）
+%   12    通算     : 七日以上 | 七日未満（求職の申込みの後、失業している日の通算。21条）
+%   13    出頭     : 行けた | 疾病十五日未満 | 疾病十五日以上 | 面接 | 訓練 | 天災 | どれでもない（失業の認定の日に行けなかった理由。15条4項）
+%   14    活動     : した | していない（求職活動。15条5項）
+%   15    収入     : 得ていない | 届出済 | 届出なし（自分で働いて収入を得たか、届け出たか。19条1項・3項）
+%   16    収入額   : 計算していない | 八割以下 | 八割超 | 日額以上（自分で計算した結果。19条1項第1号〜第3号）
+%   17    紹介     : 断っていない | 断った | 不適当 | 住所 | 賃金 | 争議 | 正当（紹介された仕事・指示された職業訓練を断ったか。断った＝各号のどれでもない。32条1項）
+%   18    指導     : 断っていない | 正当あり | 正当なし（職業指導を断ったか。32条2項）
+%   19    訓練     : 受けていない | 指示 | 前一年 | 以後（離職の前後の職業訓練。33条1項第1号〜第3号）
+%   20    不正     : していない | 受けた | 受けようとした（うそや不正なやり方で給付を。34条1項・10条の4第1項）
+%   21    やむ     : いいえ | はい（不正なやり方をしたことに、やむを得ない理由があるか。34条1項ただし書）
+%
+%   関係のない欄（たとえば15が「得ていない」のときの16、1が重大解雇・自己都合以外のときの19）は、組み合わせなしにせず、その欄を使う段を出さない（kaiko-prolog と同じ）。
+%   欄どうしで成り立たない組は 組み合わせなし/3 が返す（REVIEW_RULES C3。決め2のア・イ・ウ）。
+%
+% 書き方のきまり：
+%   ・条番号は '13条1項' '15条4項第1号' '23条1項第1号イ' '32条1項ただし書' '10条の4第1項' のような原子。
+%   ・ルールの中で範囲の外の条を、原子の先頭に条番号を置く形で書かない。書くと build.py が使う条に数え、画面に中身が埋まる。
+%   ・段は 段(状態, 文, 箱の条, 葉の文のリスト)。結論ごとの段は s(画面のid, 見出し, 段)。段の文は、末尾の「。」を外して結論の箱にも出す。
+%     段の文は本題だけを書き、「〜ので」の前半（入力の言い直し）は葉の文に置く（REVIEW_RULES A2。葉は論理の木にだけ出る）。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | and | or | info
+%   ・アプリの約束事の行は 条 を '@約束事' にする。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか。組の成り立ちは 組み合わせなし/3 で見る）----
+ctx_valid(C) :-
+    functor(C, ctx, 22),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )).
+
+% 番号は ctx の引数の位置（画面の 10の2 は 11、画面の 11〜21 は 12〜22）
+欄の値(1, [倒産, 解雇, 期間満了, 重大解雇, 自己都合, どれでもない]).
+欄の値(2, [はい, いいえ]).
+欄の値(3, [十二以上, 六以上, 足りない]).
+欄の値(4, [いいえ, はい]).
+欄の値(5, [いいえ, はい]).
+欄の値(6, [一年未満, 一年以上五年未満, 五年以上十年未満, 十年以上二十年未満, 二十年以上]).
+欄の値(7, [三十歳未満, 三十歳以上三十五歳未満, 三十五歳以上四十五歳未満, 四十五歳以上六十歳未満, 六十歳以上六十五歳未満]).
+欄の値(8, [いいえ, はい]).
+欄の値(9, [いいえ, はい]).
+欄の値(10, [いいえ, はい]).
+欄の値(11, [いいえ, はい]).
+欄の値(12, [はい, いいえ]).
+欄の値(13, [七日以上, 七日未満]).
+欄の値(14, [行けた, 疾病十五日未満, 疾病十五日以上, 面接, 訓練, 天災, どれでもない]).
+欄の値(15, [した, していない]).
+欄の値(16, [得ていない, 届出済, 届出なし]).
+欄の値(17, [計算していない, 八割以下, 八割超, 日額以上]).
+欄の値(18, [断っていない, 断った, 不適当, 住所, 賃金, 争議, 正当]).
+欄の値(19, [断っていない, 正当あり, 正当なし]).
+欄の値(20, [受けていない, 指示, 前一年, 以後]).
+欄の値(21, [していない, 受けた, 受けようとした]).
+欄の値(22, [いいえ, はい]).
+
+%% ---- 欄の読み出し（番号は ctx の引数の位置）----
+欄の番号(理由, 1).
+欄の番号(失業, 2).
+欄の番号(月数, 3).
+欄の番号(賃金, 4).
+欄の番号(困難, 5).
+欄の番号(期間, 6).
+欄の番号(年齢, 7).
+欄の番号(加算, 8).
+欄の番号(定年, 9).
+欄の番号(新資格, 10).
+欄の番号(不正後, 11).
+欄の番号(申込み, 12).
+欄の番号(通算, 13).
+欄の番号(出頭, 14).
+欄の番号(活動, 15).
+欄の番号(収入, 16).
+欄の番号(収入額, 17).
+欄の番号(紹介, 18).
+欄の番号(指導, 19).
+欄の番号(訓練, 20).
+欄の番号(不正, 21).
+欄の番号(やむ, 22).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+%% ---- 成り立たない組（REVIEW_RULES C3。決め2。根拠は rules/a_genbun.pl の原文の行で確かめた）----
+% 組み合わせなし(C, 理由の文のリスト, 根拠のリスト)。どれも11の欄が「していない」で、ほかの欄が求職の申込みの後の事実を言う組。
+% 2つ以上に当たるときは、ア→イ→ウの順で最初の1つだけを返す。既定の値（11=した・12=7日以上・13=行けた・15=得ていない）はどの組にも当たらない。
+% 11が「していない」×14（求職活動）は、組み合わせなしにせず見ないだけにする（案の「見ないだけにする組」）。
+% ア：15条2項「失業の認定…を受けようとする受給資格者は、…公共職業安定所に出頭し、求職の申込みをしなければならない」、
+%     15条4項「…証明書を提出することによつて、失業の認定を受けることができる」
+組み合わせなし(C, ['失業の認定の日に出頭できなかったときの証明書（第15条第4項）は、求職の申込みをして失業の認定を受ける受給資格者が出すもの',
+                   '11の欄は「していない」、13の欄は「行けた」以外'],
+              ['15条2項', '15条4項']) :-
+    欄(申込み, C, いいえ), \+ 欄(出頭, C, 行けた), !.
+% イ：19条1項「受給資格者が、失業の認定に係る期間中に自己の労働によつて収入を得た場合には」。失業の認定は15条2項の求職の申込みの後
+組み合わせなし(C, ['第19条第1項の収入は、失業の認定に係る期間中の収入。失業の認定は、求職の申込みをした受給資格者が受けるもの',
+                   '11の欄は「していない」、15の欄は「得ていない」以外'],
+              ['15条2項', '19条1項']) :-
+    欄(申込み, C, いいえ), \+ 欄(収入, C, 得ていない), !.
+% ウ：21条「…離職後最初に公共職業安定所に求職の申込みをした日以後において、失業している日…が通算して七日に満たない間は」
+組み合わせなし(C, ['第21条の7日は、求職の申込みをした日以後に数えるもの',
+                   '11の欄は「していない」、12の欄は「7日に足りない」'],
+              ['15条2項', '21条']) :-
+    欄(申込み, C, いいえ), 欄(通算, C, 七日未満).
+
+%% ---- 理由の語をつなぐ ----
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---- 木の部品 ----
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+原文規定(Art, X) :- 原文(Art, W), 規定(Art, W, X).
+% 成り立つ文（起きた事実・条文の読み）
+文(X, t(ok, X, '', [])).
+約束(X, t(ok, X, '@約束事', [])).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（雇用保険法の条文にないもの）
+%
+%   条の場面の外にある段（状態 当たらない）にだけ付ける（kaiko-prolog と同じ）。
+%   2026-11-24 案A。「失業」「自己の労働によつて収入を得た」「正当な理由」「自己の責めに帰すべき重大な理由」「やむを得ない理由」「不適当」
+%   「偽りその他不正の行為」は判定しない、とした 評価の約束 を消した（欄名に「（あなたの考え）」と書いて聞くので、約束事ではなくなった。
+%   断り書きは about の「判定について」へ。REVIEW_RULES A5。前は e_hantei.pl の 段の約束 で全部の段の木に付けていた）。
+%   約束の文は指示語（その）を置かずに書き直した（A6）。
+
+場面外の約束(X) :-
+    約束('「当たりません」「受給資格はありません」の答えは、条に当たらないと言うだけで、反対の結論を言うものではない', X).
+</script>
+<script type="text/prolog" data-name="rules_a_genbun.pl">% rules/a_genbun.pl — 判定に使う条文の原文（law/koyo.xml の本則のまま）
+%
+%   原文(条, 文)。test/page_test.mjs が XML を別に読み、全行が一字一句一致するかを確かめる。
+%   本文・ただし書は XML の Sentence Function="main"・"proviso"。号の2列（Column）は全角空白でつなぐ（build.py の text() と同じ）。
+%   この法律の条文は「あつた」「つた」のように小さい「っ」を使わない。直さない。
+
+原文('10条の4第1項', '偽りその他不正の行為により失業等給付の支給を受けた者がある場合には、政府は、その者に対して、支給した失業等給付の全部又は一部を返還することを命ずることができ、また、厚生労働大臣の定める基準により、当該偽りその他不正の行為により支給を受けた失業等給付の額の二倍に相当する額以下の金額を納付することを命ずることができる。').
+
+原文('13条1項', '基本手当は、被保険者が失業した場合において、離職の日以前二年間（当該期間に疾病、負傷その他厚生労働省令で定める理由により引き続き三十日以上賃金の支払を受けることができなかつた被保険者については、当該理由により賃金の支払を受けることができなかつた日数を二年に加算した期間（その期間が四年を超えるときは、四年間）。第十七条第一項において「算定対象期間」という。）に、次条の規定による被保険者期間が通算して十二箇月以上であつたときに、この款の定めるところにより、支給する。').
+原文('13条2項', '特定理由離職者及び第二十三条第二項各号のいずれかに該当する者（前項の規定により基本手当の支給を受けることができる資格を有することとなる者を除く。）に対する前項の規定の適用については、同項中「二年間」とあるのは「一年間」と、「二年に」とあるのは「一年に」と、「十二箇月」とあるのは「六箇月」とする。').
+原文('13条3項', '前項の特定理由離職者とは、離職した者のうち、第二十三条第二項各号のいずれかに該当する者以外の者であつて、期間の定めのある労働契約の期間が満了し、かつ、当該労働契約の更新がないこと（その者が当該更新を希望したにもかかわらず、当該更新についての合意が成立するに至らなかつた場合に限る。）その他のやむを得ない理由により離職したものとして厚生労働省令で定める者をいう。').
+
+原文('14条1項本文', '被保険者期間は、被保険者であつた期間のうち、当該被保険者でなくなつた日又は各月においてその日に応当し、かつ、当該被保険者であつた期間内にある日（その日に応当する日がない月においては、その月の末日。以下この項において「喪失応当日」という。）の各前日から各前月の喪失応当日までさかのぼつた各期間（賃金の支払の基礎となつた日数が十一日以上であるものに限る。）を一箇月として計算し、その他の期間は、被保険者期間に算入しない。').
+原文('14条1項ただし書', 'ただし、当該被保険者となつた日からその日後における最初の喪失応当日の前日までの期間の日数が十五日以上であり、かつ、当該期間内における賃金の支払の基礎となつた日数が十一日以上であるときは、当該期間を二分の一箇月の被保険者期間として計算する。').
+原文('14条2項', '前項の規定により被保険者期間を計算する場合において、次に掲げる期間は、同項に規定する被保険者であつた期間に含めない。').
+原文('14条3項', '前二項の規定により計算された被保険者期間が十二箇月（前条第二項の規定により読み替えて適用する場合にあつては、六箇月）に満たない場合における第一項の規定の適用については、同項中「であるもの」とあるのは「であるもの又は賃金の支払の基礎となつた時間数が八十時間以上であるもの」と、「であるとき」とあるのは「であるとき又は賃金の支払の基礎となつた時間数が八十時間以上であるとき」とする。').
+
+原文('15条1項', '基本手当は、受給資格を有する者（次節から第四節までを除き、以下「受給資格者」という。）が失業している日（失業していることについての認定を受けた日に限る。以下この款において同じ。）について支給する。').
+原文('15条2項', '前項の失業していることについての認定（以下この款において「失業の認定」という。）を受けようとする受給資格者は、離職後、厚生労働省令で定めるところにより、公共職業安定所に出頭し、求職の申込みをしなければならない。').
+原文('15条3項本文', '失業の認定は、求職の申込みを受けた公共職業安定所において、受給資格者が離職後最初に出頭した日から起算して四週間に一回ずつ直前の二十八日の各日について行うものとする。').
+原文('15条3項ただし書', 'ただし、厚生労働大臣は、公共職業安定所長の指示した公共職業訓練等（国、都道府県及び市町村並びに独立行政法人高齢・障害・求職者雇用支援機構が設置する公共職業能力開発施設の行う職業訓練（職業能力開発総合大学校の行うものを含む。）、職業訓練の実施等による特定求職者の就職の支援に関する法律（平成二十三年法律第四十七号）第四条第二項に規定する認定職業訓練（厚生労働省令で定めるものを除く。）その他法令の規定に基づき失業者に対して作業環境に適応することを容易にさせ、又は就職に必要な知識及び技能を習得させるために行われる訓練又は講習であつて、政令で定めるものをいう。以下同じ。）を受ける受給資格者その他厚生労働省令で定める受給資格者に係る失業の認定について別段の定めをすることができる。').
+原文('15条4項', '受給資格者は、次の各号のいずれかに該当するときは、前二項の規定にかかわらず、厚生労働省令で定めるところにより、公共職業安定所に出頭することができなかつた理由を記載した証明書を提出することによつて、失業の認定を受けることができる。').
+原文('15条4項第1号', '疾病又は負傷のために公共職業安定所に出頭することができなかつた場合において、その期間が継続して十五日未満であるとき。').
+原文('15条4項第2号', '公共職業安定所の紹介に応じて求人者に面接するために公共職業安定所に出頭することができなかつたとき。').
+原文('15条4項第3号', '公共職業安定所長の指示した公共職業訓練等を受けるために公共職業安定所に出頭することができなかつたとき。').
+原文('15条4項第4号', '天災その他やむを得ない理由のために公共職業安定所に出頭することができなかつたとき。').
+原文('15条5項', '失業の認定は、厚生労働省令で定めるところにより、受給資格者が求人者に面接したこと、公共職業安定所その他の職業安定機関若しくは職業紹介事業者等から職業を紹介され、又は職業指導を受けたことその他求職活動を行つたことを確認して行うものとする。').
+
+原文('19条1項', '受給資格者が、失業の認定に係る期間中に自己の労働によつて収入を得た場合には、その収入の基礎となつた日数（以下この項において「基礎日数」という。）分の基本手当の支給については、次に定めるところによる。').
+原文('19条1項第1号', 'その収入の一日分に相当する額（収入の総額を基礎日数で除して得た額をいう。）から千二百八十二円（その額が次項の規定により変更されたときは、その変更された額。同項において「控除額」という。）を控除した額と基本手当の日額との合計額（次号において「合計額」という。）が賃金日額の百分の八十に相当する額を超えないとき　基本手当の日額に基礎日数を乗じて得た額を支給する。').
+原文('19条1項第2号', '合計額が賃金日額の百分の八十に相当する額を超えるとき（次号に該当する場合を除く。）　当該超える額（次号において「超過額」という。）を基本手当の日額から控除した残りの額に基礎日数を乗じて得た額を支給する。').
+原文('19条1項第3号', '超過額が基本手当の日額以上であるとき　基礎日数分の基本手当を支給しない。').
+原文('19条3項', '受給資格者は、失業の認定を受けた期間中に自己の労働によつて収入を得たときは、厚生労働省令で定めるところにより、その収入の額その他の事項を公共職業安定所長に届け出なければならない。').
+
+原文('20条1項', '基本手当は、この法律に別段の定めがある場合を除き、次の各号に掲げる受給資格者の区分に応じ、当該各号に定める期間（当該期間内に妊娠、出産、育児その他厚生労働省令で定める理由により引き続き三十日以上職業に就くことができない者が、厚生労働省令で定めるところにより公共職業安定所長にその旨を申し出た場合には、当該理由により職業に就くことができない日数を加算するものとし、その加算された期間が四年を超えるときは、四年とする。）内の失業している日について、第二十二条第一項に規定する所定給付日数に相当する日数分を限度として支給する。').
+原文('20条1項第1号', '次号及び第三号に掲げる受給資格者以外の受給資格者　当該基本手当の受給資格に係る離職の日（以下この款において「基準日」という。）の翌日から起算して一年').
+原文('20条1項第2号', '基準日において第二十二条第二項第一号に該当する受給資格者　基準日の翌日から起算して一年に六十日を加えた期間').
+原文('20条1項第3号', '基準日において第二十三条第一項第二号イに該当する同条第二項に規定する特定受給資格者　基準日の翌日から起算して一年に三十日を加えた期間').
+原文('20条2項', '受給資格者であつて、当該受給資格に係る離職が定年（厚生労働省令で定める年齢以上の定年に限る。）に達したことその他厚生労働省令で定める理由によるものであるものが、当該離職後一定の期間第十五条第二項の規定による求職の申込みをしないことを希望する場合において、厚生労働省令で定めるところにより公共職業安定所長にその旨を申し出たときは、前項中「次の各号に掲げる受給資格者の区分に応じ、当該各号に定める期間」とあるのは「次の各号に掲げる受給資格者の区分に応じ、当該各号に定める期間と、次項に規定する求職の申込みをしないことを希望する一定の期間（一年を限度とする。）に相当する期間を合算した期間（当該求職の申込みをしないことを希望する一定の期間内に第十五条第二項の規定による求職の申込みをしたときは、当該各号に定める期間に当該基本手当の受給資格に係る離職の日（以下この款において「基準日」という。）の翌日から当該求職の申込みをした日の前日までの期間に相当する期間を加算した期間）」と、「当該期間内」とあるのは「当該合算した期間内」と、同項第一号中「当該基本手当の受給資格に係る離職の日（以下この款において「基準日」という。）」とあるのは「基準日」とする。').
+原文('20条3項', '前二項の場合において、第一項の受給資格（以下この項において「前の受給資格」という。）を有する者が、前二項の規定による期間内に新たに受給資格、第三十七条の三第二項に規定する高年齢受給資格又は第三十九条第二項に規定する特例受給資格を取得したときは、その取得した日以後においては、前の受給資格に基づく基本手当は、支給しない。').
+
+原文('21条', '基本手当は、受給資格者が当該基本手当の受給資格に係る離職後最初に公共職業安定所に求職の申込みをした日以後において、失業している日（疾病又は負傷のため職業に就くことができない日を含む。）が通算して七日に満たない間は、支給しない。').
+
+原文('22条1項', '一の受給資格に基づき基本手当を支給する日数（以下「所定給付日数」という。）は、次の各号に掲げる受給資格者の区分に応じ、当該各号に定める日数とする。').
+原文('22条1項第1号', '算定基礎期間が二十年以上である受給資格者　百五十日').
+原文('22条1項第2号', '算定基礎期間が十年以上二十年未満である受給資格者　百二十日').
+原文('22条1項第3号', '算定基礎期間が十年未満である受給資格者　九十日').
+原文('22条2項', '前項の受給資格者で厚生労働省令で定める理由により就職が困難なものに係る所定給付日数は、同項の規定にかかわらず、その算定基礎期間が一年以上の受給資格者にあつては次の各号に掲げる当該受給資格者の区分に応じ当該各号に定める日数とし、その算定基礎期間が一年未満の受給資格者にあつては百五十日とする。').
+原文('22条2項第1号', '基準日において四十五歳以上六十五歳未満である受給資格者　三百六十日').
+原文('22条2項第2号', '基準日において四十五歳未満である受給資格者　三百日').
+
+原文('23条1項', '特定受給資格者（前条第三項に規定する算定基礎期間（以下この条において単に「算定基礎期間」という。）が一年（第五号に掲げる特定受給資格者にあつては、五年）以上のものに限る。）に係る所定給付日数は、前条第一項の規定にかかわらず、次の各号に掲げる当該特定受給資格者の区分に応じ、当該各号に定める日数とする。').
+原文('23条1項第1号イ', '二十年以上　二百四十日').
+原文('23条1項第1号ロ', '十年以上二十年未満　二百十日').
+原文('23条1項第1号ハ', '五年以上十年未満　百八十日').
+原文('23条1項第1号ニ', '一年以上五年未満　百五十日').
+原文('23条1項第2号イ', '二十年以上　三百三十日').
+原文('23条1項第2号ロ', '十年以上二十年未満　二百七十日').
+原文('23条1項第2号ハ', '五年以上十年未満　二百四十日').
+原文('23条1項第2号ニ', '一年以上五年未満　百八十日').
+原文('23条1項第3号イ', '二十年以上　二百七十日').
+原文('23条1項第3号ロ', '十年以上二十年未満　二百四十日').
+原文('23条1項第3号ハ', '五年以上十年未満　百八十日').
+原文('23条1項第3号ニ', '一年以上五年未満　百五十日').
+原文('23条1項第4号イ', '二十年以上　二百四十日').
+原文('23条1項第4号ロ', '十年以上二十年未満　二百十日').
+原文('23条1項第4号ハ', '五年以上十年未満　百八十日').
+原文('23条1項第4号ニ', '一年以上五年未満　百二十日').
+原文('23条1項第5号イ', '十年以上　百八十日').
+原文('23条1項第5号ロ', '五年以上十年未満　百二十日').
+原文('23条2項', '前項の特定受給資格者とは、次の各号のいずれかに該当する受給資格者（前条第二項に規定する受給資格者を除く。）をいう。').
+原文('23条2項第1号', '当該基本手当の受給資格に係る離職が、その者を雇用していた事業主の事業について発生した倒産（破産手続開始、再生手続開始、更生手続開始又は特別清算開始の申立てその他厚生労働省令で定める事由に該当する事態をいう。第五十七条第二項第一号及び第六十条の四第二項第一号において同じ。）又は当該事業主の適用事業の縮小若しくは廃止に伴うものである者として厚生労働省令で定めるもの').
+原文('23条2項第2号', '前号に定めるもののほか、解雇（自己の責めに帰すべき重大な理由によるものを除く。第五十七条第二項第二号及び第六十条の四第二項第二号において同じ。）その他の厚生労働省令で定める理由により離職した者').
+
+原文('32条1項本文', '受給資格者（訓練延長給付、個別延長給付、広域延長給付又は全国延長給付を受けている者を除く。以下この条において同じ。）が、公共職業安定所の紹介する職業に就くこと又は公共職業安定所長の指示した公共職業訓練等を受けることを拒んだときは、その拒んだ日から起算して一箇月間は、基本手当を支給しない。').
+原文('32条1項ただし書', 'ただし、次の各号のいずれかに該当するときは、この限りでない。').
+原文('32条1項第1号', '紹介された職業又は公共職業訓練等を受けることを指示された職種が、受給資格者の能力からみて不適当であると認められるとき。').
+原文('32条1項第2号', '就職するため、又は公共職業訓練等を受けるため、現在の住所又は居所を変更することを要する場合において、その変更が困難であると認められるとき。').
+原文('32条1項第3号', '就職先の賃金が、同一地域における同種の業務及び同程度の技能に係る一般の賃金水準に比べて、不当に低いとき。').
+原文('32条1項第4号', '職業安定法第二十条（第二項ただし書を除く。）の規定に該当する事業所に紹介されたとき。').
+原文('32条1項第5号', 'その他正当な理由があるとき。').
+原文('32条2項', '受給資格者が、正当な理由がなく、厚生労働大臣の定める基準に従つて公共職業安定所が行うその者の再就職を促進するために必要な職業指導を受けることを拒んだときは、その拒んだ日から起算して一箇月を超えない範囲内において公共職業安定所長の定める期間は、基本手当を支給しない。').
+
+原文('33条1項本文', '被保険者が自己の責めに帰すべき重大な理由によつて解雇され、又は正当な理由がなく自己の都合によつて退職した場合には、第二十一条の規定による期間の満了後一箇月以上三箇月以内の間で公共職業安定所長の定める期間は、基本手当を支給しない。').
+原文('33条1項ただし書', 'ただし、次に掲げる受給資格者（第一号に掲げる者にあつては公共職業安定所長の指示した公共職業訓練等を受ける期間及び当該公共職業訓練等を受け終わつた日後の期間に限り、第三号に掲げる者にあつては第二号に規定する訓練を受ける期間及び当該訓練を受け終わつた日後の期間に限る。）については、この限りでない。').
+原文('33条1項第1号', '公共職業安定所長の指示した公共職業訓練等を受ける受給資格者（次号に該当する者を除く。）').
+原文('33条1項第2号', '第六十条の二第一項に規定する教育訓練その他の厚生労働省令で定める訓練を基準日前一年以内に受けたことがある受給資格者（正当な理由がなく自己の都合によつて退職した者に限る。次号において同じ。）').
+原文('33条1項第3号', '前号に規定する訓練を基準日以後に受ける受給資格者（同号に該当する者を除く。）').
+原文('33条3項', '基本手当の受給資格に係る離職について第一項の規定により基本手当を支給しないこととされる場合において、当該基本手当を支給しないこととされる期間に七日を超え三十日以下の範囲内で厚生労働省令で定める日数及び当該受給資格に係る所定給付日数に相当する日数を加えた期間が一年（当該基本手当の受給資格に係る離職の日において第二十二条第二項第一号に該当する受給資格者にあつては、一年に六十日を加えた期間）を超えるときは、当該受給資格者の受給期間は、第二十条第一項及び第二項の規定にかかわらず、これらの規定による期間に当該超える期間を加えた期間とする。').
+
+原文('34条1項本文', '偽りその他不正の行為により求職者給付又は就職促進給付の支給を受け、又は受けようとした者には、これらの給付の支給を受け、又は受けようとした日以後、基本手当を支給しない。').
+原文('34条1項ただし書', 'ただし、やむを得ない理由がある場合には、基本手当の全部又は一部を支給することができる。').
+原文('34条2項', '前項に規定する者が同項に規定する日以後新たに受給資格を取得した場合には、同項の規定にかかわらず、その新たに取得した受給資格に基づく基本手当を支給する。').
+</script>
+<script type="text/prolog" data-name="rules_b_shikaku.pl">% rules/b_shikaku.pl — 基本手当の受給資格があるか（13条）：1〜4の欄
+%
+%   13条2項は「前項の規定により…資格を有することとなる者を除く」とあるので、12か月以上なら理由によらず 13条1項（about の点 (f)）。
+%   2026-11-24 案A。入口の「資格」をやめ、受給資格の段はいつも出す（ほかの話の段は、受給資格があるときだけ出す。決め4）。
+%   3の欄は前の月数（0〜12の整数）を、13条の線（12か月・6か月）に合わせた3つの値にした（案の「2案に共通する直し」）。
+%   離職の理由は1の欄から読む（倒産・解雇＝23条2項各号、期間満了＝13条3項の特定理由離職者）。前の 理由 の欄（特定受給／特定理由）は1の欄に入れた（C1）。
+%   前の 場面外 の段（失業していない）と、補足の段（14条の数え方・13条3項と23条2項の語の原文）は消し、原文は about の地図で開く（A5）。
+%   段の文は本題だけにし、「〜という入力なので」の前半は葉の文に回した（A2）。指示語（その）は名詞にした（A6）。
+
+資格の段(C, L) :-
+    資格の答え(C, S1),
+    findall(s(santei, '算定対象期間', S), 算定の答え(C, S), L2),
+    L = [s(shikaku, '基本手当の受給資格', S1) | L2].
+
+% 受給資格があるか（ほかの話の段を出すかを e_hantei.pl が見る）
+% 段を空のまま受けてから比べる（段を束ねて呼ぶと、失業していないときの節が頭に合わず飛ばされ、次の節で「ある」に化ける）
+受給資格がある(C) :- 資格の答え(C, S), S = 段(支給する, _, _, _).
+
+% 13条2項の読み替えを受ける理由（特定理由離職者・23条2項各号）
+読み替えの理由(倒産, ['13条1項', '13条2項'], '辞めた理由は、第23条第2項各号のどれか（倒産や、事業の縮小・廃止に伴う離職）').
+読み替えの理由(解雇, ['13条1項', '13条2項'], '辞めた理由は、第23条第2項各号のどれか（解雇など、会社の側の事情による離職）').
+読み替えの理由(期間満了, ['13条1項', '13条2項', '13条3項'], '辞めた理由は、特定理由離職者（期間を決めた契約が終わり、更新されなかったなど、やむを得ない理由による離職）').
+
+% 13条2項の読み替えを使う入力か（12か月に足りず、理由が読み替えを受けるもの）
+読み替え(C) :- 欄(失業, C, はい), \+ 欄(月数, C, 十二以上), 欄(理由, C, R), 読み替えの理由(R, _, _).
+
+%% ---- 13条1項・2項 ----
+資格の答え(C, 段(当たらない, '基本手当の受給資格はありません。', ['13条1項'], ['今は失業していない（あなたの考え）', '基本手当は、被保険者が失業した場合に支給するもの'])) :-
+    欄(失業, C, いいえ), !.
+資格の答え(C, 段(支給する, '基本手当の受給資格があります。', ['13条1項'], ['辞めて、今、失業している（あなたの考え）', '離職の日以前2年間に、被保険者期間が通算して12か月以上'])) :-
+    欄(月数, C, 十二以上), !.
+資格の答え(C, 段(当たらない, '基本手当の受給資格はありません。', ['13条1項'], ['離職の日以前2年間の被保険者期間が、通算して12か月に足りない', '辞めた理由は、第13条第2項の読み替え（「二年間」を「一年間」、「十二箇月」を「六箇月」）を受ける理由（特定理由離職者・第23条第2項各号）ではない'])) :-
+    欄(理由, C, R), \+ 読み替えの理由(R, _, _), !.
+資格の答え(C, 段(支給する, '基本手当の受給資格があります。', As, ['辞めて、今、失業している（あなたの考え）', F, '第13条第2項の読み替えで、「二年間」は「一年間」、「十二箇月」は「六箇月」になる', '離職の日以前1年間に、被保険者期間が通算して6か月以上'])) :-
+    欄(月数, C, 六以上), !,
+    欄(理由, C, R), 読み替えの理由(R, As, F).
+資格の答え(C, 段(当たらない, '基本手当の受給資格はありません。', ['13条1項', '13条2項'], [F, '第13条第2項で読み替えた、離職の日以前1年間の被保険者期間も、通算して6か月に足りない'])) :-
+    欄(理由, C, R), 読み替えの理由(R, _, F).
+
+%% ---- 算定対象期間（13条1項の括弧）----
+% 4の欄が「はい」のときだけ出す（「いいえ」は頭の欄の「無い」側）。失業していないときは13条1項の場面に入らないので出さない
+算定の答え(C, 段(算定加算, T, As, ['離職の日以前の期間に、病気やけがなどで引き続き30日以上賃金の支払を受けられなかった' | Fs])) :-
+    欄(失業, C, はい), 欄(賃金, C, はい),
+    算定の年(C, Y, As, Fs),
+    format(atom(T), '算定対象期間は、賃金の支払を受けられなかった日数を~wに加算した期間で、四年を超えるときは四年間です。', [Y]).
+
+% 13条2項は「二年に」を「一年に」と読み替え、「四年」は読み替えていない（about の点 (m)）
+算定の年(C, '一年', ['13条1項', '13条2項'], ['第13条第2項で「二年に」は「一年に」になり、「四年」は読み替えていない']) :- 読み替え(C), !.
+算定の年(_, '二年', ['13条1項'], []).
+</script>
+<script type="text/prolog" data-name="rules_c_nissu.pl">% rules/c_nissu.pl — 何日分・いつまで（20条・22条・23条）：1・5〜10の欄
+%
+%   22条2項を先に見る。23条2項の括弧に「前条第二項に規定する受給資格者を除く」とあるため（about の点 (b)）。
+%   23条1項の括弧の外の特定受給資格者は、22条1項第3号の日数に戻ると読む（about の点 (a)）。
+%   2026-11-24 案A。入口の「日数」と前の 区分 の欄をやめ、区分は1の欄（倒産・解雇＝特定受給資格者）と5の欄（就職が困難な人）から決める（C1）。
+%   受給資格があるときだけ出す（e_hantei.pl が見る。決め4）。8・9・10の欄が「いいえ」なら、その段を出さない（前の「当たらない」と 場面外 の段は消した）。
+%   前の補足の段（区分の順の原文）は消し、読みは about の (b) に置いた（A5）。
+%   段の文は本題だけにし、「〜という入力なので」の前半と「（これは読みです）」は葉の文・about に回した（A2・A5）。指示語（その）は名詞にした（A6）。
+
+日数の段(C, L) :-
+    日数の答え(C, S1),
+    受給期間の答え(C, S2),
+    findall(S, 二十条の段(C, S), L3),
+    L = [s(nissu, '所定給付日数', S1), s(jukyu, '受給期間', S2) | L3].
+
+% 受給資格者の区分：5の欄が「はい」なら就職困難（22条2項を先に見る。読み (b)）、1の欄が倒産・解雇なら特定、ほかは一般
+区分(C, 就職困難) :- 欄(困難, C, はい), !.
+区分(C, 特定) :- 欄(理由, C, R), memberchk(R, [倒産, 解雇]), !.
+区分(_, 一般).
+% 呼ぶ側は 区分(C, Ku), Ku == ◯◯ と受けてから比べる。最後の節が 区分(_, 一般) なので、2つ目を決めて呼ぶと困難・特定の人にも当たる（11/24 run_cases の nissu 24件）
+
+期間の語(一年未満, '1年未満').
+期間の語(一年以上五年未満, '1年以上5年未満').
+期間の語(五年以上十年未満, '5年以上10年未満').
+期間の語(十年以上二十年未満, '10年以上20年未満').
+期間の語(二十年以上, '20年以上').
+
+年齢の語(三十歳未満, '30歳未満').
+年齢の語(三十歳以上三十五歳未満, '30歳以上35歳未満').
+年齢の語(三十五歳以上四十五歳未満, '35歳以上45歳未満').
+年齢の語(四十五歳以上六十歳未満, '45歳以上60歳未満').
+年齢の語(六十歳以上六十五歳未満, '60歳以上65歳未満').
+
+期間の葉(C, F) :- 欄(期間, C, P), 期間の語(P, W), format(atom(F), '算定基礎期間は~w', [W]).
+年齢の葉(C, F) :- 欄(年齢, C, Y), 年齢の語(Y, W), format(atom(F), '離職の日の年齢は~w', [W]).
+
+日数の文(K, D, T) :- format(atom(T), '所定給付日数は、~w（~d日）です。', [K, D]).
+
+%% ---- 所定給付日数 ----
+日数の答え(C, 段(日数, T, [A], ['就職が困難な人ではない', '辞めた理由は、特定受給資格者（第23条第2項各号）に当たる理由ではない', F])) :-
+    区分(C, Ku), Ku == 一般, !,
+    欄(期間, C, P), 期間の葉(C, F),
+    一般の日数(P, G, K, D),
+    format(atom(A), '22条1項第~w号', [G]),
+    日数の文(K, D, T).
+日数の答え(C, 段(日数, T, ['22条2項'], ['就職が困難な人（あなたの考え）', '算定基礎期間は1年未満'])) :-
+    区分(C, Ku), Ku == 就職困難, 欄(期間, C, 一年未満), !,
+    日数の文(百五十日, 150, T).
+日数の答え(C, 段(日数, T, ['22条2項', A], ['就職が困難な人（あなたの考え）', F1, F2])) :-
+    区分(C, Ku), Ku == 就職困難, !,
+    欄(年齢, C, Y), 期間の葉(C, F1), 年齢の葉(C, F2),
+    困難の日数(Y, G, K, D),
+    format(atom(A), '22条2項第~w号', [G]),
+    日数の文(K, D, T).
+日数の答え(C, 段(日数, T, ['23条1項', A], ['辞めた理由は第23条第2項各号のどれかで、特定受給資格者に当たる', F1, F2])) :-
+    欄(期間, C, P), 欄(年齢, C, Y),
+    特定の日数(Y, P, G, I, K, D), !,
+    期間の葉(C, F1), 年齢の葉(C, F2),
+    format(atom(A), '23条1項第~w号~w', [G, I]),
+    日数の文(K, D, T).
+日数の答え(C, 段(括弧の外, T, ['23条1項', '22条1項', '22条1項第3号'], ['辞めた理由は第23条第2項各号のどれかで、特定受給資格者に当たる', F1, F2, '第23条第1項の括弧（算定基礎期間が1年以上、30歳未満は5年以上）に入らない', '第23条は括弧の外の日数を書いていないので、第22条第1項の日数に戻ると読む（about の (a)）'])) :-
+    期間の葉(C, F1), 年齢の葉(C, F2),
+    日数の文(九十日, 90, T).
+
+一般の日数(二十年以上, 1, 百五十日, 150) :- !.
+一般の日数(十年以上二十年未満, 2, 百二十日, 120) :- !.
+一般の日数(_, 3, 九十日, 90).
+
+困難の日数(四十五歳以上六十歳未満, 1, 三百六十日, 360) :- !.
+困難の日数(六十歳以上六十五歳未満, 1, 三百六十日, 360) :- !.
+困難の日数(_, 2, 三百日, 300).
+
+特定の日数(六十歳以上六十五歳未満, 二十年以上, 1, イ, 二百四十日, 240).
+特定の日数(六十歳以上六十五歳未満, 十年以上二十年未満, 1, ロ, 二百十日, 210).
+特定の日数(六十歳以上六十五歳未満, 五年以上十年未満, 1, ハ, 百八十日, 180).
+特定の日数(六十歳以上六十五歳未満, 一年以上五年未満, 1, ニ, 百五十日, 150).
+特定の日数(四十五歳以上六十歳未満, 二十年以上, 2, イ, 三百三十日, 330).
+特定の日数(四十五歳以上六十歳未満, 十年以上二十年未満, 2, ロ, 二百七十日, 270).
+特定の日数(四十五歳以上六十歳未満, 五年以上十年未満, 2, ハ, 二百四十日, 240).
+特定の日数(四十五歳以上六十歳未満, 一年以上五年未満, 2, ニ, 百八十日, 180).
+特定の日数(三十五歳以上四十五歳未満, 二十年以上, 3, イ, 二百七十日, 270).
+特定の日数(三十五歳以上四十五歳未満, 十年以上二十年未満, 3, ロ, 二百四十日, 240).
+特定の日数(三十五歳以上四十五歳未満, 五年以上十年未満, 3, ハ, 百八十日, 180).
+特定の日数(三十五歳以上四十五歳未満, 一年以上五年未満, 3, ニ, 百五十日, 150).
+特定の日数(三十歳以上三十五歳未満, 二十年以上, 4, イ, 二百四十日, 240).
+特定の日数(三十歳以上三十五歳未満, 十年以上二十年未満, 4, ロ, 二百十日, 210).
+特定の日数(三十歳以上三十五歳未満, 五年以上十年未満, 4, ハ, 百八十日, 180).
+特定の日数(三十歳以上三十五歳未満, 一年以上五年未満, 4, ニ, 百二十日, 120).
+% 第5号イ「十年以上」は20年以上も入る（解説の表は「―」。範囲の12条に根拠条が無いので条文どおり180日。決め8・about の (c) の後ろ）
+特定の日数(三十歳未満, 二十年以上, 5, イ, 百八十日, 180).
+特定の日数(三十歳未満, 十年以上二十年未満, 5, イ, 百八十日, 180).
+特定の日数(三十歳未満, 五年以上十年未満, 5, ロ, 百二十日, 120).
+
+%% ---- 受給期間（20条1項）----
+% 22条2項は「算定基礎期間が一年以上の受給資格者にあつては次の各号」なので、1年未満は 22条2項第1号の区分に入らないと読む（about の点 (g)）
+受給期間の答え(C, 段(受給期間, '受給期間は、離職の日の翌日から1年に60日を加えた期間です。', ['20条1項', '20条1項第2号', '22条2項第1号'], ['就職が困難な人（あなたの考え）', F1, F2])) :-
+    区分(C, Ku), Ku == 就職困難, \+ 欄(期間, C, 一年未満),
+    欄(年齢, C, Y), memberchk(Y, [四十五歳以上六十歳未満, 六十歳以上六十五歳未満]), !,
+    期間の葉(C, F1), 年齢の葉(C, F2).
+受給期間の答え(C, 段(受給期間, '受給期間は、離職の日の翌日から1年に30日を加えた期間です。', ['20条1項', '20条1項第3号', '23条1項第2号イ'], ['特定受給資格者で、離職の日の年齢は45歳以上60歳未満', '算定基礎期間は20年以上'])) :-
+    区分(C, Ku), Ku == 特定, 欄(年齢, C, 四十五歳以上六十歳未満), 欄(期間, C, 二十年以上), !.
+受給期間の答え(C, 段(受給期間, '受給期間は、離職の日の翌日から1年です。', ['20条1項', '20条1項第1号'], ['就職が困難な人で、算定基礎期間は1年未満', '算定基礎期間が1年未満の人は、第22条第2項第1号に入らないと読む（about の (g)）'])) :-
+    区分(C, Ku), Ku == 就職困難, 欄(期間, C, 一年未満), !.
+受給期間の答え(_, 段(受給期間, '受給期間は、離職の日の翌日から1年です。', ['20条1項', '20条1項第1号'], ['第20条第1項第2号・第3号の受給資格者ではない'])).
+
+%% ---- 20条1項の括弧・20条2項・20条3項 ----
+% 8・9・10の欄が「はい」のときだけ出す
+二十条の段(C, s(kasan, '受給期間の加算', 段(加算, '受給期間に、職業に就けなかった日数を加算し、加算した期間が4年を超えるときは4年とします。', ['20条1項'], ['妊娠・出産・育児などで引き続き30日以上職業に就けず、公共職業安定所長に申し出た']))) :-
+    欄(加算, C, はい).
+二十条の段(C, s(teinen, '定年などで申し出たとき', 段(合算, '受給期間は、第20条第1項の期間と、求職の申込みをしないことを希望する一定の期間（1年が限度）を合算した期間です。', ['20条2項'], ['定年などで辞め、一定の期間求職の申込みをしないことを希望して、公共職業安定所長に申し出た']))) :-
+    欄(定年, C, はい).
+二十条の段(C, s(arata, '受給期間のうちに新たな受給資格を得たとき', 段(支給しない, '新たな受給資格を取得した日以後は、前の受給資格に基づく基本手当を支給しません。', ['20条3項'], ['受給期間のうちに、新たな受給資格（高年齢受給資格・特例受給資格を含む）を取得した']))) :-
+    欄(新資格, C, はい).
+</script>
+<script type="text/prolog" data-name="rules_d_tomaru.pl">% rules/d_tomaru.pl — 手続きと、受けている間に止まる・減る場合（15条・19条・21条・32条・33条・34条・10条の4）：1・10の2・11〜21の欄
+%
+%   金額は計算しない。19条1項の号は16の欄（本人が計算した結果）で引く。
+%   19条3項と34条1項はつなげない（about の点 (e)）。届け出ていないことは19条3項に「当たる」と答える（決め8）。
+%   2026-11-24 案A。入口の「止まる」と「どの話か」の欄（話）をやめ、11〜21の欄をそれぞれ見て段を並べる（C4）。
+%   受給資格があるときだけ出す（e_hantei.pl が見る。決め4）。11〜15・17・18・20の欄が「無い」側なら、その段を出さない
+%   （前の 申込み済・確認・止まらない の段と、「当たらない」「場面外」の段は消した）。
+%   15条3項（認定の周期）は事実を聞かない条なので、段と欄（前の 周期）を消し、about の「事実を聞かない条」に置いた（決め5の前の 4）。
+%   前の補足の段（19条1項の号の原文・33条3項の延長）は消し、原文は根拠条文のボタンと about の地図で開く（A5）。
+%   32条1項ただし書・33条1項ただし書の答えは「当たった答え」の この限りでない にした（決め7）。
+%   段の文は本題だけにし、「〜という入力なので」「（これは読みです）」「金額は計算しません」は葉の文・about に回した（A1・A2・A5）。
+%   指示語（その・この）は名詞にした（A6）。前の「この限りでありません」は「当てはまりません」と書いた。
+
+手続きの段(C, L) :-
+    findall(S, 手続きの一つ(C, S), L).
+
+受けている間の段(C, L) :-
+    findall(S, 間の一つ(C, S), L).
+
+%% ---- 15条2項・21条・15条4項・15条5項（11〜14の欄）----
+% 15条2項は「しなければならない」と書くだけで、しないときの語は書いていない。条文の語のまま答える（about の点 (h)）
+手続きの一つ(C, s(moushikomi, '求職の申込み', 段(認定なし, '失業の認定を受けるには、公共職業安定所に出頭し、求職の申込みをしなければなりません。', ['15条2項'], ['求職の申込みをしていない']))) :-
+    欄(申込み, C, いいえ).
+手続きの一つ(C, s(taiki, '待期', 段(支給しない, '求職の申込みの後、失業している日が通算で7日に足りない間は、基本手当を支給しません。', ['21条'], ['求職の申込みの後、失業している日（病気やけがで職業に就けない日を含む）が、通算でまだ7日に足りない']))) :-
+    欄(通算, C, 七日未満).
+手続きの一つ(C, s(shutto, '失業の認定の日に行けなかったとき', S)) :-
+    欄(出頭, C, V), V \== 行けた,
+    出頭の答え(V, S).
+% 15条5項は確認して行うと書くだけで、確認できないときの語は書いていない（about の点 (i)）。11の欄が「していない」なら見ない
+手続きの一つ(C, s(katsudo, '求職活動', 段(確認なし, '失業の認定は、求職活動を行ったことを確認して行います。', ['15条5項'], ['求職活動をしていない']))) :-
+    欄(申込み, C, はい), 欄(活動, C, していない).
+
+出頭の答え(V, 段(証明書, '公共職業安定所に出頭できなかった理由を書いた証明書を出せば、失業の認定を受けることができます。', ['15条4項', A], [F])) :-
+    出頭の号(V, G, F), !,
+    format(atom(A), '15条4項第~d号', [G]).
+出頭の答え(疾病十五日以上, 段(当たらない, '証明書による失業の認定（第15条第4項第1号）には当たりません。', ['15条4項', '15条4項第1号'], ['病気やけがで出頭できなかった期間が、継続して15日以上', '第15条第4項第1号は、継続して15日未満のときの定め'])) :- !.
+出頭の答え(どれでもない, 段(当たらない, '証明書による失業の認定（第15条第4項）には当たりません。', ['15条4項'], ['出頭できなかった理由は、第15条第4項の各号のどれでもない'])).
+
+出頭の号(疾病十五日未満, 1, '病気やけがで、継続して15日未満の間、出頭できなかった').
+出頭の号(面接, 2, '公共職業安定所の紹介に応じて求人者に面接するため、出頭できなかった').
+出頭の号(訓練, 3, '公共職業安定所長の指示した公共職業訓練等を受けるため、出頭できなかった').
+出頭の号(天災, 4, '天災その他やむを得ない理由のため、出頭できなかった（あなたの考え）').
+
+%% ---- 19条（15・16の欄）----
+間の一つ(C, s(shunyu, '働いて収入を得たとき', S)) :-
+    \+ 欄(収入, C, 得ていない),
+    欄(収入額, C, V), 収入の答え(V, S).
+間の一つ(C, s(todoke, '収入の届出', 段(St, '収入の額などを、公共職業安定所長に届け出なければなりません。', ['19条3項'], [F]))) :-
+    欄(収入, C, V), 届出の語(V, St, F).
+%% ---- 32条（17・18の欄）----
+間の一つ(C, s(shokai, '紹介された仕事や職業訓練を断ったとき', S)) :-
+    欄(紹介, C, V), V \== 断っていない,
+    紹介の答え(V, S).
+間の一つ(C, s(shido, '職業指導を断ったとき', S)) :-
+    欄(指導, C, V), 指導の答え(V, S).
+%% ---- 33条（1・19の欄）----
+間の一つ(C, s(rishoku, '自分の都合や重大な理由で辞めたとき', S)) :-
+    欄(理由, C, R), memberchk(R, [重大解雇, 自己都合]),
+    欄(訓練, C, K), 離職の答え(R, K, S).
+%% ---- 34条・10条の4（10の2・20・21の欄）----
+間の一つ(C, s(fusei, '不正のやり方で給付を受けたとき', S)) :-
+    欄(不正, C, J), J \== していない,
+    欄(やむ, C, Y), 不正の答え(J, Y, S).
+間の一つ(C, s(arata2, '不正の後に新たな受給資格を得たとき', 段(新たに支給, '不正の行為の日以後に新たに取得した受給資格に基づく基本手当は、支給します。', ['34条2項'], ['偽りその他不正の行為で給付を受けた日、または受けようとした日より後に、新たに受給資格を取得した']))) :-
+    \+ 欄(不正, C, していない), 欄(不正後, C, はい).
+間の一つ(C, s(henkan, '返還と納付の命令', S)) :-
+    欄(不正, C, J), J \== していない,
+    返還の答え(J, S).
+
+% 16の欄が「計算していない」なら19条1項の号の段を出さない（号を選ぶ事実が無い）
+収入の答え(八割以下, 段(減額, '収入の基礎になった日数分の基本手当は、基本手当の日額に日数を乗じた額を支給します。', ['19条1項', '19条1項第1号'], ['失業の認定に係る期間中に、自分で働いて収入を得た', '1日分の収入から控除額を引き、基本手当の日額を足した額が、賃金日額の100分の80以下（自分で計算した結果）'])).
+収入の答え(八割超, 段(減額, '収入の基礎になった日数分の基本手当は、超えた額を基本手当の日額から引いた残りの額に日数を乗じた額を支給します。', ['19条1項', '19条1項第2号'], ['失業の認定に係る期間中に、自分で働いて収入を得た', '1日分の収入から控除額を引き、基本手当の日額を足した額が、賃金日額の100分の80を超え、超えた額は基本手当の日額より少ない（自分で計算した結果）'])).
+収入の答え(日額以上, 段(支給しない, '収入の基礎になった日数分の基本手当は、支給しません。', ['19条1項', '19条1項第3号'], ['失業の認定に係る期間中に、自分で働いて収入を得た', '賃金日額の100分の80を超えた額が、基本手当の日額以上（自分で計算した結果）'])).
+
+届出の語(届出済, 届出済, '失業の認定を受けた期間中に、自分で働いて収入を得て、届け出た').
+届出の語(届出なし, 届出なし, '失業の認定を受けた期間中に、自分で働いて収入を得たが、届け出ていない').
+
+紹介の答え(断った, 段(支給しない, '紹介された職業や公共職業訓練等を断った日から1か月間は、基本手当を支給しません。', ['32条1項本文'], ['公共職業安定所の紹介する職業か、公共職業安定所長の指示した公共職業訓練等を断った', '断った理由は、第32条第1項の各号のどれでもない'])) :- !.
+紹介の答え(V, 段(この限りでない, '断った日から1か月間支給しない定め（第32条第1項本文）は、当てはまりません。', ['32条1項本文', '32条1項ただし書', A], ['公共職業安定所の紹介する職業か、公共職業安定所長の指示した公共職業訓練等を断った', F])) :-
+    紹介の号(V, G, F),
+    format(atom(A), '32条1項第~d号', [G]).
+
+紹介の号(不適当, 1, '紹介された職業か職種が、能力からみて不適当').
+紹介の号(住所, 2, '就職するため住所か居所を変える必要があり、変えるのが難しい').
+紹介の号(賃金, 3, '就職先の賃金が、同じ地域の同じような仕事の一般の賃金より、不当に低い').
+紹介の号(争議, 4, '職業安定法第20条の事業所（同盟罷業や作業所閉鎖の行われている事業所）に紹介された').
+紹介の号(正当, 5, '第1号〜第4号のほかに、正当な理由がある（あなたの考え）').
+
+指導の答え(正当あり, 段(当たらない, '職業指導を断ったときの支給しない定め（第32条第2項）には当たりません。', ['32条2項'], ['公共職業安定所が行う職業指導を断ったが、正当な理由がある（あなたの考え）', '第32条第2項は、正当な理由がなく断ったときの定め'])).
+指導の答え(正当なし, 段(支給しない, '職業指導を断った日から1か月を超えない範囲で公共職業安定所長が決める期間は、基本手当を支給しません。', ['32条2項'], ['公共職業安定所が行う職業指導を、正当な理由がなく断った（あなたの考え）'])).
+
+% 期間は原文の幅で答える（about の点 (d)）
+離職の語(重大解雇, '自己の責めに帰すべき重大な理由によって解雇された（あなたの考え）').
+離職の語(自己都合, '正当な理由がなく自己の都合によって退職した（あなたの考え）').
+
+給付制限の文('待期（第21条）の期間が終わった後、1か月以上3か月以内で公共職業安定所長が決める期間は、基本手当を支給しません。').
+
+離職の答え(R, 受けていない, 段(支給しない, T, ['33条1項本文'], [F])) :- !,
+    給付制限の文(T), 離職の語(R, F).
+離職の答え(R, 指示, 段(この限りでない, '第33条第1項本文の支給しない定めは、指示された公共職業訓練等を受ける期間と、受け終わった日より後の期間には当てはまりません。', ['33条1項本文', '33条1項ただし書', '33条1項第1号'], [F, '公共職業安定所長の指示した公共職業訓練等を受ける'])) :- !,
+    離職の語(R, F).
+% 第2号・第3号は「正当な理由がなく自己の都合によつて退職した者に限る」ので、重大な理由の解雇なら本文に戻す（about の点 (k)）
+離職の答え(重大解雇, K, 段(支給しない, T, ['33条1項本文', '33条1項ただし書', A], [F, W, '第33条第1項第2号・第3号は、正当な理由がなく自己の都合によって退職した人に限る'])) :- !,
+    給付制限の文(T), 離職の語(重大解雇, F),
+    訓練の号(K, G, W), format(atom(A), '33条1項第~d号', [G]).
+離職の答え(自己都合, 前一年, 段(この限りでない, '第33条第1項本文の支給しない定めは、当てはまりません。', ['33条1項本文', '33条1項ただし書', '33条1項第2号'], [F, W])) :- !,
+    離職の語(自己都合, F), 訓練の号(前一年, _, W).
+離職の答え(自己都合, 以後, 段(この限りでない, '第33条第1項本文の支給しない定めは、教育訓練などの訓練を受ける期間と、受け終わった日より後の期間には当てはまりません。', ['33条1項本文', '33条1項ただし書', '33条1項第3号'], [F, W])) :-
+    離職の語(自己都合, F), 訓練の号(以後, _, W).
+
+訓練の号(前一年, 2, '教育訓練など厚生労働省令で定める訓練を、離職の日の前1年以内に受けた').
+訓練の号(以後, 3, '教育訓練など厚生労働省令で定める訓練を、離職の日以後に受ける').
+
+不正の答え(J, はい, 段(支給できる, '基本手当の全部か一部を支給することができます。', ['34条1項本文', '34条1項ただし書'], [F, 'やむを得ない理由がある（あなたの考え）'])) :- !,
+    受給の葉(J, F).
+不正の答え(J, いいえ, 段(支給しない, T, ['34条1項本文'], [F])) :-
+    受給の語(J, W), 受給の葉(J, F),
+    format(atom(T), '不正の行為で給付を~w日以後は、基本手当を支給しません。', [W]).
+
+受給の語(受けた, '受けた').
+受給の語(受けようとした, '受けようとした').
+受給の葉(受けた, '偽りその他不正の行為で、給付の支給を受けた').
+受給の葉(受けようとした, '偽りその他不正の行為で、給付の支給を受けようとした（まだ受けていない）').
+
+% 10条の4第1項の語は「支給を受けた者」で、34条1項の「受けようとした」が無い（about の点 (j)）
+返還の答え(受けた, 段(命令, '支給した給付の返還と、受けた額の2倍以下の金額の納付を命じられることがあります。', ['10条の4第1項'], ['偽りその他不正の行為で、給付の支給を受けた'])).
+返還の答え(受けようとした, 段(当たらない, '返還と納付の命令（第10条の4第1項）には当たりません。', ['10条の4第1項'], ['給付の支給を受けようとしただけで、まだ受けていない', '第10条の4第1項は、支給を受けた者についての定め'])).
+</script>
+<script type="text/prolog" data-name="rules_e_hantei.pl">% rules/e_hantei.pl — 段をまとめ、見出し・根拠条文・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 箱の条, 葉の文のリスト)　結論ごとの段 = s(画面のid, 見出し, 段)
+%   形は kaiko-prolog の rules/g_hantei.pl（2026-11-24 公開版）と同じ（2026-11-24 案A）。
+%   前は入口（資格／日数／止まる）の段だけを出し、見出しは段の答えを全部つないでいた（atomic_list_concat(Ws, '', S)。A7）。
+%   木は全部の段を「次のすべてが成り立つ」の下にぶら下げた1本で（B5）、全部の段に 評価の約束 を付けていた。
+%   組の番号/2 の最後は受け皿 組の番号(_, 2) で、届出（「ここではつなげて判定しません（これは読みです）」）・括弧の外・受給期間（「これは読みです」）・
+%   減額（「金額は計算しません」）が2番に化けて結論の箱に出ていた（A1・A5）。
+%   今は状態を全部名前で書き、知らない状態は throw で止める（agents/dog/rules.md:96）。補足・場面外・申込み済・周期・確認・止まらない・算定期間の状態は消した。
+%   段の文は、末尾の「。」を外して、そのまま結論の箱と番号つきの節に出す。葉の文（「〜ので」の前半）は論理の木にだけ出す（A2）。
+
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 成り立たない組があれば、その組だけを段にする（REVIEW_RULES C3。ほかの段は出さない）。
+% 無ければ受給資格の段を出し、受給資格があるときだけ、残りの3つの話（何日分・いつまで→手続き→受けている間）を同じ入力で全部当てる
+% （REVIEW_RULES C4・C5。決め4：20条〜34条は受給資格者に当てる条なので、受給資格が無いときは出さない）。
+% 並びは話の順で、話の中は 当たった答えを先に で並べる。受給資格の段はいつも出るので、段が1つも無いことは無い。
+% 同じ述語を別のファイルに分けて書くと後の読み込みで消えるので、まとめはここに1つだけ置く
+全部の段(C, Steps) :- 組み合わせなし(C, Ws, As), !,
+    Steps = [s(mujun, 'この組み合わせはありません', 段(組み合わせなし, 'この組み合わせはありません。', As, Ws))].
+全部の段(C, Steps) :-
+    資格の段(C, L1), 当たった答えを先に(L1, S1),
+    (   受給資格がある(C)
+    ->  日数の段(C, L2), 当たった答えを先に(L2, S2),
+        手続きの段(C, L3), 当たった答えを先に(L3, S3),
+        受けている間の段(C, L4), 当たった答えを先に(L4, S4)
+    ;   S2 = [], S3 = [], S4 = []
+    ),
+    append([S1, S2, S3, S4], Steps).
+
+% 話の中の並びは ①止まる答え ②当たった答え ③答えを支える文（止まらないので聞いた答えの後ろ） ④「当たりません」の文
+% ①②が無いときは「当たりません」が聞いた答えなので、③より前に出す（kaiko-prolog・sorin-prolog と同じ並べ方）
+% 組の番号 は番号を空のまま呼んで後で比べる。番号を束ねて呼ぶと頭に合わず、最後の throw の節に落ちて止まる（sorin-prolog 2026-11-22 22:50 run_cases。kaiko-prolog g_hantei.pl:39）
+当たった答えを先に([], []) :- !.
+当たった答えを先に(L0, L) :-
+    ( member(s(_, _, 段(St0, _, _, _)), L0), 組の番号(St0, N0), N0 =< 2 -> Order = [1, 2, 3, 4] ; Order = [4, 3] ),
+    findall(S, ( member(N, Order), member(S, L0), S = s(_, _, 段(St, _, _, _)), 組の番号(St, M), M =:= N ), L).
+
+% 組の番号(状態, 1=止まる答え | 2=当たった答え | 3=答えを支える文 | 4=当たりません)。
+% 状態は全部名前で書き、知らない状態は止める（agents/dog/rules.md:96。前の受け皿 組の番号(_, 2) をやめた。kaiko-prolog と同じ）
+組の番号(組み合わせなし, 1) :- !.  % ア 15条2項・15条4項、イ 15条2項・19条1項、ウ 15条2項・21条
+組の番号(支給しない, 1) :- !.      % 21条・19条1項第3号・20条3項・32条1項・32条2項・33条1項・34条1項
+組の番号(認定なし, 1) :- !.        % 15条2項
+組の番号(確認なし, 1) :- !.        % 15条5項
+組の番号(届出なし, 1) :- !.        % 19条3項（届け出ていない。決め8）
+組の番号(支給する, 2) :- !.        % 13条1項・2項
+組の番号(日数, 2) :- !.            % 22条・23条
+組の番号(括弧の外, 2) :- !.        % 23条1項の括弧の外 → 22条1項第3号（読み (a)）
+組の番号(受給期間, 2) :- !.        % 20条1項
+組の番号(加算, 2) :- !.            % 20条1項の括弧
+組の番号(合算, 2) :- !.            % 20条2項
+組の番号(新たに支給, 2) :- !.      % 34条2項
+組の番号(証明書, 2) :- !.          % 15条4項
+組の番号(減額, 2) :- !.            % 19条1項第1号・第2号
+組の番号(この限りでない, 2) :- !.  % 32条1項ただし書・33条1項ただし書（前は1番。決め7）
+組の番号(支給できる, 2) :- !.      % 34条1項ただし書
+組の番号(命令, 2) :- !.            % 10条の4第1項
+組の番号(算定加算, 3) :- !.        % 13条1項の括弧
+組の番号(届出済, 3) :- !.          % 19条3項（届け出た）
+組の番号(当たらない, 4) :- !.      % 13条・15条4項・32条2項・10条の4 に当たらない
+組の番号(St, _) :- throw(知らない状態(St)).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、段の文だけを出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」を付けない）。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(_, Steps, Ws) :-
+    findall(W, ( member(s(_, _, S), Steps), 問いの答え(S, W) ), Ws).
+
+% 答えの文に箱の条を（）で付ける。条の無い段は付けない（「（）」を画面に出さない）
+問いの答え(S, W) :-
+    S = 段(_, _, As, _),
+    答え(S, W0),
+    ( As == [] -> W = W0 ; 条の表記(As, A), format(atom(W), '~w（~w）', [W0, A]) ).
+
+% 節の文：答えの文（条を付けない）
+節の文(_, S, W) :- 答え(S, W).
+
+% 答え(段, 答えの文)：段の文の末尾の「。」を外す。
+% 段の文には、画面の上で指す先の無い指示語（その・この・同項・当該 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6。rules/*.pl の段の文で守る）
+答え(段(_, M, _, _), W) :-
+    ( atom_concat(M0, '。', M) -> W = M0 ; W = M ).
+
+%% ---- 根拠条文 ----
+% 段の順に並べ、重複は1つに
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As, _), Ss), member(A, As) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5。結論をつないだ行と「次のすべてが成り立つ」の節は置かない）。
+% 並びは結論の箱と同じ。一番上の行は結論の箱の文で、その下に段の条の原文、葉の文（起きた事実・条文の読み）、約束事を置く。
+木(_, Steps, Trees) :-
+    findall(T, ( member(s(Id, _, S), Steps), 段の木(Id, S, T) ), Trees).
+
+段の木(Id, S, t(K, W, '', Cs)) :-
+    S = 段(St, _, Arts, Fs),
+    問いの答え(S, W),
+    list_to_set(Arts, As),
+    maplist(原文規定, As, Rs),
+    maplist(文, Fs, Ls),
+    段の約束(Id, St, Ys),
+    append([Rs, Ls, Ys], Kids),
+    すべて(W, '', Kids, t(_, W, _, Cs)),
+    印(St, K).
+
+% 止まった段（1番の止まる答えと、4番の「当たりません」）は info、そのほかは ok（木ごとに、その段で決める。kaiko-prolog と同じ考え方）
+印(St, K) :- 組の番号(St, N), ( memberchk(N, [1, 4]) -> K = info ; K = ok ).
+
+% 葉に置くのは結論を支える規則と事実だけ。断り書き（当てはめは判定しない・本人の考えのとおりに答える 等）は about の「判定について」に置く（REVIEW_RULES A5。
+% 前は全部の段に 評価の約束 を付けていた）。「当たりません」の段には 場面外の約束 を付ける（条文に無いアプリの決めごと。D1）
+段の約束(_, 当たらない, [Y]) :- !, 場面外の約束(Y).
+段の約束(_, _, []).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は kaiko-prolog の web.pl と同じ（2026-11-24 案A）。
+%   前は result・explain の2つで、explain は木1本を平らにしていた。今は木を結論ごとに1本にした（B5）。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+</script>
+<script type="application/json" id="law">{"10_4":{"t":"第十条の四","c":"（返還命令等）","p":[{"n":"1","s":"偽りその他不正の行為により失業等給付の支給を受けた者がある場合には、政府は、その者に対して、支給した失業等給付の全部又は一部を返還することを命ずることができ、また、厚生労働大臣の定める基準により、当該偽りその他不正の行為により支給を受けた失業等給付の額の二倍に相当する額以下の金額を納付することを命ずることができる。","i":[]},{"n":"2","s":"前項の場合において、事業主、職業紹介事業者等（労働施策の総合的な推進並びに労働者の雇用の安定及び職業生活の充実等に関する法律（昭和四十一年法律第百三十二号）第二条に規定する職業紹介機関又は業として職業安定法（昭和二十二年法律第百四十一号）第四条第四項に規定する職業指導（職業に就こうとする者の適性、職業経験その他の実情に応じて行うものに限る。）を行う者（公共職業安定所その他の職業安定機関を除く。）をいう。以下同じ。）、募集情報等提供事業を行う者（同条第六項に規定する募集情報等提供を業として行う者をいい、同項第三号に掲げる行為（労働者になろうとする者の依頼を受けて行う場合に限る。）を行う者に限る。以下この項及び第七十六条第二項において同じ。）又は指定教育訓練実施者（第六十条の二第一項に規定する厚生労働大臣が指定する教育訓練を行う者をいう。以下同じ。）が偽りの届出、報告又は証明をしたためその失業等給付が支給されたものであるときは、政府は、その事業主、職業紹介事業者等、募集情報等提供事業を行う者又は指定教育訓練実施者に対し、その失業等給付の支給を受けた者と連帯して、前項の規定による失業等給付の返還又は納付を命ぜられた金額の納付をすることを命ずることができる。","i":[]},{"n":"3","s":"徴収法第二十七条及び第四十一条第二項の規定は、前二項の規定により返還又は納付を命ぜられた金額の納付を怠つた場合に準用する。","i":[]}]},"13":{"t":"第十三条","c":"（基本手当の受給資格）","p":[{"n":"1","s":"基本手当は、被保険者が失業した場合において、離職の日以前二年間（当該期間に疾病、負傷その他厚生労働省令で定める理由により引き続き三十日以上賃金の支払を受けることができなかつた被保険者については、当該理由により賃金の支払を受けることができなかつた日数を二年に加算した期間（その期間が四年を超えるときは、四年間）。第十七条第一項において「算定対象期間」という。）に、次条の規定による被保険者期間が通算して十二箇月以上であつたときに、この款の定めるところにより、支給する。","i":[]},{"n":"2","s":"特定理由離職者及び第二十三条第二項各号のいずれかに該当する者（前項の規定により基本手当の支給を受けることができる資格を有することとなる者を除く。）に対する前項の規定の適用については、同項中「二年間」とあるのは「一年間」と、「二年に」とあるのは「一年に」と、「十二箇月」とあるのは「六箇月」とする。","i":[]},{"n":"3","s":"前項の特定理由離職者とは、離職した者のうち、第二十三条第二項各号のいずれかに該当する者以外の者であつて、期間の定めのある労働契約の期間が満了し、かつ、当該労働契約の更新がないこと（その者が当該更新を希望したにもかかわらず、当該更新についての合意が成立するに至らなかつた場合に限る。）その他のやむを得ない理由により離職したものとして厚生労働省令で定める者をいう。","i":[]}]},"14":{"t":"第十四条","c":"（被保険者期間）","p":[{"n":"1","s":"被保険者期間は、被保険者であつた期間のうち、当該被保険者でなくなつた日又は各月においてその日に応当し、かつ、当該被保険者であつた期間内にある日（その日に応当する日がない月においては、その月の末日。以下この項において「喪失応当日」という。）の各前日から各前月の喪失応当日までさかのぼつた各期間（賃金の支払の基礎となつた日数が十一日以上であるものに限る。）を一箇月として計算し、その他の期間は、被保険者期間に算入しない。ただし、当該被保険者となつた日からその日後における最初の喪失応当日の前日までの期間の日数が十五日以上であり、かつ、当該期間内における賃金の支払の基礎となつた日数が十一日以上であるときは、当該期間を二分の一箇月の被保険者期間として計算する。","i":[]},{"n":"2","s":"前項の規定により被保険者期間を計算する場合において、次に掲げる期間は、同項に規定する被保険者であつた期間に含めない。","i":[{"n":"1","t":"一","s":"最後に被保険者となつた日前に、当該被保険者が受給資格（前条第一項（同条第二項において読み替えて適用する場合を含む。）の規定により基本手当の支給を受けることができる資格をいう。次節から第四節までを除き、以下同じ。）、第三十七条の三第二項に規定する高年齢受給資格又は第三十九条第二項に規定する特例受給資格を取得したことがある場合には、当該受給資格、高年齢受給資格又は特例受給資格に係る離職の日以前における被保険者であつた期間","sub":[]},{"n":"2","t":"二","s":"第九条の規定による被保険者となつたことの確認があつた日の二年前の日（第二十二条第五項に規定する者にあつては、同項第二号に規定する被保険者の負担すべき額に相当する額がその者に支払われた賃金から控除されていたことが明らかである時期のうち最も古い時期として厚生労働省令で定める日）前における被保険者であつた期間","sub":[]},{"n":"3","t":"三","s":"当該被保険者が教育訓練休暇給付金の支給を受けたことがある場合には、第六十条の三第一項に規定する休暇開始日前における被保険者であつた期間","sub":[]}]},{"n":"3","s":"前二項の規定により計算された被保険者期間が十二箇月（前条第二項の規定により読み替えて適用する場合にあつては、六箇月）に満たない場合における第一項の規定の適用については、同項中「であるもの」とあるのは「であるもの又は賃金の支払の基礎となつた時間数が八十時間以上であるもの」と、「であるとき」とあるのは「であるとき又は賃金の支払の基礎となつた時間数が八十時間以上であるとき」とする。","i":[]}]},"15":{"t":"第十五条","c":"（失業の認定）","p":[{"n":"1","s":"基本手当は、受給資格を有する者（次節から第四節までを除き、以下「受給資格者」という。）が失業している日（失業していることについての認定を受けた日に限る。以下この款において同じ。）について支給する。","i":[]},{"n":"2","s":"前項の失業していることについての認定（以下この款において「失業の認定」という。）を受けようとする受給資格者は、離職後、厚生労働省令で定めるところにより、公共職業安定所に出頭し、求職の申込みをしなければならない。","i":[]},{"n":"3","s":"失業の認定は、求職の申込みを受けた公共職業安定所において、受給資格者が離職後最初に出頭した日から起算して四週間に一回ずつ直前の二十八日の各日について行うものとする。ただし、厚生労働大臣は、公共職業安定所長の指示した公共職業訓練等（国、都道府県及び市町村並びに独立行政法人高齢・障害・求職者雇用支援機構が設置する公共職業能力開発施設の行う職業訓練（職業能力開発総合大学校の行うものを含む。）、職業訓練の実施等による特定求職者の就職の支援に関する法律（平成二十三年法律第四十七号）第四条第二項に規定する認定職業訓練（厚生労働省令で定めるものを除く。）その他法令の規定に基づき失業者に対して作業環境に適応することを容易にさせ、又は就職に必要な知識及び技能を習得させるために行われる訓練又は講習であつて、政令で定めるものをいう。以下同じ。）を受ける受給資格者その他厚生労働省令で定める受給資格者に係る失業の認定について別段の定めをすることができる。","i":[]},{"n":"4","s":"受給資格者は、次の各号のいずれかに該当するときは、前二項の規定にかかわらず、厚生労働省令で定めるところにより、公共職業安定所に出頭することができなかつた理由を記載した証明書を提出することによつて、失業の認定を受けることができる。","i":[{"n":"1","t":"一","s":"疾病又は負傷のために公共職業安定所に出頭することができなかつた場合において、その期間が継続して十五日未満であるとき。","sub":[]},{"n":"2","t":"二","s":"公共職業安定所の紹介に応じて求人者に面接するために公共職業安定所に出頭することができなかつたとき。","sub":[]},{"n":"3","t":"三","s":"公共職業安定所長の指示した公共職業訓練等を受けるために公共職業安定所に出頭することができなかつたとき。","sub":[]},{"n":"4","t":"四","s":"天災その他やむを得ない理由のために公共職業安定所に出頭することができなかつたとき。","sub":[]}]},{"n":"5","s":"失業の認定は、厚生労働省令で定めるところにより、受給資格者が求人者に面接したこと、公共職業安定所その他の職業安定機関若しくは職業紹介事業者等から職業を紹介され、又は職業指導を受けたことその他求職活動を行つたことを確認して行うものとする。","i":[]}]},"19":{"t":"第十九条","c":"（基本手当の減額）","p":[{"n":"1","s":"受給資格者が、失業の認定に係る期間中に自己の労働によつて収入を得た場合には、その収入の基礎となつた日数（以下この項において「基礎日数」という。）分の基本手当の支給については、次に定めるところによる。","i":[{"n":"1","t":"一","s":"その収入の一日分に相当する額（収入の総額を基礎日数で除して得た額をいう。）から千二百八十二円（その額が次項の規定により変更されたときは、その変更された額。同項において「控除額」という。）を控除した額と基本手当の日額との合計額（次号において「合計額」という。）が賃金日額の百分の八十に相当する額を超えないとき　基本手当の日額に基礎日数を乗じて得た額を支給する。","sub":[]},{"n":"2","t":"二","s":"合計額が賃金日額の百分の八十に相当する額を超えるとき（次号に該当する場合を除く。）　当該超える額（次号において「超過額」という。）を基本手当の日額から控除した残りの額に基礎日数を乗じて得た額を支給する。","sub":[]},{"n":"3","t":"三","s":"超過額が基本手当の日額以上であるとき　基礎日数分の基本手当を支給しない。","sub":[]}]},{"n":"2","s":"厚生労働大臣は、年度の平均給与額が平成二十七年四月一日から始まる年度（この項の規定により控除額が変更されたときは、直近の当該変更がされた年度の前年度）の平均給与額を超え、又は下るに至つた場合においては、その上昇し、又は低下した比率を基準として、その翌年度の八月一日以後の控除額を変更しなければならない。","i":[]},{"n":"3","s":"受給資格者は、失業の認定を受けた期間中に自己の労働によつて収入を得たときは、厚生労働省令で定めるところにより、その収入の額その他の事項を公共職業安定所長に届け出なければならない。","i":[]}]},"20":{"t":"第二十条","c":"（支給の期間及び日数）","p":[{"n":"1","s":"基本手当は、この法律に別段の定めがある場合を除き、次の各号に掲げる受給資格者の区分に応じ、当該各号に定める期間（当該期間内に妊娠、出産、育児その他厚生労働省令で定める理由により引き続き三十日以上職業に就くことができない者が、厚生労働省令で定めるところにより公共職業安定所長にその旨を申し出た場合には、当該理由により職業に就くことができない日数を加算するものとし、その加算された期間が四年を超えるときは、四年とする。）内の失業している日について、第二十二条第一項に規定する所定給付日数に相当する日数分を限度として支給する。","i":[{"n":"1","t":"一","s":"次号及び第三号に掲げる受給資格者以外の受給資格者　当該基本手当の受給資格に係る離職の日（以下この款において「基準日」という。）の翌日から起算して一年","sub":[]},{"n":"2","t":"二","s":"基準日において第二十二条第二項第一号に該当する受給資格者　基準日の翌日から起算して一年に六十日を加えた期間","sub":[]},{"n":"3","t":"三","s":"基準日において第二十三条第一項第二号イに該当する同条第二項に規定する特定受給資格者　基準日の翌日から起算して一年に三十日を加えた期間","sub":[]}]},{"n":"2","s":"受給資格者であつて、当該受給資格に係る離職が定年（厚生労働省令で定める年齢以上の定年に限る。）に達したことその他厚生労働省令で定める理由によるものであるものが、当該離職後一定の期間第十五条第二項の規定による求職の申込みをしないことを希望する場合において、厚生労働省令で定めるところにより公共職業安定所長にその旨を申し出たときは、前項中「次の各号に掲げる受給資格者の区分に応じ、当該各号に定める期間」とあるのは「次の各号に掲げる受給資格者の区分に応じ、当該各号に定める期間と、次項に規定する求職の申込みをしないことを希望する一定の期間（一年を限度とする。）に相当する期間を合算した期間（当該求職の申込みをしないことを希望する一定の期間内に第十五条第二項の規定による求職の申込みをしたときは、当該各号に定める期間に当該基本手当の受給資格に係る離職の日（以下この款において「基準日」という。）の翌日から当該求職の申込みをした日の前日までの期間に相当する期間を加算した期間）」と、「当該期間内」とあるのは「当該合算した期間内」と、同項第一号中「当該基本手当の受給資格に係る離職の日（以下この款において「基準日」という。）」とあるのは「基準日」とする。","i":[]},{"n":"3","s":"前二項の場合において、第一項の受給資格（以下この項において「前の受給資格」という。）を有する者が、前二項の規定による期間内に新たに受給資格、第三十七条の三第二項に規定する高年齢受給資格又は第三十九条第二項に規定する特例受給資格を取得したときは、その取得した日以後においては、前の受給資格に基づく基本手当は、支給しない。","i":[]}]},"21":{"t":"第二十一条","c":"（待期）","p":[{"n":"1","s":"基本手当は、受給資格者が当該基本手当の受給資格に係る離職後最初に公共職業安定所に求職の申込みをした日以後において、失業している日（疾病又は負傷のため職業に就くことができない日を含む。）が通算して七日に満たない間は、支給しない。","i":[]}]},"22":{"t":"第二十二条","c":"（所定給付日数）","p":[{"n":"1","s":"一の受給資格に基づき基本手当を支給する日数（以下「所定給付日数」という。）は、次の各号に掲げる受給資格者の区分に応じ、当該各号に定める日数とする。","i":[{"n":"1","t":"一","s":"算定基礎期間が二十年以上である受給資格者　百五十日","sub":[]},{"n":"2","t":"二","s":"算定基礎期間が十年以上二十年未満である受給資格者　百二十日","sub":[]},{"n":"3","t":"三","s":"算定基礎期間が十年未満である受給資格者　九十日","sub":[]}]},{"n":"2","s":"前項の受給資格者で厚生労働省令で定める理由により就職が困難なものに係る所定給付日数は、同項の規定にかかわらず、その算定基礎期間が一年以上の受給資格者にあつては次の各号に掲げる当該受給資格者の区分に応じ当該各号に定める日数とし、その算定基礎期間が一年未満の受給資格者にあつては百五十日とする。","i":[{"n":"1","t":"一","s":"基準日において四十五歳以上六十五歳未満である受給資格者　三百六十日","sub":[]},{"n":"2","t":"二","s":"基準日において四十五歳未満である受給資格者　三百日","sub":[]}]},{"n":"3","s":"前二項の算定基礎期間は、これらの規定の受給資格者が基準日まで引き続いて同一の事業主の適用事業に被保険者として雇用された期間（当該雇用された期間に係る被保険者となつた日前に被保険者であつたことがある者については、当該雇用された期間と当該被保険者であつた期間を通算した期間）とする。ただし、当該期間に次の各号に掲げる期間が含まれているときは、当該各号に掲げる期間に該当する全ての期間を除いて算定した期間とする。","i":[{"n":"1","t":"一","s":"当該雇用された期間又は当該被保険者であつた期間に係る被保険者となつた日の直前の被保険者でなくなつた日が当該被保険者となつた日前一年の期間内にないときは、当該直前の被保険者でなくなつた日前の被保険者であつた期間","sub":[]},{"n":"2","t":"二","s":"当該雇用された期間に係る被保険者となつた日前に基本手当又は特例一時金の支給を受けたことがある者については、これらの給付の受給資格又は第三十九条第二項に規定する特例受給資格に係る離職の日以前の被保険者であつた期間","sub":[]},{"n":"3","t":"三","s":"教育訓練休暇給付金の支給を受けたことがある者については、第六十条の三第一項に規定する休暇開始日前の被保険者であつた期間及び当該給付金の支給に係る休暇の期間","sub":[]},{"n":"4","t":"四","s":"育児休業給付金又は出生時育児休業給付金の支給を受けたことがある者については、これらの給付金の支給に係る休業の期間","sub":[]}]},{"n":"4","s":"一の被保険者であつた期間に関し、被保険者となつた日が第九条の規定による被保険者となつたことの確認があつた日の二年前の日より前であるときは、当該確認のあつた日の二年前の日に当該被保険者となつたものとみなして、前項の規定による算定を行うものとする。","i":[]},{"n":"5","s":"次に掲げる要件のいずれにも該当する者（第一号に規定する事実を知つていた者を除く。）に対する前項の規定の適用については、同項中「当該確認のあつた日の二年前の日」とあるのは、「次項第二号に規定する被保険者の負担すべき額に相当する額がその者に支払われた賃金から控除されていたことが明らかである時期のうち最も古い時期として厚生労働省令で定める日」とする。","i":[{"n":"1","t":"一","s":"その者に係る第七条の規定による届出がされていなかつたこと。","sub":[]},{"n":"2","t":"二","s":"厚生労働省令で定める書類に基づき、第九条の規定による被保険者となつたことの確認があつた日の二年前の日より前に徴収法第三十二条第一項の規定により被保険者の負担すべき額に相当する額がその者に支払われた賃金から控除されていたことが明らかである時期があること。","sub":[]}]}]},"23":{"t":"第二十三条","c":"","p":[{"n":"1","s":"特定受給資格者（前条第三項に規定する算定基礎期間（以下この条において単に「算定基礎期間」という。）が一年（第五号に掲げる特定受給資格者にあつては、五年）以上のものに限る。）に係る所定給付日数は、前条第一項の規定にかかわらず、次の各号に掲げる当該特定受給資格者の区分に応じ、当該各号に定める日数とする。","i":[{"n":"1","t":"一","s":"基準日において六十歳以上六十五歳未満である特定受給資格者　次のイからニまでに掲げる算定基礎期間の区分に応じ、当該イからニまでに定める日数","sub":["イ 二十年以上　二百四十日","ロ 十年以上二十年未満　二百十日","ハ 五年以上十年未満　百八十日","ニ 一年以上五年未満　百五十日"]},{"n":"2","t":"二","s":"基準日において四十五歳以上六十歳未満である特定受給資格者　次のイからニまでに掲げる算定基礎期間の区分に応じ、当該イからニまでに定める日数","sub":["イ 二十年以上　三百三十日","ロ 十年以上二十年未満　二百七十日","ハ 五年以上十年未満　二百四十日","ニ 一年以上五年未満　百八十日"]},{"n":"3","t":"三","s":"基準日において三十五歳以上四十五歳未満である特定受給資格者　次のイからニまでに掲げる算定基礎期間の区分に応じ、当該イからニまでに定める日数","sub":["イ 二十年以上　二百七十日","ロ 十年以上二十年未満　二百四十日","ハ 五年以上十年未満　百八十日","ニ 一年以上五年未満　百五十日"]},{"n":"4","t":"四","s":"基準日において三十歳以上三十五歳未満である特定受給資格者　次のイからニまでに掲げる算定基礎期間の区分に応じ、当該イからニまでに定める日数","sub":["イ 二十年以上　二百四十日","ロ 十年以上二十年未満　二百十日","ハ 五年以上十年未満　百八十日","ニ 一年以上五年未満　百二十日"]},{"n":"5","t":"五","s":"基準日において三十歳未満である特定受給資格者　次のイ又はロに掲げる算定基礎期間の区分に応じ、当該イ又はロに定める日数","sub":["イ 十年以上　百八十日","ロ 五年以上十年未満　百二十日"]}]},{"n":"2","s":"前項の特定受給資格者とは、次の各号のいずれかに該当する受給資格者（前条第二項に規定する受給資格者を除く。）をいう。","i":[{"n":"1","t":"一","s":"当該基本手当の受給資格に係る離職が、その者を雇用していた事業主の事業について発生した倒産（破産手続開始、再生手続開始、更生手続開始又は特別清算開始の申立てその他厚生労働省令で定める事由に該当する事態をいう。第五十七条第二項第一号及び第六十条の四第二項第一号において同じ。）又は当該事業主の適用事業の縮小若しくは廃止に伴うものである者として厚生労働省令で定めるもの","sub":[]},{"n":"2","t":"二","s":"前号に定めるもののほか、解雇（自己の責めに帰すべき重大な理由によるものを除く。第五十七条第二項第二号及び第六十条の四第二項第二号において同じ。）その他の厚生労働省令で定める理由により離職した者","sub":[]}]}]},"32":{"t":"第三十二条","c":"（給付制限）","p":[{"n":"1","s":"受給資格者（訓練延長給付、個別延長給付、広域延長給付又は全国延長給付を受けている者を除く。以下この条において同じ。）が、公共職業安定所の紹介する職業に就くこと又は公共職業安定所長の指示した公共職業訓練等を受けることを拒んだときは、その拒んだ日から起算して一箇月間は、基本手当を支給しない。ただし、次の各号のいずれかに該当するときは、この限りでない。","i":[{"n":"1","t":"一","s":"紹介された職業又は公共職業訓練等を受けることを指示された職種が、受給資格者の能力からみて不適当であると認められるとき。","sub":[]},{"n":"2","t":"二","s":"就職するため、又は公共職業訓練等を受けるため、現在の住所又は居所を変更することを要する場合において、その変更が困難であると認められるとき。","sub":[]},{"n":"3","t":"三","s":"就職先の賃金が、同一地域における同種の業務及び同程度の技能に係る一般の賃金水準に比べて、不当に低いとき。","sub":[]},{"n":"4","t":"四","s":"職業安定法第二十条（第二項ただし書を除く。）の規定に該当する事業所に紹介されたとき。","sub":[]},{"n":"5","t":"五","s":"その他正当な理由があるとき。","sub":[]}]},{"n":"2","s":"受給資格者が、正当な理由がなく、厚生労働大臣の定める基準に従つて公共職業安定所が行うその者の再就職を促進するために必要な職業指導を受けることを拒んだときは、その拒んだ日から起算して一箇月を超えない範囲内において公共職業安定所長の定める期間は、基本手当を支給しない。","i":[]},{"n":"3","s":"受給資格者についての第一項各号のいずれかに該当するかどうかの認定及び前項に規定する正当な理由があるかどうかの認定は、公共職業安定所長が厚生労働大臣の定める基準に従つてするものとする。","i":[]}]},"33":{"t":"第三十三条","c":"","p":[{"n":"1","s":"被保険者が自己の責めに帰すべき重大な理由によつて解雇され、又は正当な理由がなく自己の都合によつて退職した場合には、第二十一条の規定による期間の満了後一箇月以上三箇月以内の間で公共職業安定所長の定める期間は、基本手当を支給しない。ただし、次に掲げる受給資格者（第一号に掲げる者にあつては公共職業安定所長の指示した公共職業訓練等を受ける期間及び当該公共職業訓練等を受け終わつた日後の期間に限り、第三号に掲げる者にあつては第二号に規定する訓練を受ける期間及び当該訓練を受け終わつた日後の期間に限る。）については、この限りでない。","i":[{"n":"1","t":"一","s":"公共職業安定所長の指示した公共職業訓練等を受ける受給資格者（次号に該当する者を除く。）","sub":[]},{"n":"2","t":"二","s":"第六十条の二第一項に規定する教育訓練その他の厚生労働省令で定める訓練を基準日前一年以内に受けたことがある受給資格者（正当な理由がなく自己の都合によつて退職した者に限る。次号において同じ。）","sub":[]},{"n":"3","t":"三","s":"前号に規定する訓練を基準日以後に受ける受給資格者（同号に該当する者を除く。）","sub":[]}]},{"n":"2","s":"受給資格者が前項の場合に該当するかどうかの認定は、公共職業安定所長が厚生労働大臣の定める基準に従つてするものとする。","i":[]},{"n":"3","s":"基本手当の受給資格に係る離職について第一項の規定により基本手当を支給しないこととされる場合において、当該基本手当を支給しないこととされる期間に七日を超え三十日以下の範囲内で厚生労働省令で定める日数及び当該受給資格に係る所定給付日数に相当する日数を加えた期間が一年（当該基本手当の受給資格に係る離職の日において第二十二条第二項第一号に該当する受給資格者にあつては、一年に六十日を加えた期間）を超えるときは、当該受給資格者の受給期間は、第二十条第一項及び第二項の規定にかかわらず、これらの規定による期間に当該超える期間を加えた期間とする。","i":[]},{"n":"4","s":"前項の規定に該当する受給資格者については、第二十四条第一項中「第二十条第一項及び第二項」とあるのは、「第三十三条第三項」とする。","i":[]},{"n":"5","s":"第三項の規定に該当する受給資格者が個別延長給付、広域延長給付、全国延長給付又は訓練延長給付を受ける場合におけるその者の受給期間についての調整に関して必要な事項は、厚生労働省令で定める。","i":[]}]},"34":{"t":"第三十四条","c":"","p":[{"n":"1","s":"偽りその他不正の行為により求職者給付又は就職促進給付の支給を受け、又は受けようとした者には、これらの給付の支給を受け、又は受けようとした日以後、基本手当を支給しない。ただし、やむを得ない理由がある場合には、基本手当の全部又は一部を支給することができる。","i":[]},{"n":"2","s":"前項に規定する者が同項に規定する日以後新たに受給資格を取得した場合には、同項の規定にかかわらず、その新たに取得した受給資格に基づく基本手当を支給する。","i":[]},{"n":"3","s":"受給資格者が第一項の規定により基本手当を支給されないこととされたため、当該受給資格に基づき基本手当の支給を受けることができる日数の全部について基本手当の支給を受けることができなくなつた場合においても、第二十二条第三項の規定の適用については、当該受給資格に基づく基本手当の支給があつたものとみなす。","i":[]},{"n":"4","s":"受給資格者が第一項の規定により基本手当を支給されないこととされたため、同項に規定する日以後当該受給資格に基づき基本手当の支給を受けることができる日数の全部又は一部について基本手当の支給を受けることができなくなつたときは、第三十七条第四項の規定の適用については、その支給を受けることができないこととされた日数分の基本手当の支給があつたものとみなす。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"第一章　総則","a":[{"k":"1","t":"第一条","c":"（目的）","u":0},{"k":"2","t":"第二条","c":"（管掌）","u":0},{"k":"3","t":"第三条","c":"（雇用保険事業）","u":0},{"k":"4","t":"第四条","c":"（定義）","u":0}]},{"t":"第二章　適用事業等","a":[{"k":"5","t":"第五条","c":"（適用事業）","u":0},{"k":"6","t":"第六条","c":"（適用除外）","u":0},{"k":"7","t":"第七条","c":"（被保険者に関する届出）","u":0},{"k":"8","t":"第八条","c":"（確認の請求）","u":0},{"k":"9","t":"第九条","c":"（確認）","u":0}]},{"t":"第三章　失業等給付","a":[{"k":"10","t":"第十条","c":"（失業等給付）","u":0},{"k":"10_2","t":"第十条の二","c":"（就職への努力）","u":0},{"k":"10_3","t":"第十条の三","c":"（未支給の失業等給付）","u":0},{"k":"10_4","t":"第十条の四","c":"（返還命令等）","u":1},{"k":"11","t":"第十一条","c":"（受給権の保護）","u":0},{"k":"12","t":"第十二条","c":"（公課の禁止）","u":0},{"k":"13","t":"第十三条","c":"（基本手当の受給資格）","u":1},{"k":"14","t":"第十四条","c":"（被保険者期間）","u":1},{"k":"15","t":"第十五条","c":"（失業の認定）","u":1},{"k":"16","t":"第十六条","c":"（基本手当の日額）","u":0},{"k":"17","t":"第十七条","c":"（賃金日額）","u":0},{"k":"18","t":"第十八条","c":"（基本手当の日額の算定に用いる賃金日額の範囲等の自動的変更）","u":0},{"k":"19","t":"第十九条","c":"（基本手当の減額）","u":1},{"k":"20","t":"第二十条","c":"（支給の期間及び日数）","u":1},{"k":"20_2","t":"第二十条の二","c":"（支給の期間の特例）","u":0},{"k":"21","t":"第二十一条","c":"（待期）","u":1},{"k":"22","t":"第二十二条","c":"（所定給付日数）","u":1},{"k":"23","t":"第二十三条","c":"","u":1},{"k":"24","t":"第二十四条","c":"（訓練延長給付）","u":0},{"k":"24_2","t":"第二十四条の二","c":"（個別延長給付）","u":0},{"k":"25","t":"第二十五条","c":"（広域延長給付）","u":0},{"k":"26","t":"第二十六条","c":"","u":0},{"k":"27","t":"第二十七条","c":"（全国延長給付）","u":0},{"k":"28","t":"第二十八条","c":"（延長給付に関する調整）","u":0},{"k":"29","t":"第二十九条","c":"（給付日数を延長した場合の給付制限）","u":0},{"k":"30","t":"第三十条","c":"（支給方法及び支給期日）","u":0},{"k":"31","t":"第三十一条","c":"（未支給の基本手当の請求手続）","u":0},{"k":"32","t":"第三十二条","c":"（給付制限）","u":1},{"k":"33","t":"第三十三条","c":"","u":1},{"k":"34","t":"第三十四条","c":"","u":1},{"k":"35","t":"第三十五条","c":"","u":2},{"k":"36","t":"第三十六条","c":"","u":0},{"k":"37","t":"第三十七条","c":"","u":0},{"k":"37_2","t":"第三十七条の二","c":"（高年齢被保険者）","u":0},{"k":"37_3","t":"第三十七条の三","c":"（高年齢受給資格）","u":0},{"k":"37_4","t":"第三十七条の四","c":"（高年齢求職者給付金）","u":0},{"k":"37_5","t":"第三十七条の五","c":"（高年齢被保険者の特例）","u":0},{"k":"37_6","t":"第三十七条の六","c":"（特例高年齢被保険者に対する失業等給付等の特例）","u":0},{"k":"38","t":"第三十八条","c":"（短期雇用特例被保険者）","u":0},{"k":"39","t":"第三十九条","c":"（特例受給資格）","u":0},{"k":"40","t":"第四十条","c":"（特例一時金）","u":0},{"k":"41","t":"第四十一条","c":"（公共職業訓練等を受ける場合）","u":0},{"k":"42","t":"第四十二条","c":"（日雇労働者）","u":0},{"k":"43","t":"第四十三条","c":"（日雇労働被保険者）","u":0},{"k":"44","t":"第四十四条","c":"（日雇労働被保険者手帳）","u":0},{"k":"45","t":"第四十五条","c":"（日雇労働求職者給付金の受給資格）","u":0},{"k":"46","t":"第四十六条","c":"","u":0},{"k":"47","t":"第四十七条","c":"（日雇労働被保険者に係る失業の認定）","u":0},{"k":"48","t":"第四十八条","c":"（日雇労働求職者給付金の日額）","u":0},{"k":"49","t":"第四十九条","c":"（日雇労働求職者給付金の日額等の自動的変更）","u":0},{"k":"50","t":"第五十条","c":"（日雇労働求職者給付金の支給日数等）","u":0},{"k":"51","t":"第五十一条","c":"（日雇労働求職者給付金の支給方法等）","u":0},{"k":"52","t":"第五十二条","c":"（給付制限）","u":0},{"k":"53","t":"第五十三条","c":"（日雇労働求職者給付金の特例）","u":0},{"k":"54","t":"第五十四条","c":"","u":0},{"k":"55","t":"第五十五条","c":"","u":0},{"k":"56","t":"第五十六条","c":"（日雇労働被保険者であつた者に係る被保険者期間等の特例）","u":0},{"k":"56_2","t":"第五十六条の二","c":"","u":0},{"k":"56_3","t":"第五十六条の三","c":"（就業促進手当）","u":0},{"k":"57","t":"第五十七条","c":"（就業促進手当の支給を受けた場合の特例）","u":0},{"k":"58","t":"第五十八条","c":"（移転費）","u":0},{"k":"59","t":"第五十九条","c":"（求職活動支援費）","u":0},{"k":"60","t":"第六十条","c":"（給付制限）","u":0},{"k":"60_2","t":"第六十条の二","c":"（教育訓練給付金）","u":0},{"k":"60_3","t":"第六十条の三","c":"（教育訓練休暇給付金）","u":0},{"k":"60_4","t":"第六十条の四","c":"（特定教育訓練休暇給付金受給者に対する失業等給付の特例）","u":0},{"k":"60_5","t":"第六十条の五","c":"（給付制限）","u":0},{"k":"61","t":"第六十一条","c":"（高年齢雇用継続基本給付金）","u":0},{"k":"61_2","t":"第六十一条の二","c":"（高年齢再就職給付金）","u":0},{"k":"61_3","t":"第六十一条の三","c":"（給付制限）","u":0},{"k":"61_4","t":"第六十一条の四","c":"（介護休業給付金）","u":0},{"k":"61_5","t":"第六十一条の五","c":"（給付制限）","u":0}]},{"t":"第三章の二　育児休業等給付","a":[{"k":"61_6","t":"第六十一条の六","c":"","u":0},{"k":"61_7","t":"第六十一条の七","c":"（育児休業給付金）","u":0},{"k":"61_8","t":"第六十一条の八","c":"（出生時育児休業給付金）","u":0},{"k":"61_9","t":"第六十一条の九","c":"（給付制限）","u":0},{"k":"61_10","t":"第六十一条の十","c":"（出生後休業支援給付金）","u":0},{"k":"61_11","t":"第六十一条の十一","c":"（給付制限）","u":0},{"k":"61_12","t":"第六十一条の十二","c":"（育児時短就業給付金）","u":0},{"k":"61_13","t":"第六十一条の十三","c":"（給付制限）","u":0}]},{"t":"第四章　雇用安定事業等","a":[{"k":"62","t":"第六十二条","c":"（雇用安定事業）","u":0},{"k":"63","t":"第六十三条","c":"（能力開発事業）","u":0},{"k":"64","t":"第六十四条","c":"","u":0},{"k":"64_2","t":"第六十四条の二","c":"（事業における留意事項）","u":0},{"k":"65","t":"第六十五条","c":"（事業等の利用）","u":0}]},{"t":"第五章　費用の負担","a":[{"k":"66","t":"第六十六条","c":"（国庫の負担）","u":0},{"k":"67","t":"第六十七条","c":"","u":0},{"k":"67_2","t":"第六十七条の二","c":"","u":0},{"k":"68","t":"第六十八条","c":"（保険料）","u":0},{"k":"68_2","t":"第六十八条の二","c":"（子ども・子育て支援納付金）","u":0}]},{"t":"第六章　不服申立て及び訴訟","a":[{"k":"69","t":"第六十九条","c":"（不服申立て）","u":0},{"k":"70","t":"第七十条","c":"（不服理由の制限）","u":0},{"k":"71","t":"第七十一条","c":"（審査請求と訴訟との関係）","u":0}]},{"t":"第七章　雑則","a":[{"k":"72","t":"第七十二条","c":"（労働政策審議会への諮問）","u":0},{"k":"73","t":"第七十三条","c":"（不利益取扱いの禁止）","u":0},{"k":"74","t":"第七十四条","c":"（時効）","u":0},{"k":"75","t":"第七十五条","c":"（戸籍事項の無料証明）","u":0},{"k":"76","t":"第七十六条","c":"（報告等）","u":0},{"k":"77","t":"第七十七条","c":"","u":0},{"k":"77_2","t":"第七十七条の二","c":"（資料の提供等）","u":0},{"k":"78","t":"第七十八条","c":"（診断）","u":0},{"k":"79","t":"第七十九条","c":"（立入検査）","u":0},{"k":"79_2","t":"第七十九条の二","c":"（船員に関する特例）","u":0},{"k":"79_3","t":"第七十九条の三","c":"","u":0},{"k":"80","t":"第八十条","c":"（経過措置の命令への委任）","u":0},{"k":"81","t":"第八十一条","c":"（権限の委任）","u":0},{"k":"82","t":"第八十二条","c":"（厚生労働省令への委任）","u":0}]},{"t":"第八章　罰則","a":[{"k":"83","t":"第八十三条","c":"","u":0},{"k":"84","t":"第八十四条","c":"","u":0},{"k":"85","t":"第八十五条","c":"","u":0},{"k":"86","t":"第八十六条","c":"","u":0}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+// parseArt・lawHTML はこの本の前の template.html のまま（号のボタンで条の文とその号だけを出すため。tokusho の lawHTML は号を絞らない）
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  // '466条2項' '466条1項本文' '509条第1号' '466条の2第1項' '469条2項第1号' '469条2項ただし書' のような形。複数条が「・」で区切られることもある → 最初の条だけ見る
+  const first = String(a).split("・")[0];
+  const m = first.match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(?:第?(\d+)号((?:の\d+)*))?([イロハニホ])?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[4] ? m[4] + (m[5] || "").replace(/の/g, "_") : null, sub: m[6] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para);
+  // 号まで指定があれば、項の本文とその号だけ出す
+  if (r.item) ps = ps.filter(p => p.i.some(it => it.n === r.item));
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const list = r.item ? p.i.filter(it => it.n === r.item) : p.i;
+    const its = list.map(it => `<p class="it">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => r.sub && x.startsWith(r.sub + " ") ? `<br><span class="hit">　${esc(x)}</span>` : `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなく、このアプリの決め事（収録範囲・仕組みのページに一覧）。</p>`;
+// 凡例は最初の木の上に1回だけ出す（legend＝false で外す。shohi-prolog・gyotetsu-prolog と同じ）
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+
+// ---------- ここから別ページ（about.html）だけの処理 ----------
+if (location.protocol === "file:") $("back").href = "koyo.html";
+function openHash(){ const d = location.hash && document.getElementById(location.hash.slice(1)); if (d && d.tagName === "DETAILS") d.open = true; }
+openHash(); window.addEventListener("hashchange", openHash);
+
+async function bootAbout(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    // 全条文の地図
+    let C = []; try{ C = JSON.parse(document.getElementById("cover-data").textContent); }catch(e){}
+    const cover = $("cover");
+    C.forEach(ch => {
+      const div = document.createElement("div"); div.className = "cover-ch";
+      div.innerHTML = `<h4>${esc(ch.t)} <span>${ch.a.length}条</span></h4><div class="cells"></div>`;
+      const cells = div.querySelector(".cells");
+      ch.a.forEach(a => {
+        const btn = document.createElement("button"); btn.type = "button";
+        btn.className = `cell u${a.u}`; btn.title = `${a.t}${a.c}`;
+        btn.addEventListener("click", () => {
+          const old = document.getElementById("cover-pick"); if (old) old.remove();
+          const pk = document.createElement("div"); pk.id = "cover-pick";
+          pk.innerHTML = a.u === 1 ? lawHTML(a.k.includes("_") ? a.k.replace("_", "条の").replace(/_/g, "の") : a.k + "条") : `<p class="hint" style="margin-top:6px">${esc(a.t)}${esc(a.c)}${a.u === 2 ? "（削除）" : "（このアプリでは使用しない条）"}</p>`;
+          div.appendChild(pk);
+        });
+        cells.appendChild(btn);
+      });
+      cover.appendChild(div);
+    });
+    const used = C.flatMap(c => c.a).filter(a => a.u === 1).length;
+    const total = C.flatMap(c => c.a).filter(a => a.u !== 2).length;
+    cover.insertAdjacentHTML("afterbegin", `<p class="cover-total">使っている条：${used} / ${total} 条</p>`);
+    // ソース表示
+    const src = $("src");
+    files.forEach(f => {
+      const det = document.createElement("details"); det.className = "srcfile";
+      det.innerHTML = `<summary>${esc(f.dataset.name.replace(/_/g, "/"))}</summary><pre>${esc(f.textContent)}</pre>`;
+      src.appendChild(det);
+    });
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+  }
+}
+
+// 直接クエリ実行
+$("run").addEventListener("click", () => {
+  if (!pl){ $("out").textContent = "まだ読み込み中です。"; return; }
+  const q = $("q").value.trim().replace(/\.$/, "");
+  try{
+    const it = pl.prolog.query(q); const out = [];
+    for (let i = 0; i < 20; i++){
+      const r = it.next();
+      if (!r) break;
+      if (r.error){ out.push("エラー：" + r.message); break; }
+      // 最後の解は done:true に値が付いて返る。done で先に抜けると、その解を捨てて「解なし」に見える
+      if (r.value && r.value.$tag === "bindings"){
+        const { $tag, ...vars } = r.value;
+        out.push(Object.keys(vars).length ? JSON.stringify(vars, null, 2) : "true");
+      }
+      if (r.done) break;
+    }
+    $("out").textContent = out.length ? out.join("\n---\n") : "（解なし）";
+  } catch(e){ $("out").textContent = "エラー：" + e.message; }
+});
+
+if (typeof SWIPL === "function") bootAbout();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; }
+</script>
