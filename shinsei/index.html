@@ -1,0 +1,1424 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="申請・行政指導・届出・違反の是正について起きたことを入れると、行政手続法で役所に何を求められるかを、条文番号つきでPrologが判定します。">
+<title>役所に求められることを逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+/* 欄の番号は小見出しをまたいで 1〜30 を続けて振る（.slots を小見出しごとに分けたので、番号の振り直しは .ask で1回だけ。gyosos-prolog と同じ） */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;counter-reset:slot}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper)}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+.input{display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.input input{font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 10px;min-width:0;width:100%}
+.input input:focus-visible{outline:none}
+.input:hover{border-color:var(--blue)}
+.input:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.step.off{color:var(--muted)}
+.flow{margin:0;padding-left:1.2em}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+.disclaimer-inline{margin-top:10px;font-size:.78rem;color:var(--muted);border-top:1px solid var(--hair);padding-top:8px;line-height:1.65}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+/* about の「1の欄の選択肢と3条1項の号」の表は、長い号の文を折り返す */
+#go-table td{white-space:normal;min-width:9em}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border-left:2px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <h1>役所に求められることを<span class="ao">逆から引く</span></h1>
+    <div class="judge-plate"><span class="jp-k">判定</span><img src="densuke_icon.svg" width="64" height="64" alt="でんすけのアイコン"><span class="jp-v">でんすけ<small>秘書AI</small></span></div>
+    <p class="lead">申請・行政指導・届出・違反の是正について起きたことを入れると、でんすけが行政手続法の条文から、役所が何をしなければならないか・役所に何を求められるかを判定します。1つの件について、した手続を全部入れて読みます。</p>
+    <p class="caution" role="note"><b>注意</b><span>条文をルールにして、論理的にそのまま演算した結果です。行政庁や裁判所の判断とは異なる場合があります。<a class="aboutlink" href="about.html">収録範囲・仕組み →</a></span></p>
+  </header>
+
+  <section class="ask">
+    <div>
+      <p class="sec-h">例から選ぶ（名前はすべて条文の語です）</p>
+      <div class="presets" id="presets"></div>
+    </div>
+    <!-- 欄は起きた事実と、あなたの考えを聞く30個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-23 「何が起きているか」（iri）で4つの手続から1つを
+         選ばせる作り、欄を出し消しする関数（updateSlots）と表（SLOTS）、入口で欄名を変える表（LABELS・l-kikan・l-konkyo・d-konkyo）、隠れた欄を
+         「関係なし」で渡す buildCtx（shown）、遅れの欄（oku）、他庁の「遅延／遅延なし」、欄の説明の「判定しません」をやめた）。
+         並びは schema.pl の ctx の引数の順（1〜30）。番号は Prolog の「この組み合わせはありません（5と9の欄）」と同じ。
+         4つの手続（申請・行政指導・届出・是正を求める）は、それぞれ「した／していない」の事実の欄（5・16・26・28）で聞く（案A）。
+         選択肢の頭の条番号・号番号（「一　」「4条1項　」）は外した（C2）。「あなたの考え」の欄は 24・28 の2つで、欄名の後ろに書く。
+         2026-11-23 1の欄（3条1項の号）の16択と、条文の文に近かった欄名・選択肢を、起きた事実の言葉に替えた（C2・C4。若しくは・又は・専ら・その他を外した）。
+         値と判定は変えていない。号と選択肢の対応は about の「1の欄の選択肢と3条1項の号」の表に置く
+         関係のない欄は、Prolog がその欄の段を出さないだけで、欄は消さない -->
+    <div id="slots">
+    <p class="sec-h">この件の処分・行政指導と役所</p>
+    <div class="slots">
+      <div class="slot full-slot" id="s-exc"><label for="exc">誰が、どんな場面でする処分・行政指導か</label><span class="field"><select id="exc">
+        <option value="なし">下のどれにも当たらない</option>
+        <option value="1">国会や地方議会が、議決で決めた処分</option>
+        <option value="2">裁判所・裁判官が裁判で決めた処分、裁判を執行する中でされた処分</option>
+        <option value="3">国会や地方議会の議決・同意・承認を得てからする決まりの処分</option>
+        <option value="4">会計検査院の検査官会議で決める処分、会計検査の場でされた行政指導</option>
+        <option value="5">刑事事件で、検察官・検察事務官・司法警察職員（警察官など）がした処分・行政指導</option>
+        <option value="6">税の犯則事件（脱税など）・金融商品取引の犯則事件の調べで、税務署・税関・証券取引等監視委員会などがした処分・行政指導</option>
+        <option value="7">学校・講習所・訓練所・研修所で、教育・講習・訓練・研修のために、学生・生徒・児童・幼児・保護者・受講生にされた処分・行政指導</option>
+        <option value="8">刑務所・拘置所・留置施設・少年院などで、収容のためにされた処分・行政指導</option>
+        <option value="9">公務員（元公務員を含む）が、職務・身分について受けた処分・行政指導</option>
+        <option value="10">外国人の出入国・難民の認定・補完的保護対象者の認定・帰化についての処分・行政指導</option>
+        <option value="11">試験・検定の合否や点数の処分（人の知識・技能だけを見るもの）</option>
+        <option value="12">利害が対立する人どうしを調整するために、双方を相手にした裁定などの処分・行政指導</option>
+        <option value="13">公衆衛生・環境・防疫・保安などの事件や事故が起きた（起きそうな）現場で、警察官・海上保安官などがした処分・行政指導</option>
+        <option value="14">報告や物の提出を命じるなど、情報を集めることが目的の処分・行政指導</option>
+        <option value="15">審査請求・再調査の請求などの不服申立てに、行政庁が出した裁決・決定などの処分</option>
+        <option value="16">不服申立ての手続や、聴聞・弁明など意見を述べる手続の中で、法令に基づいてされた処分・行政指導</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-na"><label for="na">処分・行政指導の相手方、届出をする者</label><span class="field"><select id="na">
+        <option value="通常">下のどれにも当たらない</option>
+        <option value="固有資格">国の機関・地方公共団体・地方公共団体の機関で、固有の資格において</option>
+        <option value="固有でない">国の機関・地方公共団体・地方公共団体の機関だが、固有の資格においてではない</option>
+        <option value="四条二項">法律で直接つくられた法人・特別の法律でつくられた法人（政令で定めるものなど）で、法人を監督する法律の特別の規定に基づく処分を受ける</option>
+        <option value="四条三項">試験・検査などの事務を行わせるため指定を受けた者で、事務に関し監督上の処分を受ける</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-kikan"><label for="kikan">処分・行政指導をする機関（届出の提出先、是正を求める先）</label><span class="field"><select id="kikan">
+        <option value="他">地方公共団体の機関以外</option>
+        <option value="地方">地方公共団体の機関</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-konkyo"><label for="konkyo">処分・届出の根拠となる規定</label><span class="field"><select id="konkyo">
+        <option value="法律">法律</option>
+        <option value="条例規則">条例・規則</option>
+        <option value="その他">そのほか</option>
+      </select></span></div>
+    </div>
+    <p class="sec-h">申請</p>
+    <div class="slots">
+      <div class="slot full-slot" id="s-shinsei"><label for="shinsei">法令に基づき、許認可等を求める申請をしたか</label><span class="field"><select id="shinsei">
+        <option value="到達">申請が行政庁の事務所に到達した</option>
+        <option value="未到達">申請したが、まだ到達していない</option>
+        <option value="していない">申請をしていない</option>
+      </select></span></div>
+      <div class="slot" id="s-kijun"><label for="kijun">審査基準</label><span class="field"><select id="kijun">
+        <option value="公">公にされている</option>
+        <option value="非公">公にされていない</option>
+      </select></span></div>
+      <div class="slot" id="s-hyou"><label for="hyou">標準的な期間（申請が到達してから処分をするまで）</label><span class="field"><select id="hyou">
+        <option value="公">定めて公にされている</option>
+        <option value="非公">定めているが、公にされていない</option>
+        <option value="なし">定めていない</option>
+      </select></span></div>
+      <div class="slot" id="s-kei"><label for="kei">申請の形式上の要件（記載事項・添付書類・申請期間など）</label><span class="field"><select id="kei">
+        <option value="適合">適合している</option>
+        <option value="不適合">適合していない</option>
+      </select></span></div>
+      <div class="slot" id="s-kek"><label for="kek">申請に対する処分</label><span class="field"><select id="kek">
+        <option value="まだ">まだない</option>
+        <option value="書面で拒否">書面で、許認可等を拒否する処分があった</option>
+        <option value="書面でなく拒否">書面でなく、許認可等を拒否する処分があった</option>
+        <option value="認める">申請を認める処分があった</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-shi"><label for="shi">法令の要件・公にされた審査基準と、申請の内容</label><span class="field"><select id="shi">
+        <option value="明確でない">数量などの客観的な物差しで、明確には決まっていない</option>
+        <option value="明らかでない">明確に決まっているが、満たさないことが申請の書類からははっきりしない</option>
+        <option value="明らか">明確に決まっていて、満たさないことが申請の書類からはっきりしている</option>
+      </select></span></div>
+      <div class="slot" id="s-mot"><label for="mot">処分の理由を示すよう、申請者が求めたか</label><span class="field"><select id="mot">
+        <option value="求めていない">求めていない</option>
+        <option value="求めた">求めた</option>
+      </select></span></div>
+      <div class="slot" id="s-jou"><label for="jou">審査の進行状況・処分の時期の見通し・申請に必要な情報を、行政庁に求めたか</label><span class="field"><select id="jou">
+        <option value="求めていない">求めていない</option>
+        <option value="求めた">求めた</option>
+      </select></span></div>
+      <div class="slot" id="s-rig"><label for="rig">申請者以外の人の利害を考えることが、許認可等の要件に入っているか</label><span class="field"><select id="rig">
+        <option value="要件でない">入っていない</option>
+        <option value="要件">入っている</option>
+      </select></span></div>
+      <div class="slot" id="s-tac"><label for="tac">他の行政庁で、同じ申請者からの関連する申請が審査中か</label><span class="field"><select id="tac">
+        <option value="審査中でない">審査中ではない</option>
+        <option value="審査中">審査中である</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-kan"><label for="kan">複数の行政庁が関与するか</label><span class="field"><select id="kan">
+        <option value="ない">関与しない</option>
+        <option value="ある">関与する</option>
+      </select></span></div>
+    </div>
+    <p class="sec-h">行政指導</p>
+    <div class="slots">
+      <div class="slot" id="s-shidou"><label for="shidou">行政指導を受けたか</label><span class="field"><select id="shidou">
+        <option value="受けていない">受けていない</option>
+        <option value="書面">書面で受けた</option>
+        <option value="口頭">口頭で受けた</option>
+      </select></span></div>
+      <div class="slot" id="s-fur"><label for="fur">行政指導に従わなかったことを理由とする不利益な取扱い</label><span class="field"><select id="fur">
+        <option value="ない">受けていない</option>
+        <option value="ある">受けた・受けると言われた</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-tor"><label for="tor">申請を取り下げるか、申請の内容を変えるよう求める行政指導か</label><span class="field"><select id="tor">
+        <option value="違う">違う</option>
+        <option value="未表明">そうで、従わないとまだ伝えていない</option>
+        <option value="継続">そうで、従わないと伝えたのに行政指導が続いている</option>
+        <option value="継続なし">そうで、従わないと伝えた後は続いていない</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-ken"><label for="ken">行政指導の中で、許認可等をする権限を使えると示されたか</label><span class="field"><select id="ken">
+        <option value="示していない">示されていない</option>
+        <option value="示した不能">示された（行政機関は権限を行使できない・行使する意思がないと思う）</option>
+        <option value="示した">示された（行政機関は権限を行使できる・行使する意思があると思う）</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-shs"><label for="shs">行政指導の趣旨・内容・責任者を書いた書面を渡すよう求めたか</label><span class="field"><select id="shs">
+        <option value="求めていない">求めていない</option>
+        <option value="求めた">求めた</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-jog"><label for="jog">行政指導が求めるもの</label><span class="field"><select id="jog">
+        <option value="なし">下には当たらない</option>
+        <option value="その場">行政指導を受けたその場で済む行為</option>
+        <option value="通知済み">既に文書などで知らされているのと同じ内容</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-fuk"><label for="fuk">同じ目的で、同じ条件に当てはまる何人もの人にされる行政指導か</label><span class="field"><select id="fuk">
+        <option value="違う">違う</option>
+        <option value="そうである">そうである</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-zes"><label for="zes">法令に違反する行為を正すよう求める行政指導か</label><span class="field"><select id="zes">
+        <option value="違う">違う</option>
+        <option value="法律">そうで、根拠の規定が法律にある</option>
+        <option value="法律でない">そうで、根拠の規定が法律にない</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-tek"><label for="tek">行政指導は、根拠の法律が定める要件を満たしていないと思うか（あなたの考え）</label><span class="field"><select id="tek">
+        <option value="適合しない">満たしていないと思う</option>
+        <option value="適合する">満たしていると思う</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-ben"><label for="ben">弁明など、意見を述べる手続を経てからされた行政指導か</label><span class="field"><select id="ben">
+        <option value="経ていない">経ていない</option>
+        <option value="経た">経た</option>
+      </select></span></div>
+    </div>
+    <p class="sec-h">届出</p>
+    <div class="slots">
+      <div class="slot" id="s-todoke"><label for="todoke">届出をしたか</label><span class="field"><select id="todoke">
+        <option value="していない">届出をしていない</option>
+        <option value="到達">提出先の機関の事務所に到達した</option>
+        <option value="未到達">まだ到達していない</option>
+      </select></span></div>
+      <div class="slot" id="s-yok"><label for="yok">届出の形式上の要件（記載事項・添付書類など）</label><span class="field"><select id="yok">
+        <option value="適合">適合している</option>
+        <option value="不適合">適合していない</option>
+      </select></span></div>
+    </div>
+    <p class="sec-h">法令違反の是正を求める</p>
+    <div class="slots">
+      <div class="slot full-slot" id="s-ihan"><label for="ihan">法令に違反する事実と、是正のための処分・行政指導（あなたの考え）</label><span class="field"><select id="ihan">
+        <option value="ない">違反する事実はないと思う</option>
+        <option value="処分">違反する事実があり、処分がされていないと思う</option>
+        <option value="行政指導">違反する事実があり、行政指導がされていないと思う</option>
+        <option value="されている">違反する事実はあるが、処分・行政指導はされていると思う</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-mkon"><label for="mkon">是正のためにされるべき処分・行政指導の根拠となる規定</label><span class="field"><select id="mkon">
+        <option value="法律">法律に置かれている</option>
+        <option value="法律でない">法律に置かれていない</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-ihansha"><label for="ihansha">違反している者</label><span class="field"><select id="ihansha">
+        <option value="通常">下には当たらない</option>
+        <option value="固有資格">国の機関・地方公共団体・地方公共団体の機関で、固有の資格において</option>
+        <option value="固有でない">国の機関・地方公共団体・地方公共団体の機関だが、固有の資格においてではない</option>
+      </select></span></div>
+    </div>
+    </div>
+    <div class="qline" id="qline"></div>
+  </section>
+
+  <section id="answer" aria-live="polite"><p class="loading">でんすけが条文のルール（Prolog）を読み込んでいます…</p></section>
+
+  <p class="foot techline"><span>行政手続法／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot" id="foot">e-Gov法令検索の行政手続法（平成五年法律第八十八号）の本則の原文から、適用除外・申請に対する処分・行政指導・処分等の求め・届出の規定（2条の語・3条1項・3条3項・4条1項〜3項・5条〜11条・32条〜37条・46条）をルールにしたものです。第三章（不利益処分）・第六章（意見公募手続等）・判例は含みません。行政手続法の条文は2026年11月2日までに取得した版で、それ以後の改正と、公布済みで施行前の改正は読んでいません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 行政手続法Prolog（申請・行政指導・届出・処分等の求め）共通の型・欄の読み出し・組み合わせなし・木の部品
+%
+% ctx(除外号, 相手, 機関, 根拠, 申請, 基準, 標準, 形式, 結果, 指標, 理由の求め, 情報, 利害, 他庁, 関与,
+%     指導, 不利益, 取下げ, 権限, 書面請求, 交付除外, 複数者, 是正, 適合, 弁明, 届出, 届出の要件, 違反, 求める根拠, 違反者)
+%   欄は起きた事実と、あなたの考えを聞く30個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-23 「何が起きているか」（iri）で
+%   申請・行政指導・届出・求めの4つから1つを選ばせる作り、欄の出し消し（SLOTS・updateSlots）、値の「関係なし」、入口で欄名を変える
+%   機関・根拠の欄（LABELS）、遅れの欄（oku）、他庁の「遅延／遅延なし」をやめた）。引数の順は画面の欄の番号（1〜30）と同じ。
+%   案は ../shinsei_form_plan_answer_1123.md の案A（依頼書 task_beaver_shinsei_fixed_fields_1123.md の決めたこと1）。gyosos-prolog と同じ形。
+%   4つの手続は互いに排他ではない（33条は申請と行政指導の両方の場面）ので、それぞれを「した／していない」の事実の欄（5・16・26・28）で聞き、
+%   「した」ものの章を全部同じ入力に当てる。1〜4の欄は「この件」として1回だけ聞く（是正を求める相手方だけは30の欄で別に聞く）。
+%   前の読み (f)（「申請した」を選んだ人は到達したものとして読む）をやめ、5の欄に「まだ到達していない」を足した（決めたこと6。D4）。
+%   2の欄の固有の資格を2つに分けた（4条1項の括弧は処分と届出に付いていて、行政指導には付いていないため。NOTES (a)）。
+%    1 除外号     : なし | 1〜16（3条1項の号）
+%    2 相手       : 通常 | 固有資格 | 固有でない | 四条二項 | 四条三項（処分・行政指導の相手方、届出をする者。4条1項〜3項）
+%    3 機関       : 他 | 地方（処分・行政指導をする機関、届出の提出先、是正を求める先。3条3項）
+%    4 根拠       : 法律 | 条例規則 | その他（処分・届出の根拠となる規定。3条3項）
+%    5 申請       : 到達 | 未到達 | していない（2条3号・7条）
+%    6 基準       : 公 | 非公（審査基準。5条）
+%    7 標準       : 公 | 非公 | なし（標準的な期間。6条）
+%    8 形式       : 適合 | 不適合（申請の形式上の要件。7条）
+%    9 結果       : まだ | 書面で拒否 | 書面でなく拒否 | 認める（申請に対する処分。8条）
+%   10 指標       : 明確でない | 明らかでない | 明らか（要件・審査基準が客観的指標で明確か、適合しないことが申請の内容から明らかか。8条1項ただし書）
+%   11 理由の求め : 求めていない | 求めた（8条1項ただし書）
+%   12 情報       : 求めていない | 求めた（9条）
+%   13 利害       : 要件でない | 要件（10条）
+%   14 他庁       : 審査中でない | 審査中（11条1項）
+%   15 関与       : ない | ある（11条2項）
+%   16 指導       : 受けていない | 書面 | 口頭（2条6号・35条3項）
+%   17 不利益     : ない | ある（32条2項）
+%   18 取下げ     : 違う | 未表明 | 継続 | 継続なし（33条）
+%   19 権限       : 示していない | 示した不能 | 示した（34条・35条2項。示した不能＝権限を行使できない・行使する意思がないと思う）
+%   20 書面請求   : 求めていない | 求めた（35条3項）
+%   21 交付除外   : なし | その場 | 通知済み（35条4項1号・2号）
+%   22 複数者     : 違う | そうである（36条）
+%   23 是正       : 違う | 法律 | 法律でない（是正を求める行政指導か・根拠となる規定が法律に置かれているか。36条の2第1項）
+%   24 適合       : 適合しない | 適合する（あなたの考え。36条の2第1項本文）
+%   25 弁明       : 経ていない | 経た（36条の2第1項ただし書）
+%   26 届出       : していない | 到達 | 未到達（2条7号・37条）
+%   27 届出の要件 : 適合 | 不適合（37条）
+%   28 違反       : ない | 処分 | 行政指導 | されている（あなたの考え。法令に違反する事実と、されていない処分・行政指導。36条の3第1項）
+%   29 求める根拠 : 法律 | 法律でない（是正のためにされるべき処分・行政指導の根拠となる規定。36条の3第1項）
+%   30 違反者     : 通常 | 固有資格 | 固有でない（違反している者。4条1項）
+%
+%   関係のない欄（たとえば、申請をしていないときの8〜11・13〜15の欄、行政指導を受けていないときの21・22・24・25の欄、
+%   書面で受けたときの20・21の欄、届出をしていないときの27の欄、28の欄が「ない」ときの29・30の欄）は、組み合わせなしにせず、
+%   その欄を使う段を出さない（gyosos-prolog と同じ）。欄どうしで成り立たない組は 組み合わせなし/4 が欄の番号と一緒に返す（REVIEW_RULES C3）。
+%
+% 書き方のきまり：
+%   ・条番号は '3条1項5号' '8条1項ただし書' '36条の2第1項本文' のような原子。
+%   ・段は 段(状態, 文, 箱の条, 木だけの条)。箱の条は結論の箱の（）に出し、木だけの条（ただし書・定義の条・46条・申出書の条など）は論理の木の原文の葉にだけ出す。
+%     結論ごとの段は s(画面のid, 見出し, 段)。段の文は、末尾の「。」を外して結論の箱にも出す。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | and | or | info
+%   ・アプリの約束事の行は 条 を '@約束事' にする（2026-11-23 の時点で約束事は無い。yakusoku/kihon.pl）。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか。組の成り立ちは 組み合わせなし/4 で見る）----
+ctx_valid(C) :-
+    functor(C, ctx, 30),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )).
+
+欄の値(1, [なし, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]).
+欄の値(2, [通常, 固有資格, 固有でない, 四条二項, 四条三項]).
+欄の値(3, [他, 地方]).
+欄の値(4, [法律, 条例規則, その他]).
+欄の値(5, [到達, 未到達, していない]).
+欄の値(6, [公, 非公]).
+欄の値(7, [公, 非公, なし]).
+欄の値(8, [適合, 不適合]).
+欄の値(9, [まだ, 書面で拒否, 書面でなく拒否, 認める]).
+欄の値(10, [明確でない, 明らかでない, 明らか]).
+欄の値(11, [求めていない, 求めた]).
+欄の値(12, [求めていない, 求めた]).
+欄の値(13, [要件でない, 要件]).
+欄の値(14, [審査中でない, 審査中]).
+欄の値(15, [ない, ある]).
+欄の値(16, [受けていない, 書面, 口頭]).
+欄の値(17, [ない, ある]).
+欄の値(18, [違う, 未表明, 継続, 継続なし]).
+欄の値(19, [示していない, 示した不能, 示した]).
+欄の値(20, [求めていない, 求めた]).
+欄の値(21, [なし, その場, 通知済み]).
+欄の値(22, [違う, そうである]).
+欄の値(23, [違う, 法律, 法律でない]).
+欄の値(24, [適合しない, 適合する]).
+欄の値(25, [経ていない, 経た]).
+欄の値(26, [していない, 到達, 未到達]).
+欄の値(27, [適合, 不適合]).
+欄の値(28, [ない, 処分, 行政指導, されている]).
+欄の値(29, [法律, 法律でない]).
+欄の値(30, [通常, 固有資格, 固有でない]).
+
+%% ---- 欄の読み出し（番号は画面の欄の番号）----
+欄の番号(除外号, 1).
+欄の番号(相手, 2).
+欄の番号(機関, 3).
+欄の番号(根拠, 4).
+欄の番号(申請, 5).
+欄の番号(基準, 6).
+欄の番号(標準, 7).
+欄の番号(形式, 8).
+欄の番号(結果, 9).
+欄の番号(指標, 10).
+欄の番号(理由の求め, 11).
+欄の番号(情報, 12).
+欄の番号(利害, 13).
+欄の番号(他庁, 14).
+欄の番号(関与, 15).
+欄の番号(指導, 16).
+欄の番号(不利益, 17).
+欄の番号(取下げ, 18).
+欄の番号(権限, 19).
+欄の番号(書面請求, 20).
+欄の番号(交付除外, 21).
+欄の番号(複数者, 22).
+欄の番号(是正, 23).
+欄の番号(適合, 24).
+欄の番号(弁明, 25).
+欄の番号(届出, 26).
+欄の番号(届出の要件, 27).
+欄の番号(違反, 28).
+欄の番号(求める根拠, 29).
+欄の番号(違反者, 30).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+%% ---- 段を出すかを決める語 ----
+申請した(C) :- 欄(申請, C, K), memberchk(K, [到達, 未到達]).
+% 第二章の段を見るか。申請をしていなくても、5条・6条（行政庁が前もってすること）と9条2項（申請をしようとする者の求め）は当たる
+申請の章を見る(C) :- 申請した(C), !.
+申請の章を見る(C) :- 欄(基準, C, 非公), !.
+申請の章を見る(C) :- \+ 欄(標準, C, 公), !.
+申請の章を見る(C) :- 欄(情報, C, 求めた).
+指導を受けた(C) :- \+ 欄(指導, C, 受けていない).
+届出をした(C) :- \+ 欄(届出, C, していない).
+% 36条の3の求めの対象（28の欄が 処分 か 行政指導 のとき）
+求めの対象(C, K) :- 欄(違反, C, K), memberchk(K, [処分, 行政指導]).
+求めの章を見る(C) :- \+ 欄(違反, C, ない).
+拒否した(C) :- 欄(結果, C, K), memberchk(K, [書面で拒否, 書面でなく拒否]).
+
+% 4つの手続のどれもしていない（受けていない）。5条・6条・9条2項が当たる値も入っていない（決めたこと4）
+手続なし(C) :- \+ 申請の章を見る(C), \+ 指導を受けた(C), \+ 届出をした(C), \+ 求めの章を見る(C).
+
+%% ---- 成り立たない組（REVIEW_RULES C3。根拠は rules/a_genbun.pl の原文の行で確かめた）----
+% 組み合わせなし(C, 欄の番号のリスト, 理由の文, 根拠のリスト)
+% 既定の値はどの組にも当たらない。ア〜カの名前は回答ファイルの表のまま（オは欄ごとに3つに分けた）。
+% ア：2条3号「申請」・8条1項本文「申請により求められた許認可等を拒否する処分」。申請に対する処分は、申請があって初めてある
+組み合わせなし(C, [5, 9], '申請をしていないので、申請に対する処分はありません', ['8条1項本文', '2条3号']) :-
+    欄(申請, C, していない), \+ 欄(結果, C, まだ).
+% イ：7条「申請がその事務所に到達したときは遅滞なく当該申請の審査を開始しなければならず」
+組み合わせなし(C, [5, 9], '申請が行政庁の事務所にまだ到達していないので、申請に対する処分はありません', ['7条']) :-
+    欄(申請, C, 未到達), \+ 欄(結果, C, まだ).
+% ウ：33条「申請の取下げ又は内容の変更を求める行政指導」
+組み合わせなし(C, [5, 18], '申請をしていないので、申請の取下げ又は内容の変更を求める行政指導はありません', ['33条']) :-
+    欄(申請, C, していない), \+ 欄(取下げ, C, 違う).
+% エ：32条2項「相手方が行政指導に従わなかったことを理由として」
+組み合わせなし(C, [16, 17], '行政指導を受けていないので、行政指導に従わなかったことを理由とする不利益な取扱いはありません', ['32条2項']) :-
+    \+ 指導を受けた(C), 欄(不利益, C, ある).
+% オ：33条・34条・35条2項・36条の2第1項本文（行政指導の中身の欄）
+組み合わせなし(C, [16, 18], '行政指導を受けていないので、申請の取下げ又は内容の変更を求める行政指導はありません', ['33条']) :-
+    \+ 指導を受けた(C), \+ 欄(取下げ, C, 違う).
+組み合わせなし(C, [16, 19], '行政指導を受けていないので、行政指導をする際に権限を行使し得る旨を示されることはありません', ['34条', '35条2項']) :-
+    \+ 指導を受けた(C), \+ 欄(権限, C, 示していない).
+組み合わせなし(C, [16, 23], '行政指導を受けていないので、法令に違反する行為の是正を求める行政指導はありません', ['36条の2第1項本文']) :-
+    \+ 指導を受けた(C), \+ 欄(是正, C, 違う).
+% カ：35条3項「行政指導が口頭でされた場合において…書面の交付を求められたときは」
+組み合わせなし(C, [16, 20], '行政指導を受けていないので、行政指導の書面の交付を求めることはありません', ['35条3項']) :-
+    \+ 指導を受けた(C), 欄(書面請求, C, 求めた).
+
+組み合わせなしがある(C) :- 組み合わせなし(C, _, _, _), !.
+
+%% ---- 理由の語をつなぐ ----
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---- 木の部品 ----
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+原文規定(Art, X) :- 原文(Art, W), 規定(Art, W, X).
+約束(X, t(ok, X, '@約束事', [])).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（行政手続法の条文にないもの）
+%
+%   2026-11-23 今は約束事が1つも無い（案A）。前の5つ（当否の約束・思料の約束・支障の約束・条例の約束・定義の約束）は消した。
+%   5つとも「判定しない」の断りで、条文に無い決めごとではないため（REVIEW_RULES A5・D1。gyosos-prolog の 2026-11-23 の直しと同じ）。
+%   「遅滞なく」「速やかに」「相当の期間」「殊更に」「行政上特別の支障」の当否、法令に違反する事実があるか、要件に適合しないか、
+%   個別の法律・条例の中身は、about の「判定について」に書いた。本人の考えを聞く欄は、欄名に「（あなたの考え）」と書いて聞く。
+%   前の定義の約束（「選んだ入口のとおりに読んでいる」）は、入口の欄（iri）をやめたので要らなくなった。
+%   ファイルは残す（build.py・test/run_cases.mjs が yakusoku/ の *.pl を読み込む。run_cases.mjs は yakusoku/ が無いと止まる）。
+%   約束事を足すときは、約束/2（schema.pl）で木の行を作り、rules/g_hantei.pl の 段の約束/2 で状態ごとに付ける。
+</script>
+<script type="text/prolog" data-name="rules_a_genbun.pl">% rules/a_genbun.pl — 判定に使う条文の原文（law/gyotetsu.xml の本則のまま）
+%
+%   原文(条, 文)。test/page_test.mjs が XML を別に読み、全行が一字一句一致するかを確かめる。
+%   2条3号のように XML で欄（Column）が分かれている号は、全角の空白でつないでいる。
+
+原文('1条2項', '処分、行政指導及び届出に関する手続並びに命令等を定める手続に関しこの法律に規定する事項について、他の法律に特別の定めがある場合は、その定めるところによる。').
+
+原文('2条2号', '処分　行政庁の処分その他公権力の行使に当たる行為をいう。').
+原文('2条3号', '申請　法令に基づき、行政庁の許可、認可、免許その他の自己に対し何らかの利益を付与する処分（以下「許認可等」という。）を求める行為であって、当該行為に対して行政庁が諾否の応答をすべきこととされているものをいう。').
+原文('2条6号', '行政指導　行政機関がその任務又は所掌事務の範囲内において一定の行政目的を実現するため特定の者に一定の作為又は不作為を求める指導、勧告、助言その他の行為であって処分に該当しないものをいう。').
+原文('2条7号', '届出　行政庁に対し一定の事項の通知をする行為（申請に該当するものを除く。）であって、法令により直接に当該通知が義務付けられているもの（自己の期待する一定の法律上の効果を発生させるためには当該通知をすべきこととされているものを含む。）をいう。').
+
+原文('3条1項', '次に掲げる処分及び行政指導については、次章から第四章の二までの規定は、適用しない。').
+原文('3条1項1号', '国会の両院若しくは一院又は議会の議決によってされる処分').
+原文('3条1項2号', '裁判所若しくは裁判官の裁判により、又は裁判の執行としてされる処分').
+原文('3条1項3号', '国会の両院若しくは一院若しくは議会の議決を経て、又はこれらの同意若しくは承認を得た上でされるべきものとされている処分').
+原文('3条1項4号', '検査官会議で決すべきものとされている処分及び会計検査の際にされる行政指導').
+原文('3条1項5号', '刑事事件に関する法令に基づいて検察官、検察事務官又は司法警察職員がする処分及び行政指導').
+原文('3条1項6号', '国税又は地方税の犯則事件に関する法令（他の法令において準用する場合を含む。）に基づいて国税庁長官、国税局長、税務署長、国税庁、国税局若しくは税務署の当該職員、税関長、税関職員又は徴税吏員（他の法令の規定に基づいてこれらの職員の職務を行う者を含む。）がする処分及び行政指導並びに金融商品取引の犯則事件に関する法令（他の法令において準用する場合を含む。）に基づいて証券取引等監視委員会、その職員（当該法令においてその職員とみなされる者を含む。）、財務局長又は財務支局長がする処分及び行政指導').
+原文('3条1項7号', '学校、講習所、訓練所又は研修所において、教育、講習、訓練又は研修の目的を達成するために、学生、生徒、児童若しくは幼児若しくはこれらの保護者、講習生、訓練生又は研修生に対してされる処分及び行政指導').
+原文('3条1項8号', '刑務所、少年刑務所、拘置所、留置施設、海上保安留置施設、少年院又は少年鑑別所において、収容の目的を達成するためにされる処分及び行政指導').
+原文('3条1項9号', '公務員（国家公務員法（昭和二十二年法律第百二十号）第二条第一項に規定する国家公務員及び地方公務員法（昭和二十五年法律第二百六十一号）第三条第一項に規定する地方公務員をいう。以下同じ。）又は公務員であった者に対してその職務又は身分に関してされる処分及び行政指導').
+原文('3条1項10号', '外国人の出入国、出入国管理及び難民認定法（昭和二十六年政令第三百十九号）第六十一条の二第一項に規定する難民の認定、同条第二項に規定する補完的保護対象者の認定又は帰化に関する処分及び行政指導').
+原文('3条1項11号', '専ら人の学識技能に関する試験又は検定の結果についての処分').
+原文('3条1項12号', '相反する利害を有する者の間の利害の調整を目的として法令の規定に基づいてされる裁定その他の処分（その双方を名宛人とするものに限る。）及び行政指導').
+原文('3条1項13号', '公衆衛生、環境保全、防疫、保安その他の公益に関わる事象が発生し又は発生する可能性のある現場において警察官若しくは海上保安官又はこれらの公益を確保するために行使すべき権限を法律上直接に与えられたその他の職員によってされる処分及び行政指導').
+原文('3条1項14号', '報告又は物件の提出を命ずる処分その他その職務の遂行上必要な情報の収集を直接の目的としてされる処分及び行政指導').
+原文('3条1項15号', '審査請求、再調査の請求その他の不服申立てに対する行政庁の裁決、決定その他の処分').
+原文('3条1項16号', '前号に規定する処分の手続又は第三章に規定する聴聞若しくは弁明の機会の付与の手続その他の意見陳述のための手続において法令に基づいてされる処分及び行政指導').
+原文('3条3項', '第一項各号及び前項各号に掲げるもののほか、地方公共団体の機関がする処分（その根拠となる規定が条例又は規則に置かれているものに限る。）及び行政指導、地方公共団体の機関に対する届出（前条第七号の通知の根拠となる規定が条例又は規則に置かれているものに限る。）並びに地方公共団体の機関が命令等を定める行為については、次章から第六章までの規定は、適用しない。').
+
+原文('4条1項', '国の機関又は地方公共団体若しくはその機関に対する処分（これらの機関又は団体がその固有の資格において当該処分の名あて人となるものに限る。）及び行政指導並びにこれらの機関又は団体がする届出（これらの機関又は団体がその固有の資格においてすべきこととされているものに限る。）については、この法律の規定は、適用しない。').
+原文('4条2項', '次の各号のいずれかに該当する法人に対する処分であって、当該法人の監督に関する法律の特別の規定に基づいてされるもの（当該法人の解散を命じ、若しくは設立に関する認可を取り消す処分又は当該法人の役員若しくは当該法人の業務に従事する者の解任を命ずる処分を除く。）については、次章及び第三章の規定は、適用しない。').
+原文('4条3項', '行政庁が法律の規定に基づく試験、検査、検定、登録その他の行政上の事務について当該法律に基づきその全部又は一部を行わせる者を指定した場合において、その指定を受けた者（その者が法人である場合にあっては、その役員）又は職員その他の者が当該事務に従事することに関し公務に従事する職員とみなされるときは、その指定を受けた者に対し当該法律に基づいて当該事務に関し監督上される処分（当該指定を取り消す処分、その指定を受けた者が法人である場合におけるその役員の解任を命ずる処分又はその指定を受けた者の当該事務に従事する者の解任を命ずる処分を除く。）については、次章及び第三章の規定は、適用しない。').
+
+原文('5条1項', '行政庁は、審査基準を定めるものとする。').
+原文('5条2項', '行政庁は、審査基準を定めるに当たっては、許認可等の性質に照らしてできる限り具体的なものとしなければならない。').
+原文('5条3項', '行政庁は、行政上特別の支障があるときを除き、法令により申請の提出先とされている機関の事務所における備付けその他の適当な方法により審査基準を公にしておかなければならない。').
+原文('6条', '行政庁は、申請がその事務所に到達してから当該申請に対する処分をするまでに通常要すべき標準的な期間（法令により当該行政庁と異なる機関が当該申請の提出先とされている場合は、併せて、当該申請が当該提出先とされている機関の事務所に到達してから当該行政庁の事務所に到達するまでに通常要すべき標準的な期間）を定めるよう努めるとともに、これを定めたときは、これらの当該申請の提出先とされている機関の事務所における備付けその他の適当な方法により公にしておかなければならない。').
+原文('7条', '行政庁は、申請がその事務所に到達したときは遅滞なく当該申請の審査を開始しなければならず、かつ、申請書の記載事項に不備がないこと、申請書に必要な書類が添付されていること、申請をすることができる期間内にされたものであることその他の法令に定められた申請の形式上の要件に適合しない申請については、速やかに、申請をした者（以下「申請者」という。）に対し相当の期間を定めて当該申請の補正を求め、又は当該申請により求められた許認可等を拒否しなければならない。').
+原文('8条1項本文', '行政庁は、申請により求められた許認可等を拒否する処分をする場合は、申請者に対し、同時に、当該処分の理由を示さなければならない。').
+原文('8条1項ただし書', 'ただし、法令に定められた許認可等の要件又は公にされた審査基準が数量的指標その他の客観的指標により明確に定められている場合であって、当該申請がこれらに適合しないことが申請書の記載又は添付書類その他の申請の内容から明らかであるときは、申請者の求めがあったときにこれを示せば足りる。').
+原文('8条2項', '前項本文に規定する処分を書面でするときは、同項の理由は、書面により示さなければならない。').
+原文('9条1項', '行政庁は、申請者の求めに応じ、当該申請に係る審査の進行状況及び当該申請に対する処分の時期の見通しを示すよう努めなければならない。').
+原文('9条2項', '行政庁は、申請をしようとする者又は申請者の求めに応じ、申請書の記載及び添付書類に関する事項その他の申請に必要な情報の提供に努めなければならない。').
+原文('10条', '行政庁は、申請に対する処分であって、申請者以外の者の利害を考慮すべきことが当該法令において許認可等の要件とされているものを行う場合には、必要に応じ、公聴会の開催その他の適当な方法により当該申請者以外の者の意見を聴く機会を設けるよう努めなければならない。').
+原文('11条1項', '行政庁は、申請の処理をするに当たり、他の行政庁において同一の申請者からされた関連する申請が審査中であることをもって自らすべき許認可等をするかどうかについての審査又は判断を殊更に遅延させるようなことをしてはならない。').
+原文('11条2項', '一の申請又は同一の申請者からされた相互に関連する複数の申請に対する処分について複数の行政庁が関与する場合においては、当該複数の行政庁は、必要に応じ、相互に連絡をとり、当該申請者からの説明の聴取を共同して行う等により審査の促進に努めるものとする。').
+
+原文('32条1項', '行政指導にあっては、行政指導に携わる者は、いやしくも当該行政機関の任務又は所掌事務の範囲を逸脱してはならないこと及び行政指導の内容があくまでも相手方の任意の協力によってのみ実現されるものであることに留意しなければならない。').
+原文('32条2項', '行政指導に携わる者は、その相手方が行政指導に従わなかったことを理由として、不利益な取扱いをしてはならない。').
+原文('33条', '申請の取下げ又は内容の変更を求める行政指導にあっては、行政指導に携わる者は、申請者が当該行政指導に従う意思がない旨を表明したにもかかわらず当該行政指導を継続すること等により当該申請者の権利の行使を妨げるようなことをしてはならない。').
+原文('34条', '許認可等をする権限又は許認可等に基づく処分をする権限を有する行政機関が、当該権限を行使することができない場合又は行使する意思がない場合においてする行政指導にあっては、行政指導に携わる者は、当該権限を行使し得る旨を殊更に示すことにより相手方に当該行政指導に従うことを余儀なくさせるようなことをしてはならない。').
+原文('35条1項', '行政指導に携わる者は、その相手方に対して、当該行政指導の趣旨及び内容並びに責任者を明確に示さなければならない。').
+原文('35条2項', '行政指導に携わる者は、当該行政指導をする際に、行政機関が許認可等をする権限又は許認可等に基づく処分をする権限を行使し得る旨を示すときは、その相手方に対して、次に掲げる事項を示さなければならない。').
+原文('35条2項1号', '当該権限を行使し得る根拠となる法令の条項').
+原文('35条2項2号', '前号の条項に規定する要件').
+原文('35条2項3号', '当該権限の行使が前号の要件に適合する理由').
+原文('35条3項', '行政指導が口頭でされた場合において、その相手方から前二項に規定する事項を記載した書面の交付を求められたときは、当該行政指導に携わる者は、行政上特別の支障がない限り、これを交付しなければならない。').
+原文('35条4項', '前項の規定は、次に掲げる行政指導については、適用しない。').
+原文('35条4項1号', '相手方に対しその場において完了する行為を求めるもの').
+原文('35条4項2号', '既に文書（前項の書面を含む。）又は電磁的記録（電子的方式、磁気的方式その他人の知覚によっては認識することができない方式で作られる記録であって、電子計算機による情報処理の用に供されるものをいう。）によりその相手方に通知されている事項と同一の内容を求めるもの').
+原文('36条', '同一の行政目的を実現するため一定の条件に該当する複数の者に対し行政指導をしようとするときは、行政機関は、あらかじめ、事案に応じ、行政指導指針を定め、かつ、行政上特別の支障がない限り、これを公表しなければならない。').
+原文('36条の2第1項本文', '法令に違反する行為の是正を求める行政指導（その根拠となる規定が法律に置かれているものに限る。）の相手方は、当該行政指導が当該法律に規定する要件に適合しないと思料するときは、当該行政指導をした行政機関に対し、その旨を申し出て、当該行政指導の中止その他必要な措置をとることを求めることができる。').
+原文('36条の2第1項ただし書', 'ただし、当該行政指導がその相手方について弁明その他意見陳述のための手続を経てされたものであるときは、この限りでない。').
+原文('36条の2第2項', '前項の申出は、次に掲げる事項を記載した申出書を提出してしなければならない。').
+原文('36条の2第2項1号', '申出をする者の氏名又は名称及び住所又は居所').
+原文('36条の2第2項2号', '当該行政指導の内容').
+原文('36条の2第2項3号', '当該行政指導がその根拠とする法律の条項').
+原文('36条の2第2項4号', '前号の条項に規定する要件').
+原文('36条の2第2項5号', '当該行政指導が前号の要件に適合しないと思料する理由').
+原文('36条の2第2項6号', 'その他参考となる事項').
+原文('36条の2第3項', '当該行政機関は、第一項の規定による申出があったときは、必要な調査を行い、当該行政指導が当該法律に規定する要件に適合しないと認めるときは、当該行政指導の中止その他必要な措置をとらなければならない。').
+
+原文('36条の3第1項', '何人も、法令に違反する事実がある場合において、その是正のためにされるべき処分又は行政指導（その根拠となる規定が法律に置かれているものに限る。）がされていないと思料するときは、当該処分をする権限を有する行政庁又は当該行政指導をする権限を有する行政機関に対し、その旨を申し出て、当該処分又は行政指導をすることを求めることができる。').
+原文('36条の3第2項', '前項の申出は、次に掲げる事項を記載した申出書を提出してしなければならない。').
+原文('36条の3第2項1号', '申出をする者の氏名又は名称及び住所又は居所').
+原文('36条の3第2項2号', '法令に違反する事実の内容').
+原文('36条の3第2項3号', '当該処分又は行政指導の内容').
+原文('36条の3第2項4号', '当該処分又は行政指導の根拠となる法令の条項').
+原文('36条の3第2項5号', '当該処分又は行政指導がされるべきであると思料する理由').
+原文('36条の3第2項6号', 'その他参考となる事項').
+原文('36条の3第3項', '当該行政庁又は行政機関は、第一項の規定による申出があったときは、必要な調査を行い、その結果に基づき必要があると認めるときは、当該処分又は行政指導をしなければならない。').
+
+原文('37条', '届出が届出書の記載事項に不備がないこと、届出書に必要な書類が添付されていることその他の法令に定められた届出の形式上の要件に適合している場合は、当該届出が法令により当該届出の提出先とされている機関の事務所に到達したときに、当該届出をすべき手続上の義務が履行されたものとする。').
+
+原文('46条', '地方公共団体は、第三条第三項において第二章から前章までの規定を適用しないこととされた処分、行政指導及び届出並びに命令等を定める行為に関する手続について、この法律の規定の趣旨にのっとり、行政運営における公正の確保と透明性の向上を図るため必要な措置を講ずるよう努めなければならない。').
+</script>
+<script type="text/prolog" data-name="rules_b_tekiyou.pl">% rules/b_tekiyou.pl — 適用除外（3条1項・3条3項・4条1項〜3項）。「した」手続ごとに当てる：1〜4・30の欄
+%
+%   状態 = 除外（外れるときだけ段を出す）。外れた手続は、その手続のほかの段を出さない（rules/g_hantei.pl の 全部の段）。
+%   条ごとに「何について」「どの章を」外すかが違う：
+%     3条1項  処分・行政指導について 第二章〜第四章の二。届出は書いていない。号ごとに処分だけの号がある（1・2・3・11・15号）
+%     3条3項  地方公共団体の機関。処分と届出は根拠が条例・規則のものだけ、行政指導は根拠を問わず。第二章〜第六章
+%     4条1項  処分と届出は固有の資格のものだけ、行政指導は括弧が付いていない。この法律の規定全部
+%     4条2項・3項  処分について 第二章及び第三章だけ。第四章の二は外れない
+%   2026-11-23 入口（iri）を選ばせる形をやめ、申請・行政指導・届出・求めの「した」ものに1つずつ当てる形にした（案A）。
+%   前の「適用」の段（「第二章の規定が当たります。…のどれでも外れないという入力です」）は判定の答えではないので消した（A1・A2）。
+%   外れなかった理由（号の添え・地方の添え・四条の添え）は、結論の箱に出さず、その手続の最初の段の木の葉にだけ置く（決めたこと5。外れない葉/3）。
+%   同時に2つ以上の条で外れるときは、文と箱の条は 除外の条の順 の最初の1つにし、ほかの条は木の葉に置く。
+%   46条（3条3項で外れたときの地方公共団体の努力義務）は箱に出さず、木の葉に置く（決めたこと7）。
+%   是正を求める（36条の3）ときの4条1項は、求める処分・行政指導の名あて人＝違反している者（30の欄）で見る。
+%   1〜3の欄（号・機関）は、自分の手続と是正の求めで共通に読む（案A の「1つの件」の前提。lead に書いた。決めたこと8）。
+
+% 手続ごとに、何についての定めを見るか（是正を求めるときは、求めるもの）
+当てるもの(_, 申請, 処分).
+当てるもの(_, 指導, 行政指導).
+当てるもの(_, 届出, 届出).
+当てるもの(C, 求め, K) :- 求めの対象(C, K).
+
+手続の名(_, 申請, '申請に対する処分').
+手続の名(_, 指導, '行政指導').
+手続の名(_, 届出, '届出').
+手続の名(C, 求め, '是正のための処分') :- 求めの対象(C, 処分), !.
+手続の名(_, 求め, '是正のための行政指導').
+
+% その手続を「した」か（申請は、申請をしていなくても5条・6条・9条2項を見るときに当てる）
+手続がある(C, 申請) :- 申請の章を見る(C).
+手続がある(C, 指導) :- 指導を受けた(C).
+手続がある(C, 届出) :- 届出をした(C).
+% 28の欄が「されていると思う」のときも段（36条の3の申出はできません）を出すので、ある。外れるかは 求めの対象 があるときだけ見る（当てるもの/3）
+手続がある(C, 求め) :- 求めの章を見る(C).
+
+%% ---- 外れる条（並びは文に使う順）----
+除外の条(C, P, Arts) :-
+    当てるもの(C, P, K),
+    三条一項の条(C, K, A1), 三条三項の条(C, P, K, A2), 四条一項の条(C, P, K, A3), 四条二三項の条(C, P, A4),
+    append([A1, A2, A3, A4], Arts).
+
+除外された(C, P) :- 手続がある(C, P), 除外の条(C, P, [_|_]).
+
+三条一項の条(C, K, [A]) :- 欄(除外号, C, N), integer(N), 号が当たる(K, N), !, 号の条(N, A).
+三条一項の条(_, _, []).
+
+号の条(N, A) :- format(atom(A), '3条1項~d号', [N]).
+
+号が当たる(処分, _).
+号が当たる(行政指導, N) :- \+ 処分だけの号(N).
+処分だけの号(N) :- memberchk(N, [1, 2, 3, 11, 15]).
+
+三条三項の条(C, _, 行政指導, ['3条3項']) :- 欄(機関, C, 地方), !.
+三条三項の条(C, 申請, 処分, ['3条3項']) :- 欄(機関, C, 地方), 欄(根拠, C, 条例規則), !.
+三条三項の条(C, 届出, 届出, ['3条3項']) :- 欄(機関, C, 地方), 欄(根拠, C, 条例規則), !.
+三条三項の条(_, _, _, []).
+
+% 名あて人（届出は届出をする者）。是正を求めるときは違反している者（30の欄）
+名あての欄(求め, 違反者) :- !.
+名あての欄(_, 相手).
+
+四条一項の条(C, P, 行政指導, ['4条1項']) :- 名あての欄(P, F), 欄(F, C, V), memberchk(V, [固有資格, 固有でない]), !.
+四条一項の条(C, P, K, ['4条1項']) :- K \== 行政指導, 名あての欄(P, F), 欄(F, C, 固有資格), !.
+四条一項の条(_, _, _, []).
+
+四条二三項の条(C, 申請, ['4条2項']) :- 欄(相手, C, 四条二項), !.
+四条二三項の条(C, 申請, ['4条3項']) :- 欄(相手, C, 四条三項), !.
+四条二三項の条(_, _, []).
+
+%% ---- 外れるときの文（条ごとに、何が適用されなくなるかが違う）----
+除外の文(C, P, A, M) :- sub_atom(A, 0, _, _, '3条1項'), !, 手続の名(C, P, Nm),
+    format(atom(M), '~wは~wに当たるので、第二章から第四章の二までの規定は適用されません。', [Nm, A]).
+除外の文(_, 申請, '3条3項', '地方公共団体の機関がする処分で、根拠となる規定が条例又は規則に置かれているので、第二章から第六章までの規定は、申請に対する処分には適用されません。').
+除外の文(_, 指導, '3条3項', '地方公共団体の機関がする行政指導なので、根拠となる規定を問わず、第二章から第六章までの規定は、行政指導には適用されません。').
+除外の文(_, 届出, '3条3項', '地方公共団体の機関に対する届出で、根拠となる規定が条例又は規則に置かれているので、第二章から第六章までの規定は、届出には適用されません。').
+除外の文(_, 求め, '3条3項', '地方公共団体の機関がする行政指導なので、根拠となる規定を問わず、第二章から第六章までの規定は、是正のための行政指導には適用されません。').
+除外の文(_, 申請, '4条1項', '国の機関・地方公共団体・地方公共団体の機関が固有の資格において名あて人となる処分なので、行政手続法の規定は、申請に対する処分には適用されません。').
+除外の文(_, 指導, '4条1項', '国の機関・地方公共団体・地方公共団体の機関に対する行政指導なので、行政手続法の規定は、行政指導には適用されません。').
+除外の文(_, 届出, '4条1項', '国の機関・地方公共団体・地方公共団体の機関が固有の資格においてする届出なので、行政手続法の規定は、届出には適用されません。').
+除外の文(C, 求め, '4条1項', M) :- 手続の名(C, 求め, Nm),
+    format(atom(M), '違反している者が国の機関・地方公共団体・地方公共団体の機関なので、行政手続法の規定は、~wには適用されません。', [Nm]).
+除外の文(_, 申請, '4条2項', '4条2項各号の法人に対する、法人の監督に関する法律の特別の規定に基づく処分なので、第二章及び第三章の規定は、申請に対する処分には適用されません。').
+除外の文(_, 申請, '4条3項', '指定を受けた者に対する、事務に関し監督上される処分なので、第二章及び第三章の規定は、申請に対する処分には適用されません。').
+
+除外の見出し(申請, '適用除外（申請に対する処分）').
+除外の見出し(指導, '適用除外（行政指導）').
+除外の見出し(届出, '適用除外（届出）').
+除外の見出し(求め, '適用除外（是正を求める処分・行政指導）').
+
+除外のid(申請, jogai_shinsei).
+除外のid(指導, jogai_shidou).
+除外のid(届出, jogai_todoke).
+除外のid(求め, jogai_motome).
+
+%% ---- 段 ----
+% 外れた手続ごとに1行。3条1項の号のときは柱書き（3条1項）を、3条3項のときは46条を、木の葉に足す
+除外の段(C, L) :-
+    findall(s(Id, T, 段(除外, M, [A], Ex)),
+            ( member(P, [申請, 指導, 届出, 求め]), 手続がある(C, P), 除外の条(C, P, [A|Rest]),
+              除外のid(P, Id), 除外の見出し(P, T), 除外の文(C, P, A, M),
+              除外の葉の条(A, Rest, Ex) ),
+            L).
+
+除外の葉の条(A, Rest, Ex) :-
+    ( sub_atom(A, 0, _, _, '3条1項') -> Ex0 = ['3条1項'|Rest] ; Ex0 = Rest ),
+    ( memberchk('3条3項', [A|Rest]) -> append(Ex0, ['46条'], Ex) ; Ex = Ex0 ).
+
+%% ---- 外れなかった理由（木の葉だけ。決めたこと5）----
+% 外れない葉(C, 手続, 木の行のリスト)。手続の最初の段の木に足す（rules/g_hantei.pl の 段の木）
+外れない葉(C, P, Ls) :-
+    findall(t(ok, W, A, []), 外れない理由(C, P, W, A), Ls).
+
+外れない理由(C, 届出, W, A) :- 欄(除外号, C, N), integer(N), 号の条(N, A),
+    format(atom(W), '3条1項は処分と行政指導についての定めなので、届出は~wでは外れません', [A]).
+外れない理由(C, P, W, A) :- memberchk(P, [指導, 求め]), 当てるもの(C, P, 行政指導),
+    欄(除外号, C, N), integer(N), 処分だけの号(N), 号の条(N, A), 手続の名(C, P, Nm),
+    format(atom(W), '~wに書いてあるのは処分だけなので、~wは~wでは外れません', [A, Nm, A]).
+外れない理由(C, 申請, '地方公共団体の機関がする処分でも、根拠となる規定が条例又は規則に置かれていないので、3条3項では外れません', '3条3項') :-
+    欄(機関, C, 地方), \+ 欄(根拠, C, 条例規則).
+外れない理由(C, 届出, '地方公共団体の機関に対する届出でも、根拠となる規定が条例又は規則に置かれていないので、3条3項では外れません', '3条3項') :-
+    欄(機関, C, 地方), \+ 欄(根拠, C, 条例規則).
+外れない理由(C, 求め, '是正のための処分は、根拠となる規定が法律に置かれているので、3条3項では外れません', '3条3項') :-
+    欄(機関, C, 地方), 求めの対象(C, 処分), 欄(求める根拠, C, 法律).
+外れない理由(C, 申請, '国の機関・地方公共団体・地方公共団体の機関に対する処分でも、固有の資格において名あて人となるものではないので、4条1項では外れません', '4条1項') :-
+    欄(相手, C, 固有でない).
+外れない理由(C, 届出, '国の機関・地方公共団体・地方公共団体の機関がする届出でも、固有の資格においてすべきものではないので、4条1項では外れません', '4条1項') :-
+    欄(相手, C, 固有でない).
+外れない理由(C, 求め, '違反している者が国の機関・地方公共団体・地方公共団体の機関でも、固有の資格において名あて人となるものではないので、是正のための処分は4条1項では外れません', '4条1項') :-
+    求めの対象(C, 処分), 欄(違反者, C, 固有でない).
+外れない理由(C, P, W, A) :- memberchk(P, [指導, 届出]), 名あての項(C, A), 手続の名(C, P, Nm),
+    format(atom(W), '~wは処分についての定めなので、~wは~wでは外れません', [A, Nm, A]).
+
+名あての項(C, '4条2項') :- 欄(相手, C, 四条二項).
+名あての項(C, '4条3項') :- 欄(相手, C, 四条三項).
+</script>
+<script type="text/prolog" data-name="rules_c_shinsei.pl">% rules/c_shinsei.pl — 第二章 申請に対する処分（5条〜11条）：5〜15の欄
+%
+%   2026-11-23 段は答えがあるときだけ出す形にした（案A。前は7つの段をいつも出し、当たらない段は「〜という入力なので、◯条の場面に当たりません」）。
+%   段の文から「という入力」と「当否はアプリで判定しません」を外し、断り書きは about の「判定について」へ移した（A2・A5）。
+%   義務と努力義務は語尾（「しなければなりません」「してはなりません」／「努めなければなりません」「努めるものとされています」）で分け、
+%   努力義務の文にだけ「（努力義務）」を付ける（決めたこと2。前は義務の文にも「（義務）」を付けていた）。
+%   5条1項・2項（審査基準を定める）・6条を満たしているとき・9条1項の「求めれば示す」は箱に出さない（決めたこと7）。
+%   前の遅れの欄（oku）と、他庁の欄の「遅延／遅延なし」をやめた。値を変えても断り書きのほかは答えが変わらなかったため（決めたこと3）。
+%   5条・6条は申請をしていなくても出す（行政庁が前もってすることの定め）。9条2項は申請をしようとする者の求めにも当たる。
+%   7条・8条・9条1項・10条・11条は、申請が行政庁の事務所に到達したときだけ（7条は、まだ到達していないときも1行出す）。
+
+申請の段(C, L) :-
+    findall(S, 申請の一段(C, S), L).
+
+申請の一段(C, s(kijun, '審査基準（5条）', S)) :- 段基準(C, S).
+申請の一段(C, s(hyoujun, '標準的な期間（6条）', S)) :- 段標準(C, S).
+申請の一段(C, s(shinsa, '審査の開始と、補正か拒否か（7条）', S)) :- 段審査(C, S).
+申請の一段(C, s(riyuu, '理由の提示（8条1項）', S)) :- 段理由(C, S).
+申請の一段(C, s(riyuusho, '理由を示す方法（8条2項）', S)) :- 段理由書面(C, S).
+申請の一段(C, s(jouhou, '情報の提供（9条）', S)) :- 段情報(C, S).
+申請の一段(C, s(kouchou, '公聴会など（10条）', S)) :- 段公聴会(C, S).
+申請の一段(C, s(tachou, '他の行政庁の審査（11条1項）', S)) :- 段他庁(C, S).
+申請の一段(C, s(kyoudou, '複数の行政庁の関与（11条2項）', S)) :- 段関与(C, S).
+
+%% ---- 審査基準（5条）----
+段基準(C, 段(基準非公, '行政庁は、行政上特別の支障があるときを除き、審査基準を公にしておかなければなりません。', ['5条3項'], ['5条1項', '5条2項'])) :-
+    欄(基準, C, 非公).
+
+%% ---- 標準的な期間（6条）----
+段標準(C, 段(標準非公, '行政庁は、標準的な期間を定めたときは、公にしておかなければなりません。', ['6条'], [])) :-
+    欄(標準, C, 非公).
+段標準(C, 段(標準なし, '行政庁は、申請が事務所に到達してから処分をするまでに通常要すべき標準的な期間を定めるよう努めなければなりません（努力義務）。', ['6条'], [])) :-
+    欄(標準, C, なし).
+
+%% ---- 審査の開始（7条）----
+段審査(C, 段(到達前, '申請が行政庁の事務所にまだ到達していないので、行政庁が遅滞なく審査を開始しなければならないのは、申請が到達したときからです。', ['7条'], ['2条3号'])) :-
+    欄(申請, C, 未到達), !.
+段審査(C, 段(審査開始, '行政庁は、申請が事務所に到達したときは、遅滞なく審査を開始しなければなりません。', ['7条'], ['2条3号'])) :-
+    欄(申請, C, 到達), 欄(形式, C, 適合), !.
+段審査(C, 段(補正か拒否, '申請が形式上の要件に適合しないので、行政庁は、速やかに、申請者に対し相当の期間を定めて申請の補正を求めるか、許認可等を拒否しなければなりません。', ['7条'], ['2条3号'])) :-
+    欄(申請, C, 到達), 欄(形式, C, 不適合).
+
+%% ---- 理由の提示（8条1項）----
+% 拒否する処分（申請が到達しているとき。到達していない組は schema.pl の ア・イ で組み合わせなし）
+段理由(C, 段(St, M, As, Ex)) :-
+    欄(申請, C, 到達), 拒否した(C), !,
+    欄(指標, C, Sh), 欄(理由の求め, C, Mo),
+    理由の結論(Sh, Mo, St, M, As, Ex).
+段理由(C, 段(要件に当たらない, '申請を認める処分は、許認可等を拒否する処分ではないので、処分の理由を示す定めは当たりません。', ['8条1項本文'], [])) :-
+    欄(申請, C, 到達), 欄(結果, C, 認める).
+
+理由の結論(明確でない, _, 理由同時, '行政庁は、許認可等を拒否する処分と同時に、申請者に処分の理由を示さなければなりません。', ['8条1項本文'], ['8条1項ただし書']) :- !.
+理由の結論(明らかでない, _, 理由同時, '行政庁は、許認可等を拒否する処分と同時に、申請者に処分の理由を示さなければなりません。', ['8条1項本文'], ['8条1項ただし書']) :- !.
+理由の結論(明らか, 求めていない, 求めで足りる, '行政庁は、申請者の求めがあったときに、処分の理由を示せば足ります。', ['8条1項ただし書'], ['8条1項本文']) :- !.
+理由の結論(明らか, 求めた, 求めあり, '申請者の求めがあったので、行政庁は、処分の理由を示さなければなりません。', ['8条1項ただし書'], ['8条1項本文']).
+
+%% ---- 理由を示す方法（8条2項）----
+% 「前項本文に規定する処分」は拒否する処分のことと読み、ただし書の場面でも書面でするなら添える（NOTES (e)）
+段理由書面(C, 段(理由書面, '許認可等を拒否する処分を書面でするので、理由も書面で示さなければなりません。', ['8条2項'], [])) :-
+    欄(申請, C, 到達), 欄(結果, C, 書面で拒否).
+
+%% ---- 情報の提供（9条）----
+段情報(C, 段(進行状況, '行政庁は、申請者の求めに応じ、審査の進行状況と処分の時期の見通しを示すよう努めるとともに、申請に必要な情報の提供に努めなければなりません（努力義務）。', ['9条1項', '9条2項'], [])) :-
+    欄(情報, C, 求めた), 欄(申請, C, 到達), !.
+段情報(C, 段(情報提供, '行政庁は、申請をしようとする者又は申請者の求めに応じ、申請書の記載及び添付書類に関する事項その他の申請に必要な情報の提供に努めなければなりません（努力義務）。', ['9条2項'], [])) :-
+    欄(情報, C, 求めた).
+
+%% ---- 公聴会など（10条）----
+段公聴会(C, 段(公聴会, '行政庁は、必要に応じ、公聴会の開催その他の適当な方法により、申請者以外の者の意見を聴く機会を設けるよう努めなければなりません（努力義務）。', ['10条'], [])) :-
+    欄(申請, C, 到達), 欄(利害, C, 要件).
+
+%% ---- 他の行政庁の審査（11条1項）----
+段他庁(C, 段(遅延禁止, '行政庁は、他の行政庁で同じ申請者からの関連する申請が審査中であることをもって、許認可等をするかどうかの審査又は判断を殊更に遅延させるようなことをしてはなりません。', ['11条1項'], [])) :-
+    欄(申請, C, 到達), 欄(他庁, C, 審査中).
+
+%% ---- 複数の行政庁の関与（11条2項）----
+段関与(C, 段(共同審査, '関与する複数の行政庁は、必要に応じ、相互に連絡をとり、申請者からの説明の聴取を共同して行う等により、審査の促進に努めるものとされています（努力義務）。', ['11条2項'], [])) :-
+    欄(申請, C, 到達), 欄(関与, C, ある).
+</script>
+<script type="text/prolog" data-name="rules_d_shidou.pl">% rules/d_shidou.pl — 第四章 行政指導（32条〜36条の2）：16〜25の欄
+%
+%   2026-11-23 16の欄で「行政指導を受けた」ときだけ段を出す形にした（案A）。33条〜36条の2の各段は、入口の事実（取下げを求める指導か・
+%   権限を示されたか・口頭か・複数の者か・是正を求める指導か）が1つ目の値（違う・示されていない など）なら段を出さない
+%   （前は「〜ではないという入力なので、◯条の場面に当たりません」の 場面外 の段を毎回出していた）。
+%   段の文から「という入力」「当否はアプリで判定しません」「「等」に当たる他の行為があるかは判定しません」を外し、about の「判定について」へ移した（A2・A5）。
+%   32条2項は行政指導を受けたらいつも出す（行政指導に携わる者の義務で、どの行政指導にも当たる）。17の欄（不利益な取扱いを受けたか）は、
+%   行政指導を受けていない組を組み合わせなし（schema.pl のエ）にするときだけ使う。
+%   32条1項（任意の協力）・35条1項（趣旨・内容・責任者を示す）・36条の2第2項・3項（申出書と行政機関がすること）は箱に出さず、木の葉に置く（決めたこと7）。
+%   指示語を外した（前の「そのように示して」「その条項に規定する要件」「前二項に規定する事項」「当該行政指導」。A6）。
+
+行政指導の段(C, L) :-
+    findall(S, 指導の一段(C, S), L).
+
+指導の一段(C, s(ippan, '不利益な取扱いの禁止（32条）', S)) :- 段一般(C, S).
+指導の一段(C, s(torisage, '申請の取下げ・変更を求める行政指導（33条）', S)) :- 段取下げ(C, S).
+指導の一段(C, s(kengen, '権限を行使し得る旨を示す行政指導（34条）', S)) :- 段権限(C, S).
+指導の一段(C, s(houshiki, '権限を行使し得る旨を示すときに示す事項（35条2項）', S)) :- 段方式(C, S).
+指導の一段(C, s(shomen, '書面の交付（35条3項・4項）', S)) :- 段書面(C, S).
+指導の一段(C, s(shishin, '複数の者を対象とする行政指導（36条）', S)) :- 段指針(C, S).
+指導の一段(C, s(chushi, '行政指導の中止等の求め（36条の2）', S)) :- 段中止(C, S).
+
+%% ---- 一般原則（32条）----
+段一般(_, 段(不利益禁止, '行政指導に携わる者は、相手方が行政指導に従わなかったことを理由として、不利益な取扱いをしてはなりません。', ['32条2項'], ['32条1項', '2条6号'])).
+
+%% ---- 申請に関連する行政指導（33条）----
+段取下げ(C, 段(St, M, ['33条'], [])) :- 欄(取下げ, C, T), 取下げの文(T, St, M).
+
+取下げの文(未表明, 要件に当たらない, '申請者が行政指導に従う意思がない旨をまだ表明していないので、表明したにもかかわらず行政指導を継続すること等により権利の行使を妨げることを禁じる定めは、まだ当たりません。').
+取下げの文(継続, 妨げ禁止, '行政指導に携わる者は、申請者が従う意思がない旨を表明したのに行政指導を継続すること等により、申請者の権利の行使を妨げるようなことをしてはなりません。').
+取下げの文(継続なし, 妨げ禁止, '申請者が従う意思がない旨を表明したので、行政指導に携わる者は、行政指導を継続すること等により、申請者の権利の行使を妨げるようなことをしてはなりません。').
+
+%% ---- 権限に関連する行政指導（34条）----
+段権限(C, 段(余儀なく禁止, '行政指導に携わる者は、権限を行使し得る旨を殊更に示すことにより、相手方に行政指導に従うことを余儀なくさせるようなことをしてはなりません。', ['34条'], [])) :-
+    欄(権限, C, 示した不能).
+
+%% ---- 権限を行使し得る旨を示すとき（35条2項）----
+段方式(C, 段(三項目, '行政指導に携わる者は、権限を行使し得る旨を示すときは、相手方に、権限を行使し得る根拠となる法令の条項・条項に規定する要件・権限の行使が要件に適合する理由を示さなければなりません。', ['35条2項'], ['35条2項1号', '35条2項2号', '35条2項3号', '35条1項'])) :-
+    \+ 欄(権限, C, 示していない).
+
+%% ---- 書面の交付（35条3項・4項）----
+% 35条3項は口頭でされた行政指導の定めなので、書面で受けたときは段を出さない。35条4項の行政指導なら、求めたかどうかに関わらず当たらない
+段書面(C, 段(St, M, As, Ex)) :-
+    欄(指導, C, 口頭),
+    欄(書面請求, C, R), 欄(交付除外, C, J),
+    書面の事項(C, W),
+    書面の文(J, R, W, St, M, As, Ex).
+
+% 35条3項の「前二項に規定する事項」：35条1項の3つと、権限を行使し得る旨を示したときは35条2項の3つ
+書面の事項(C, '行政指導の趣旨・内容・責任者') :- 欄(権限, C, 示していない), !.
+書面の事項(_, '行政指導の趣旨・内容・責任者と、権限を行使し得る根拠となる法令の条項・条項に規定する要件・権限の行使が要件に適合する理由').
+
+書面の文(その場, _, _, 要件に当たらない, '相手方に対し行政指導の場において完了する行為を求める行政指導なので、書面の交付を求める定めは適用されません。', ['35条4項1号'], ['35条4項', '35条3項']) :- !.
+書面の文(通知済み, _, _, 要件に当たらない, '既に文書又は電磁的記録により相手方に通知されている事項と同一の内容を求める行政指導なので、書面の交付を求める定めは適用されません。', ['35条4項2号'], ['35条4項', '35条3項']) :- !.
+書面の文(なし, 求めていない, W, 交付を求められる, M, ['35条3項'], ['35条1項']) :- !,
+    format(atom(M), '口頭の行政指導なので、相手方は、~wを記載した書面の交付を求めることができます。', [W]).
+書面の文(なし, 求めた, W, 交付, M, ['35条3項'], ['35条1項']) :-
+    format(atom(M), '行政指導に携わる者は、行政上特別の支障がない限り、~wを記載した書面を交付しなければなりません。', [W]).
+
+%% ---- 指針（36条）----
+段指針(C, 段(指針, '行政機関は、あらかじめ、事案に応じ、行政指導指針を定め、行政上特別の支障がない限り、公表しなければなりません。', ['36条'], [])) :-
+    欄(複数者, C, そうである).
+
+%% ---- 中止等の求め（36条の2）----
+段中止(C, 段(St, M, As, Ex)) :-
+    欄(是正, C, Z), Z \== 違う,
+    欄(適合, C, T), 欄(弁明, C, B),
+    中止の結論(Z, T, B, St, M, As, Ex).
+
+中止の結論(法律でない, _, _, 要件に当たらない, '是正を求める行政指導の根拠となる規定が法律に置かれていないので、行政指導の中止その他必要な措置を求める申出はできません。', ['36条の2第1項本文'], []) :- !.
+中止の結論(法律, 適合する, _, 要件に当たらない, '行政指導が法律に規定する要件に適合すると思うので、行政指導の中止その他必要な措置を求める申出はできません。', ['36条の2第1項本文'], []) :- !.
+中止の結論(法律, 適合しない, 経た, 要件に当たらない, '行政指導が弁明その他意見陳述のための手続を経てされたものなので、行政指導の中止その他必要な措置を求める申出はできません。', ['36条の2第1項ただし書'], ['36条の2第1項本文']) :- !.
+中止の結論(法律, 適合しない, 経ていない, 中止を求められる, '相手方は、行政指導をした行政機関に対し、行政指導が法律に規定する要件に適合しない旨を申し出て、行政指導の中止その他必要な措置をとることを求めることができます。',
+           ['36条の2第1項本文'],
+           ['36条の2第1項ただし書', '36条の2第2項', '36条の2第2項1号', '36条の2第2項2号', '36条の2第2項3号', '36条の2第2項4号', '36条の2第2項5号', '36条の2第2項6号', '36条の2第3項']).
+</script>
+<script type="text/prolog" data-name="rules_e_todoke.pl">% rules/e_todoke.pl — 第五章 届出（37条）：26・27の欄
+%
+%   条文にあるのは「形式上の要件に適合している」「事務所に到達した」だけなので、この2つだけで答えを出す。
+%   2026-11-23 26の欄で届出をしたときだけ段を出す形にした（案A。前は入口「届出」を選んだときの1段）。
+%   段の文から「という入力」を外し、欠けた要件を主語に立てた（A2）。
+
+届出の段(C, [s(todoke, '届出の義務が履行されたか（37条）', S)]) :- 届出をした(C), !, 段届出(C, S).
+届出の段(_, []).
+
+段届出(C, 段(St, M, ['37条'], ['2条7号'])) :- 欄(届出, C, T), 欄(届出の要件, C, Y), 届出の文(Y, T, St, M).
+
+届出の文(適合, 到達, 履行, '届出をすべき手続上の義務は、届出が提出先の機関の事務所に到達した時に、履行されたものとされます。') :- !.
+届出の文(適合, 未到達, 未履行, '届出が提出先の機関の事務所にまだ到達していないので、届出をすべき手続上の義務は、まだ履行されたものとされません。') :- !.
+届出の文(不適合, _, 要件に当たらない, '届出が形式上の要件に適合していないので、届出をすべき手続上の義務は、37条では履行されたものとされません。').
+</script>
+<script type="text/prolog" data-name="rules_f_motome.pl">% rules/f_motome.pl — 第四章の二 処分等の求め（36条の3）：28〜30の欄
+%
+%   2026-11-23 28の欄（法令に違反する事実と、されていない処分・行政指導。あなたの考え）が「違反する事実はないと思う」のときは段を出さない形にした
+%   （案A。前は入口「求め」を選んだときに、対象・違反・未実施・根拠の4つから「〜という入力なので、36条の3の場面に当たりません」を出していた）。
+%   根拠は29の欄（是正のためにされるべき処分・行政指導の根拠となる規定）で聞く（前は入口によって意味が変わる共通の根拠の欄）。
+%   36条の3第2項（申出書）・第3項（行政庁又は行政機関がすること）は箱に出さず、木の葉に置く（決めたこと7）。
+%   36条の3の「法令に違反する事実」は、違反した法令の種類を問わないと読む（NOTES (d)）。
+%   指示語を外した（前の「その根拠となる規定」「当該処分」「当該行政指導」。A6）。
+
+求めの段(C, [s(motome, '処分等の求め（36条の3）', S)]) :- 求めの章を見る(C), !, 段求め(C, S).
+求めの段(_, []).
+
+申出書の条(['36条の3第2項', '36条の3第2項1号', '36条の3第2項2号', '36条の3第2項3号', '36条の3第2項4号', '36条の3第2項5号', '36条の3第2項6号', '36条の3第3項']).
+
+段求め(C, 段(要件に当たらない, '是正のためにされるべき処分又は行政指導はされているので、処分又は行政指導をすることを求める申出はできません。', ['36条の3第1項'], [])) :-
+    欄(違反, C, されている), !.
+段求め(C, 段(要件に当たらない, M, ['36条の3第1項'], [])) :-
+    欄(求める根拠, C, 法律でない), !, 手続の名(C, 求め, Nm),
+    format(atom(M), '~wの根拠となる規定が法律に置かれていないので、~wをすることを求める申出はできません。', [Nm, Nm]).
+段求め(C, 段(処分等を求められる, '何人も、法令に違反する事実の是正のための処分をする権限を有する行政庁に対し、処分をすることを求めることができます。', ['36条の3第1項'], Ex)) :-
+    求めの対象(C, 処分), !, 申出書の条(Ex0), append(Ex0, ['2条2号'], Ex).
+段求め(C, 段(処分等を求められる, '何人も、法令に違反する事実の是正のための行政指導をする権限を有する行政機関に対し、行政指導をすることを求めることができます。', ['36条の3第1項'], Ex)) :-
+    求めの対象(C, 行政指導), 申出書の条(Ex0), append(Ex0, ['2条6号'], Ex).
+</script>
+<script type="text/prolog" data-name="rules_g_hantei.pl">% rules/g_hantei.pl — 段をまとめ、見出し・根拠条文・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 箱の条, 木だけの条)　結論ごとの段 = s(画面のid, 見出し, 段)
+%   形は gyosos-prolog/rules/h_hantei.pl と同じ（2026-11-23 案A）。前は r(見出し, 定義の段, 適用除外の段, 入口の段のリスト, 根拠条文) で、
+%   見出し/4 が申請・行政指導では段を見ずに「第二章（申請に対する処分）の規定が当たります」の決まった1文を返していた（箱が判定の結果を言っていない。A1）。
+%   今は結論の箱を全部の段の答えの箇条書きにし、論理の木は結論1つにつき1本にした（A7・B5）。
+%   前の 見出し/4・除外の見出し/2・届出の見出し/2・求めの見出し/2（受け皿が無く「判定できませんでした」で止まる）・
+%   止まった段がある/1（除外・未履行の2つと、段の並びの位置で37条・36条の3の 場面外 を見ていた）は消した。
+%   止まった段は 印/2 が 組の番号/2 を呼んでから名前で見るので、知らない状態は throw で止まる（依頼書「最初に」）。
+%   段の約束/2 も状態を全部名前で書き、最後を throw にした（前は受け皿 段の約束(_, []) で黙って通っていた）。
+%   前の「語の定義」の段（「「申請」は2条3号の語です」）は判定の答えではないので消し、2条の号は手続ごとの段の木の原文の葉に置いた（A1）。
+%   1条2項（他の法律に特別の定めがある場合）は about の「収録範囲」へ移し、木と根拠条文から外した（A5・B6。gyosos の1条と同じ）。
+%   段の文は、末尾の「。」を外して、そのまま結論の箱と番号つきの節に出す（段と箱で文が食い違わないように）。
+
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 成り立たない組があれば、その組だけを段にする（REVIEW_RULES C3。ほかの段は出さない）。
+% 4つの手続のどれもしていなければ、そのことを1行だけ出す（決めたこと4）。
+% どちらでもなければ、適用除外と、「した」手続の章（第二章・第四章・第五章・第四章の二）を同じ入力で全部当てる（REVIEW_RULES C4・C5）。
+% 適用除外で外れた手続は、その手続の段を出さない（除外の1行だけ）。
+% 箱の並びは 組の番号 の順で、同じ番号の中は下の append の順（適用除外→申請→行政指導→届出→処分等の求め）。
+% 同じ述語を別のファイルに分けて書くと後の読み込みで消えるので、まとめはここに1つだけ置く
+全部の段(C, Steps) :- 組み合わせなしがある(C), !, 組み合わせなしの段(C, Steps).
+全部の段(C, [s(nashi, '当たる規定', 段(手続なし, M, ['2条3号', '2条6号', '2条7号', '36条の3第1項'], []))]) :- 手続なし(C), !,
+    M = '申請をしておらず、行政指導を受けておらず、届出もしておらず、処分又は行政指導をすることを求めてもいないので、第二章（申請に対する処分）・第四章（行政指導）・第四章の二（処分等の求め）・第五章（届出）の規定は当たりません。'.
+全部の段(C, Steps) :-
+    除外の段(C, L0),
+    手続の段(C, 申請, L1),
+    手続の段(C, 指導, L2),
+    手続の段(C, 届出, L3),
+    手続の段(C, 求め, L4),
+    append([L0, L1, L2, L3, L4], L),
+    箱の順(L, Steps).
+
+% 手続をしていない、又は適用除外で外れた手続は段を出さない
+手続の段(C, P, []) :- ( \+ 手続がある(C, P) ; 除外された(C, P) ), !.
+手続の段(C, 申請, L) :- 申請の段(C, L).
+手続の段(C, 指導, L) :- 行政指導の段(C, L).
+手続の段(C, 届出, L) :- 届出の段(C, L).
+手続の段(C, 求め, L) :- 求めの段(C, L).
+
+% 組の番号 は番号を空のまま呼んで後で比べる。番号を束ねて呼ぶと頭に合わず、最後の throw の節に落ちて止まる（sorin-prolog 2026-11-22）
+箱の順(L0, L) :-
+    findall(S, ( member(N, [1, 2, 3, 4]), member(S, L0), S = s(_, _, 段(St, _, _, _)), 組の番号(St, M), M =:= N ), L).
+
+組み合わせなしの段(C, Steps) :-
+    組み合わせなしの一覧(C, L),
+    findall(s(Id, 'この組み合わせはありません', 段(組み合わせなし, M, As, [])),
+            ( nth1(I, L, _-M-As), atom_concat(mujun, I, Id) ), Steps).
+
+組み合わせなしの一覧(C, L) :- findall(Ns-M-As, 組み合わせなし(C, Ns, M, As), L).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、段の文だけを出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」を付けない）。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(C, Steps, Ws) :-
+    結論の段(C, Steps, Ps),
+    findall(W, member(_-_-W, Ps), Ws).
+
+% 結論の箱に出す段を 段のid-段-答え の組で、箱の並びのまま返す（論理の木も同じ並びで結論1つにつき1本立てる。REVIEW_RULES B5）
+% 手続を「した」のに答えの段が1つも無い組（たとえば、申請をしていない人が書面で行政指導を受けたときは32条2項が出るので、今の欄では起きない）の受け皿。
+結論の段(C, Steps, Ps) :-
+    findall(Id-S-W, ( member(s(Id, _, S), Steps), 問いの答え(C, Id, S, W) ), Ps0),
+    ( Ps0 == [] -> どれにも当たらない(W0, S0), Ps = [none-S0-W0] ; Ps = Ps0 ).
+
+どれにも当たらない('当てる条がありません', 段(当たらない, '当てる条がありません。', [], [])).
+
+% 根拠の無い段は結論の箱に出さない。答え/4 の書き損じで立っても「（）」を画面に出さない
+% 「;」で書くと、根拠の付いた組み合わせなしで両方の枝が成り立ち、同じ文が結論の箱に2回出た（dairi-prolog 2026-11-19）。「->」で解を1つにする
+問いの答え(C, Id, S, W) :-
+    S = 段(St, _, As, _),
+    As \== [],
+    答え(C, Id, S, W0), !,
+    (   St == 組み合わせなし -> 組み合わせなしの条(C, Id, A)
+    ;   条の表記(As, A)
+    ),
+    format(atom(W), '~w（~w）', [W0, A]).
+
+% 成り立たない組は「この組み合わせはありません。…（5と9の欄・8条1項本文・2条3号）」
+組み合わせなしの条(C, Id, S) :-
+    atom_concat(mujun, IA, Id), atom_number(IA, I),
+    組み合わせなしの一覧(C, L), nth1(I, L, Ns-_-As),
+    atomic_list_concat(Ns, 'と', N),
+    条の表記(As, A),
+    format(atom(S), '~wの欄・~w', [N, A]).
+
+% 節の文：答えの文（条を付けない）
+節の文(C, Id, S, W) :- 答え(C, Id, S, W).
+
+% 答え(C, 段のid, 段, 答えの文)：段の文の末尾の「。」を外す。組み合わせなしは頭に「この組み合わせはありません。」を付ける。
+% 段の文には、画面の上で指す先の無い指示語（その・この・同項・当該 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6。rules/*.pl の段の文で守る）
+答え(_, _, 段(St, M, _, _), W) :-
+    ( atom_concat(M0, '。', M) -> true ; M0 = M ),
+    ( St == 組み合わせなし -> atomic_list_concat(['この組み合わせはありません。', M0], W) ; W = M0 ).
+
+%% ---- 根拠条文 ----
+% 段の順に並べ、重複は1つに。箱の条のあとに木だけの条（ただし書・定義の条・46条・申出書の条など）も並べる
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As, Ex), Ss), ( member(A, As) ; member(A, Ex) ) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5。結論をつないだ行と「次のすべてが成り立つ」の節は置かない）。
+% 並びは結論の箱と同じ。一番上の行は結論の箱の文で、その下に段の条の原文を置く。
+% 適用除外で外れなかった理由（rules/b_tekiyou.pl の 外れない葉）は、その手続の段のうち箱で一番前の段の木にだけ足す（決めたこと5）
+木(C, Steps, Trees) :-
+    結論の段(C, Steps, Ps),
+    findall(T, ( nth1(I, Ps, Id-S-W), 添えの葉(C, Ps, I, Id, Ls), 段の木(Ls, S, W, T) ), Trees).
+
+添えの葉(C, Ps, I, Id, Ls) :-
+    段の手続(Id, P),
+    \+ ( nth1(J, Ps, Id2-_-_), J < I, 段の手続(Id2, P) ), !,
+    外れない葉(C, P, Ls).
+添えの葉(_, _, _, _, []).
+
+段の手続(Id, 申請) :- memberchk(Id, [kijun, hyoujun, shinsa, riyuu, riyuusho, jouhou, kouchou, tachou, kyoudou]), !.
+段の手続(Id, 指導) :- memberchk(Id, [ippan, torisage, kengen, houshiki, shomen, shishin, chushi]), !.
+段の手続(todoke, 届出) :- !.
+段の手続(motome, 求め).
+
+段の木(Ls, 段(St, _, As, Ex), W, t(K, W, A, Cs)) :-
+    append(As, Ex, All), list_to_set(All, Arts),
+    maplist(原文規定, Arts, Rs),
+    段の約束(St, Ys),
+    append([Rs, Ls, Ys], Kids),
+    すべて(W, '', Kids, t(_, W, A, Cs)),
+    印(St, K).
+
+% 止まった段・できない段（組み合わせなし・手続なし・除外・到達前・未履行・要件に当たらない）は info、そのほかは ok（木ごとに、その段で決める）
+印(St, K) :- 組の番号(St, _), ( memberchk(St, [組み合わせなし, 手続なし, 除外, 到達前, 未履行, 要件に当たらない, 当たらない]) -> K = info ; K = ok ).
+
+% 組の番号(状態, 1=先頭に出す答え | 2=当たった答え | 4=当たりません・できません)。状態は全部名前で書き、知らない状態は止める（依頼書「最初に」）。
+% 3（答えを支える文）は、回答ファイルの 基準公・標準公・求めれば示す・方式・一般原則・中止の申出書・求めの申出書・措置 を
+% 箱に出さず木の葉にした（決めたこと7）ので、今は使っていない。
+% 2026-11-23 前の 定義・適用・判定しない・申出書・場面外・求められない・交付対象外・求めなし・努力義務・当たる・処分前・理由対象外・同時・
+% 公にする義務・公にしている・定めなし・求めれば・求められる・方式・一般原則・基準公 は、段を出さないか、下の名前に寄せたので消した
+組の番号(組み合わせなし, 1) :- !.
+組の番号(手続なし, 1) :- !.            % 申請・行政指導・届出・処分等の求めのどれもしていない（決めたこと4）
+組の番号(除外, 1) :- !.                % 3条1項・3条3項・4条で、その手続の章が外れる（手続ごとに1行）
+組の番号(審査開始, 2) :- !.            % 7条（到達・形式に適合）
+組の番号(補正か拒否, 2) :- !.          % 7条（形式に適合しない）
+組の番号(到達前, 2) :- !.              % 7条（まだ到達していない）
+組の番号(理由同時, 2) :- !.            % 8条1項本文
+組の番号(求めで足りる, 2) :- !.        % 8条1項ただし書（求めていない）
+組の番号(求めあり, 2) :- !.            % 8条1項ただし書（求めた）
+組の番号(理由書面, 2) :- !.            % 8条2項
+組の番号(基準非公, 2) :- !.            % 5条3項
+組の番号(標準非公, 2) :- !.            % 6条（定めたのに公にしていない）
+組の番号(標準なし, 2) :- !.            % 6条（定めるよう努める）
+組の番号(進行状況, 2) :- !.            % 9条1項・2項（到達して求めた）
+組の番号(情報提供, 2) :- !.            % 9条2項（到達していないか、申請をしていなくて求めた）
+組の番号(公聴会, 2) :- !.              % 10条
+組の番号(遅延禁止, 2) :- !.            % 11条1項
+組の番号(共同審査, 2) :- !.            % 11条2項
+組の番号(不利益禁止, 2) :- !.          % 32条2項
+組の番号(妨げ禁止, 2) :- !.            % 33条
+組の番号(余儀なく禁止, 2) :- !.        % 34条
+組の番号(三項目, 2) :- !.              % 35条2項
+組の番号(交付, 2) :- !.                % 35条3項（口頭・求めた）
+組の番号(交付を求められる, 2) :- !.    % 35条3項（口頭・まだ求めていない）
+組の番号(指針, 2) :- !.                % 36条
+組の番号(中止を求められる, 2) :- !.    % 36条の2第1項本文
+組の番号(履行, 2) :- !.                % 37条
+組の番号(未履行, 2) :- !.              % 37条（まだ到達していない）
+組の番号(処分等を求められる, 2) :- !.  % 36条の3第1項
+組の番号(要件に当たらない, 4) :- !.    % 「〜ので、〜は当たりません」「〜ので、〜申出はできません」（その手続を「した」ときだけ出す）
+組の番号(当たらない, 4) :- !.          % どれにも当たらない（受け皿）
+組の番号(St, _) :- throw(知らない状態(St)).
+
+% 葉に置くのは結論を支える規則だけ。断り書き（遅滞なく・殊更に・行政上特別の支障の当否、法令に違反する事実があるか、条例の中身は判定しない 等）は
+% about の「判定について」に置く（REVIEW_RULES A5・D1。前は段ごとに 当否の約束・思料の約束・支障の約束・条例の約束・定義の約束 を付けていた）。
+% 今はどの状態にも約束事を付けない。状態は全部名前で書き、知らない状態は止める
+段の約束(St, []) :-
+    memberchk(St, [組み合わせなし, 手続なし, 除外, 審査開始, 補正か拒否, 到達前, 理由同時, 求めで足りる, 求めあり, 理由書面,
+                   基準非公, 標準非公, 標準なし, 進行状況, 情報提供, 公聴会, 遅延禁止, 共同審査, 不利益禁止, 妨げ禁止, 余儀なく禁止,
+                   三項目, 交付, 交付を求められる, 指針, 中止を求められる, 履行, 未履行, 処分等を求められる, 要件に当たらない, 当たらない]), !.
+段の約束(St, _) :- throw(知らない状態(St)).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は gyosos-prolog の web.pl と同じ（2026-11-23）。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(C, Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+</script>
+<script type="application/json" id="law">{"1":{"t":"第一条","c":"（目的等）","p":[{"n":"1","s":"この法律は、処分、行政指導及び届出に関する手続並びに命令等を定める手続に関し、共通する事項を定めることによって、行政運営における公正の確保と透明性（行政上の意思決定について、その内容及び過程が国民にとって明らかであることをいう。第四十六条において同じ。）の向上を図り、もって国民の権利利益の保護に資することを目的とする。","i":[]},{"n":"2","s":"処分、行政指導及び届出に関する手続並びに命令等を定める手続に関しこの法律に規定する事項について、他の法律に特別の定めがある場合は、その定めるところによる。","i":[]}]},"2":{"t":"第二条","c":"（定義）","p":[{"n":"1","s":"この法律において、次の各号に掲げる用語の意義は、当該各号に定めるところによる。","i":[{"n":"1","t":"一","s":"法令　法律、法律に基づく命令（告示を含む。）、条例及び地方公共団体の執行機関の規則（規程を含む。以下「規則」という。）をいう。","sub":[]},{"n":"2","t":"二","s":"処分　行政庁の処分その他公権力の行使に当たる行為をいう。","sub":[]},{"n":"3","t":"三","s":"申請　法令に基づき、行政庁の許可、認可、免許その他の自己に対し何らかの利益を付与する処分（以下「許認可等」という。）を求める行為であって、当該行為に対して行政庁が諾否の応答をすべきこととされているものをいう。","sub":[]},{"n":"4","t":"四","s":"不利益処分　行政庁が、法令に基づき、特定の者を名あて人として、直接に、これに義務を課し、又はその権利を制限する処分をいう。ただし、次のいずれかに該当するものを除く。","sub":["イ 事実上の行為及び事実上の行為をするに当たりその範囲、時期等を明らかにするために法令上必要とされている手続としての処分","ロ 申請により求められた許認可等を拒否する処分その他申請に基づき当該申請をした者を名あて人としてされる処分","ハ 名あて人となるべき者の同意の下にすることとされている処分","ニ 許認可等の効力を失わせる処分であって、当該許認可等の基礎となった事実が消滅した旨の届出があったことを理由としてされるもの"]},{"n":"5","t":"五","s":"行政機関　次に掲げる機関をいう。","sub":["イ 法律の規定に基づき内閣に置かれる機関若しくは内閣の所轄の下に置かれる機関、宮内庁、内閣府設置法（平成十一年法律第八十九号）第四十九条第一項若しくは第二項に規定する機関、国家行政組織法（昭和二十三年法律第百二十号）第三条第二項に規定する機関、会計検査院若しくはこれらに置かれる機関又はこれらの機関の職員であって法律上独立に権限を行使することを認められた職員","ロ 地方公共団体の機関（議会を除く。）"]},{"n":"6","t":"六","s":"行政指導　行政機関がその任務又は所掌事務の範囲内において一定の行政目的を実現するため特定の者に一定の作為又は不作為を求める指導、勧告、助言その他の行為であって処分に該当しないものをいう。","sub":[]},{"n":"7","t":"七","s":"届出　行政庁に対し一定の事項の通知をする行為（申請に該当するものを除く。）であって、法令により直接に当該通知が義務付けられているもの（自己の期待する一定の法律上の効果を発生させるためには当該通知をすべきこととされているものを含む。）をいう。","sub":[]},{"n":"8","t":"八","s":"命令等　内閣又は行政機関が定める次に掲げるものをいう。","sub":["イ 法律に基づく命令（処分の要件を定める告示を含む。次条第二項において単に「命令」という。）又は規則","ロ 審査基準（申請により求められた許認可等をするかどうかをその法令の定めに従って判断するために必要とされる基準をいう。以下同じ。）","ハ 処分基準（不利益処分をするかどうか又はどのような不利益処分とするかについてその法令の定めに従って判断するために必要とされる基準をいう。以下同じ。）","ニ 行政指導指針（同一の行政目的を実現するため一定の条件に該当する複数の者に対し行政指導をしようとするときにこれらの行政指導に共通してその内容となるべき事項をいう。以下同じ。）"]}]}]},"3":{"t":"第三条","c":"（適用除外）","p":[{"n":"1","s":"次に掲げる処分及び行政指導については、次章から第四章の二までの規定は、適用しない。","i":[{"n":"1","t":"一","s":"国会の両院若しくは一院又は議会の議決によってされる処分","sub":[]},{"n":"2","t":"二","s":"裁判所若しくは裁判官の裁判により、又は裁判の執行としてされる処分","sub":[]},{"n":"3","t":"三","s":"国会の両院若しくは一院若しくは議会の議決を経て、又はこれらの同意若しくは承認を得た上でされるべきものとされている処分","sub":[]},{"n":"4","t":"四","s":"検査官会議で決すべきものとされている処分及び会計検査の際にされる行政指導","sub":[]},{"n":"5","t":"五","s":"刑事事件に関する法令に基づいて検察官、検察事務官又は司法警察職員がする処分及び行政指導","sub":[]},{"n":"6","t":"六","s":"国税又は地方税の犯則事件に関する法令（他の法令において準用する場合を含む。）に基づいて国税庁長官、国税局長、税務署長、国税庁、国税局若しくは税務署の当該職員、税関長、税関職員又は徴税吏員（他の法令の規定に基づいてこれらの職員の職務を行う者を含む。）がする処分及び行政指導並びに金融商品取引の犯則事件に関する法令（他の法令において準用する場合を含む。）に基づいて証券取引等監視委員会、その職員（当該法令においてその職員とみなされる者を含む。）、財務局長又は財務支局長がする処分及び行政指導","sub":[]},{"n":"7","t":"七","s":"学校、講習所、訓練所又は研修所において、教育、講習、訓練又は研修の目的を達成するために、学生、生徒、児童若しくは幼児若しくはこれらの保護者、講習生、訓練生又は研修生に対してされる処分及び行政指導","sub":[]},{"n":"8","t":"八","s":"刑務所、少年刑務所、拘置所、留置施設、海上保安留置施設、少年院又は少年鑑別所において、収容の目的を達成するためにされる処分及び行政指導","sub":[]},{"n":"9","t":"九","s":"公務員（国家公務員法（昭和二十二年法律第百二十号）第二条第一項に規定する国家公務員及び地方公務員法（昭和二十五年法律第二百六十一号）第三条第一項に規定する地方公務員をいう。以下同じ。）又は公務員であった者に対してその職務又は身分に関してされる処分及び行政指導","sub":[]},{"n":"10","t":"十","s":"外国人の出入国、出入国管理及び難民認定法（昭和二十六年政令第三百十九号）第六十一条の二第一項に規定する難民の認定、同条第二項に規定する補完的保護対象者の認定又は帰化に関する処分及び行政指導","sub":[]},{"n":"11","t":"十一","s":"専ら人の学識技能に関する試験又は検定の結果についての処分","sub":[]},{"n":"12","t":"十二","s":"相反する利害を有する者の間の利害の調整を目的として法令の規定に基づいてされる裁定その他の処分（その双方を名宛人とするものに限る。）及び行政指導","sub":[]},{"n":"13","t":"十三","s":"公衆衛生、環境保全、防疫、保安その他の公益に関わる事象が発生し又は発生する可能性のある現場において警察官若しくは海上保安官又はこれらの公益を確保するために行使すべき権限を法律上直接に与えられたその他の職員によってされる処分及び行政指導","sub":[]},{"n":"14","t":"十四","s":"報告又は物件の提出を命ずる処分その他その職務の遂行上必要な情報の収集を直接の目的としてされる処分及び行政指導","sub":[]},{"n":"15","t":"十五","s":"審査請求、再調査の請求その他の不服申立てに対する行政庁の裁決、決定その他の処分","sub":[]},{"n":"16","t":"十六","s":"前号に規定する処分の手続又は第三章に規定する聴聞若しくは弁明の機会の付与の手続その他の意見陳述のための手続において法令に基づいてされる処分及び行政指導","sub":[]}]},{"n":"2","s":"次に掲げる命令等を定める行為については、第六章の規定は、適用しない。","i":[{"n":"1","t":"一","s":"法律の施行期日について定める政令","sub":[]},{"n":"2","t":"二","s":"恩赦に関する命令","sub":[]},{"n":"3","t":"三","s":"命令又は規則を定める行為が処分に該当する場合における当該命令又は規則","sub":[]},{"n":"4","t":"四","s":"法律の規定に基づき施設、区間、地域その他これらに類するものを指定する命令又は規則","sub":[]},{"n":"5","t":"五","s":"公務員の給与、勤務時間その他の勤務条件について定める命令等","sub":[]},{"n":"6","t":"六","s":"審査基準、処分基準又は行政指導指針であって、法令の規定により若しくは慣行として、又は命令等を定める機関の判断により公にされるもの以外のもの","sub":[]}]},{"n":"3","s":"第一項各号及び前項各号に掲げるもののほか、地方公共団体の機関がする処分（その根拠となる規定が条例又は規則に置かれているものに限る。）及び行政指導、地方公共団体の機関に対する届出（前条第七号の通知の根拠となる規定が条例又は規則に置かれているものに限る。）並びに地方公共団体の機関が命令等を定める行為については、次章から第六章までの規定は、適用しない。","i":[]}]},"4":{"t":"第四条","c":"（国の機関等に対する処分等の適用除外）","p":[{"n":"1","s":"国の機関又は地方公共団体若しくはその機関に対する処分（これらの機関又は団体がその固有の資格において当該処分の名あて人となるものに限る。）及び行政指導並びにこれらの機関又は団体がする届出（これらの機関又は団体がその固有の資格においてすべきこととされているものに限る。）については、この法律の規定は、適用しない。","i":[]},{"n":"2","s":"次の各号のいずれかに該当する法人に対する処分であって、当該法人の監督に関する法律の特別の規定に基づいてされるもの（当該法人の解散を命じ、若しくは設立に関する認可を取り消す処分又は当該法人の役員若しくは当該法人の業務に従事する者の解任を命ずる処分を除く。）については、次章及び第三章の規定は、適用しない。","i":[{"n":"1","t":"一","s":"法律により直接に設立された法人又は特別の法律により特別の設立行為をもって設立された法人","sub":[]},{"n":"2","t":"二","s":"特別の法律により設立され、かつ、その設立に関し行政庁の認可を要する法人のうち、その行う業務が国又は地方公共団体の行政運営と密接な関連を有するものとして政令で定める法人","sub":[]}]},{"n":"3","s":"行政庁が法律の規定に基づく試験、検査、検定、登録その他の行政上の事務について当該法律に基づきその全部又は一部を行わせる者を指定した場合において、その指定を受けた者（その者が法人である場合にあっては、その役員）又は職員その他の者が当該事務に従事することに関し公務に従事する職員とみなされるときは、その指定を受けた者に対し当該法律に基づいて当該事務に関し監督上される処分（当該指定を取り消す処分、その指定を受けた者が法人である場合におけるその役員の解任を命ずる処分又はその指定を受けた者の当該事務に従事する者の解任を命ずる処分を除く。）については、次章及び第三章の規定は、適用しない。","i":[]},{"n":"4","s":"次に掲げる命令等を定める行為については、第六章の規定は、適用しない。","i":[{"n":"1","t":"一","s":"国又は地方公共団体の機関の設置、所掌事務の範囲その他の組織について定める命令等","sub":[]},{"n":"2","t":"二","s":"皇室典範（昭和二十二年法律第三号）第二十六条の皇統譜その他天皇及び皇族の身分関係に関する事項について定める命令等","sub":[]},{"n":"3","t":"三","s":"公務員の礼式、服制、研修、教育訓練、表彰及び報償並びに公務員の間における競争試験について定める命令等","sub":[]},{"n":"4","t":"四","s":"国又は地方公共団体の予算、決算及び会計について定める命令等（入札の参加者の資格、入札保証金その他の国又は地方公共団体の契約の相手方又は相手方になろうとする者に係る事項を定める命令等を除く。）並びに国又は地方公共団体の財産及び物品の管理について定める命令等（国又は地方公共団体が財産及び物品を貸し付け、交換し、売り払い、譲与し、信託し、若しくは出資の目的とし、又はこれらに私権を設定することについて定める命令等であって、これらの行為の相手方又は相手方になろうとする者に係る事項を定めるものを除く。）","sub":[]},{"n":"5","t":"五","s":"会計検査について定める命令等","sub":[]},{"n":"6","t":"六","s":"国の機関相互間の関係について定める命令等並びに地方自治法（昭和二十二年法律第六十七号）第二編第十二章に規定する国と普通地方公共団体との関係及び普通地方公共団体相互間の関係その他の国と地方公共団体との関係及び地方公共団体相互間の関係について定める命令等（第一項の規定によりこの法律の規定を適用しないこととされる処分に係る命令等を含む。）","sub":[]},{"n":"7","t":"七","s":"第二項各号に規定する法人の役員及び職員、業務の範囲、財務及び会計その他の組織、運営及び管理について定める命令等（これらの法人に対する処分であって、これらの法人の解散を命じ、若しくは設立に関する認可を取り消す処分又はこれらの法人の役員若しくはこれらの法人の業務に従事する者の解任を命ずる処分に係る命令等を除く。）","sub":[]}]}]},"5":{"t":"第五条","c":"（審査基準）","p":[{"n":"1","s":"行政庁は、審査基準を定めるものとする。","i":[]},{"n":"2","s":"行政庁は、審査基準を定めるに当たっては、許認可等の性質に照らしてできる限り具体的なものとしなければならない。","i":[]},{"n":"3","s":"行政庁は、行政上特別の支障があるときを除き、法令により申請の提出先とされている機関の事務所における備付けその他の適当な方法により審査基準を公にしておかなければならない。","i":[]}]},"6":{"t":"第六条","c":"（標準処理期間）","p":[{"n":"1","s":"行政庁は、申請がその事務所に到達してから当該申請に対する処分をするまでに通常要すべき標準的な期間（法令により当該行政庁と異なる機関が当該申請の提出先とされている場合は、併せて、当該申請が当該提出先とされている機関の事務所に到達してから当該行政庁の事務所に到達するまでに通常要すべき標準的な期間）を定めるよう努めるとともに、これを定めたときは、これらの当該申請の提出先とされている機関の事務所における備付けその他の適当な方法により公にしておかなければならない。","i":[]}]},"7":{"t":"第七条","c":"（申請に対する審査、応答）","p":[{"n":"1","s":"行政庁は、申請がその事務所に到達したときは遅滞なく当該申請の審査を開始しなければならず、かつ、申請書の記載事項に不備がないこと、申請書に必要な書類が添付されていること、申請をすることができる期間内にされたものであることその他の法令に定められた申請の形式上の要件に適合しない申請については、速やかに、申請をした者（以下「申請者」という。）に対し相当の期間を定めて当該申請の補正を求め、又は当該申請により求められた許認可等を拒否しなければならない。","i":[]}]},"8":{"t":"第八条","c":"（理由の提示）","p":[{"n":"1","s":"行政庁は、申請により求められた許認可等を拒否する処分をする場合は、申請者に対し、同時に、当該処分の理由を示さなければならない。ただし、法令に定められた許認可等の要件又は公にされた審査基準が数量的指標その他の客観的指標により明確に定められている場合であって、当該申請がこれらに適合しないことが申請書の記載又は添付書類その他の申請の内容から明らかであるときは、申請者の求めがあったときにこれを示せば足りる。","i":[]},{"n":"2","s":"前項本文に規定する処分を書面でするときは、同項の理由は、書面により示さなければならない。","i":[]}]},"9":{"t":"第九条","c":"（情報の提供）","p":[{"n":"1","s":"行政庁は、申請者の求めに応じ、当該申請に係る審査の進行状況及び当該申請に対する処分の時期の見通しを示すよう努めなければならない。","i":[]},{"n":"2","s":"行政庁は、申請をしようとする者又は申請者の求めに応じ、申請書の記載及び添付書類に関する事項その他の申請に必要な情報の提供に努めなければならない。","i":[]}]},"10":{"t":"第十条","c":"（公聴会の開催等）","p":[{"n":"1","s":"行政庁は、申請に対する処分であって、申請者以外の者の利害を考慮すべきことが当該法令において許認可等の要件とされているものを行う場合には、必要に応じ、公聴会の開催その他の適当な方法により当該申請者以外の者の意見を聴く機会を設けるよう努めなければならない。","i":[]}]},"11":{"t":"第十一条","c":"（複数の行政庁が関与する処分）","p":[{"n":"1","s":"行政庁は、申請の処理をするに当たり、他の行政庁において同一の申請者からされた関連する申請が審査中であることをもって自らすべき許認可等をするかどうかについての審査又は判断を殊更に遅延させるようなことをしてはならない。","i":[]},{"n":"2","s":"一の申請又は同一の申請者からされた相互に関連する複数の申請に対する処分について複数の行政庁が関与する場合においては、当該複数の行政庁は、必要に応じ、相互に連絡をとり、当該申請者からの説明の聴取を共同して行う等により審査の促進に努めるものとする。","i":[]}]},"32":{"t":"第三十二条","c":"（行政指導の一般原則）","p":[{"n":"1","s":"行政指導にあっては、行政指導に携わる者は、いやしくも当該行政機関の任務又は所掌事務の範囲を逸脱してはならないこと及び行政指導の内容があくまでも相手方の任意の協力によってのみ実現されるものであることに留意しなければならない。","i":[]},{"n":"2","s":"行政指導に携わる者は、その相手方が行政指導に従わなかったことを理由として、不利益な取扱いをしてはならない。","i":[]}]},"33":{"t":"第三十三条","c":"（申請に関連する行政指導）","p":[{"n":"1","s":"申請の取下げ又は内容の変更を求める行政指導にあっては、行政指導に携わる者は、申請者が当該行政指導に従う意思がない旨を表明したにもかかわらず当該行政指導を継続すること等により当該申請者の権利の行使を妨げるようなことをしてはならない。","i":[]}]},"34":{"t":"第三十四条","c":"（許認可等の権限に関連する行政指導）","p":[{"n":"1","s":"許認可等をする権限又は許認可等に基づく処分をする権限を有する行政機関が、当該権限を行使することができない場合又は行使する意思がない場合においてする行政指導にあっては、行政指導に携わる者は、当該権限を行使し得る旨を殊更に示すことにより相手方に当該行政指導に従うことを余儀なくさせるようなことをしてはならない。","i":[]}]},"35":{"t":"第三十五条","c":"（行政指導の方式）","p":[{"n":"1","s":"行政指導に携わる者は、その相手方に対して、当該行政指導の趣旨及び内容並びに責任者を明確に示さなければならない。","i":[]},{"n":"2","s":"行政指導に携わる者は、当該行政指導をする際に、行政機関が許認可等をする権限又は許認可等に基づく処分をする権限を行使し得る旨を示すときは、その相手方に対して、次に掲げる事項を示さなければならない。","i":[{"n":"1","t":"一","s":"当該権限を行使し得る根拠となる法令の条項","sub":[]},{"n":"2","t":"二","s":"前号の条項に規定する要件","sub":[]},{"n":"3","t":"三","s":"当該権限の行使が前号の要件に適合する理由","sub":[]}]},{"n":"3","s":"行政指導が口頭でされた場合において、その相手方から前二項に規定する事項を記載した書面の交付を求められたときは、当該行政指導に携わる者は、行政上特別の支障がない限り、これを交付しなければならない。","i":[]},{"n":"4","s":"前項の規定は、次に掲げる行政指導については、適用しない。","i":[{"n":"1","t":"一","s":"相手方に対しその場において完了する行為を求めるもの","sub":[]},{"n":"2","t":"二","s":"既に文書（前項の書面を含む。）又は電磁的記録（電子的方式、磁気的方式その他人の知覚によっては認識することができない方式で作られる記録であって、電子計算機による情報処理の用に供されるものをいう。）によりその相手方に通知されている事項と同一の内容を求めるもの","sub":[]}]}]},"36":{"t":"第三十六条","c":"（複数の者を対象とする行政指導）","p":[{"n":"1","s":"同一の行政目的を実現するため一定の条件に該当する複数の者に対し行政指導をしようとするときは、行政機関は、あらかじめ、事案に応じ、行政指導指針を定め、かつ、行政上特別の支障がない限り、これを公表しなければならない。","i":[]}]},"36_2":{"t":"第三十六条の二","c":"（行政指導の中止等の求め）","p":[{"n":"1","s":"法令に違反する行為の是正を求める行政指導（その根拠となる規定が法律に置かれているものに限る。）の相手方は、当該行政指導が当該法律に規定する要件に適合しないと思料するときは、当該行政指導をした行政機関に対し、その旨を申し出て、当該行政指導の中止その他必要な措置をとることを求めることができる。ただし、当該行政指導がその相手方について弁明その他意見陳述のための手続を経てされたものであるときは、この限りでない。","i":[]},{"n":"2","s":"前項の申出は、次に掲げる事項を記載した申出書を提出してしなければならない。","i":[{"n":"1","t":"一","s":"申出をする者の氏名又は名称及び住所又は居所","sub":[]},{"n":"2","t":"二","s":"当該行政指導の内容","sub":[]},{"n":"3","t":"三","s":"当該行政指導がその根拠とする法律の条項","sub":[]},{"n":"4","t":"四","s":"前号の条項に規定する要件","sub":[]},{"n":"5","t":"五","s":"当該行政指導が前号の要件に適合しないと思料する理由","sub":[]},{"n":"6","t":"六","s":"その他参考となる事項","sub":[]}]},{"n":"3","s":"当該行政機関は、第一項の規定による申出があったときは、必要な調査を行い、当該行政指導が当該法律に規定する要件に適合しないと認めるときは、当該行政指導の中止その他必要な措置をとらなければならない。","i":[]}]},"36_3":{"t":"第三十六条の三","c":"","p":[{"n":"1","s":"何人も、法令に違反する事実がある場合において、その是正のためにされるべき処分又は行政指導（その根拠となる規定が法律に置かれているものに限る。）がされていないと思料するときは、当該処分をする権限を有する行政庁又は当該行政指導をする権限を有する行政機関に対し、その旨を申し出て、当該処分又は行政指導をすることを求めることができる。","i":[]},{"n":"2","s":"前項の申出は、次に掲げる事項を記載した申出書を提出してしなければならない。","i":[{"n":"1","t":"一","s":"申出をする者の氏名又は名称及び住所又は居所","sub":[]},{"n":"2","t":"二","s":"法令に違反する事実の内容","sub":[]},{"n":"3","t":"三","s":"当該処分又は行政指導の内容","sub":[]},{"n":"4","t":"四","s":"当該処分又は行政指導の根拠となる法令の条項","sub":[]},{"n":"5","t":"五","s":"当該処分又は行政指導がされるべきであると思料する理由","sub":[]},{"n":"6","t":"六","s":"その他参考となる事項","sub":[]}]},{"n":"3","s":"当該行政庁又は行政機関は、第一項の規定による申出があったときは、必要な調査を行い、その結果に基づき必要があると認めるときは、当該処分又は行政指導をしなければならない。","i":[]}]},"37":{"t":"第三十七条","c":"（届出）","p":[{"n":"1","s":"届出が届出書の記載事項に不備がないこと、届出書に必要な書類が添付されていることその他の法令に定められた届出の形式上の要件に適合している場合は、当該届出が法令により当該届出の提出先とされている機関の事務所に到達したときに、当該届出をすべき手続上の義務が履行されたものとする。","i":[]}]},"46":{"t":"第四十六条","c":"（地方公共団体の措置）","p":[{"n":"1","s":"地方公共団体は、第三条第三項において第二章から前章までの規定を適用しないこととされた処分、行政指導及び届出並びに命令等を定める行為に関する手続について、この法律の規定の趣旨にのっとり、行政運営における公正の確保と透明性の向上を図るため必要な措置を講ずるよう努めなければならない。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"第一章　総則","a":[{"k":"1","t":"第一条","c":"（目的等）","u":1},{"k":"2","t":"第二条","c":"（定義）","u":1},{"k":"3","t":"第三条","c":"（適用除外）","u":1},{"k":"4","t":"第四条","c":"（国の機関等に対する処分等の適用除外）","u":1}]},{"t":"第二章　申請に対する処分","a":[{"k":"5","t":"第五条","c":"（審査基準）","u":1},{"k":"6","t":"第六条","c":"（標準処理期間）","u":1},{"k":"7","t":"第七条","c":"（申請に対する審査、応答）","u":1},{"k":"8","t":"第八条","c":"（理由の提示）","u":1},{"k":"9","t":"第九条","c":"（情報の提供）","u":1},{"k":"10","t":"第十条","c":"（公聴会の開催等）","u":1},{"k":"11","t":"第十一条","c":"（複数の行政庁が関与する処分）","u":1}]},{"t":"第三章　不利益処分","a":[{"k":"12","t":"第十二条","c":"（処分の基準）","u":0},{"k":"13","t":"第十三条","c":"（不利益処分をしようとする場合の手続）","u":0},{"k":"14","t":"第十四条","c":"（不利益処分の理由の提示）","u":0},{"k":"15","t":"第十五条","c":"（聴聞の通知の方式）","u":0},{"k":"16","t":"第十六条","c":"（代理人）","u":0},{"k":"17","t":"第十七条","c":"（参加人）","u":0},{"k":"18","t":"第十八条","c":"（文書等の閲覧）","u":0},{"k":"19","t":"第十九条","c":"（聴聞の主宰）","u":0},{"k":"20","t":"第二十条","c":"（聴聞の期日における審理の方式）","u":0},{"k":"21","t":"第二十一条","c":"（陳述書等の提出）","u":0},{"k":"22","t":"第二十二条","c":"（続行期日の指定）","u":0},{"k":"23","t":"第二十三条","c":"（当事者の不出頭等の場合における聴聞の終結）","u":0},{"k":"24","t":"第二十四条","c":"（聴聞調書及び報告書）","u":0},{"k":"25","t":"第二十五条","c":"（聴聞の再開）","u":0},{"k":"26","t":"第二十六条","c":"（聴聞を経てされる不利益処分の決定）","u":0},{"k":"27","t":"第二十七条","c":"（審査請求の制限）","u":0},{"k":"28","t":"第二十八条","c":"（役員等の解任等を命ずる不利益処分をしようとする場合の聴聞等の特例）","u":0},{"k":"29","t":"第二十九条","c":"（弁明の機会の付与の方式）","u":0},{"k":"30","t":"第三十条","c":"（弁明の機会の付与の通知の方式）","u":0},{"k":"31","t":"第三十一条","c":"（聴聞に関する手続の準用）","u":0}]},{"t":"第四章　行政指導","a":[{"k":"32","t":"第三十二条","c":"（行政指導の一般原則）","u":1},{"k":"33","t":"第三十三条","c":"（申請に関連する行政指導）","u":1},{"k":"34","t":"第三十四条","c":"（許認可等の権限に関連する行政指導）","u":1},{"k":"35","t":"第三十五条","c":"（行政指導の方式）","u":1},{"k":"36","t":"第三十六条","c":"（複数の者を対象とする行政指導）","u":1},{"k":"36_2","t":"第三十六条の二","c":"（行政指導の中止等の求め）","u":1}]},{"t":"第四章の二　処分等の求め","a":[{"k":"36_3","t":"第三十六条の三","c":"","u":1}]},{"t":"第五章　届出","a":[{"k":"37","t":"第三十七条","c":"（届出）","u":1}]},{"t":"第六章　意見公募手続等","a":[{"k":"38","t":"第三十八条","c":"（命令等を定める場合の一般原則）","u":0},{"k":"39","t":"第三十九条","c":"（意見公募手続）","u":0},{"k":"40","t":"第四十条","c":"（意見公募手続の特例）","u":0},{"k":"41","t":"第四十一条","c":"（意見公募手続の周知等）","u":0},{"k":"42","t":"第四十二条","c":"（提出意見の考慮）","u":0},{"k":"43","t":"第四十三条","c":"（結果の公示等）","u":0},{"k":"44","t":"第四十四条","c":"（準用）","u":0},{"k":"45","t":"第四十五条","c":"（公示の方法）","u":0}]},{"t":"第七章　補則","a":[{"k":"46","t":"第四十六条","c":"（地方公共団体の措置）","u":1}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+// ==== 共有ここから（別ページでも同じ部品を使う） ====
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  // '2条3号' '8条1項本文' '36条の2第2項1号' のような形。複数条が「・」で区切られることもある → 最初の条だけ見る
+  const first = String(a).split("・")[0];
+  const m = first.match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(?:第?(\d+)号)?([イロハニ])?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[4] || null, sub: m[5] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para);
+  // 号まで指定があれば、項の本文とその号だけ出す（3条1項は号が多いので全部は出さない）
+  if (r.item) ps = ps.filter(p => p.i.some(it => it.n === r.item));
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const list = r.item ? p.i.filter(it => it.n === r.item) : p.i;
+    const its = list.map(it => `<p class="it">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => r.sub && x.startsWith(r.sub + " ") ? `<br><span class="hit">　${esc(x)}</span>` : `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。</p>`;
+// 2026-11-23 凡例から「アプリの約束事」の説明を外した（約束事が1つも無くなったため。yakusoku/kihon.pl。REVIEW_RULES B3）。
+// 凡例は最初の木の上に1回だけ出す（legend＝false で外す。gyosos-prolog と同じ）
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+// ==== 共有ここまで ====
+
+async function boot(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const need = ["result/2", "explain/2", "heads/2", "answers/2"].filter(p => !once(`current_predicate(${p})`));
+    if (need.length) throw new Error(`Prologの読み込みが不完全です（${need.join("・")} がありません）。${errBuf.slice(-3).join(" ")}`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    renderPresets();
+    ask();
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+    $("answer").innerHTML = `<p class="loading err">エラー：${esc(e.message)}</p>`;
+  }
+}
+
+// ---- 入力 → ctx の文字 ----
+// 欄はいつも全部出し、出し消ししない（REVIEW_RULES C5。2026-11-23 欄を出し消しする関数（updateSlots）と、その表（SLOTS・LABELS）、
+// 隠れた欄を「関係なし」で渡す buildCtx（shown）、入口の値を ctx の頭と詳細の項の名前にする形をやめた。形は gyosos-prolog と同じ）。
+// 並びは schema.pl の ctx の引数の順（1〜30）。成り立たない組は Prolog が「この組み合わせはありません」と返す（C3）
+const IDS = ["exc","na","kikan","konkyo","shinsei","kijun","hyou","kei","kek","shi","mot","jou","rig","tac","kan","shidou","fur","tor","ken","shs","jog","fuk","zes","tek","ben","todoke","yok","ihan","mkon","ihansha"];
+// 1の欄（3条1項の号）だけは数で渡す（schema.pl の 欄の値(1, …) は整数）
+const valOf = id => /^\d+$/.test($(id).value) ? $(id).value : atom($(id).value);
+function buildCtx(){
+  return `ctx(${IDS.map(valOf).join(",")})`;
+}
+
+// ---- 判定と表示 ----
+const HEAD = `<div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div>`;
+const lawBtn = a => a === "@約束事" ? `<span class="yk">アプリの約束事</span>` : (a ? `<button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : "");
+const artsHTML = as => as.map(String).map(lawBtn).join(" ");
+// 断り書き（個別の法律で変わる・義務と努力義務の一覧・勝ち負け・当否）と、この先のページへのリンクは about.html の「判定について」に置く
+// （REVIEW_RULES A1・A5。2026-11-23 結果の下に出していた NOTE_KOBETSU・NOTE_GIMU・NOTE_KACHIMAKE・NOTE_TOUHI・note-next と、
+// 欄の説明の「判定しません」、「判定していません」の段、「語の定義」「適用」の段を移した・消した）。頭の注意は見本の1文だけ（A3）。
+// 左だけ色の線の .tokurei と .lawtext .hit の inset の影は外した（E1）
+
+// 段(状態, 文, 箱の条, 木だけの条) を1段ぶんの行にする。文は答え（answers/2。段の文から末尾の「。」を外したもの）
+function stepHTML(id, title, s, ans){
+  const [st, , as] = T(s).args;
+  return `<p class="sec">${esc(title)}</p><p class="step" id="${id}" data-st="${esc(st)}">${esc(ans)}。 ${artsHTML(as)}</p>`;
+}
+
+function ask(){
+  const c = buildCtx();
+  $("qline").textContent = `?- result(${c}, R).`;
+  if (!pl) return;
+  try{
+    // 木は結論1つにつき1本（結論の箱と同じ並び）。凡例は最初の木の上に1回だけ（REVIEW_RULES B5）
+    const lr = once(`explain(${c}, Lines)`);
+    const trees = lr ? lr.Lines.map(ls => ls.map(T).map(t => t.args)) : [];
+    const r = once(`result(${c}, r(Head,Steps,Arts))`);
+    if (!r){
+      $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">判定できませんでした</div></div><p class="hint">入力を確かめてください。</p></div>`;
+      return;
+    }
+    const ar = once(`answers(${c}, L)`);
+    const ans = Object.fromEntries((ar ? ar.L : []).map(T).map(t => t.args));
+    const steps = r.Steps.map(T).map(t => t.args).filter(([id]) => ans[id] !== undefined);
+    // 答えが2つ以上なら箇条書き、1つなら1文のまま（REVIEW_RULES A7）。並びは組の番号の順（組み合わせなし・手続なし・適用除外が先頭、「当たりません」「できません」は最後）
+    const hr = once(`heads(${c}, L)`);
+    const hs = hr ? hr.L.map(String) : [];
+    const big = hs.length > 1 ? `<ul>${hs.map(h => `<li>${esc(h)}</li>`).join("")}</ul>` : esc(r.Head);
+    $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">${big}</div></div>
+      ${steps.map(([id, title, s], i) => stepHTML("st-" + id, `${i + 1}　${title}`, s, ans[id])).join("")}
+      <p class="sec">根拠条文</p><p class="arts" id="arts">${r.Arts.length ? artsHTML(r.Arts) : "当てはまる条文はありません。"}</p>
+      ${trees.length ? `<p class="sec">なぜそうなるか（論理の木）</p>${trees.map((ls, i) => treeHTML(ls, i === 0)).join("")}` : ""}</div>`;
+  } catch(e){ $("answer").innerHTML = `<p class="hint">エラー：${esc(e.message)}</p>`; }
+}
+
+// ---- 例（名前は条文の語で書く。条文に無い処分名を使わない）----
+function presetList(){
+  // 欄の値は DEFAULTS から変えるものだけ書く。no＝申請をしていない（申請の段を出さずに、ほかの手続だけを見る）
+  // 2026-11-23 30欄で組み直した（前の例は入口の欄 iri を使っていた）
+  const no = {shinsei:"していない"};
+  return [
+    ["書面で許認可等を拒否する処分があった", {kek:"書面で拒否"}],
+    ["拒否する処分：客観的指標で明確・内容から明らか", {kek:"書面でなく拒否",shi:"明らか"}],
+    ["拒否する処分：同上で申請者が理由を求めた", {kek:"書面でなく拒否",shi:"明らか",mot:"求めた"}],
+    ["申請を認める処分があった", {kek:"認める"}],
+    ["形式上の要件に適合しない申請", {kei:"不適合"}],
+    ["申請がまだ到達していない", {shinsei:"未到達"}],
+    ["標準的な期間を定めていない", {hyou:"なし"}],
+    ["申請をする前に、申請に必要な情報を求めた", {...no,jou:"求めた"}],
+    ["地方公共団体の機関がする処分・根拠は条例又は規則", {kikan:"地方",konkyo:"条例規則"}],
+    ["従わなかったことを理由とする不利益な取扱い", {...no,shidou:"書面",fur:"ある"}],
+    ["申請の取下げを求める行政指導：従う意思がない旨を表明したのに続いている", {shidou:"口頭",tor:"継続"}],
+    ["地方公共団体の機関がする行政指導", {...no,shidou:"書面",kikan:"地方"}],
+    ["口頭の行政指導：書面の交付を求めた", {...no,shidou:"口頭",shs:"求めた"}],
+    ["口頭の行政指導：行政指導の場で完了する行為を求めるもの", {...no,shidou:"口頭",shs:"求めた",jog:"その場"}],
+    ["法令に違反する行為の是正を求める行政指導", {...no,shidou:"書面",zes:"法律"}],
+    ["届出が形式上の要件に適合し、到達した", {...no,todoke:"到達"}],
+    ["届出がまだ到達していない", {...no,todoke:"未到達"}],
+    ["是正のためにされるべき処分がされていない", {...no,ihan:"処分"}],
+    ["是正のためにされるべき行政指導がされていない", {...no,ihan:"行政指導"}],
+    ["申請・行政指導・届出・処分等の求めのどれもしていない", {...no}],
+  ];
+}
+// 例に書いていない欄は既定に戻す（前の例の値を残すと、見出しと違う入力になるため）
+// 既定は申請が到達し、ほかの手続はしていない（回答ファイル案Aの既定）。箱は 7条の1行。組み合わせなし（schema.pl のア〜カ）には当たらない
+const DEFAULTS = {exc:"なし",na:"通常",kikan:"他",konkyo:"法律",shinsei:"到達",kijun:"公",hyou:"公",kei:"適合",kek:"まだ",shi:"明確でない",mot:"求めていない",jou:"求めていない",rig:"要件でない",tac:"審査中でない",kan:"ない",shidou:"受けていない",fur:"ない",tor:"違う",ken:"示していない",shs:"求めていない",jog:"なし",fuk:"違う",zes:"違う",tek:"適合しない",ben:"経ていない",todoke:"していない",yok:"適合",ihan:"ない",mkon:"法律",ihansha:"通常"};
+function setDefaults(p){
+  for (const [id, v] of Object.entries(DEFAULTS)) $(id).value = p[id] !== undefined ? p[id] : v;
+}
+function applyPreset(p){
+  setDefaults(p);
+  ask();
+}
+function renderPresets(){
+  $("presets").innerHTML = presetList().map((p, i) => `<button type="button" data-preset="${i}">${esc(p[0])}</button>`).join("");
+}
+
+// 初期表示（既定の値）
+setDefaults({});
+
+document.addEventListener("change", e => { if (e.target.closest("#slots")) ask(); });
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.preset !== undefined){ applyPreset(presetList()[+b.dataset.preset][1]); $("answer").scrollIntoView?.(); }
+  else if (b.dataset.art && pl){
+    const host = b.closest(".tr") || b.closest("li") || b.parentElement, nx = host.nextElementSibling;
+    if (nx && nx.classList.contains("lawtext") && nx.dataset.for === b.dataset.art) nx.remove();
+    else { host.insertAdjacentHTML("afterend", lawHTML(b.dataset.art)); host.nextElementSibling.dataset.for = b.dataset.art; }
+  }
+});
+
+if (typeof SWIPL === "function") boot();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; $("answer").innerHTML = `<p class="loading err">Prolog（swipl-wasm）を読み込めませんでした。ページを再読み込みしてください。</p>`; }
+</script>
