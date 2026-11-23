@@ -1,0 +1,1198 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="起きたことと契約書の条項を入れると、消費者契約法で取り消せるか・いつまでか・第三者に対抗できるか・条項が無効かを、条文番号つきでPrologが判定します。">
+<title>消費者契約の取消し・条項の無効を逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+/* 欄の上の区切りの見出し（当事者・契約するまでの勧誘・契約書の条項）。選ばせる欄ではないので番号を数えない */
+.slots .slot-h{margin:0;padding:8px 10px 4px;border-bottom:2px solid var(--line);border-right:2px solid var(--line);background:var(--paper)}
+.checks{display:grid;gap:6px;margin:4px 10px 8px}
+.checks label{display:flex;gap:8px;align-items:flex-start;font-size:.84rem;font-weight:400;padding:0;letter-spacing:0;line-height:1.5}
+.checks label::before{content:none}
+.checks input{flex:0 0 auto;margin-top:.25em}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.step.off{color:var(--muted)}
+.flow{margin:0;padding-left:1.2em}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+.disclaimer-inline{margin-top:10px;font-size:.78rem;color:var(--muted);border-top:1px solid var(--hair);padding-top:8px;line-height:1.65}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border-left:2px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <h1>消費者契約の取消し・条項の無効を<span class="ao">逆から引く</span></h1>
+    <div class="judge-plate"><span class="jp-k">判定</span><img src="densuke_icon.svg" width="64" height="64" alt="でんすけのアイコン"><span class="jp-v">でんすけ<small>秘書AI</small></span></div>
+    <p class="lead">起きたことと契約書の条項を入れると、でんすけが消費者契約法の第2条・第4条〜第10条から、取り消せるか、いつまでか、第三者に対抗できるか、条項が無効かを判定します。</p>
+    <p class="caution" role="note"><b>注意</b><span>条文をルールにして、論理的にそのまま演算した結果です。裁判所の判断とは異なる場合があります。<a class="aboutlink" href="about.html">収録範囲・仕組み →</a></span></p>
+  </header>
+
+  <section class="ask">
+    <div>
+      <p class="sec-h">例から選ぶ</p>
+      <div class="presets" id="presets"></div>
+    </div>
+    <!-- 欄は起きた事実と、あなたの考えを聞く16個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-23 案A。
+         前の1つ目の欄「どちらの話か」（iri。勧誘か条項かを選ばせていた）をやめ、勧誘と条項を同じ入力で両方とも判定する。
+         出し消ししていた欄は親の欄の選択肢にまとめた（koi・kobam・shitte → koui、zeni・kashitsu → daisan、
+         nakami・houki・teikyo・seigen → joshu、yusho・tekigo・nikou → tekigo）。欄を出し消しする関数（updateSlots）、
+         隠れた欄を「関係なし」で渡す buildCtx、値で変わる欄名（ishi）と選択肢の文（nakami）、欄の説明（.desc）の条文と断りをやめた。
+         並びは schema.pl の ctx の引数の順（1〜16）。選択肢の頭の条番号・号番号と、条で分けた optgroup は外した（C2）。
+         「当事者」「契約するまでの勧誘」「契約書の条項」は区切りの見出しで、選ばせる欄ではない。
+         「あなたの考え」は 5・6・11・14・16 の欄名と、3の欄の4条2項の2つの値の後ろに書く -->
+    <div class="slots" id="slots">
+      <p class="sec-h slot-h full-slot" id="h-tojisha">当事者</p>
+      <div class="slot full-slot" id="s-jibun">
+        <label for="jibun">あなた（契約したこちら側）</label>
+        <span class="field"><select id="jibun">
+          <option value="消費者">個人で、事業のためではなく契約した</option>
+          <option value="事業目的">個人で、事業として又は事業のために契約した</option>
+          <option value="団体">会社などの法人その他の団体</option>
+        </select></span>
+      </div>
+      <div class="slot full-slot" id="s-aite">
+        <label for="aite">契約の相手</label>
+        <span class="field"><select id="aite">
+          <option value="団体">会社などの法人その他の団体</option>
+          <option value="事業目的">個人で、事業として又は事業のために契約した</option>
+          <option value="消費者">個人で、事業のためではなく契約した</option>
+        </select></span>
+      </div>
+      <p class="sec-h slot-h full-slot" id="h-kanyu">契約するまでの勧誘</p>
+      <div class="slot full-slot" id="s-koui">
+        <label for="koui">契約するまでの勧誘で、相手側がしたこと</label>
+        <span class="field"><select id="koui">
+          <option value="なし">下のどれにも当たらない</option>
+          <option value="不実告知">事実と違うことを言った</option>
+          <option value="断定的判断">将来の値段や受け取れる額など、確かでないことを確実だと言い切った</option>
+          <option value="不利益事実">得になることを言い、損になる事実を、わざと又は重大な不注意で言わなかった（あなたの考え）</option>
+          <option value="不利益事実過失なし">得になることを言い、損になる事実を言わなかったが、わざとでも重大な不注意でもない（あなたの考え）</option>
+          <option value="拒否">損になる事実を言おうとしたが、あなたが聞くのを断った</option>
+          <option value="不退去">帰ってほしいと言ったのに、家や仕事場から帰らなかった</option>
+          <option value="退去妨害">帰りたいと言ったのに、勧誘の場所から帰らせなかった</option>
+          <option value="同行">勧誘と言わずに、自分では出にくい場所へ連れて行き、そこで勧誘した</option>
+          <option value="連絡妨害">契約するかを人に相談するため電話などで連絡したいと言ったのに、脅すような言動で妨げた</option>
+          <option value="不安">社会経験が少ないことにつけこみ、進学・就職・結婚・容姿などの願いがかなうか不安をあおって、契約が必要だと言った</option>
+          <option value="好意">社会経験が少なく、勧誘する人に好かれていると思っていることにつけこみ、契約しないと関係が終わると言った</option>
+          <option value="判断力">年齢や心身の故障で判断力がとても落ちていることにつけこみ、今の生活を続けられるか不安をあおって、契約しないと続けられないと言った</option>
+          <option value="霊感">霊感などの特別な力で知ったとして不安をあおり、契約しないと重大な不利益を避けられないと言った</option>
+          <option value="原状回復">申込みの前に、契約したらすることを始めたり品物の形を変えたりして、元に戻すのをとても難しくした</option>
+          <option value="損失補償">申込みの前に、あなたのために調査などをしたと言い、かかった損失の支払を求めると言った</option>
+          <option value="過量">量・回数・期間が、あなたにとって普通の量をとても超えると知りながら勧誘した</option>
+          <option value="過量合算">前に同じ種類の契約をしていて、合わせると普通の量をとても超えると知りながら勧誘した</option>
+          <option value="過量知らない">量が普通をとても超えた（前の契約と合わせた場合を含む）が、相手はそれを知らなかった</option>
+        </select></span>
+      </div>
+      <div class="slot full-slot" id="s-kouisha">
+        <label for="kouisha">勧誘をした人</label>
+        <span class="field"><select id="kouisha">
+          <option value="事業者">事業者</option>
+          <option value="受託者等">事業者から契約の仲介を頼まれた人（さらに頼まれた人を含む）</option>
+          <option value="事業者の代理人">事業者の代理人</option>
+          <option value="受託者等の代理人">仲介を頼まれた人の代理人</option>
+        </select></span>
+      </div>
+      <div class="slot full-slot" id="s-juyo">
+        <label for="juyo">言われた（言われなかった）事柄は、契約するかを決めるのに普通は影響する、次のどれか（あなたの考え）</label>
+        <span class="field"><select id="juyo">
+          <option value="一号">品物・権利・サービスの質や用途などの中身</option>
+          <option value="二号">値段などの取引の条件</option>
+          <option value="三号">命・体・財産などの損や危険を避けるのに普通は必要とされる事情</option>
+          <option value="当たらない">どれでもない</option>
+        </select></span>
+      </div>
+      <div class="slot full-slot" id="s-ishi">
+        <label for="ishi">勧誘が原因で、契約の申込み又は承諾をしたか（あなたの考え）</label>
+        <span class="field"><select id="ishi">
+          <option value="した">勧誘が原因で申込み・承諾をした（思い違いをした・困った場合を含む）</option>
+          <option value="しない">勧誘とは関係なく申込み・承諾をした</option>
+        </select></span>
+      </div>
+      <div class="slot full-slot" id="s-nana">
+        <label for="nana">契約したもの</label>
+        <span class="field"><select id="nana">
+          <option value="当たらない">下に当たらない</option>
+          <option value="当たる">株式・出資の引受け又は基金の拠出で、会社法などの法律で詐欺・強迫を理由に取り消せないとされているもの</option>
+        </select></span>
+      </div>
+      <div class="slot full-slot" id="s-daisan">
+        <label for="daisan">取り消す前に、契約にかかわって新しく関係を持った第三者</label>
+        <span class="field"><select id="daisan">
+          <option value="いない">いない</option>
+          <option value="善意無過失">いる。事情を知らず、知らないことに不注意もない</option>
+          <option value="善意有過失">いる。事情を知らなかったが、不注意があった</option>
+          <option value="悪意">いる。事情を知っていた</option>
+        </select></span>
+      </div>
+      <p class="sec-h slot-h full-slot" id="h-joko">契約書の条項</p>
+      <div class="slot full-slot" id="s-joshu">
+        <label for="joshu">契約書の条項の中身</label>
+        <span class="field"><select id="joshu">
+          <option value="なし">下のどれにも当たらない</option>
+          <option value="全部免除">事業者の損害賠償の責任を全部免除する</option>
+          <option value="一部免除">事業者の損害賠償の責任を一部免除する</option>
+          <option value="有無決定">責任があるかを事業者が決める</option>
+          <option value="限度決定">責任がどこまでかを事業者が決める</option>
+          <option value="解除権放棄">事業者が契約を守らなかったときの、消費者の解除権を放棄させる</option>
+          <option value="解除権決定">事業者が契約を守らなかったときの、消費者の解除権があるかを事業者が決める</option>
+          <option value="後見解除">後見・保佐・補助の開始の審判を受けたことだけを理由に、事業者が解除できる（消費者が物やサービスを提供する側の契約ではない）</option>
+          <option value="後見解除提供">後見・保佐・補助の開始の審判を受けたことだけを理由に、事業者が解除できる（消費者が物やサービスを提供する側の契約）</option>
+          <option value="解除予定">解除したときの損害賠償の額や違約金を決めている</option>
+          <option value="遅延予定">支払が遅れたときの損害賠償の額や違約金を決めている</option>
+          <option value="権利制限">上のどれでもないが、契約書が無ければ法律で決まる中身より、消費者の権利を狭め又は義務を重くする（返事をしないと申し込んだことにする条項を含む）</option>
+        </select></span>
+      </div>
+      <div class="slot full-slot" id="s-sekinin">
+        <label for="sekinin">免除・決定の対象になる責任のもと</label>
+        <span class="field"><select id="sekinin">
+          <option value="債務不履行">事業者が契約を守らなかった（債務不履行）</option>
+          <option value="不法行為">契約を果たす途中で事業者が不法行為をした</option>
+        </select></span>
+      </div>
+      <div class="slot full-slot" id="s-koi">
+        <label for="koi">損害は、事業者・代表者・従業員の故意又は重大な過失によるものか（あなたの考え）</label>
+        <span class="field"><select id="koi">
+          <option value="よる">よる</option>
+          <option value="よらない">よらない</option>
+        </select></span>
+      </div>
+      <div class="slot full-slot" id="s-akiraka">
+        <label for="akiraka">条項は、重大な過失を除く過失のときにだけ使うと書いているか</label>
+        <span class="field"><select id="akiraka">
+          <option value="書いていない">書いていない</option>
+          <option value="書いている">書いている</option>
+        </select></span>
+      </div>
+      <div class="slot full-slot" id="s-tekigo">
+        <label for="tekigo">引き渡された物が契約の内容（種類・品質）に合わないときの責任と、代わりに負う責任</label>
+        <span class="field"><select id="tekigo">
+          <option value="無償">有償契約ではない</option>
+          <option value="責任でない">有償契約だが、合わないときの責任についての条項ではない</option>
+          <option value="追完">合わないときの責任についての条項で、事業者が直す・代金を減らす責任を負うとされている</option>
+          <option value="他の事業者">合わないときの責任についての条項で、別の事業者が損害賠償や直す責任を負う契約がある</option>
+          <option value="代わりなし">合わないときの責任についての条項で、代わりの責任はどれも決めていない</option>
+        </select></span>
+      </div>
+      <div class="slot full-slot" id="s-koeru">
+        <label for="koeru">条項で決めた額は、上限を超えるか（あなたの考え。解除のときは同じ種類の契約の平均的な損害の額、支払が遅れたときは年14.6%で計算した額）</label>
+        <span class="field"><select id="koeru">
+          <option value="超える">超えると思う</option>
+          <option value="超えない">超えないと思う</option>
+        </select></span>
+      </div>
+      <div class="slot full-slot" id="s-setsumei">
+        <label for="setsumei">条項に基づいて支払を請求され、額の計算の根拠の説明を求めたか</label>
+        <span class="field"><select id="setsumei">
+          <option value="求めていない">求めていない</option>
+          <option value="求めた">求めた</option>
+        </select></span>
+      </div>
+      <div class="slot full-slot" id="s-gai">
+        <label for="gai">条項は、民法の基本原則（信義誠実）に反して、消費者の利益を一方的に害するか（あなたの考え）</label>
+        <span class="field"><select id="gai">
+          <option value="害する">害すると思う</option>
+          <option value="害さない">害するとは思わない</option>
+        </select></span>
+      </div>
+    </div>
+    <div class="qline" id="qline"></div>
+  </section>
+
+  <section id="answer" aria-live="polite"><p class="loading">でんすけが条文のルール（Prolog）を読み込んでいます…</p></section>
+
+  <p class="foot techline"><span>消費者契約法 第2条・第4条〜第11条／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot" id="foot">e-Gov法令検索の消費者契約法（平成十二年法律第六十一号）の本則のうち、第2条第1項〜第3項と第4条〜第11条（第6条の2を除く）の原文をルールにしたものです。附則、第3条の努力義務、第6条の2の返還の義務、第12条以降の差止請求・適格消費者団体、判例の基準、民法第九十六条の中身、内閣府令の中身は含みません。消費者契約法の条文は2026年11月2日までに取得した版で、それ以後の改正と、公布済みで施行前の改正は読んでいません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 消費者契約法Prolog 共通の型・欄の読み出し・木の部品
+%
+% ctx(自分, 相手, 勧誘, 行為者, 重要, 原因, 株式, 第三者, 条項, 責任, 故意, 明示, 適合, 超える, 説明, 害する)
+%   欄は起きた事実と、あなたの考えを聞く16個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-23 案A。
+%   案は ../shohi_form_plan_answer_1123.md の案A（依頼書 task_beaver_shohi_planA_1123.md の決まったこと1）。
+%   前は ctx(入口, 自分, 相手, 勧誘(…11個) | 条項(…13個)) で、1つ目の欄「どちらの話か」で論点を選ばせ（C4）、
+%   出し消しした欄を「関係なし」で渡していた（C5）。今は勧誘と条項を同じ入力で両方とも当てる。
+%   出し消ししていた欄は親の欄の選択肢にまとめた（故意・拒んだ・知っていた → 3の欄、第三者・善意・過失 → 8の欄、
+%   中身・放棄・提供・制限 → 9の欄、有償・適合・二項 → 13の欄）。前の 詳細OK・行為の欄・二項の欄・七二の欄OK・
+%   第三者の欄OK・条項の欄・八条二項の欄 と、値の「関係なし」はやめた。
+%   引数の順は画面の欄の番号（1〜16）と同じ（gyotetsu-prolog の schema.pl と同じ形）。
+%    1 自分   : 消費者 | 事業目的 | 団体（2条1項。消費者＝個人で、事業のためではなく契約した）
+%    2 相手   : 団体 | 事業目的 | 消費者（2条2項。団体・事業目的なら事業者）
+%    3 勧誘   : なし | 不実告知 | 断定的判断 | 不利益事実 | 不利益事実過失なし | 拒否 |
+%               不退去 | 退去妨害 | 同行 | 連絡妨害 | 不安 | 好意 | 判断力 | 霊感 | 原状回復 | 損失補償 |
+%               過量 | 過量合算 | 過量知らない（4条1項〜4項。rules/c_kanyu.pl の 勧誘の条）
+%    4 行為者 : 事業者 | 受託者等 | 事業者の代理人 | 受託者等の代理人（5条1項・2項）
+%    5 重要   : 一号 | 二号 | 三号 | 当たらない（4条5項。あなたの考え）
+%    6 原因   : した | しない（勧誘が原因で申込み・承諾をしたか。あなたの考え）
+%    7 株式   : 当たらない | 当たる（7条2項）
+%    8 第三者 : いない | 善意無過失 | 善意有過失 | 悪意（4条6項）
+%    9 条項   : なし | 全部免除 | 一部免除 | 有無決定 | 限度決定 | 解除権放棄 | 解除権決定 |
+%               後見解除 | 後見解除提供 | 解除予定 | 遅延予定 | 権利制限（8条〜10条）
+%   10 責任   : 債務不履行 | 不法行為（8条1項の号・8条3項）
+%   11 故意   : よる | よらない（損害が事業者側の故意又は重大な過失によるか。あなたの考え）
+%   12 明示   : 書いていない | 書いている（8条3項）
+%   13 適合   : 無償 | 責任でない | 追完 | 他の事業者 | 代わりなし（8条2項）
+%   14 超える : 超える | 超えない（9条1項。あなたの考え）
+%   15 説明   : 求めていない | 求めた（9条2項）
+%   16 害する : 害する | 害さない（10条。あなたの考え）
+%
+%   どの組も「この組み合わせはありません」にはしない（回答ファイル案A。親の欄にまとめたので、前に 関係なし で防いでいた組は選択肢として作れない）。
+%   関係のない欄（たとえば、消費者契約でないときの3〜16の欄、3の欄が「なし」のときの4〜8の欄）は、その欄を使う段を出さないだけ。
+%
+% 書き方のきまり：
+%   ・条番号は '4条1項1号' '4条2項ただし書' '4条4項前段' '8条の2' のような原子。
+%   ・段は 段(状態, 文, 箱の条, 木だけの条)。箱の条は結論の箱の（）に出し、木だけの条（柱書き・準用・5項の号など）は論理の木の原文の葉にだけ出す。
+%     結論ごとの段は s(画面のid, 見出し, 段)。段の文は、末尾の「。」を外して結論の箱にも出す。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | and | or | info
+%   ・アプリの約束事の行は 条 を '@約束事' にする（2026-11-23 の時点で約束事は無い。yakusoku/kihon.pl）。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか）----
+ctx_valid(C) :-
+    functor(C, ctx, 16),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )).
+
+欄の値(1, [消費者, 事業目的, 団体]).
+欄の値(2, [団体, 事業目的, 消費者]).
+欄の値(3, [なし, 不実告知, 断定的判断, 不利益事実, 不利益事実過失なし, 拒否,
+           不退去, 退去妨害, 同行, 連絡妨害, 不安, 好意, 判断力, 霊感, 原状回復, 損失補償,
+           過量, 過量合算, 過量知らない]).
+欄の値(4, [事業者, 受託者等, 事業者の代理人, 受託者等の代理人]).
+欄の値(5, [一号, 二号, 三号, 当たらない]).
+欄の値(6, [した, しない]).
+欄の値(7, [当たらない, 当たる]).
+欄の値(8, [いない, 善意無過失, 善意有過失, 悪意]).
+欄の値(9, [なし, 全部免除, 一部免除, 有無決定, 限度決定, 解除権放棄, 解除権決定,
+           後見解除, 後見解除提供, 解除予定, 遅延予定, 権利制限]).
+欄の値(10, [債務不履行, 不法行為]).
+欄の値(11, [よる, よらない]).
+欄の値(12, [書いていない, 書いている]).
+欄の値(13, [無償, 責任でない, 追完, 他の事業者, 代わりなし]).
+欄の値(14, [超える, 超えない]).
+欄の値(15, [求めていない, 求めた]).
+欄の値(16, [害する, 害さない]).
+
+%% ---- 欄の読み出し（番号は画面の欄の番号）----
+欄の番号(自分, 1).
+欄の番号(相手, 2).
+欄の番号(勧誘, 3).
+欄の番号(行為者, 4).
+欄の番号(重要, 5).
+欄の番号(原因, 6).
+欄の番号(株式, 7).
+欄の番号(第三者, 8).
+欄の番号(条項, 9).
+欄の番号(責任, 10).
+欄の番号(故意, 11).
+欄の番号(明示, 12).
+欄の番号(適合, 13).
+欄の番号(超える, 14).
+欄の番号(説明, 15).
+欄の番号(害する, 16).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+%% ---- 語がそろうか ----
+% 相手が事業者か（2条2項：法人その他の団体、又は事業として若しくは事業のために契約の当事者となる個人）
+相手が事業者(C) :- 欄(相手, C, V), memberchk(V, [団体, 事業目的]).
+消費者契約(C) :- 欄(自分, C, 消費者), 相手が事業者(C).
+
+%% ---- 理由の語をつなぐ ----
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---- 木の部品 ----
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+原文規定(Art, X) :- 原文(Art, W), 規定(Art, W, X).
+約束(X, t(ok, X, '@約束事', [])).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（消費者契約法の条文にないもの）
+%
+%   2026-11-23 今は約束事が1つも無い（案A）。前の4つ（評価の約束・重なりの約束・日付の約束・場面外の約束）は消した。
+%   どれも「判定しない」「日付は出さない」「反対の結論を言わない」の断りで、条文に無い決めごとではないため（REVIEW_RULES A5・D1。gyotetsu-prolog の 2026-11-23 の直しと同じ）。
+%   「重要事項か」「平均的な損害の額を超えるか」「通常の分量等を著しく超えるか」「利益を一方的に害するか」などの評価、重なり、7条1項の起算点の日付は、
+%   about の「判定について」に書いた。本人の考えを聞く欄は、欄名の後ろに「（あなたの考え）」と書いて聞く（5・6・11・14・16の欄と、3の欄の4条2項の2つの値）。
+%   「場面ではありません」の段はもう無い（当たらないときは「〜による取消しはできません」「〜では無効になりません」と、どの条に当たらないかを答えにした）。
+%   ファイルは残す（build.py・test/run_cases.mjs が yakusoku/ の *.pl を読み込む。run_cases.mjs は yakusoku/ が無いと止まる）。
+%   約束事を足すときは、約束/2（schema.pl）で木の行を作り、rules/e_hantei.pl の 段の約束/2 で状態ごとに付ける。
+</script>
+<script type="text/prolog" data-name="rules_a_genbun.pl">% rules/a_genbun.pl — 判定に使う条文の原文（law/shohi.xml の本則の第2条・第4条〜第11条のまま）
+%
+%   原文(条, 文)。test/page_test.mjs が XML を別に読み、全行が一字一句一致するかを確かめる。
+%   本文・ただし書は XML の Sentence Function="main"・"proviso"、前段・後段は Sentence Num="1"・"2" の1文ずつ。
+%   項だけの条（'5条1項' '7条1項'）は項の文を全部つなぐ。9条1項の号は2列を全角の空白でつなぐ。
+
+原文('2条1項', 'この法律において「消費者」とは、個人（事業として又は事業のために契約の当事者となる場合におけるものを除く。）をいう。').
+原文('2条2項', 'この法律（第四十三条第二項第二号を除く。）において「事業者」とは、法人その他の団体及び事業として又は事業のために契約の当事者となる場合における個人をいう。').
+原文('2条3項', 'この法律において「消費者契約」とは、消費者と事業者との間で締結される契約をいう。').
+
+原文('4条1項', '消費者は、事業者が消費者契約の締結について勧誘をするに際し、当該消費者に対して次の各号に掲げる行為をしたことにより当該各号に定める誤認をし、それによって当該消費者契約の申込み又はその承諾の意思表示をしたときは、これを取り消すことができる。').
+原文('4条1項1号', '重要事項について事実と異なることを告げること。　当該告げられた内容が事実であるとの誤認').
+原文('4条1項2号', '物品、権利、役務その他の当該消費者契約の目的となるものに関し、将来におけるその価額、将来において当該消費者が受け取るべき金額その他の将来における変動が不確実な事項につき断定的判断を提供すること。　当該提供された断定的判断の内容が確実であるとの誤認').
+原文('4条2項本文', '消費者は、事業者が消費者契約の締結について勧誘をするに際し、当該消費者に対してある重要事項又は当該重要事項に関連する事項について当該消費者の利益となる旨を告げ、かつ、当該重要事項について当該消費者の不利益となる事実（当該告知により当該事実が存在しないと消費者が通常考えるべきものに限る。）を故意又は重大な過失によって告げなかったことにより、当該事実が存在しないとの誤認をし、それによって当該消費者契約の申込み又はその承諾の意思表示をしたときは、これを取り消すことができる。').
+原文('4条2項ただし書', 'ただし、当該事業者が当該消費者に対し当該事実を告げようとしたにもかかわらず、当該消費者がこれを拒んだときは、この限りでない。').
+原文('4条3項', '消費者は、事業者が消費者契約の締結について勧誘をするに際し、当該消費者に対して次に掲げる行為をしたことにより困惑し、それによって当該消費者契約の申込み又はその承諾の意思表示をしたときは、これを取り消すことができる。').
+原文('4条3項1号', '当該事業者に対し、当該消費者が、その住居又はその業務を行っている場所から退去すべき旨の意思を示したにもかかわらず、それらの場所から退去しないこと。').
+原文('4条3項2号', '当該事業者が当該消費者契約の締結について勧誘をしている場所から当該消費者が退去する旨の意思を示したにもかかわらず、その場所から当該消費者を退去させないこと。').
+原文('4条3項3号', '当該消費者に対し、当該消費者契約の締結について勧誘をすることを告げずに、当該消費者が任意に退去することが困難な場所であることを知りながら、当該消費者をその場所に同行し、その場所において当該消費者契約の締結について勧誘をすること。').
+原文('4条3項4号', '当該消費者が当該消費者契約の締結について勧誘を受けている場所において、当該消費者が当該消費者契約を締結するか否かについて相談を行うために電話その他の内閣府令で定める方法によって当該事業者以外の者と連絡する旨の意思を示したにもかかわらず、威迫する言動を交えて、当該消費者が当該方法によって連絡することを妨げること。').
+原文('4条3項5号', '当該消費者が、社会生活上の経験が乏しいことから、次に掲げる事項に対する願望の実現に過大な不安を抱いていることを知りながら、その不安をあおり、裏付けとなる合理的な根拠がある場合その他の正当な理由がある場合でないのに、物品、権利、役務その他の当該消費者契約の目的となるものが当該願望を実現するために必要である旨を告げること。').
+原文('4条3項5号イ', '進学、就職、結婚、生計その他の社会生活上の重要な事項').
+原文('4条3項5号ロ', '容姿、体型その他の身体の特徴又は状況に関する重要な事項').
+原文('4条3項6号', '当該消費者が、社会生活上の経験が乏しいことから、当該消費者契約の締結について勧誘を行う者に対して恋愛感情その他の好意の感情を抱き、かつ、当該勧誘を行う者も当該消費者に対して同様の感情を抱いているものと誤信していることを知りながら、これに乗じ、当該消費者契約を締結しなければ当該勧誘を行う者との関係が破綻することになる旨を告げること。').
+原文('4条3項7号', '当該消費者が、加齢又は心身の故障によりその判断力が著しく低下していることから、生計、健康その他の事項に関しその現在の生活の維持に過大な不安を抱いていることを知りながら、その不安をあおり、裏付けとなる合理的な根拠がある場合その他の正当な理由がある場合でないのに、当該消費者契約を締結しなければその現在の生活の維持が困難となる旨を告げること。').
+原文('4条3項8号', '当該消費者に対し、霊感その他の合理的に実証することが困難な特別な能力による知見として、当該消費者又はその親族の生命、身体、財産その他の重要な事項について、そのままでは現在生じ、若しくは将来生じ得る重大な不利益を回避することができないとの不安をあおり、又はそのような不安を抱いていることに乗じて、その重大な不利益を回避するためには、当該消費者契約を締結することが必要不可欠である旨を告げること。').
+原文('4条3項9号', '当該消費者が当該消費者契約の申込み又はその承諾の意思表示をする前に、当該消費者契約を締結したならば負うこととなる義務の内容の全部若しくは一部を実施し、又は当該消費者契約の目的物の現状を変更し、その実施又は変更前の原状の回復を著しく困難にすること。').
+原文('4条3項10号', '前号に掲げるもののほか、当該消費者が当該消費者契約の申込み又はその承諾の意思表示をする前に、当該事業者が調査、情報の提供、物品の調達その他の当該消費者契約の締結を目指した事業活動を実施した場合において、当該事業活動が当該消費者からの特別の求めに応じたものであったことその他の取引上の社会通念に照らして正当な理由がある場合でないのに、当該事業活動が当該消費者のために特に実施したものである旨及び当該事業活動の実施により生じた損失の補償を請求する旨を告げること。').
+原文('4条4項前段', '消費者は、事業者が消費者契約の締結について勧誘をするに際し、物品、権利、役務その他の当該消費者契約の目的となるものの分量、回数又は期間（以下この項において「分量等」という。）が当該消費者にとっての通常の分量等（消費者契約の目的となるものの内容及び取引条件並びに事業者がその締結について勧誘をする際の消費者の生活の状況及びこれについての当該消費者の認識に照らして当該消費者契約の目的となるものの分量等として通常想定される分量等をいう。以下この項において同じ。）を著しく超えるものであることを知っていた場合において、その勧誘により当該消費者契約の申込み又はその承諾の意思表示をしたときは、これを取り消すことができる。').
+原文('4条4項後段', '事業者が消費者契約の締結について勧誘をするに際し、消費者が既に当該消費者契約の目的となるものと同種のものを目的とする消費者契約（以下この項において「同種契約」という。）を締結し、当該同種契約の目的となるものの分量等と当該消費者契約の目的となるものの分量等とを合算した分量等が当該消費者にとっての通常の分量等を著しく超えるものであることを知っていた場合において、その勧誘により当該消費者契約の申込み又はその承諾の意思表示をしたときも、同様とする。').
+原文('4条5項', '第一項第一号及び第二項の「重要事項」とは、消費者契約に係る次に掲げる事項（同項の場合にあっては、第三号に掲げるものを除く。）をいう。').
+原文('4条5項1号', '物品、権利、役務その他の当該消費者契約の目的となるものの質、用途その他の内容であって、消費者の当該消費者契約を締結するか否かについての判断に通常影響を及ぼすべきもの').
+原文('4条5項2号', '物品、権利、役務その他の当該消費者契約の目的となるものの対価その他の取引条件であって、消費者の当該消費者契約を締結するか否かについての判断に通常影響を及ぼすべきもの').
+原文('4条5項3号', '前二号に掲げるもののほか、物品、権利、役務その他の当該消費者契約の目的となるものが当該消費者の生命、身体、財産その他の重要な利益についての損害又は危険を回避するために通常必要であると判断される事情').
+原文('4条6項', '第一項から第四項までの規定による消費者契約の申込み又はその承諾の意思表示の取消しは、これをもって善意でかつ過失がない第三者に対抗することができない。').
+
+原文('5条1項', '前条の規定は、事業者が第三者に対し、当該事業者と消費者との間における消費者契約の締結について媒介をすることの委託（以下この項において単に「委託」という。）をし、当該委託を受けた第三者（その第三者から委託（二以上の段階にわたる委託を含む。）を受けた者を含む。以下「受託者等」という。）が消費者に対して同条第一項から第四項までに規定する行為をした場合について準用する。この場合において、同条第二項ただし書中「当該事業者」とあるのは、「当該事業者又は次条第一項に規定する受託者等」と読み替えるものとする。').
+原文('5条2項', '消費者契約の締結に係る消費者の代理人（復代理人（二以上の段階にわたり復代理人として選任された者を含む。）を含む。以下同じ。）、事業者の代理人及び受託者等の代理人は、前条第一項から第四項まで（前項において準用する場合を含む。次条から第七条までにおいて同じ。）の規定の適用については、それぞれ消費者、事業者及び受託者等とみなす。').
+原文('6条', '第四条第一項から第四項までの規定は、これらの項に規定する消費者契約の申込み又はその承諾の意思表示に対する民法第九十六条の規定の適用を妨げるものと解してはならない。').
+原文('7条1項', '第四条第一項から第四項までの規定による取消権は、追認をすることができる時から一年間（同条第三項第八号に係る取消権については、三年間）行わないときは、時効によって消滅する。当該消費者契約の締結の時から五年（同号に係る取消権については、十年）を経過したときも、同様とする。').
+原文('7条2項', '会社法（平成十七年法律第八十六号）その他の法律により詐欺又は強迫を理由として取消しをすることができないものとされている株式若しくは出資の引受け又は基金の拠出が消費者契約としてされた場合には、当該株式若しくは出資の引受け又は基金の拠出に係る意思表示については、第四条第一項から第四項までの規定によりその取消しをすることができない。').
+
+原文('8条1項', '次に掲げる消費者契約の条項は、無効とする。').
+原文('8条1項1号', '事業者の債務不履行により消費者に生じた損害を賠償する責任の全部を免除し、又は当該事業者にその責任の有無を決定する権限を付与する条項').
+原文('8条1項2号', '事業者の債務不履行（当該事業者、その代表者又はその使用する者の故意又は重大な過失によるものに限る。）により消費者に生じた損害を賠償する責任の一部を免除し、又は当該事業者にその責任の限度を決定する権限を付与する条項').
+原文('8条1項3号', '消費者契約における事業者の債務の履行に際してされた当該事業者の不法行為により消費者に生じた損害を賠償する責任の全部を免除し、又は当該事業者にその責任の有無を決定する権限を付与する条項').
+原文('8条1項4号', '消費者契約における事業者の債務の履行に際してされた当該事業者の不法行為（当該事業者、その代表者又はその使用する者の故意又は重大な過失によるものに限る。）により消費者に生じた損害を賠償する責任の一部を免除し、又は当該事業者にその責任の限度を決定する権限を付与する条項').
+原文('8条2項', '前項第一号又は第二号に掲げる条項のうち、消費者契約が有償契約である場合において、引き渡された目的物が種類又は品質に関して契約の内容に適合しないとき（当該消費者契約が請負契約である場合には、請負人が種類又は品質に関して契約の内容に適合しない仕事の目的物を注文者に引き渡したとき（その引渡しを要しない場合には、仕事が終了した時に仕事の目的物が種類又は品質に関して契約の内容に適合しないとき。）。以下この項において同じ。）に、これにより消費者に生じた損害を賠償する事業者の責任を免除し、又は当該事業者にその責任の有無若しくは限度を決定する権限を付与するものについては、次に掲げる場合に該当するときは、前項の規定は、適用しない。').
+原文('8条2項1号', '当該消費者契約において、引き渡された目的物が種類又は品質に関して契約の内容に適合しないときに、当該事業者が履行の追完をする責任又は不適合の程度に応じた代金若しくは報酬の減額をする責任を負うこととされている場合').
+原文('8条2項2号', '当該消費者と当該事業者の委託を受けた他の事業者との間の契約又は当該事業者と他の事業者との間の当該消費者のためにする契約で、当該消費者契約の締結に先立って又はこれと同時に締結されたものにおいて、引き渡された目的物が種類又は品質に関して契約の内容に適合しないときに、当該他の事業者が、その目的物が種類又は品質に関して契約の内容に適合しないことにより当該消費者に生じた損害を賠償する責任の全部若しくは一部を負い、又は履行の追完をする責任を負うこととされている場合').
+原文('8条3項', '事業者の債務不履行（当該事業者、その代表者又はその使用する者の故意又は重大な過失によるものを除く。）又は消費者契約における事業者の債務の履行に際してされた当該事業者の不法行為（当該事業者、その代表者又はその使用する者の故意又は重大な過失によるものを除く。）により消費者に生じた損害を賠償する責任の一部を免除する消費者契約の条項であって、当該条項において事業者、その代表者又はその使用する者の重大な過失を除く過失による行為にのみ適用されることを明らかにしていないものは、無効とする。').
+原文('8条の2', '事業者の債務不履行により生じた消費者の解除権を放棄させ、又は当該事業者にその解除権の有無を決定する権限を付与する消費者契約の条項は、無効とする。').
+原文('8条の3', '事業者に対し、消費者が後見開始、保佐開始又は補助開始の審判を受けたことのみを理由とする解除権を付与する消費者契約（消費者が事業者に対し物品、権利、役務その他の消費者契約の目的となるものを提供することとされているものを除く。）の条項は、無効とする。').
+原文('9条1項', '次の各号に掲げる消費者契約の条項は、当該各号に定める部分について、無効とする。').
+原文('9条1項1号', '当該消費者契約の解除に伴う損害賠償の額を予定し、又は違約金を定める条項であって、これらを合算した額が、当該条項において設定された解除の事由、時期等の区分に応じ、当該消費者契約と同種の消費者契約の解除に伴い当該事業者に生ずべき平均的な損害の額を超えるもの　当該超える部分').
+原文('9条1項2号', '当該消費者契約に基づき支払うべき金銭の全部又は一部を消費者が支払期日（支払回数が二以上である場合には、それぞれの支払期日。以下この号において同じ。）までに支払わない場合における損害賠償の額を予定し、又は違約金を定める条項であって、これらを合算した額が、支払期日の翌日からその支払をする日までの期間について、その日数に応じ、当該支払期日に支払うべき額から当該支払期日に支払うべき額のうち既に支払われた額を控除した額に年十四・六パーセントの割合を乗じて計算した額を超えるもの　当該超える部分').
+原文('9条2項', '事業者は、消費者に対し、消費者契約の解除に伴う損害賠償の額を予定し、又は違約金を定める条項に基づき損害賠償又は違約金の支払を請求する場合において、当該消費者から説明を求められたときは、損害賠償の額の予定又は違約金の算定の根拠（第十二条の四において「算定根拠」という。）の概要を説明するよう努めなければならない。').
+原文('10条', '消費者の不作為をもって当該消費者が新たな消費者契約の申込み又はその承諾の意思表示をしたものとみなす条項その他の法令中の公の秩序に関しない規定の適用による場合に比して消費者の権利を制限し又は消費者の義務を加重する消費者契約の条項であって、民法第一条第二項に規定する基本原則に反して消費者の利益を一方的に害するものは、無効とする。').
+
+原文('11条1項', '消費者契約の申込み又はその承諾の意思表示の取消し及び消費者契約の条項の効力については、この法律の規定によるほか、民法及び商法（明治三十二年法律第四十八号）の規定による。').
+原文('11条2項', '消費者契約の申込み又はその承諾の意思表示の取消し及び消費者契約の条項の効力について民法及び商法以外の他の法律に別段の定めがあるときは、その定めるところによる。').
+</script>
+<script type="text/prolog" data-name="rules_b_tojisha.pl">% rules/b_tojisha.pl — 消費者契約か（2条）：1・2の欄
+%
+%   状態 = 消費者でない | 事業者でない（当たるときだけ段を出す。出したら、ほかの段は出さない。rules/e_hantei.pl の 全部の段）
+%   2026-11-23 案A。前の「消費者契約」の段（「…という入力です。…という定めです（当たるかは判定しません）」）は判定の答えではないので、
+%   段を作らず、消費者契約に当たったことは最初の段の木の葉にだけ置く（消費者契約の葉/2。gyotetsu-prolog の 外れない葉 と同じ形）。
+%   前の11条の段（他の法律）は、入力に関わらず同じ文なので結論の箱に出さず、about の「判定について」へ移した（決まったこと2）。
+%   原文の行（rules/a_genbun.pl の 11条1項・11条2項）は残す（全条文の地図の数え方を変えない）。
+%   自分と相手の両方が当たらないときは、自分の段を出す（2条1項が先）。
+
+当事者の段(C, [s(tojisha, '消費者契約か', 段(消費者でない, M, ['2条1項', '2条3項'], []))]) :-
+    欄(自分, C, V), 自分の文(V, M), !.
+当事者の段(C, [s(tojisha, '消費者契約か', 段(事業者でない, '契約の相手が事業者に当たらないので、消費者契約ではありません。', ['2条2項', '2条3項'], []))]) :-
+    \+ 相手が事業者(C), !.
+当事者の段(_, []).
+
+自分の文(事業目的, '事業として又は事業のために契約した個人は消費者に当たらないので、消費者契約ではありません。').
+自分の文(団体, '法人その他の団体は消費者に当たらないので、消費者契約ではありません。').
+
+%% ---- 消費者契約に当たった理由（木の葉だけ）----
+% 消費者契約の葉(C, 木の行のリスト)。最初の段の木に足す（rules/e_hantei.pl の 木）
+消費者契約の葉(C, [t(ok, W, '2条3項', [])]) :-
+    消費者契約(C), !,
+    欄(相手, C, V), 相手の語(V, A),
+    format(atom(W), 'あなたは事業のためではなく契約した個人で消費者に当たり、相手は~wで事業者に当たるので、契約は消費者契約です', [A]).
+消費者契約の葉(_, []).
+
+相手の語(団体, '法人その他の団体').
+相手の語(事業目的, '事業として又は事業のために契約した個人').
+</script>
+<script type="text/prolog" data-name="rules_c_kanyu.pl">% rules/c_kanyu.pl — 契約するまでの勧誘（4条〜7条）：3〜8の欄
+%
+%   段 = torikeshi（取り消せるか）・daisansha（第三者に対抗できるか）・kikan（取消権の期間）
+%   3の欄が「なし」なら段を作らない（[]）。取り消せるときだけ、第三者と期間の段を足す。
+%   2026-11-23 案A。前は「…という入力で、…という入力です。…、という定めです（当たるかは判定しません）」の文（A1・A2）と、
+%   行為の語・結果の語・定めの語（条文の写し）で段を作っていた。今は答えの文だけにし、条文の原文は木の葉に任せる。
+%   段を作らない状態は名前で書いておく（前の状態。agents/dog/rules.md:94）：
+%     ・判定しない（前提が立たない段）… 消費者契約でないときは rules/e_hantei.pl の 全部の段 が当事者の段で止める
+%     ・第三者なし・第三者の 場面でない … 8の欄が「善意でかつ過失がない第三者」以外なら第三者の段を作らない（決まったこと6。about の「判定について」）
+%     ・妨げない（6条）… 入力に関わらず同じ文なので about の「判定について」へ移した（決まったこと2）
+%   前の 場面でない（取消し・第三者・条項の3か所で同じ名前）は、取消しの側を 取消しに当たらない に分けた（条項の側は 条項に当たらない。rules/d_joko.pl）。
+%   受託者等は 5条1項の準用なので、語の「事業者」を受託者等に置いて読む（4条2項ただし書・4条4項の「知っていた」も同じ。NOTES (b)）。
+%   4条2項は、重要事項 → 故意又は重大な過失 → 拒んだか → 勧誘が原因か の順に読む（NOTES (g)。3の欄の値に故意と拒んだを入れた）。
+
+勧誘の段(C, []) :- 欄(勧誘, C, なし), !.
+勧誘の段(C, [s(torikeshi, '取り消せるか', S1) | L]) :-
+    取消しの段(C, S1),
+    S1 = 段(St, _, _, _),
+    ( St == 取り消せる -> 第三者の段(C, L2), 期間の段(C, L3), append(L2, L3, L) ; L = [] ).
+
+%% ---- 取り消せるか ----
+取消しの段(C, 段(St, M, Box, Tree)) :-
+    欄(勧誘, C, V),
+    取消しの判定(C, V, St0, M0, B0, T0),
+    七条二項(C, St0, M0, B0, T0, St, M, B1, T1),
+    欄(行為者, C, Ks), 行為者の条(Ks, A5),
+    ( St == 取り消せる -> append(B1, A5, Box), Tree = T1 ; Box = B1, append(T1, A5, Tree) ).
+
+行為者の条(事業者, []).
+行為者の条(受託者等, ['5条1項']).
+行為者の条(事業者の代理人, ['5条2項']).
+行為者の条(受託者等の代理人, ['5条1項', '5条2項']).
+
+% 取消しの判定(C, 3の欄の値, 状態, 文, 箱の条, 木だけの条)
+% 4条4項で、量が普通を超えると知らなかったとき（勧誘が原因かより先に見る。前の 取消しの状態 と同じ順）
+取消しの判定(_, 過量知らない, 取消しに当たらない,
+    '勧誘をした側が、量が通常の分量等を著しく超えることを知らなかったので、4条4項による取消しはできません。',
+    ['4条4項前段', '4条4項後段'], []) :- !.
+% 4条1項1号・4条2項：重要事項に当たらないとき
+取消しの判定(C, V, 取消しに当たらない, M, Box, []) :-
+    重要事項の要る行為(V, Ko), 欄(重要, C, Ju), 重要事項でない(Ko, Ju, M, Box), !.
+% 4条2項：故意又は重大な過失によらないとき・拒んだとき
+取消しの判定(C, 不利益事実過失なし, 取消しに当たらない,
+    '損になる事実を言わなかったのが故意又は重大な過失によるものではないので、4条2項による取消しはできません。',
+    ['4条2項本文'], ['4条5項', A]) :- !,
+    欄(重要, C, Ju), 五項の号(Ju, A).
+取消しの判定(C, 拒否, 拒んだ,
+    '事業者側が損になる事実を告げようとしたのを、あなたが拒んだので、4条2項による取消しはできません。',
+    ['4条2項ただし書'], ['4条2項本文', '4条5項', A]) :- !,
+    欄(重要, C, Ju), 五項の号(Ju, A).
+% 勧誘が原因で申込み・承諾をしたのではないとき（箱は行為の条だけ、ほかの条は木の葉）
+取消しの判定(C, V, 取消しに当たらない,
+    '勧誘によって契約の申込み又は承諾の意思表示をしたのではないので、取り消すことはできません。',
+    [B], Tree) :-
+    欄(原因, C, しない), !,
+    行為の条(C, V, [B|Bs], T0), append(T0, Bs, Tree).
+取消しの判定(C, V, 取り消せる, '契約の申込み又は承諾の意思表示を取り消すことができます。', Box, Tree) :-
+    行為の条(C, V, Box, Tree).
+
+% 7条2項：取り消せるときだけ見る。取り消せないなら、前の箱の条は木の葉へ
+七条二項(C, 取り消せる, _, B0, T0, 取り消せない,
+    '会社法などで詐欺・強迫を理由に取り消せないとされている株式・出資の引受け又は基金の拠出の意思表示は、4条1項から4項までの規定でも取り消すことができません。',
+    ['7条2項'], T) :-
+    欄(株式, C, 当たる), !,
+    append(B0, T0, T).
+七条二項(_, St, M, B, T, St, M, B, T).
+
+%% ---- 3の欄の値と条（箱の条・木だけの条）----
+% 行為の条(C, 3の欄の値, 箱の条, 木だけの条)。箱の先頭は行為の号・項（勧誘が原因でないときの箱に使う）
+行為の条(C, 不実告知, ['4条1項1号', A], ['4条1項', '4条5項']) :- !, 欄(重要, C, Ju), 五項の号(Ju, A).
+行為の条(_, 断定的判断, ['4条1項2号'], ['4条1項']) :- !.
+行為の条(C, 不利益事実, ['4条2項本文', A], ['4条5項']) :- !, 欄(重要, C, Ju), 五項の号(Ju, A).
+行為の条(_, 過量, ['4条4項前段'], []) :- !.
+行為の条(_, 過量合算, ['4条4項後段'], []) :- !.
+行為の条(_, V, [A], ['4条3項']) :- 三項の号(V, N), format(atom(A), '4条3項~d号', [N]).
+
+三項の号(不退去, 1).
+三項の号(退去妨害, 2).
+三項の号(同行, 3).
+三項の号(連絡妨害, 4).
+三項の号(不安, 5).
+三項の号(好意, 6).
+三項の号(判断力, 7).
+三項の号(霊感, 8).
+三項の号(原状回復, 9).
+三項の号(損失補償, 10).
+
+五項の号(一号, '4条5項1号').
+五項の号(二号, '4条5項2号').
+五項の号(三号, '4条5項3号').
+
+% 重要事項の要る行為（4条1項1号・4条2項）。4条5項の括弧で、4条2項のときは3号を除く
+重要事項の要る行為(不実告知, 一項).
+重要事項の要る行為(不利益事実, 二項).
+重要事項の要る行為(不利益事実過失なし, 二項).
+重要事項の要る行為(拒否, 二項).
+
+重要事項でない(一項, 当たらない, '言われた事柄が重要事項に当たらないので、4条1項1号による取消しはできません。', ['4条1項1号', '4条5項']).
+重要事項でない(二項, 当たらない, '言われなかった事実が重要事項に当たらないので、4条2項による取消しはできません。', ['4条2項本文', '4条5項']).
+重要事項でない(二項, 三号, '命・体・財産などの損害や危険を避けるのに通常必要な事情は、4条2項の重要事項から除かれているので、4条2項による取消しはできません。', ['4条2項本文', '4条5項']).
+
+%% ---- 第三者に対抗できるか（4条6項）----
+% 8の欄が「善意でかつ過失がない第三者」のときだけ段を作る。ほかの値（いない・不注意あり・知っていた）は段を作らない（決まったこと6。対抗できるとは書かない。NOTES (k)）
+第三者の段(C, [s(daisansha, '第三者に対抗できるか', 段(対抗できない, '意思表示の取消しは、善意でかつ過失がない第三者に対抗することができません。', ['4条6項'], []))]) :-
+    欄(第三者, C, 善意無過失), !.
+第三者の段(_, []).
+
+%% ---- 取消権の期間（7条1項）----
+% 起算点の日付は出さない（about の「判定について」）
+期間の段(C, [s(kikan, '取消権の期間', 段(三年十年, '霊感などの特別な能力による知見として不安をあおられた勧誘の取消権は、追認をすることができる時から3年間行わないとき、又は契約の締結の時から10年を経過したときは、時効によって消滅します。', ['7条1項'], []))]) :-
+    欄(勧誘, C, 霊感), !.
+期間の段(_, [s(kikan, '取消権の期間', 段(一年五年, '取消権は、追認をすることができる時から1年間行わないとき、又は契約の締結の時から5年を経過したときは、時効によって消滅します。', ['7条1項'], []))]).
+</script>
+<script type="text/prolog" data-name="rules_d_joko.pl">% rules/d_joko.pl — 契約書の条項（8条〜10条）：9〜16の欄
+%
+%   段 = joko（条項が無効か）・setsumei（額の計算の根拠の説明）
+%   9の欄が「なし」なら段を作らない（[]）。
+%   2026-11-23 案A。前は種類の欄（joshu）で8条1項の号を利用者に選ばせていた（C2 後段・C4）。今は 9の欄（条項の中身）・10の欄（責任のもと）・
+%   11の欄（故意又は重大な過失か）から、アプリが8条1項の号・8条3項を決める（D4）。
+%   9の欄「一部免除」×11の欄「よらない」は、8条3項へ回して12の欄で決める（決まったこと4。前の NOTES (m) は「8条1項2号の場面でない」で止め、利用者に選び直させていた）。
+%   段を作らない状態は名前で書いておく（前の状態。agents/dog/rules.md:94）：
+%     ・条項全体・当該超える部分（どの部分か）… 消した。無効の答えの文に「〜を超える部分について」を含める（決まったこと3）
+%     ・8条2項の 当たらない … 段を作らず、条項の段の木の葉にだけ置く（八条二項の葉/2）
+%     ・場面外（9条2項）… 15の欄が「求めていない」なら説明の段を作らない
+%     ・定め（11条）… about の「判定について」へ移した（決まったこと2）
+%   前の 場面でない は、条項の側を 条項に当たらない に分けた（取消しの側は 取消しに当たらない。rules/c_kanyu.pl）。
+%   8条2項は「前項第一号又は第二号に掲げる条項のうち」なので、債務不履行（1号・2号）のときだけ13の欄を見る（NOTES (l)）。
+
+条項の段(C, []) :- 欄(条項, C, なし), !.
+条項の段(C, [s(joko, '条項が無効か', S1) | L]) :-
+    条項の判定(C, S1),
+    説明の段(C, L).
+
+%% ---- 条項が無効か ----
+条項の判定(C, 段(St, M, Box, Tree)) :-
+    欄(条項, C, V),
+    条項の型(C, V, St, M, Box, Tree), !.
+
+% 8条1項の号（1〜4）を決める。決まらない（一部免除・限度決定で故意又は重大な過失によらない）なら失敗
+八条一項の号(C, N) :-
+    欄(条項, C, V), 欄(責任, C, R), 欄(故意, C, K),
+    号の決め方(V, R, K, N).
+
+号の決め方(全部免除, 債務不履行, _, 1).
+号の決め方(有無決定, 債務不履行, _, 1).
+号の決め方(全部免除, 不法行為, _, 3).
+号の決め方(有無決定, 不法行為, _, 3).
+号の決め方(一部免除, 債務不履行, よる, 2).
+号の決め方(限度決定, 債務不履行, よる, 2).
+号の決め方(一部免除, 不法行為, よる, 4).
+号の決め方(限度決定, 不法行為, よる, 4).
+
+号の条(N, A) :- format(atom(A), '8条1項~d号', [N]).
+
+% 条項の型(C, 9の欄の値, 状態, 文, 箱の条, 木だけの条)
+% 8条1項：1号・2号で13の欄が8条2項に当たれば 適用しない
+条項の型(C, V, 適用しない, M, [B], ['8条2項', '8条1項', A]) :-
+    八条一項の号(C, N), memberchk(N, [1, 2]),
+    欄(適合, C, T), 八条二項の号(T, B, W), !,
+    号の条(N, A), 条項の主語(C, V, S),
+    format(atom(M), '~w~wに、8条1項は適用されません。', [W, S]).
+条項の型(C, V, 無効, M, [A], ['8条1項']) :-
+    八条一項の号(C, N), !,
+    号の条(N, A), 条項の主語(C, V, S),
+    format(atom(M), '~wは、無効です。', [S]).
+% 一部免除で故意又は重大な過失によらない → 8条3項（決まったこと4）
+条項の型(C, 一部免除, 無効, '重大な過失を除く過失のときにだけ使うと書いていない、損害賠償の責任を一部免除する条項は、無効です。', ['8条3項'], []) :-
+    欄(明示, C, 書いていない), !.
+条項の型(_, 一部免除, 条項に当たらない, '重大な過失を除く過失のときにだけ使うと書いているので、損害賠償の責任を一部免除する条項は、8条3項では無効になりません。', ['8条3項'], []) :- !.
+% 限度決定で故意又は重大な過失によらない → 8条1項2号・4号に当たらない（8条3項は「一部を免除する」条項だけ）
+条項の型(C, 限度決定, 条項に当たらない, M, [A], ['8条1項']) :- !,
+    欄(責任, C, R), 限度の号(R, N), 号の条(N, A),
+    format(atom(M), '損害が事業者側の故意又は重大な過失によるものではないので、責任がどこまでかを事業者が決めるとする条項は、~wでは無効になりません。', [A]).
+条項の型(_, 解除権放棄, 無効, '事業者の債務不履行で生じた消費者の解除権を放棄させる条項は、無効です。', ['8条の2'], []).
+条項の型(_, 解除権決定, 無効, '事業者の債務不履行で生じた消費者の解除権があるかを事業者が決めるとする条項は、無効です。', ['8条の2'], []).
+条項の型(_, 後見解除, 無効, '後見・保佐・補助の開始の審判を受けたことだけを理由に事業者が解除できるとする条項は、無効です。', ['8条の3'], []).
+条項の型(_, 後見解除提供, 条項に当たらない, '消費者が物やサービスを提供する側の契約なので、後見・保佐・補助の開始の審判を受けたことだけを理由に事業者が解除できるとする条項は、8条の3では無効になりません。', ['8条の3'], []).
+条項の型(C, V, St, M, [A], ['9条1項']) :-
+    九条の号(V, N, S, U), format(atom(A), '9条1項~d号', [N]),
+    (   欄(超える, C, 超える)
+    ->  St = 超える部分, format(atom(M), '~wは、~wを超える部分について、無効です。', [S, U])
+    ;   St = 条項に当たらない, format(atom(M), '条項で決めた額が~wを超えないので、~wは、~wでは無効になりません。', [U, S, A])
+    ).
+% 10条：前は「〜条項で、…害するものは、無効です」と規定の形で、この契約の条項の判定に読めなかった（REVIEW_RULES A1。2026-11-23 LLMレビュー）
+条項の型(C, 権利制限, 無効, '契約書の条項は、消費者の権利を制限し又は義務を重くし、信義誠実の基本原則に反して消費者の利益を一方的に害するので、無効です。', ['10条'], []) :-
+    欄(害する, C, 害する), !.
+条項の型(_, 権利制限, 条項に当たらない, '消費者の利益を一方的に害するものではないので、権利を制限し又は義務を重くする条項は、10条では無効になりません。', ['10条'], []).
+
+限度の号(債務不履行, 2).
+限度の号(不法行為, 4).
+
+% 8条1項の号の条項の主語（指示語・「当該」を置かない。REVIEW_RULES A6）
+条項の主語(C, V, S) :-
+    欄(責任, C, R), 主語の形(V, R, S).
+
+主語の形(全部免除, R, S) :- 責任の語(R, W), format(atom(S), '~w損害賠償の責任を全部免除する条項', [W]).
+主語の形(有無決定, R, S) :- 責任の語(R, W), format(atom(S), '~w損害賠償の責任があるかを事業者が決めるとする条項', [W]).
+主語の形(一部免除, R, S) :- 故意の責任の語(R, W), format(atom(S), '~w損害賠償の責任を一部免除する条項', [W]).
+主語の形(限度決定, R, S) :- 故意の責任の語(R, W), format(atom(S), '~w損害賠償の責任がどこまでかを事業者が決めるとする条項', [W]).
+
+責任の語(債務不履行, '事業者の債務不履行による').
+責任の語(不法行為, '契約を果たす途中でした事業者の不法行為による').
+故意の責任の語(債務不履行, '事業者側の故意又は重大な過失による債務不履行の').
+故意の責任の語(不法行為, '契約を果たす途中でした、事業者側の故意又は重大な過失による不法行為の').
+
+% 9条1項の号(9の欄の値, 号, 条項の主語, 上限の語)
+九条の号(解除予定, 1, '解除に伴う損害賠償の額の予定・違約金を定める条項', '同じ種類の契約の解除で事業者に生じる平均的な損害の額').
+九条の号(遅延予定, 2, '支払が遅れたときの損害賠償の額の予定・違約金を定める条項', '年14.6%の割合で計算した額').
+
+%% ---- 8条2項（13の欄）----
+% 八条二項の号(13の欄の値, 箱の条, 文の頭)
+八条二項の号(追完, '8条2項1号', '契約の内容に合わない物を引き渡したときに事業者が履行の追完又は代金の減額をする責任を負うとされているので、').
+八条二項の号(他の事業者, '8条2項2号', '契約の内容に合わない物を引き渡したときに別の事業者が損害賠償又は履行の追完をする責任を負うとされているので、').
+
+% 8条1項1号・2号に当たり、8条2項に当たらないときの理由（条項の段の木の葉だけ。前の 段八条二項 の 当たらない）
+八条二項の葉(C, [t(ok, W, '8条2項', [])]) :-
+    八条一項の号(C, N), memberchk(N, [1, 2]),
+    欄(適合, C, T), 八条二項に当たらない理由(T, W), !.
+八条二項の葉(_, []).
+
+八条二項に当たらない理由(無償, '有償契約ではないので、8条2項で8条1項が外れることはありません').
+八条二項に当たらない理由(責任でない, '契約の内容に合わないときの責任についての条項ではないので、8条2項で8条1項が外れることはありません').
+八条二項に当たらない理由(代わりなし, '事業者も別の事業者も、直す・代金を減らす・損害を賠償する責任を負うとされていないので、8条2項で8条1項が外れることはありません').
+
+%% ---- 額の計算の根拠の説明（9条2項）----
+% 9の欄が「解除したときの損害賠償・違約金」で、15の欄が「求めた」ときだけ。超えるかの欄にかかわらず出す（NOTES (n)）
+説明の段(C, [s(setsumei, '額の計算の根拠の説明', 段(説明の努力, '事業者は、損害賠償の額の予定又は違約金の算定の根拠の概要を説明するよう努めなければなりません。', ['9条2項'], []))]) :-
+    欄(条項, C, 解除予定), 欄(説明, C, 求めた), !.
+説明の段(_, []).
+</script>
+<script type="text/prolog" data-name="rules_e_hantei.pl">% rules/e_hantei.pl — 段をまとめ、見出し・根拠条文・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 箱の条, 木だけの条)　結論ごとの段 = s(画面のid, 見出し, 段)
+%   形は gyotetsu-prolog/rules/f_hantei.pl と同じ（2026-11-23 案A）。前は 入口（勧誘・条項）ごとに段を並べ、見出し/3 が
+%   見出しの順 に合う段だけを findall で集めていた。合わない状態（消費者契約・判定しない・第三者なし・適用しない・場面外 など）は
+%   黙って見出しから抜け、書き忘れた状態も同じ形で抜けた（agents/dog/rules.md:94）。木も全部の段を「次のすべてが成り立つ」の下にぶら下げた1本だった（A7・B5）。
+%   今は結論の箱を全部の段の答えの箇条書きにし、論理の木は結論1つにつき1本にした。
+%   出さない段は rules の側で「段を作らない」で表し（c_kanyu.pl・d_joko.pl の頭に前の状態の名前を書いた）、
+%   箱の並びと印は 組の番号/2 を呼んでから名前で見るので、知らない状態は throw で止まる。段の約束/2 も状態を全部名前で書き、最後を throw にした。
+%   前の 段の木 の除外リスト（判定しない・第三者なし・場面外・条項全体・当該超える部分）と 段の約束(_, []) の受け皿は消した。
+%   6条（民法第九十六条との関係）・11条（他の法律）の段は箱に出さず、about の「判定について」へ移した（決まったこと2）。
+%   約束事4つ（評価・重なり・日付・場面外）は消し、about の「判定について」へ移した（A5・D1）。
+
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 消費者契約でなければ、その1行だけ（ほかの段は出さない）。
+% 消費者契約なら、勧誘（3〜8の欄）と条項（9〜16の欄）を同じ入力で両方とも当てる（REVIEW_RULES C4・C5）。
+% どちらも「なし」なら、受け皿の1行（当たらない）。
+% 箱の並びは 組の番号 の順で、同じ番号の中は下の append の順（取消し→第三者→期間→条項→説明）。
+% 同じ述語を別のファイルに分けて書くと後の読み込みで消えるので、まとめはここに1つだけ置く
+全部の段(C, Steps) :- 当事者の段(C, Steps), Steps \== [], !.
+全部の段(C, Steps) :-
+    勧誘の段(C, L1),
+    条項の段(C, L2),
+    append(L1, L2, L0),
+    ( L0 == [] -> どれにも当たらない(L) ; L = L0 ),
+    箱の順(L, Steps).
+
+どれにも当たらない([s(nashi, '取消しと条項', 段(当たらない,
+    '契約するまでの勧誘に取消しの理由になる行為がなく、契約書に無効になる条項もないので、取消しも条項の無効もありません。',
+    ['4条1項', '4条2項本文', '4条3項', '4条4項前段', '4条4項後段', '8条1項', '8条3項', '8条の2', '8条の3', '9条1項', '10条'], []))]).
+
+% 組の番号 は番号を空のまま呼んで後で比べる。番号を束ねて呼ぶと頭に合わず、最後の throw の節に落ちて止まる（sorin-prolog 2026-11-22）
+箱の順(L0, L) :-
+    findall(S, ( member(N, [1, 2, 3, 4]), member(S, L0), S = s(_, _, 段(St, _, _, _)), 組の番号(St, M), M =:= N ), L).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、段の文だけを出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」を付けない）。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(C, Steps, Ws) :-
+    結論の段(C, Steps, Ps),
+    findall(W, member(_-_-W, Ps), Ws).
+
+% 結論の箱に出す段を 段のid-段-答え の組で、箱の並びのまま返す（論理の木も同じ並びで結論1つにつき1本立てる。REVIEW_RULES B5）
+% どの段も箱の条を持つので、答えの段が1つも無い組は今の欄では起きない（全部の段 は必ず1つ以上の段を返す）。gyotetsu と同じ形の受け皿
+結論の段(_, Steps, Ps) :-
+    findall(Id-S-W, ( member(s(Id, _, S), Steps), 問いの答え(Id, S, W) ), Ps0),
+    ( Ps0 == [] -> Ps = [none-段(当たらない, '当てる条がありません。', [], [])-'当てる条がありません'] ; Ps = Ps0 ).
+
+% 根拠の無い段は結論の箱に出さない。答え/3 の書き損じで立っても「（）」を画面に出さない
+問いの答え(Id, S, W) :-
+    S = 段(_, _, As, _),
+    As \== [],
+    答え(Id, S, W0), !,
+    条の表記(As, A),
+    format(atom(W), '~w（~w）', [W0, A]).
+
+% 節の文：答えの文（条を付けない）
+節の文(Id, S, W) :- 答え(Id, S, W).
+
+% 答え(段のid, 段, 答えの文)：段の文の末尾の「。」を外す。
+% 段の文には、画面の上で指す先の無い指示語（その・この・同項・当該 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6。rules/*.pl の段の文で守る）
+答え(_, 段(_, M, _, _), W) :-
+    ( atom_concat(M0, '。', M) -> W = M0 ; W = M ).
+
+%% ---- 根拠条文 ----
+% 段の順に並べ、重複は1つに。箱の条のあとに木だけの条（柱書き・準用・5項の号など）も並べる
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As, Ex), Ss), ( member(A, As) ; member(A, Ex) ) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5。結論をつないだ行と「次のすべてが成り立つ」の節は置かない）。
+% 並びは結論の箱と同じ。一番上の行は結論の箱の文で、その下に段の条の原文を置く。
+% 消費者契約に当たった理由（rules/b_tojisha.pl の 消費者契約の葉）は、箱で一番前の段の木にだけ足す（消費者契約でないときは足さない）。
+% 条項の木には、8条1項1号・2号で8条2項に当たらない理由（rules/d_joko.pl の 八条二項の葉）を足す
+木(C, Steps, Trees) :-
+    結論の段(C, Steps, Ps),
+    findall(T, ( nth1(I, Ps, Id-S-W), 添えの葉(C, I, Id, S, Ls), 段の木(Ls, S, W, T) ), Trees).
+
+添えの葉(C, I, Id, S, Ls) :-
+    ( I =:= 1, S \= 段(消費者でない, _, _, _), S \= 段(事業者でない, _, _, _) -> 消費者契約の葉(C, L1) ; L1 = [] ),
+    ( Id == joko, S \= 段(適用しない, _, _, _) -> 八条二項の葉(C, L2) ; L2 = [] ),
+    append(L1, L2, Ls).
+
+段の木(Ls, 段(St, _, As, Ex), W, t(K, W, A, Cs)) :-
+    append(As, Ex, All), list_to_set(All, Arts0),
+    条の付き添い(Arts0, Arts),
+    maplist(原文規定, Arts, Rs),
+    段の約束(St, Ys),
+    append([Rs, Ls, Ys], Kids),
+    すべて(W, '', Kids, t(_, W, A, Cs)),
+    印(St, K).
+
+% 4条3項5号は イ・ロ まで読んで語がそろう（号の文が「次に掲げる事項」）
+条の付き添い(As, Bs) :-
+    findall(B, ( member(A, As), 付き添い(A, B) ), Bs).
+
+付き添い('4条3項5号', '4条3項5号').
+付き添い('4条3項5号', '4条3項5号イ').
+付き添い('4条3項5号', '4条3項5号ロ').
+付き添い(A, A) :- A \== '4条3項5号'.
+
+% 止まった段・当たらない段は info、そのほかは ok（木ごとに、その段で決める）
+印(St, K) :- 組の番号(St, _),
+    ( memberchk(St, [消費者でない, 事業者でない, 取り消せない, 拒んだ, 取消しに当たらない, 適用しない, 条項に当たらない, 当たらない]) -> K = info ; K = ok ).
+
+% 組の番号(状態, 1=先頭に出す答え | 2=当たった答え | 4=当たりません)。状態は全部名前で書き、知らない状態は止める（agents/dog/rules.md:94）。
+% 3（答えを支える文）は今は使っていない。
+% 回答ファイルの 組み合わせなし（1）は、案Aでは「この組み合わせはありません」になる組が無い（0件）ので置いていない（gyotetsu と同じ）。
+% 2026-11-23 前の 消費者契約（木の葉へ）・判定しない・第三者なし・場面外・条項全体・当該超える部分・妨げない（6条。about へ）・
+% 定め（11条。about へ）・この限りでない（拒んだ に改名）・場面でない（取消しに当たらない・条項に当たらない に分けた）・
+% 8条2項の 当たらない（条項の木の葉へ）・努力義務（説明の努力 に改名）は消した
+組の番号(消費者でない, 1) :- !.        % 2条1項・2条3項（自分が事業のための個人・団体）
+組の番号(事業者でない, 1) :- !.        % 2条2項・2条3項（相手が事業者でない）
+組の番号(取り消せる, 2) :- !.          % 4条1項〜4項・5条
+組の番号(対抗できない, 2) :- !.        % 4条6項（善意でかつ過失がない第三者がいるとき）
+組の番号(一年五年, 2) :- !.            % 7条1項
+組の番号(三年十年, 2) :- !.            % 7条1項の括弧（4条3項8号）
+組の番号(無効, 2) :- !.                % 8条1項・8条3項・8条の2・8条の3・10条
+組の番号(超える部分, 2) :- !.          % 9条1項
+組の番号(説明の努力, 2) :- !.          % 9条2項
+組の番号(取り消せない, 4) :- !.        % 7条2項
+組の番号(拒んだ, 4) :- !.              % 4条2項ただし書
+組の番号(取消しに当たらない, 4) :- !.  % 重要事項でない・故意又は重大な過失でない・知らなかった・勧誘が原因でない
+組の番号(適用しない, 4) :- !.          % 8条2項
+組の番号(条項に当たらない, 4) :- !.    % 故意又は重大な過失でない・明らかにしている・消費者が提供する契約・超えない・害さない
+組の番号(当たらない, 4) :- !.          % 勧誘も条項も「なし」を選んだとき（受け皿）
+組の番号(St, _) :- throw(知らない状態(St)).
+
+% 葉に置くのは結論を支える規則だけ。断り書き（評価は判定しない・重なりは判定しない・日付は出さない・場面外は反対の結論を言わない）は
+% about の「判定について」に置く（REVIEW_RULES A5・D1。前は 評価の約束・重なりの約束・日付の約束・場面外の約束 を付けていた）。
+% 今はどの状態にも約束事を付けない。状態は全部名前で書き、知らない状態は止める（前の 段の約束(_, []) の受け皿はやめた）
+段の約束(St, []) :-
+    memberchk(St, [消費者でない, 事業者でない, 取り消せる, 対抗できない, 一年五年, 三年十年, 無効, 超える部分, 説明の努力,
+                   取り消せない, 拒んだ, 取消しに当たらない, 適用しない, 条項に当たらない, 当たらない]), !.
+段の約束(St, _) :- throw(知らない状態(St)).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は gyotetsu-prolog の web.pl から notice/2 を除いたもの（2026-11-23）。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+</script>
+<script type="application/json" id="law">{"2":{"t":"第二条","c":"（定義）","p":[{"n":"1","s":"この法律において「消費者」とは、個人（事業として又は事業のために契約の当事者となる場合におけるものを除く。）をいう。","i":[]},{"n":"2","s":"この法律（第四十三条第二項第二号を除く。）において「事業者」とは、法人その他の団体及び事業として又は事業のために契約の当事者となる場合における個人をいう。","i":[]},{"n":"3","s":"この法律において「消費者契約」とは、消費者と事業者との間で締結される契約をいう。","i":[]},{"n":"4","s":"この法律において「適格消費者団体」とは、不特定かつ多数の消費者の利益のためにこの法律の規定による差止請求権を行使するのに必要な適格性を有する法人である消費者団体（消費者基本法（昭和四十三年法律第七十八号）第八条の消費者団体をいう。以下同じ。）として第十三条の定めるところにより内閣総理大臣の認定を受けた者をいう。","i":[]}]},"4":{"t":"第四条","c":"（消費者契約の申込み又はその承諾の意思表示の取消し）","p":[{"n":"1","s":"消費者は、事業者が消費者契約の締結について勧誘をするに際し、当該消費者に対して次の各号に掲げる行為をしたことにより当該各号に定める誤認をし、それによって当該消費者契約の申込み又はその承諾の意思表示をしたときは、これを取り消すことができる。","i":[{"n":"1","t":"一","s":"重要事項について事実と異なることを告げること。　当該告げられた内容が事実であるとの誤認","sub":[]},{"n":"2","t":"二","s":"物品、権利、役務その他の当該消費者契約の目的となるものに関し、将来におけるその価額、将来において当該消費者が受け取るべき金額その他の将来における変動が不確実な事項につき断定的判断を提供すること。　当該提供された断定的判断の内容が確実であるとの誤認","sub":[]}]},{"n":"2","s":"消費者は、事業者が消費者契約の締結について勧誘をするに際し、当該消費者に対してある重要事項又は当該重要事項に関連する事項について当該消費者の利益となる旨を告げ、かつ、当該重要事項について当該消費者の不利益となる事実（当該告知により当該事実が存在しないと消費者が通常考えるべきものに限る。）を故意又は重大な過失によって告げなかったことにより、当該事実が存在しないとの誤認をし、それによって当該消費者契約の申込み又はその承諾の意思表示をしたときは、これを取り消すことができる。ただし、当該事業者が当該消費者に対し当該事実を告げようとしたにもかかわらず、当該消費者がこれを拒んだときは、この限りでない。","i":[]},{"n":"3","s":"消費者は、事業者が消費者契約の締結について勧誘をするに際し、当該消費者に対して次に掲げる行為をしたことにより困惑し、それによって当該消費者契約の申込み又はその承諾の意思表示をしたときは、これを取り消すことができる。","i":[{"n":"1","t":"一","s":"当該事業者に対し、当該消費者が、その住居又はその業務を行っている場所から退去すべき旨の意思を示したにもかかわらず、それらの場所から退去しないこと。","sub":[]},{"n":"2","t":"二","s":"当該事業者が当該消費者契約の締結について勧誘をしている場所から当該消費者が退去する旨の意思を示したにもかかわらず、その場所から当該消費者を退去させないこと。","sub":[]},{"n":"3","t":"三","s":"当該消費者に対し、当該消費者契約の締結について勧誘をすることを告げずに、当該消費者が任意に退去することが困難な場所であることを知りながら、当該消費者をその場所に同行し、その場所において当該消費者契約の締結について勧誘をすること。","sub":[]},{"n":"4","t":"四","s":"当該消費者が当該消費者契約の締結について勧誘を受けている場所において、当該消費者が当該消費者契約を締結するか否かについて相談を行うために電話その他の内閣府令で定める方法によって当該事業者以外の者と連絡する旨の意思を示したにもかかわらず、威迫する言動を交えて、当該消費者が当該方法によって連絡することを妨げること。","sub":[]},{"n":"5","t":"五","s":"当該消費者が、社会生活上の経験が乏しいことから、次に掲げる事項に対する願望の実現に過大な不安を抱いていることを知りながら、その不安をあおり、裏付けとなる合理的な根拠がある場合その他の正当な理由がある場合でないのに、物品、権利、役務その他の当該消費者契約の目的となるものが当該願望を実現するために必要である旨を告げること。","sub":["イ 進学、就職、結婚、生計その他の社会生活上の重要な事項","ロ 容姿、体型その他の身体の特徴又は状況に関する重要な事項"]},{"n":"6","t":"六","s":"当該消費者が、社会生活上の経験が乏しいことから、当該消費者契約の締結について勧誘を行う者に対して恋愛感情その他の好意の感情を抱き、かつ、当該勧誘を行う者も当該消費者に対して同様の感情を抱いているものと誤信していることを知りながら、これに乗じ、当該消費者契約を締結しなければ当該勧誘を行う者との関係が破綻することになる旨を告げること。","sub":[]},{"n":"7","t":"七","s":"当該消費者が、加齢又は心身の故障によりその判断力が著しく低下していることから、生計、健康その他の事項に関しその現在の生活の維持に過大な不安を抱いていることを知りながら、その不安をあおり、裏付けとなる合理的な根拠がある場合その他の正当な理由がある場合でないのに、当該消費者契約を締結しなければその現在の生活の維持が困難となる旨を告げること。","sub":[]},{"n":"8","t":"八","s":"当該消費者に対し、霊感その他の合理的に実証することが困難な特別な能力による知見として、当該消費者又はその親族の生命、身体、財産その他の重要な事項について、そのままでは現在生じ、若しくは将来生じ得る重大な不利益を回避することができないとの不安をあおり、又はそのような不安を抱いていることに乗じて、その重大な不利益を回避するためには、当該消費者契約を締結することが必要不可欠である旨を告げること。","sub":[]},{"n":"9","t":"九","s":"当該消費者が当該消費者契約の申込み又はその承諾の意思表示をする前に、当該消費者契約を締結したならば負うこととなる義務の内容の全部若しくは一部を実施し、又は当該消費者契約の目的物の現状を変更し、その実施又は変更前の原状の回復を著しく困難にすること。","sub":[]},{"n":"10","t":"十","s":"前号に掲げるもののほか、当該消費者が当該消費者契約の申込み又はその承諾の意思表示をする前に、当該事業者が調査、情報の提供、物品の調達その他の当該消費者契約の締結を目指した事業活動を実施した場合において、当該事業活動が当該消費者からの特別の求めに応じたものであったことその他の取引上の社会通念に照らして正当な理由がある場合でないのに、当該事業活動が当該消費者のために特に実施したものである旨及び当該事業活動の実施により生じた損失の補償を請求する旨を告げること。","sub":[]}]},{"n":"4","s":"消費者は、事業者が消費者契約の締結について勧誘をするに際し、物品、権利、役務その他の当該消費者契約の目的となるものの分量、回数又は期間（以下この項において「分量等」という。）が当該消費者にとっての通常の分量等（消費者契約の目的となるものの内容及び取引条件並びに事業者がその締結について勧誘をする際の消費者の生活の状況及びこれについての当該消費者の認識に照らして当該消費者契約の目的となるものの分量等として通常想定される分量等をいう。以下この項において同じ。）を著しく超えるものであることを知っていた場合において、その勧誘により当該消費者契約の申込み又はその承諾の意思表示をしたときは、これを取り消すことができる。事業者が消費者契約の締結について勧誘をするに際し、消費者が既に当該消費者契約の目的となるものと同種のものを目的とする消費者契約（以下この項において「同種契約」という。）を締結し、当該同種契約の目的となるものの分量等と当該消費者契約の目的となるものの分量等とを合算した分量等が当該消費者にとっての通常の分量等を著しく超えるものであることを知っていた場合において、その勧誘により当該消費者契約の申込み又はその承諾の意思表示をしたときも、同様とする。","i":[]},{"n":"5","s":"第一項第一号及び第二項の「重要事項」とは、消費者契約に係る次に掲げる事項（同項の場合にあっては、第三号に掲げるものを除く。）をいう。","i":[{"n":"1","t":"一","s":"物品、権利、役務その他の当該消費者契約の目的となるものの質、用途その他の内容であって、消費者の当該消費者契約を締結するか否かについての判断に通常影響を及ぼすべきもの","sub":[]},{"n":"2","t":"二","s":"物品、権利、役務その他の当該消費者契約の目的となるものの対価その他の取引条件であって、消費者の当該消費者契約を締結するか否かについての判断に通常影響を及ぼすべきもの","sub":[]},{"n":"3","t":"三","s":"前二号に掲げるもののほか、物品、権利、役務その他の当該消費者契約の目的となるものが当該消費者の生命、身体、財産その他の重要な利益についての損害又は危険を回避するために通常必要であると判断される事情","sub":[]}]},{"n":"6","s":"第一項から第四項までの規定による消費者契約の申込み又はその承諾の意思表示の取消しは、これをもって善意でかつ過失がない第三者に対抗することができない。","i":[]}]},"5":{"t":"第五条","c":"（媒介の委託を受けた第三者及び代理人）","p":[{"n":"1","s":"前条の規定は、事業者が第三者に対し、当該事業者と消費者との間における消費者契約の締結について媒介をすることの委託（以下この項において単に「委託」という。）をし、当該委託を受けた第三者（その第三者から委託（二以上の段階にわたる委託を含む。）を受けた者を含む。以下「受託者等」という。）が消費者に対して同条第一項から第四項までに規定する行為をした場合について準用する。この場合において、同条第二項ただし書中「当該事業者」とあるのは、「当該事業者又は次条第一項に規定する受託者等」と読み替えるものとする。","i":[]},{"n":"2","s":"消費者契約の締結に係る消費者の代理人（復代理人（二以上の段階にわたり復代理人として選任された者を含む。）を含む。以下同じ。）、事業者の代理人及び受託者等の代理人は、前条第一項から第四項まで（前項において準用する場合を含む。次条から第七条までにおいて同じ。）の規定の適用については、それぞれ消費者、事業者及び受託者等とみなす。","i":[]}]},"6":{"t":"第六条","c":"（解釈規定）","p":[{"n":"1","s":"第四条第一項から第四項までの規定は、これらの項に規定する消費者契約の申込み又はその承諾の意思表示に対する民法第九十六条の規定の適用を妨げるものと解してはならない。","i":[]}]},"7":{"t":"第七条","c":"（取消権の行使期間等）","p":[{"n":"1","s":"第四条第一項から第四項までの規定による取消権は、追認をすることができる時から一年間（同条第三項第八号に係る取消権については、三年間）行わないときは、時効によって消滅する。当該消費者契約の締結の時から五年（同号に係る取消権については、十年）を経過したときも、同様とする。","i":[]},{"n":"2","s":"会社法（平成十七年法律第八十六号）その他の法律により詐欺又は強迫を理由として取消しをすることができないものとされている株式若しくは出資の引受け又は基金の拠出が消費者契約としてされた場合には、当該株式若しくは出資の引受け又は基金の拠出に係る意思表示については、第四条第一項から第四項までの規定によりその取消しをすることができない。","i":[]}]},"8":{"t":"第八条","c":"（事業者の損害賠償の責任を免除する条項等の無効）","p":[{"n":"1","s":"次に掲げる消費者契約の条項は、無効とする。","i":[{"n":"1","t":"一","s":"事業者の債務不履行により消費者に生じた損害を賠償する責任の全部を免除し、又は当該事業者にその責任の有無を決定する権限を付与する条項","sub":[]},{"n":"2","t":"二","s":"事業者の債務不履行（当該事業者、その代表者又はその使用する者の故意又は重大な過失によるものに限る。）により消費者に生じた損害を賠償する責任の一部を免除し、又は当該事業者にその責任の限度を決定する権限を付与する条項","sub":[]},{"n":"3","t":"三","s":"消費者契約における事業者の債務の履行に際してされた当該事業者の不法行為により消費者に生じた損害を賠償する責任の全部を免除し、又は当該事業者にその責任の有無を決定する権限を付与する条項","sub":[]},{"n":"4","t":"四","s":"消費者契約における事業者の債務の履行に際してされた当該事業者の不法行為（当該事業者、その代表者又はその使用する者の故意又は重大な過失によるものに限る。）により消費者に生じた損害を賠償する責任の一部を免除し、又は当該事業者にその責任の限度を決定する権限を付与する条項","sub":[]}]},{"n":"2","s":"前項第一号又は第二号に掲げる条項のうち、消費者契約が有償契約である場合において、引き渡された目的物が種類又は品質に関して契約の内容に適合しないとき（当該消費者契約が請負契約である場合には、請負人が種類又は品質に関して契約の内容に適合しない仕事の目的物を注文者に引き渡したとき（その引渡しを要しない場合には、仕事が終了した時に仕事の目的物が種類又は品質に関して契約の内容に適合しないとき。）。以下この項において同じ。）に、これにより消費者に生じた損害を賠償する事業者の責任を免除し、又は当該事業者にその責任の有無若しくは限度を決定する権限を付与するものについては、次に掲げる場合に該当するときは、前項の規定は、適用しない。","i":[{"n":"1","t":"一","s":"当該消費者契約において、引き渡された目的物が種類又は品質に関して契約の内容に適合しないときに、当該事業者が履行の追完をする責任又は不適合の程度に応じた代金若しくは報酬の減額をする責任を負うこととされている場合","sub":[]},{"n":"2","t":"二","s":"当該消費者と当該事業者の委託を受けた他の事業者との間の契約又は当該事業者と他の事業者との間の当該消費者のためにする契約で、当該消費者契約の締結に先立って又はこれと同時に締結されたものにおいて、引き渡された目的物が種類又は品質に関して契約の内容に適合しないときに、当該他の事業者が、その目的物が種類又は品質に関して契約の内容に適合しないことにより当該消費者に生じた損害を賠償する責任の全部若しくは一部を負い、又は履行の追完をする責任を負うこととされている場合","sub":[]}]},{"n":"3","s":"事業者の債務不履行（当該事業者、その代表者又はその使用する者の故意又は重大な過失によるものを除く。）又は消費者契約における事業者の債務の履行に際してされた当該事業者の不法行為（当該事業者、その代表者又はその使用する者の故意又は重大な過失によるものを除く。）により消費者に生じた損害を賠償する責任の一部を免除する消費者契約の条項であって、当該条項において事業者、その代表者又はその使用する者の重大な過失を除く過失による行為にのみ適用されることを明らかにしていないものは、無効とする。","i":[]}]},"8_2":{"t":"第八条の二","c":"（消費者の解除権を放棄させる条項等の無効）","p":[{"n":"1","s":"事業者の債務不履行により生じた消費者の解除権を放棄させ、又は当該事業者にその解除権の有無を決定する権限を付与する消費者契約の条項は、無効とする。","i":[]}]},"8_3":{"t":"第八条の三","c":"（事業者に対し後見開始の審判等による解除権を付与する条項の無効）","p":[{"n":"1","s":"事業者に対し、消費者が後見開始、保佐開始又は補助開始の審判を受けたことのみを理由とする解除権を付与する消費者契約（消費者が事業者に対し物品、権利、役務その他の消費者契約の目的となるものを提供することとされているものを除く。）の条項は、無効とする。","i":[]}]},"9":{"t":"第九条","c":"（消費者が支払う損害賠償の額を予定する条項等の無効等）","p":[{"n":"1","s":"次の各号に掲げる消費者契約の条項は、当該各号に定める部分について、無効とする。","i":[{"n":"1","t":"一","s":"当該消費者契約の解除に伴う損害賠償の額を予定し、又は違約金を定める条項であって、これらを合算した額が、当該条項において設定された解除の事由、時期等の区分に応じ、当該消費者契約と同種の消費者契約の解除に伴い当該事業者に生ずべき平均的な損害の額を超えるもの　当該超える部分","sub":[]},{"n":"2","t":"二","s":"当該消費者契約に基づき支払うべき金銭の全部又は一部を消費者が支払期日（支払回数が二以上である場合には、それぞれの支払期日。以下この号において同じ。）までに支払わない場合における損害賠償の額を予定し、又は違約金を定める条項であって、これらを合算した額が、支払期日の翌日からその支払をする日までの期間について、その日数に応じ、当該支払期日に支払うべき額から当該支払期日に支払うべき額のうち既に支払われた額を控除した額に年十四・六パーセントの割合を乗じて計算した額を超えるもの　当該超える部分","sub":[]}]},{"n":"2","s":"事業者は、消費者に対し、消費者契約の解除に伴う損害賠償の額を予定し、又は違約金を定める条項に基づき損害賠償又は違約金の支払を請求する場合において、当該消費者から説明を求められたときは、損害賠償の額の予定又は違約金の算定の根拠（第十二条の四において「算定根拠」という。）の概要を説明するよう努めなければならない。","i":[]}]},"10":{"t":"第十条","c":"（消費者の利益を一方的に害する条項の無効）","p":[{"n":"1","s":"消費者の不作為をもって当該消費者が新たな消費者契約の申込み又はその承諾の意思表示をしたものとみなす条項その他の法令中の公の秩序に関しない規定の適用による場合に比して消費者の権利を制限し又は消費者の義務を加重する消費者契約の条項であって、民法第一条第二項に規定する基本原則に反して消費者の利益を一方的に害するものは、無効とする。","i":[]}]},"11":{"t":"第十一条","c":"（他の法律の適用）","p":[{"n":"1","s":"消費者契約の申込み又はその承諾の意思表示の取消し及び消費者契約の条項の効力については、この法律の規定によるほか、民法及び商法（明治三十二年法律第四十八号）の規定による。","i":[]},{"n":"2","s":"消費者契約の申込み又はその承諾の意思表示の取消し及び消費者契約の条項の効力について民法及び商法以外の他の法律に別段の定めがあるときは、その定めるところによる。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"第一章　総則","a":[{"k":"1","t":"第一条","c":"（目的）","u":0},{"k":"2","t":"第二条","c":"（定義）","u":1},{"k":"3","t":"第三条","c":"（事業者及び消費者の努力）","u":0}]},{"t":"第二章　消費者契約","a":[{"k":"4","t":"第四条","c":"（消費者契約の申込み又はその承諾の意思表示の取消し）","u":1},{"k":"5","t":"第五条","c":"（媒介の委託を受けた第三者及び代理人）","u":1},{"k":"6","t":"第六条","c":"（解釈規定）","u":1},{"k":"6_2","t":"第六条の二","c":"（取消権を行使した消費者の返還義務）","u":0},{"k":"7","t":"第七条","c":"（取消権の行使期間等）","u":1},{"k":"8","t":"第八条","c":"（事業者の損害賠償の責任を免除する条項等の無効）","u":1},{"k":"8_2","t":"第八条の二","c":"（消費者の解除権を放棄させる条項等の無効）","u":1},{"k":"8_3","t":"第八条の三","c":"（事業者に対し後見開始の審判等による解除権を付与する条項の無効）","u":1},{"k":"9","t":"第九条","c":"（消費者が支払う損害賠償の額を予定する条項等の無効等）","u":1},{"k":"10","t":"第十条","c":"（消費者の利益を一方的に害する条項の無効）","u":1},{"k":"11","t":"第十一条","c":"（他の法律の適用）","u":1}]},{"t":"第三章　差止請求","a":[{"k":"12","t":"第十二条","c":"（差止請求権）","u":0},{"k":"12_2","t":"第十二条の二","c":"（差止請求の制限）","u":0},{"k":"12_3","t":"第十二条の三","c":"（消費者契約の条項の開示要請）","u":0},{"k":"12_4","t":"第十二条の四","c":"（損害賠償の額を予定する条項等に関する説明の要請等）","u":0},{"k":"12_5","t":"第十二条の五","c":"（差止請求に係る講じた措置の開示要請）","u":0},{"k":"13","t":"第十三条","c":"（適格消費者団体の認定）","u":0},{"k":"14","t":"第十四条","c":"（認定の申請）","u":0},{"k":"15","t":"第十五条","c":"（認定の申請に関する公告及び縦覧等）","u":0},{"k":"16","t":"第十六条","c":"（認定の公示等）","u":0},{"k":"17","t":"第十七条","c":"（認定の有効期間等）","u":0},{"k":"18","t":"第十八条","c":"（変更の届出）","u":0},{"k":"19","t":"第十九条","c":"（合併の届出及び認可等）","u":0},{"k":"20","t":"第二十条","c":"（事業の譲渡の届出及び認可等）","u":0},{"k":"21","t":"第二十一条","c":"（解散の届出等）","u":0},{"k":"22","t":"第二十二条","c":"（認定の失効）","u":0},{"k":"23","t":"第二十三条","c":"（差止請求権の行使等）","u":0},{"k":"24","t":"第二十四条","c":"（消費者の被害に関する情報の取扱い）","u":0},{"k":"25","t":"第二十五条","c":"（秘密保持義務）","u":0},{"k":"26","t":"第二十六条","c":"（氏名等の明示）","u":0},{"k":"27","t":"第二十七条","c":"（判決等に関する情報の提供）","u":0},{"k":"28","t":"第二十八条","c":"（財産上の利益の受領の禁止等）","u":0},{"k":"29","t":"第二十九条","c":"（業務の範囲及び区分経理）","u":0},{"k":"30","t":"第三十条","c":"（帳簿書類の作成及び保存）","u":0},{"k":"31","t":"第三十一条","c":"（財務諸表等の作成、備置き、閲覧等及び提出等）","u":0},{"k":"32","t":"第三十二条","c":"（報告及び立入検査）","u":0},{"k":"33","t":"第三十三条","c":"（適合命令及び改善命令）","u":0},{"k":"34","t":"第三十四条","c":"（認定の取消し等）","u":0},{"k":"35","t":"第三十五条","c":"（差止請求権の承継に係る指定等）","u":0},{"k":"36","t":"第三十六条","c":"（規律）","u":0},{"k":"37","t":"第三十七条","c":"（官公庁等への協力依頼）","u":0},{"k":"38","t":"第三十八条","c":"（内閣総理大臣への意見）","u":0},{"k":"39","t":"第三十九条","c":"（判決等に関する情報の公表）","u":0},{"k":"40","t":"第四十条","c":"（適格消費者団体への協力等）","u":0},{"k":"41","t":"第四十一条","c":"（書面による事前の請求）","u":0},{"k":"42","t":"第四十二条","c":"（訴訟の目的の価額）","u":0},{"k":"43","t":"第四十三条","c":"（管轄）","u":0},{"k":"44","t":"第四十四条","c":"（移送）","u":0},{"k":"45","t":"第四十五条","c":"（弁論等の併合）","u":0},{"k":"46","t":"第四十六条","c":"（訴訟手続の中止）","u":0},{"k":"47","t":"第四十七条","c":"（間接強制の支払額の算定）","u":0}]},{"t":"第四章　雑則","a":[{"k":"48","t":"第四十八条","c":"（適用除外）","u":0},{"k":"48_2","t":"第四十八条の二","c":"（権限の委任）","u":0}]},{"t":"第五章　罰則","a":[{"k":"49","t":"第四十九条","c":"","u":0},{"k":"50","t":"第五十条","c":"","u":0},{"k":"51","t":"第五十一条","c":"","u":0},{"k":"52","t":"第五十二条","c":"","u":0},{"k":"53","t":"第五十三条","c":"","u":0}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+// ==== 共有ここから（別ページでも同じ部品を使う） ====
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  // '2条2項1号' '10条1項ただし書' '12条の2第1項' '5条1号の2' '5条1号イ' のような形。複数条が「・」で区切られることもある → 最初の条だけ見る
+  // 号の枝番は XML では Num="1_2"（5条1号の2）
+  const first = String(a).split("・")[0];
+  const m = first.match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(?:第?(\d+)号((?:の\d+)*))?([イロハニホ])?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[4] ? m[4] + (m[5] || "").replace(/の/g, "_") : null, sub: m[6] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para);
+  // 号まで指定があれば、項の本文とその号だけ出す（5条は号が多いので全部は出さない）
+  if (r.item) ps = ps.filter(p => p.i.some(it => it.n === r.item));
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const list = r.item ? p.i.filter(it => it.n === r.item) : p.i;
+    const its = list.map(it => `<p class="it">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => r.sub && x.startsWith(r.sub + " ") ? `<br><span class="hit">　${esc(x)}</span>` : `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。</p>`;
+// 2026-11-23 凡例から「アプリの約束事」の説明を外した（約束事が1つも無くなったため。yakusoku/kihon.pl。REVIEW_RULES B3）。
+// 凡例は最初の木の上に1回だけ出す（legend＝false で外す。gyotetsu-prolog と同じ）
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+// ==== 共有ここまで ====
+
+async function boot(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const need = ["result/2", "explain/2", "heads/2", "answers/2"].filter(p => !once(`current_predicate(${p})`));
+    if (need.length) throw new Error(`Prologの読み込みが不完全です（${need.join("・")} がありません）。${errBuf.slice(-3).join(" ")}`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    renderPresets();
+    ask();
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+    $("answer").innerHTML = `<p class="loading err">エラー：${esc(e.message)}</p>`;
+  }
+}
+
+// ---- 入力 → ctx の文字 ----
+// 欄はいつも全部出し、出し消ししない（REVIEW_RULES C5。2026-11-23 欄を出し消しする関数（updateSlots・SLOTS）と、
+// 隠れた欄を「関係なし」で渡す buildCtx をやめた。形は gyotetsu-prolog と同じ）。
+// 並びは schema.pl の ctx の引数の順（1〜16）
+const IDS = ["jibun","aite","koui","kouisha","juyo","ishi","nana","daisan","joshu","sekinin","koi","akiraka","tekigo","koeru","setsumei","gai"];
+function buildCtx(){
+  return `ctx(${IDS.map(id => atom($(id).value)).join(",")})`;
+}
+
+// ---- 判定と表示 ----
+const HEAD = `<div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div>`;
+const lawBtn = a => a === "@約束事" ? `<span class="yk">アプリの約束事</span>` : (a ? `<button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : "");
+const artsHTML = as => as.map(String).map(lawBtn).join(" ");
+// 断り書き（評価は判定しない・日付は出さない・重なりは判定しない・別の法律は読まない）は about.html の「判定について」と「収録範囲」に置く
+// （REVIEW_RULES A1・A5。2026-11-23 結果の下に出していた NOTE_HANTEI・NOTE_HIZUKE・NOTE_KASANARI・note-betsu と、
+// 欄の説明の「判定しません」、「判定していません」の段、6条・11条の段を移した・消した）。頭の注意は見本の1文だけ（A3）。
+// 左だけ色の線の .tokurei と .lawtext .hit の inset の影は外した（E1）
+
+// 段(状態, 文, 箱の条, 木だけの条) を1段ぶんの行にする。文は答え（answers/2。段の文から末尾の「。」を外したもの）
+function stepHTML(id, title, s, ans){
+  const [st, , as] = T(s).args;
+  return `<p class="sec">${esc(title)}</p><p class="step" id="${id}" data-st="${esc(st)}">${esc(ans)}。 ${artsHTML(as)}</p>`;
+}
+
+function ask(){
+  const c = buildCtx();
+  $("qline").textContent = `?- result(${c}, R).`;
+  if (!pl) return;
+  try{
+    // 木は結論1つにつき1本（結論の箱と同じ並び）。凡例は最初の木の上に1回だけ（REVIEW_RULES B5）
+    const lr = once(`explain(${c}, Lines)`);
+    const trees = lr ? lr.Lines.map(ls => ls.map(T).map(t => t.args)) : [];
+    const r = once(`result(${c}, r(Head,Steps,Arts))`);
+    if (!r){
+      $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">判定できませんでした</div></div><p class="hint">入力を確かめてください。</p></div>`;
+      return;
+    }
+    const ar = once(`answers(${c}, L)`);
+    const ans = Object.fromEntries((ar ? ar.L : []).map(T).map(t => t.args));
+    const steps = r.Steps.map(T).map(t => t.args).filter(([id]) => ans[id] !== undefined);
+    // 答えが2つ以上なら箇条書き、1つなら1文のまま（REVIEW_RULES A7）。並びは組の番号の順（消費者契約でないが先頭、「できません」「なりません」は最後）
+    const hr = once(`heads(${c}, L)`);
+    const hs = hr ? hr.L.map(String) : [];
+    const big = hs.length > 1 ? `<ul>${hs.map(h => `<li>${esc(h)}</li>`).join("")}</ul>` : esc(r.Head);
+    $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">${big}</div></div>
+      ${steps.map(([id, title, s], i) => stepHTML("st-" + id, `${i + 1}　${title}`, s, ans[id])).join("")}
+      <p class="sec">根拠条文</p><p class="arts" id="arts">${r.Arts.length ? artsHTML(r.Arts) : "当てはまる条文はありません。"}</p>
+      ${trees.length ? `<p class="sec">なぜそうなるか（論理の木）</p>${trees.map((ls, i) => treeHTML(ls, i === 0)).join("")}` : ""}</div>`;
+  } catch(e){ $("answer").innerHTML = `<p class="hint">エラー：${esc(e.message)}</p>`; }
+}
+
+// ---- 例（名前は起きた事実の言葉で書く。号・条の文を写さない（REVIEW_RULES C2・C4）。条文に無い品物・業種の名前を使わない）----
+function presetList(){
+  // 欄の値は DEFAULTS から変えるものだけ書く。2026-11-23 16欄で組み直した（前の例50個は 入口・種類 の欄を使い、名前は条文の語だった）
+  return [
+    ["自分が事業のために契約した", {jibun:"事業目的"}],
+    ["自分が会社などの団体", {jibun:"団体"}],
+    ["相手が事業のためではない個人", {aite:"消費者"}],
+    ["事実と違うことを言われたが、契約を決めるのに影響しない事柄だった", {juyo:"当たらない"}],
+    ["事実と違うことを言われたが、契約とは関係ない", {ishi:"しない"}],
+    ["値上がり確実と言い切られた", {koui:"断定的判断"}],
+    ["得になることだけ言われ、損になる事実をわざと隠された", {koui:"不利益事実"}],
+    ["損になる事実を言われなかったが、わざとではない", {koui:"不利益事実過失なし"}],
+    ["損になる事実を言おうとしたのを、自分が断った", {koui:"拒否"}],
+    ["帰ってほしいと言ったのに帰らなかった", {koui:"不退去"}],
+    ["霊感で不安をあおられた", {koui:"霊感"}],
+    ["普通の量をとても超える量を、知りながら勧められた", {koui:"過量"}],
+    ["量はとても多かったが、相手は知らなかった", {koui:"過量知らない"}],
+    ["仲介を頼まれた人が事実と違うことを言った", {kouisha:"受託者等"}],
+    ["取り消す前に、事情を知らない第三者が関係を持った", {daisan:"善意無過失"}],
+    ["株式の引受けをした", {nana:"当たる"}],
+    ["勧誘には問題がない・契約が守られなくても責任を全部負わない条項", {koui:"なし",joshu:"全部免除"}],
+    ["契約の内容に合わない物で、事業者が直すとされている", {koui:"なし",joshu:"全部免除",tekigo:"追完"}],
+    ["故意・重大な過失のときでも責任を一部しか負わない条項", {koui:"なし",joshu:"一部免除"}],
+    ["軽い過失のときだけと書かずに、責任を一部しか負わない条項", {koui:"なし",joshu:"一部免除",koi:"よらない"}],
+    ["軽い過失のときだけと書いて、責任を一部しか負わない条項", {koui:"なし",joshu:"一部免除",koi:"よらない",akiraka:"書いている"}],
+    ["契約を果たす途中の不法行為の責任を、事業者が決める条項", {koui:"なし",joshu:"有無決定",sekinin:"不法行為"}],
+    ["事業者が契約を守らなくても解除できないとする条項", {koui:"なし",joshu:"解除権放棄"}],
+    ["後見が始まったら事業者が解除できる条項", {koui:"なし",joshu:"後見解除"}],
+    ["解約の違約金が平均的な損害の額を超える", {koui:"なし",joshu:"解除予定"}],
+    ["解約の違約金を請求され、計算の根拠の説明を求めた", {koui:"なし",joshu:"解除予定",setsumei:"求めた"}],
+    ["支払が遅れたときの違約金が年14.6%で計算した額を超えない", {koui:"なし",joshu:"遅延予定",koeru:"超えない"}],
+    ["返事をしないと申し込んだことにする条項で、損をするのは消費者だけ", {koui:"なし",joshu:"権利制限"}],
+    ["事実と違うことを言われ、解約の違約金が平均的な損害の額を超える条項もある", {joshu:"解除予定"}],
+    ["勧誘にも条項にも問題がない", {koui:"なし"}],
+  ];
+}
+// 例に書いていない欄は既定に戻す（前の例の値を残すと、見出しと違う入力になるため）
+// 既定は 事実と違うことを言われた・条項はどれにも当たらない（答えは取り消せる。決まったこと5）
+const DEFAULTS = {jibun:"消費者",aite:"団体",koui:"不実告知",kouisha:"事業者",juyo:"一号",ishi:"した",nana:"当たらない",daisan:"いない",joshu:"なし",sekinin:"債務不履行",koi:"よる",akiraka:"書いていない",tekigo:"無償",koeru:"超える",setsumei:"求めていない",gai:"害する"};
+function setDefaults(p){
+  for (const [id, v] of Object.entries(DEFAULTS)) $(id).value = p[id] !== undefined ? p[id] : v;
+}
+function applyPreset(p){
+  setDefaults(p);
+  ask();
+}
+function renderPresets(){
+  $("presets").innerHTML = presetList().map((p, i) => `<button type="button" data-preset="${i}">${esc(p[0])}</button>`).join("");
+}
+
+// 初期表示（既定の値）
+setDefaults({});
+
+document.addEventListener("change", e => { if (e.target.closest("#slots")) ask(); });
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.preset !== undefined){ applyPreset(presetList()[+b.dataset.preset][1]); $("answer").scrollIntoView?.(); }
+  else if (b.dataset.art && pl){
+    const host = b.closest(".tr") || b.closest("li") || b.parentElement, nx = host.nextElementSibling;
+    if (nx && nx.classList.contains("lawtext") && nx.dataset.for === b.dataset.art) nx.remove();
+    else { host.insertAdjacentHTML("afterend", lawHTML(b.dataset.art)); host.nextElementSibling.dataset.for = b.dataset.art; }
+  }
+});
+
+if (typeof SWIPL === "function") boot();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; $("answer").innerHTML = `<p class="loading err">Prolog（swipl-wasm）を読み込めませんでした。ページを再読み込みしてください。</p>`; }
+</script>
