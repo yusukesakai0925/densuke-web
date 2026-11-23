@@ -1,0 +1,1041 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="今すぐ解雇と言われたとき予告は要るか、辞めたのに給料が来ないときいつまでに払わせられるか、給料から勝手に引かれたとき、会社都合で休まされたときを、労働基準法の条文から判定します。">
+<title>解雇と賃金の決まりを逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+/* 欄の上の小見出し（解雇・辞めるときの証明書・辞めたときの賃金と金品・賃金の払い方）。選ばせる欄ではないので番号を数えない */
+.slots .slot-h{margin:0;padding:8px 10px 4px;border-bottom:2px solid var(--line);border-right:2px solid var(--line);background:var(--paper)}
+.checks{display:grid;gap:6px;margin:4px 10px 8px}
+.checks label{display:flex;gap:8px;align-items:flex-start;font-size:.84rem;font-weight:400;padding:0;letter-spacing:0;line-height:1.5}
+.checks label::before{content:none}
+.checks input{flex:0 0 auto;margin-top:.25em}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.step.off{color:var(--muted)}
+.flow{margin:0;padding-left:1.2em}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+.disclaimer-inline{margin-top:10px;font-size:.78rem;color:var(--muted);border-top:1px solid var(--hair);padding-top:8px;line-height:1.65}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border-left:2px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <h1>解雇と賃金の決まりを<span class="ao">逆から引く</span></h1>
+    <div class="judge-plate"><span class="jp-k">判定</span><img src="densuke_icon.svg" width="64" height="64" alt="でんすけのアイコン"><span class="jp-v">でんすけ<small>秘書AI</small></span></div>
+    <p class="lead">今すぐ解雇と言われたとき予告は要るか、辞めたのに給料が来ないときいつまでに払わせられるか、給料から勝手に引かれたとき、会社都合で休まされたときを、でんすけが労働基準法の条文から判定します。</p>
+    <p class="caution" role="note"><b>注意</b><span>条文をルールにして、論理的にそのまま演算した結果です。労働基準監督署や裁判所の判断とは異なる場合があります。<a class="aboutlink" href="about.html">収録範囲・仕組み →</a></span></p>
+  </header>
+
+  <section class="ask">
+    <div>
+      <p class="sec-h">例から選ぶ</p>
+      <div class="presets" id="presets"></div>
+    </div>
+    <!-- 欄は起きた事実と、あなたの考えを聞く21個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-24 案A）。
+         前の入口「どの話か」（iri）と「何の話か」（qwa・cwa）、欄の出し消し（updateSlots）、隠れた欄を 関係なし で渡す shown() をやめた。
+         関係のない欄は Prolog が見ないだけ（about の「話ごとに見る欄」）。並びは schema.pl の ctx の引数の順（1〜21）。
+         小見出しは選ばせる欄ではない（番号を数えない）。選択肢と欄名から条文の写しと「（19条〜21条）」の類を外した（C2） -->
+    <div class="slots" id="slots">
+      <p class="sec-h slot-h full-slot">解雇</p>
+      <div class="slot full-slot" id="s-kyok"><label for="kyok">解雇の予告</label><span class="field"><select id="kyok">
+        <option value="無い">解雇の話は無い</option><option value="以上">解雇の日の30日以上前に予告された</option><option value="足りない">解雇の日まで30日に足りない予告だった（予告なしを含む）</option>
+      </select></span><p class="desc">30日は、予告した日を数えず、翌日から数える</p></div>
+      <div class="slot full-slot" id="s-ktas"><label for="ktas">予告に足りない日数分の平均賃金が支払われるか</label><span class="field"><select id="ktas">
+        <option value="はい">支払われる（予告の日数と足して30日以上）</option><option value="いいえ">支払われない（足しても30日に足りない）</option>
+      </select></span><p class="desc">平均賃金＝1日について支払う賃金の額</p></div>
+      <div class="slot full-slot" id="s-kkyu"><label for="kkyu">解雇のときの、労働者の休業</label><span class="field"><select id="kkyu">
+        <option value="無い">休業していない</option><option value="療養中">仕事でのけがや病気（業務上の負傷・疾病）の療養で休業している</option><option value="療養後以内">仕事でのけがや病気の療養の休業が終わって30日以内</option><option value="療養後過ぎた">仕事でのけがや病気の療養の休業が終わって30日を過ぎた</option><option value="産休中">産前産後の休業（第65条）をしている</option><option value="産休後以内">産前産後の休業が終わって30日以内</option><option value="産休後過ぎた">産前産後の休業が終わって30日を過ぎた</option>
+      </select></span><p class="desc">予告した日ではなく、解雇の日の状態を選ぶ</p></div>
+      <div class="slot" id="s-kuch"><label for="kuch">打切補償（第81条）を支払うか</label><span class="field"><select id="kuch">
+        <option value="いいえ">支払わない</option><option value="はい">支払う</option>
+      </select></span><p class="desc">打切補償＝療養を始めて3年たっても仕事のけがや病気が治らないときに、平均賃金の1200日分を払うもの</p></div>
+      <div class="slot" id="s-khat"><label for="khat">雇われ方</label><span class="field"><select id="khat">
+        <option value="どれでもない">次のどれでもない</option><option value="日日">日々雇われている</option><option value="二箇月">2か月以内の期間を決めて雇われている</option><option value="季節">季節の仕事に4か月以内の期間を決めて雇われている</option><option value="試用">試用期間中</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-ktsu"><label for="ktsu">雇われてから引き続き使われた期間</label><span class="field"><select id="ktsu">
+        <option value="以内">決まった期間以内</option><option value="超えた">決まった期間を超えた</option>
+      </select></span><p class="desc">決まった期間：日々雇われているときは1か月、期間を決めて雇われているときは決めた期間、試用期間中は14日</p></div>
+      <div class="slot full-slot" id="s-kten"><label for="kten">天災などやむを得ない事情で、事業を続けられなくなったか（あなたの考え）</label><span class="field"><select id="kten">
+        <option value="いいえ">いいえ</option><option value="はい">はい</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-kseki"><label for="kseki">解雇の理由が労働者の側にあるか（労働者の責に帰すべき事由。あなたの考え）</label><span class="field"><select id="kseki">
+        <option value="いいえ">いいえ</option><option value="はい">はい</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-knin"><label for="knin">7・8の事情について、役所（行政官庁）の認定を受けたか</label><span class="field"><select id="knin">
+        <option value="いいえ">いいえ</option><option value="はい">はい</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">辞めるときの証明書</p>
+      <div class="slot full-slot" id="s-qsei"><label for="qsei">証明書の請求</label><span class="field"><select id="qsei">
+        <option value="無い">請求していない</option><option value="退職後">退職の後に、使用期間・業務の種類・地位・賃金・退職の事由（解雇なら解雇の理由も）について請求した</option><option value="予告後">解雇の予告を受けてから退職の日までに、解雇の理由について請求した</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-qta"><label for="qta">解雇の予告の後、解雇の日より前に、自分から辞めるなど解雇以外の理由で退職し、退職した日より後に請求したか</label><span class="field"><select id="qta">
+        <option value="いいえ">いいえ</option><option value="はい">はい</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-qki"><label for="qki">頼んでいない事項を証明書に書かれたか</label><span class="field"><select id="qki">
+        <option value="いいえ">いいえ</option><option value="はい">はい</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">辞めたときの賃金と金品</p>
+      <div class="slot full-slot" id="s-qken"><label for="qken">退職か死亡の後に、権利者（あなたの考え）が賃金の支払いや積立金・保証金などの返還を請求したか</label><span class="field"><select id="qken">
+        <option value="いいえ">していない</option><option value="はい">した</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-qaso"><label for="qaso">賃金や金品に争いがあるか</label><span class="field"><select id="qaso">
+        <option value="無い">争いは無い</option><option value="異議なし">争いがあり、異議の無い部分</option><option value="異議あり">争いがあり、異議のある部分</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">賃金の払い方</p>
+      <div class="slot full-slot" id="s-ctsu"><label for="ctsu">賃金を何で払われたか</label><span class="field"><select id="ctsu">
+        <option value="通貨">通貨（お金）</option><option value="定め">通貨以外で、法令か労働協約に定めがある</option><option value="省令">通貨以外で、厚生労働省令で決めた確実な方法</option><option value="なし">通貨以外で、どちらでもない</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-ckou"><label for="ckou">賃金から引かれたもの</label><span class="field"><select id="ckou">
+        <option value="無い">引かれていない</option><option value="法令">法令に定めがあるものを引かれた</option><option value="協定">労働者の過半数の組合か、過半数の代表者との書面の協定で引かれた</option><option value="なし">どちらでもないのに引かれた</option>
+      </select></span></div>
+      <div class="slot" id="s-ckai"><label for="ckai">賃金を払う回数と日</label><span class="field"><select id="ckai">
+        <option value="毎月">毎月1回以上、決まった日</option><option value="少ない">毎月1回より少ない</option><option value="期日なし">決まった日が無い</option><option value="両方">毎月1回より少なく、決まった日も無い</option>
+      </select></span></div>
+      <div class="slot" id="s-crin"><label for="crin">17の賃金は、臨時の賃金・賞与など（臨時の賃金等。あなたの考え）か</label><span class="field"><select id="crin">
+        <option value="いいえ">いいえ</option><option value="はい">はい</option>
+      </select></span></div>
+      <div class="slot" id="s-chiy"><label for="chiy">支払日より前に請求した賃金の使い道</label><span class="field"><select id="chiy">
+        <option value="無い">請求していない</option><option value="出産">出産</option><option value="疾病">病気（疾病）</option><option value="災害">災害</option><option value="省令">厚生労働省令で定める非常の場合（あなたの考え）</option><option value="それ以外">それ以外</option>
+      </select></span></div>
+      <div class="slot" id="s-ckio"><label for="ckio">請求したのは、既に働いた分か</label><span class="field"><select id="ckio">
+        <option value="はい">はい</option><option value="いいえ">いいえ（まだ働いていない分）</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-cseki"><label for="cseki">会社の都合などで休まされたか</label><span class="field"><select id="cseki">
+        <option value="無い">休まされていない</option><option value="使用者">休まされ、原因は使用者の側にある（使用者の責に帰すべき事由。あなたの考え）</option><option value="ほか">休まされたが、原因は使用者の側に無い</option>
+      </select></span></div>
+    </div>
+    <div class="qline" id="qline"></div>
+  </section>
+
+  <section id="answer" aria-live="polite"><p class="loading">でんすけが条文のルール（Prolog）を読み込んでいます…</p></section>
+
+  <p class="foot techline"><span>労働基準法（解雇と賃金）／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot" id="foot">e-Gov法令検索の労働基準法の本則のうち、第19条〜第26条の原文をルールにしたものです。労働基準法の条文は2026年11月3日までに取得した版で、それ以後の改正と、公布済みで施行前の改正は読んでいません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 労働基準法の解雇と賃金のProlog 共通の型・欄の読み出し・組み合わせなし・木の部品
+%
+% ctx(予告, 足す, 休業, 打切, 雇われ方, 続いた, 天災, 責, 認定, 証明書, 他退職, 記入,
+%     権利者, 争い, 通貨, 控除, 回数, 臨時, 費用, 既往, 休業手当)
+%   欄は起きた事実と、あなたの考えを聞く21個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-24 案A。
+%   案は ../kaiko_form_plan_answer_1124.md の案A、決めは ../kaiko_form_plan_decision_1124.md）。
+%   前は ctx(入口, 詳細) で、入口（解雇／退職／賃金）と「何の話か」の欄（退職の話・賃金の話）を利用者に先に選ばせ、
+%   画面が欄を出し消しして、隠れた欄を 関係なし で渡していた（形OK/2 が 関係なし を除いた並びを見ていた）。今は使わない欄を判定で見ないだけにした。
+%   同じ事実を2回聞かない（C1）：前は2つの欄で1つの事実を聞いていた組（休業＋いつ・話＋請求・争い＋部分・回数＋期日・賃金の話＋中の欄）を1つの欄にした。
+%   引数の順は画面の欄の番号（1〜21）と同じ。同じ入力で第19条〜第26条を全部当てる。
+%   画面では4つの小見出し（解雇／辞めるときの証明書／辞めたときの賃金と金品／賃金の払い方）の下に並べる。小見出しは欄を出し消ししない。
+%   頭の欄（1・10・13・15・16・17・19・21）が「無い」側なら、その話の段を出さない。全部が「無い」側なら nashi の1段だけを出す（決め3）。
+%   「あなたの考え」の欄は 7・8・13（権利者）・18・19（省令の値）・21 の6つ。本人の考えのとおりに答える（前の 評価の約束 の代わり）。
+%    1 予告       : 無い | 以上 | 足りない（解雇の予告。以上＝解雇の日の30日以上前、足りない＝30日に足りない（予告なしを含む）。20条1項）
+%    2 足す       : はい | いいえ（予告に足りない日数分の平均賃金が支払われ、予告の日数と足して30日以上になるか。20条2項）
+%    3 休業       : 無い | 療養中 | 療養後以内 | 療養後過ぎた | 産休中 | 産休後以内 | 産休後過ぎた
+%                   （解雇のときの労働者の休業。療養＝業務上の負傷・疾病の療養、産休＝第65条の産前産後の休業。以内・過ぎた＝休業が終わって30日。19条1項）
+%    4 打切       : いいえ | はい（第81条の打切補償を支払うか。19条1項ただし書。3が療養中・療養後以内のときだけ見る）
+%    5 雇われ方   : どれでもない | 日日 | 二箇月 | 季節 | 試用（21条1号〜4号の順）
+%    6 続いた     : 以内 | 超えた（21条ただし書の期間。日日は1か月、二箇月・季節は所定の期間、試用は14日）
+%    7 天災       : いいえ | はい（天災などやむを得ない事情で、事業を続けられなくなったか。あなたの考え。19条1項ただし書・20条1項ただし書）
+%    8 責         : いいえ | はい（解雇の理由が労働者の側にあるか。あなたの考え。20条1項ただし書）
+%    9 認定       : いいえ | はい（7・8の事情について、行政官庁の認定を受けたか。19条2項・20条3項）
+%   10 証明書     : 無い | 退職後 | 予告後（証明書の請求。退職後＝退職の後に22条1項の事項について請求、予告後＝解雇の予告を受けてから退職の日までに解雇の理由について請求）
+%   11 他退職     : いいえ | はい（解雇の予告の後、解雇以外の理由で退職し、退職した日より後に請求したか。22条2項ただし書。10が予告後のときだけ見る）
+%   12 記入       : いいえ | はい（請求していない事項を証明書に書かれたか。22条3項）
+%   13 権利者     : いいえ | はい（退職か死亡の後に、権利者が賃金の支払いや金品の返還を請求したか。あなたの考え。23条1項）
+%   14 争い       : 無い | 異議なし | 異議あり（賃金や金品の争い。異議なし・異議あり＝争いがあり、異議の無い部分・ある部分。23条2項）
+%   15 通貨       : 通貨 | 定め | 省令 | なし（賃金を何で払われたか。定め＝通貨以外で法令か労働協約に定めがある、省令＝通貨以外で省令の確実な方法、なし＝通貨以外でどちらでもない。24条1項）
+%   16 控除       : 無い | 法令 | 協定 | なし（賃金から引かれたもの。無い＝引かれていない、なし＝どちらでもないのに引かれた。24条1項）
+%   17 回数       : 毎月 | 少ない | 期日なし | 両方（賃金を払う回数と日。毎月＝毎月1回以上・決まった日、少ない＝毎月1回より少ない、期日なし＝決まった日が無い、両方＝その2つとも。24条2項）
+%   18 臨時       : いいえ | はい（17の賃金は臨時の賃金等か。あなたの考え。24条2項ただし書）
+%   19 費用       : 無い | 出産 | 疾病 | 災害 | 省令 | それ以外（支払日より前に請求した賃金の使い道。省令はあなたの考え。25条）
+%   20 既往       : はい | いいえ（請求したのは、既に働いた分か。25条）
+%   21 休業手当   : 無い | 使用者 | ほか（会社の都合などで休まされたか。使用者＝原因は使用者の側にある（あなたの考え）、ほか＝原因は使用者の側に無い。26条）
+%
+%   関係のない欄（たとえば1が「無い」のときの2〜9、5が「どれでもない」のときの6）は、組み合わせなしにせず、その欄を使う段を出さない（sorin-prolog と同じ）。
+%   欄どうしで成り立たない組は 組み合わせなし/3 が返す（REVIEW_RULES C3。決め2のア・エ）。
+%
+% 書き方のきまり：
+%   ・条番号は '19条1項' '21条1号' のような原子。ただし書・本文は原文の表の行にせず、文の中に書く（表は項と号まで）。
+%   ・第21条は項が1つなので項の番号を付けない（'21条'）。
+%   ・ルールの中で範囲の外の条を、原子の先頭に条番号を置く形で書かない。書くと build.py が使う条に数え、画面に中身が埋まる。
+%   ・段は 段(状態, 文, 箱の条, 葉の文のリスト)。結論ごとの段は s(画面のid, 見出し, 段)。段の文は、末尾の「。」を外して結論の箱にも出す。
+%     段の文は本題だけを書き、「〜ので」の前半（入力の言い直し）は葉の文に置く（REVIEW_RULES A2。葉は論理の木にだけ出る）。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | and | or | info
+%   ・アプリの約束事の行は 条 を '@約束事' にする。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか。組の成り立ちは 組み合わせなし/3 で見る）----
+ctx_valid(C) :-
+    functor(C, ctx, 21),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )).
+
+欄の値(1, [無い, 以上, 足りない]).
+欄の値(2, [はい, いいえ]).
+欄の値(3, [無い, 療養中, 療養後以内, 療養後過ぎた, 産休中, 産休後以内, 産休後過ぎた]).
+欄の値(4, [いいえ, はい]).
+欄の値(5, [どれでもない, 日日, 二箇月, 季節, 試用]).
+欄の値(6, [以内, 超えた]).
+欄の値(7, [いいえ, はい]).
+欄の値(8, [いいえ, はい]).
+欄の値(9, [いいえ, はい]).
+欄の値(10, [無い, 退職後, 予告後]).
+欄の値(11, [いいえ, はい]).
+欄の値(12, [いいえ, はい]).
+欄の値(13, [いいえ, はい]).
+欄の値(14, [無い, 異議なし, 異議あり]).
+欄の値(15, [通貨, 定め, 省令, なし]).
+欄の値(16, [無い, 法令, 協定, なし]).
+欄の値(17, [毎月, 少ない, 期日なし, 両方]).
+欄の値(18, [いいえ, はい]).
+欄の値(19, [無い, 出産, 疾病, 災害, 省令, それ以外]).
+欄の値(20, [はい, いいえ]).
+欄の値(21, [無い, 使用者, ほか]).
+
+%% ---- 欄の読み出し（番号は画面の欄の番号）----
+欄の番号(予告, 1).
+欄の番号(足す, 2).
+欄の番号(休業, 3).
+欄の番号(打切, 4).
+欄の番号(雇われ方, 5).
+欄の番号(続いた, 6).
+欄の番号(天災, 7).
+欄の番号(責, 8).
+欄の番号(認定, 9).
+欄の番号(証明書, 10).
+欄の番号(他退職, 11).
+欄の番号(記入, 12).
+欄の番号(権利者, 13).
+欄の番号(争い, 14).
+欄の番号(通貨, 15).
+欄の番号(控除, 16).
+欄の番号(回数, 17).
+欄の番号(臨時, 18).
+欄の番号(費用, 19).
+欄の番号(既往, 20).
+欄の番号(休業手当, 21).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+%% ---- 成り立たない組（REVIEW_RULES C3。決め2。根拠は rules/a_genbun.pl の原文の行で確かめた）----
+% 組み合わせなし(C, 理由の文のリスト, 根拠のリスト)。ア・エは同時に成り立たない（アは1が「無い」、エは1が「無い」以外）。
+% 既定の値（1=無い・9=いいえ・10=無い）はどちらの組にも当たらない。
+% ア：22条2項「第二十条第一項の解雇の予告がされた日から退職の日までの間において、当該解雇の理由について証明書を請求した場合」。
+%     解雇の予告の話が無いのに、解雇の予告を受けてから請求したとは言えない
+組み合わせなし(C, ['解雇の理由の証明書（第22条第2項）は、第20条第1項の解雇の予告がされた日から退職の日までに請求するもの',
+                   '1の欄は「解雇の話は無い」、10の欄は「解雇の予告を受けてから退職の日までに、解雇の理由について請求した」'],
+              ['20条1項', '22条2項']) :-
+    欄(予告, C, 無い), 欄(証明書, C, 予告後).
+% エ：19条2項「その事由について行政官庁の認定を受けなければならない」、20条3項（19条2項の準用）。
+%     認定を受けるのは天災などの事情か、労働者の側にある解雇の理由についてなので、どちらも無いのに認定を受けたとは言えない
+組み合わせなし(C, ['行政官庁の認定は、天災などで事業を続けられなくなった事情か、労働者の側にある解雇の理由について受けるもの',
+                   '7の欄も8の欄も「いいえ」で、9の欄は「はい」'],
+              ['19条2項', '20条3項']) :-
+    \+ 欄(予告, C, 無い),
+    欄(天災, C, いいえ), 欄(責, C, いいえ), 欄(認定, C, はい).
+
+%% ---- 理由の語をつなぐ ----
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---- 木の部品 ----
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+原文規定(Art, X) :- 原文(Art, W), 規定(Art, W, X).
+% 成り立つ文（起きた事実・条文の読み）
+文(X, t(ok, X, '', [])).
+約束(X, t(ok, X, '@約束事', [])).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（労働基準法の条文にないもの）
+%
+%   条の場面の外にある段（状態 当たらない）にだけ付ける（sorin-prolog と同じ）。
+%   2026-11-24 案A。労働者に当たるか・業務上か・やむを得ない事由か・責に帰すべき事由か・遅滞なくかは判定しない、とした 評価の約束 を消した
+%   （欄名に「（あなたの考え）」と書いて聞き、業務上は3の欄の選択肢の事実として聞くので、約束事ではなくなった。
+%   断り書きは about の「判定について」へ。REVIEW_RULES A5。前は g_hantei.pl の 段の約束 で全部の段の木に付けていた）。
+%   約束の文は指示語（その）を置かずに書き直した（A6）。
+
+場面外の約束(X) :-
+    約束('「当たりません」「適用されません」「要りません」の答えは、条に当たらないと言うだけで、反対の結論を言うものではない。解雇が有効という答えでもない', X).
+</script>
+<script type="text/prolog" data-name="rules_a_genbun.pl">% rules/a_genbun.pl — 判定に使う条文の原文（law/roki.xml の本則のまま）
+%
+%   原文(条, 文)。test/page_test.mjs が XML を別に読み、全行が一字一句一致するかを確かめる。
+%   2文以上ある項は続けて1行にする（build.py の text() と同じ）。項の行に号の文は入れない。
+%   「少くとも」「左の各号」「但書」「よつて」のような古い書き方も直さない。
+
+原文('19条1項', '使用者は、労働者が業務上負傷し、又は疾病にかかり療養のために休業する期間及びその後三十日間並びに産前産後の女性が第六十五条の規定によつて休業する期間及びその後三十日間は、解雇してはならない。ただし、使用者が、第八十一条の規定によつて打切補償を支払う場合又は天災事変その他やむを得ない事由のために事業の継続が不可能となつた場合においては、この限りでない。').
+原文('19条2項', '前項但書後段の場合においては、その事由について行政官庁の認定を受けなければならない。').
+原文('20条1項', '使用者は、労働者を解雇しようとする場合においては、少くとも三十日前にその予告をしなければならない。三十日前に予告をしない使用者は、三十日分以上の平均賃金を支払わなければならない。但し、天災事変その他やむを得ない事由のために事業の継続が不可能となつた場合又は労働者の責に帰すべき事由に基いて解雇する場合においては、この限りでない。').
+原文('20条2項', '前項の予告の日数は、一日について平均賃金を支払つた場合においては、その日数を短縮することができる。').
+原文('20条3項', '前条第二項の規定は、第一項但書の場合にこれを準用する。').
+原文('21条', '前条の規定は、左の各号の一に該当する労働者については適用しない。但し、第一号に該当する者が一箇月を超えて引き続き使用されるに至つた場合、第二号若しくは第三号に該当する者が所定の期間を超えて引き続き使用されるに至つた場合又は第四号に該当する者が十四日を超えて引き続き使用されるに至つた場合においては、この限りでない。').
+原文('21条1号', '日日雇い入れられる者').
+原文('21条2号', '二箇月以内の期間を定めて使用される者').
+原文('21条3号', '季節的業務に四箇月以内の期間を定めて使用される者').
+原文('21条4号', '試の使用期間中の者').
+原文('22条1項', '労働者が、退職の場合において、使用期間、業務の種類、その事業における地位、賃金又は退職の事由（退職の事由が解雇の場合にあつては、その理由を含む。）について証明書を請求した場合においては、使用者は、遅滞なくこれを交付しなければならない。').
+原文('22条2項', '労働者が、第二十条第一項の解雇の予告がされた日から退職の日までの間において、当該解雇の理由について証明書を請求した場合においては、使用者は、遅滞なくこれを交付しなければならない。ただし、解雇の予告がされた日以後に労働者が当該解雇以外の事由により退職した場合においては、使用者は、当該退職の日以後、これを交付することを要しない。').
+原文('22条3項', '前二項の証明書には、労働者の請求しない事項を記入してはならない。').
+原文('22条4項', '使用者は、あらかじめ第三者と謀り、労働者の就業を妨げることを目的として、労働者の国籍、信条、社会的身分若しくは労働組合運動に関する通信をし、又は第一項及び第二項の証明書に秘密の記号を記入してはならない。').
+原文('23条1項', '使用者は、労働者の死亡又は退職の場合において、権利者の請求があつた場合においては、七日以内に賃金を支払い、積立金、保証金、貯蓄金その他名称の如何を問わず、労働者の権利に属する金品を返還しなければならない。').
+原文('23条2項', '前項の賃金又は金品に関して争がある場合においては、使用者は、異議のない部分を、同項の期間中に支払い、又は返還しなければならない。').
+原文('24条1項', '賃金は、通貨で、直接労働者に、その全額を支払わなければならない。ただし、法令若しくは労働協約に別段の定めがある場合又は厚生労働省令で定める賃金について確実な支払の方法で厚生労働省令で定めるものによる場合においては、通貨以外のもので支払い、また、法令に別段の定めがある場合又は当該事業場の労働者の過半数で組織する労働組合があるときはその労働組合、労働者の過半数で組織する労働組合がないときは労働者の過半数を代表する者との書面による協定がある場合においては、賃金の一部を控除して支払うことができる。').
+原文('24条2項', '賃金は、毎月一回以上、一定の期日を定めて支払わなければならない。ただし、臨時に支払われる賃金、賞与その他これに準ずるもので厚生労働省令で定める賃金（第八十九条において「臨時の賃金等」という。）については、この限りでない。').
+原文('25条', '使用者は、労働者が出産、疾病、災害その他厚生労働省令で定める非常の場合の費用に充てるために請求する場合においては、支払期日前であつても、既往の労働に対する賃金を支払わなければならない。').
+原文('26条', '使用者の責に帰すべき事由による休業の場合においては、使用者は、休業期間中当該労働者に、その平均賃金の百分の六十以上の手当を支払わなければならない。').
+</script>
+<script type="text/prolog" data-name="rules_b_kaiko.pl">% rules/b_kaiko.pl — 解雇の禁止と予告（19条〜21条）：1〜9の欄
+%
+%   第19条〜第21条に当たらないことは「解雇してよい」ではない。文は「当たりません」「要りません」「適用されません」で止める。
+%   第19条と第20条は別々に答える（予告や手当を払っても第19条の期間の解雇は別に禁止）。
+%   第21条が外すのは第20条だけなので、第19条の段は第21条と関わりなく出す。
+%   2026-11-24 案A。入口の「解雇」をやめ、1の欄（解雇の予告）が「無い」なら段を出さない（決め3）。
+%   3の欄は前の2つの欄（休業の種類・いつの解雇か）を1つにした（C1）。前の 場面外 の段（休業がどちらでもない）は、3の欄の「無い」側なので消した。
+%   前の補足の段（解雇が有効かどうか・語の意味と判定しないこと）は消し、語の意味は欄の説明へ、断り書きは about の「判定について」へ移した（A5）。
+%   段の文は本題だけにし、「〜ので」の前半は葉の文に回した（A2）。指示語（この・その）は名詞にした（A6）。
+
+解雇の段(C, []) :- 欄(予告, C, 無い), !.
+解雇の段(C, L) :-
+    禁止の段(C, K),
+    適用の段(C, Ts),
+    予告の段(C, Ys),
+    append([K, Ts, Ys], L).
+
+%% ---- 第19条 解雇の禁止 ----
+禁止の段(C, []) :- 欄(休業, C, 無い), !.
+禁止の段(C, [s(kinshi, '第19条の解雇の禁止', S)]) :- 禁止の答え(C, S).
+
+禁止の答え(C, 段(当たらない, '第19条の解雇の禁止には当たりません。', ['19条1項'], [F])) :-
+    欄(休業, C, H), 過ぎた休業(H, W), !,
+    format(atom(F), '~wが終わって30日を過ぎた', [W]).
+禁止の答え(C, 段(当たらない, '第19条の解雇の禁止には当たりません。', ['19条1項'], ['第81条の打切補償を支払う', '打切補償を支払う場合については、第19条第2項の行政官庁の認定の定めが無い'])) :-
+    欄(休業, C, H), 療養の期間(H), 欄(打切, C, はい), !.
+禁止の答え(C, 段(当たらない, '第19条の解雇の禁止には当たりません。', ['19条1項', '19条2項'], ['天災などやむを得ない事情で、事業を続けられなくなった', '事業を続けられなくなった事情について、行政官庁の認定を受けた'])) :-
+    欄(天災, C, はい), 欄(認定, C, はい), !.
+禁止の答え(C, 段(できない, '第19条の解雇の禁止の例外とするには、天災などで事業を続けられなくなった事情について、行政官庁の認定を受けなければなりません。', ['19条1項', '19条2項'], ['天災などやむを得ない事情で、事業を続けられなくなった', '事業を続けられなくなった事情について、行政官庁の認定を受けていない'])) :-
+    欄(天災, C, はい), !.
+禁止の答え(C, 段(できない, '使用者は解雇してはなりません。', ['19条1項'], [F | Fs])) :-
+    欄(休業, C, H), 期間の語(H, F),
+    findall(X, 禁止の付記(C, X), Fs).
+
+% 過ぎた休業の語（3の欄が「30日を過ぎた」のとき）
+過ぎた休業(療養後過ぎた, '業務上の負傷や疾病の療養のための休業').
+過ぎた休業(産休後過ぎた, '第65条の産前産後の休業').
+
+% 打切補償を見る値（第19条第1項ただし書の打切補償は業務上の療養のときだけ当てる。NOTES の読み (f)）
+療養の期間(H) :- memberchk(H, [療養中, 療養後以内]).
+
+期間の語(療養中, '労働者が業務上負傷し、又は疾病にかかり療養のために休業する期間').
+期間の語(療養後以内, '業務上の負傷や疾病の療養のための休業が終わった後の30日間').
+期間の語(産休中, '産前産後の女性が第65条の規定によって休業する期間').
+期間の語(産休後以内, '第65条の産前産後の休業が終わった後の30日間').
+
+禁止の付記(C, '労働者の責に帰すべき事由は、第19条第1項のただし書に書かれておらず、第20条の予告の例外とは別') :-
+    欄(責, C, はい).
+禁止の付記(C, '第21条が外すのは第20条だけで、第19条の解雇の禁止は別に当たる') :-
+    第20条が外れる(C).
+禁止の付記(C, '第20条の予告や平均賃金の支払いがあっても、第19条の解雇の禁止は別に当たる') :-
+    \+ 第20条が外れる(C), 予告が足りる(C).
+
+第20条が外れる(C) :- \+ 欄(雇われ方, C, どれでもない), 欄(続いた, C, 以内).
+
+予告が足りる(C) :- 欄(予告, C, 以上), !.
+予告が足りる(C) :- 欄(足す, C, はい).
+
+%% ---- 第21条 第20条が外れる雇われ方 ----
+適用の段(C, []) :- 欄(雇われ方, C, どれでもない), !.
+適用の段(C, [s(tekiyo, '第21条で第20条が外れるか', 段(St, T, ['21条', G], [F]))]) :-
+    欄(雇われ方, C, H), 欄(続いた, C, Z),
+    雇われ方の語(H, W, K, G),
+    適用の文(Z, W, K, St, T, F).
+
+適用の文(以内, W, K, 当たらない, T, F) :-
+    format(atom(T), '解雇の予告の定め（第20条）は、~wに適用されません。', [W]),
+    format(atom(F), '使用を始めてから引き続き使われた期間が~w以内', [K]).
+適用の文(超えた, W, K, 当たる, T, F) :-
+    format(atom(T), '解雇の予告の定め（第20条）は、~wでも適用されます。', [W]),
+    format(atom(F), '使用を始めてから~wを超えて引き続き使われた', [K]).
+
+雇われ方の語(日日, '日日雇い入れられる者', '1か月', '21条1号').
+雇われ方の語(二箇月, '2か月以内の期間を定めて使用される者', '所定の期間', '21条2号').
+雇われ方の語(季節, '季節的業務に4か月以内の期間を定めて使用される者', '所定の期間', '21条3号').
+雇われ方の語(試用, '試の使用期間中の者', '14日', '21条4号').
+
+%% ---- 第20条 解雇の予告 ----
+予告の段(C, []) :- 第20条が外れる(C), !.
+予告の段(C, [s(yokoku, '第20条の解雇の予告', S)]) :- 予告の答え(C, S).
+
+予告の答え(C, 段(足りる, '解雇の予告は、第20条の定めを満たします。', ['20条1項'], ['解雇の日の30日以上前に予告された'])) :-
+    欄(予告, C, 以上), !.
+予告の答え(C, 段(足りる, '解雇の予告は、平均賃金の支払いで日数を短縮し、第20条の定めを満たします。', ['20条1項', '20条2項'], ['予告の日数と、平均賃金が支払われる日数を足すと30日以上'])) :-
+    欄(足す, C, はい), !.
+予告の答え(C, 段(できない, '解雇の日の30日前までに予告するか、30日に足りない日数分の平均賃金を支払わなければなりません。', ['20条1項', '20条2項'], ['予告の日数と、平均賃金が支払われる日数を足しても30日に足りない', '天災などで事業を続けられなくなった事情も、労働者の側にある解雇の理由も無い'])) :-
+    欄(天災, C, いいえ), 欄(責, C, いいえ), !.
+予告の答え(C, 段(当たらない, '第20条の予告も、30日分の平均賃金の支払いも要りません。', ['20条1項', '20条3項', '19条2項'], Fs)) :-
+    欄(認定, C, はい), !,
+    事情の語(C, W),
+    format(atom(F), '~wについて、行政官庁の認定を受けた', [W]),
+    findall(X, 事情の一つ(C, X), Xs), append(Xs, [F], Fs).
+予告の答え(C, 段(できない, T, ['20条1項', '20条3項', '19条2項'], Xs)) :-
+    事情の語(C, W),
+    format(atom(T), '第20条の予告を省くには、~wについて、行政官庁の認定を受けなければなりません。', [W]),
+    findall(X, 事情の一つ(C, X), Xs).
+
+事情の語(C, W) :-
+    findall(X, 事情の名(C, X), Xs),
+    atomic_list_concat(Xs, 'や', W).
+
+事情の名(C, '天災などで事業を続けられなくなった事情') :- 欄(天災, C, はい).
+事情の名(C, '労働者の側にある解雇の理由') :- 欄(責, C, はい).
+
+事情の一つ(C, '天災などやむを得ない事情で、事業を続けられなくなった') :- 欄(天災, C, はい).
+事情の一つ(C, '解雇の理由が労働者の側にある（労働者の責に帰すべき事由）') :- 欄(責, C, はい).
+</script>
+<script type="text/prolog" data-name="rules_c_taishoku.pl">% rules/c_taishoku.pl — 辞めるときの証明書（22条）：10〜12の欄、辞めたときの賃金と金品（23条）：13・14の欄
+%
+%   2026-11-24 案A。入口の「退職」と「何の話か」の欄（退職証明／解雇理由／金品）をやめ、
+%   10の欄（証明書の請求）で第22条第1項と第2項を分け、13の欄（権利者の請求）で第23条を出す（別々の話にした。C4）。
+%   10の欄が「無い」、13の欄が「いいえ」なら段を出さない（前の「請求していないので当たりません」の段は、頭の欄の「無い」側なので消した。決め3）。
+%   第22条第4項（第三者と謀った通信・秘密の記号）は事実を聞かない条なので、段から外して about の「事実を聞かない条」へ移した（決め4）。
+%   前の補足の段（語の意味と判定しないこと）は消し、語の意味は欄の説明へ、断り書きは about の「判定について」へ移した（A5）。
+%   第23条の「権利者」の範囲は、13の欄の「（あなたの考え）」で受ける。
+%   段の文は本題だけにし、「〜ので」の前半は葉の文に回した（A2）。指示語（その）は名詞にした（A6）。
+
+%% ---- 第22条 証明書 ----
+証明書の段(C, []) :- 欄(証明書, C, 無い), !.
+% 第22条第1項 退職の証明
+証明書の段(C, [s(shomei, '退職の証明書', 段(当たる, '使用者は、遅滞なく退職の証明書を交付しなければなりません。', ['22条1項'], ['退職の後に、使用期間、業務の種類、事業における地位、賃金又は退職の事由について証明書を請求した'])), K]) :-
+    欄(証明書, C, 退職後), !,
+    記入の段(C, K).
+% 第22条第2項ただし書 解雇以外の事由で退職した後の請求
+証明書の段(C, [s(shomei, '解雇の理由の証明書', 段(当たらない, '使用者は、解雇の理由の証明書を交付することを要しません。', ['22条2項'], ['解雇の予告がされた日以後に、解雇以外の事由で退職し、退職の日より後に請求した']))]) :-
+    欄(他退職, C, はい), !.
+% 第22条第2項本文 解雇の理由の証明
+証明書の段(C, [s(shomei, '解雇の理由の証明書', 段(当たる, '使用者は、遅滞なく解雇の理由の証明書を交付しなければなりません。', ['22条2項'], ['解雇の予告がされた日から退職の日までの間に、解雇の理由について証明書を請求した'])), K]) :-
+    記入の段(C, K).
+
+%% ---- 第22条第3項 請求していない事項の記入 ----
+記入の段(C, s(kinyu, '請求していない事項の記入', 段(できない, '労働者が請求していない事項を、証明書に記入してはなりません。', ['22条3項'], ['請求していない事項を証明書に書かれた']))) :-
+    欄(記入, C, はい), !.
+記入の段(_, s(kinyu, '請求していない事項の記入', 段(当たらない, '証明書の記入は、第22条第3項の記入の禁止に当たりません。', ['22条3項'], ['証明書に書かれたのは、労働者が請求した事項だけ']))).
+
+%% ---- 第23条 金品の返還 ----
+金品の段(C, []) :- 欄(権利者, C, いいえ), !.
+金品の段(C, [s(kinpin, '7日以内の支払いと返還', 段(当たる, '使用者は、請求があった時から7日以内に賃金を支払い、労働者の権利に属する金品を返還しなければなりません。', ['23条1項'], ['労働者の退職か死亡の後に、権利者が請求した']))]) :-
+    欄(争い, C, 無い), !.
+金品の段(C, [s(kinpin, '7日以内の支払いと返還', 段(当たる, '使用者は、異議のない部分を、請求があった時から7日以内に支払い、又は返還しなければなりません。', ['23条1項', '23条2項'], ['労働者の退職か死亡の後に、権利者が請求した', '賃金や金品に争いがあり、異議のない部分']))]) :-
+    欄(争い, C, 異議なし), !.
+金品の段(_, [s(kinpin, '7日以内の支払いと返還', 段(当たらない, '異議のある部分は、第23条第2項の異議のない部分に当たりません。', ['23条2項'], ['賃金や金品に争いがあり、異議のある部分']))]).
+</script>
+<script type="text/prolog" data-name="rules_d_chingin.pl">% rules/d_chingin.pl — 賃金の払い方（24条〜26条）：15〜21の欄
+%
+%   厚生労働省令の中身、労働協約の中身、法令の別段の定めの中身は読んでいないので判定しない。本人の選択で受ける。
+%   2026-11-24 案A。入口の「賃金」と「何の話か」の欄（通貨／控除／期日／非常／休業）をやめ、15・16・17・19・21の欄をそれぞれ見て段を並べる（C4）。
+%   15・16・17・19・21の欄が「無い」側（通貨・引かれていない・毎月1回以上で決まった日・請求していない・休まされていない）なら段を出さない（決め3）。
+%   17の欄は前の2つの欄（毎月一回以上か・一定の期日を定めているか）を1つにした（C1）。
+%   第25条の「厚生労働省令で定める非常の場合」は、第24条第1項の省令の方法と同じく本人の選択（19の欄の「あなたの考え」）で受け、当たる と答える（決め5）。
+%   前の 判定しない の段（省令を読んでいないので判定しません。…その欄を選んでください）は結論の箱に出ていたので消した（A1・A5）。
+%   前の補足の段（語の意味と判定しないこと）は消し、語の意味は欄の説明へ、断り書きは about の「判定について」へ移した（A5）。
+%   段の文は本題だけにし、「〜ので」の前半は葉の文に回した（A2）。指示語（その）は名詞にした（A6）。
+
+賃金の段(C, L) :-
+    通貨の段(C, L1),
+    控除の段(C, L2),
+    期日の段(C, L3),
+    非常の段(C, L4),
+    休業の段(C, L5),
+    append([L1, L2, L3, L4, L5], L).
+
+%% ---- 第24条第1項 通貨で ----
+通貨の段(C, []) :- 欄(通貨, C, 通貨), !.
+通貨の段(C, [s(tsuka, '通貨以外で払えるか', 段(St, T, ['24条1項'], [F]))]) :-
+    欄(通貨, C, V), 通貨の答え(V, St, T, F).
+
+通貨の答え(なし, できない, '賃金は通貨で支払わなければなりません。', '法令や労働協約の別段の定めも、厚生労働省令で定める確実な支払の方法も無いのに、通貨以外で払われた').
+通貨の答え(定め, できる, '通貨以外のもので支払うことができます。', '法令か労働協約に別段の定めがある').
+通貨の答え(省令, できる, '通貨以外のもので支払うことができます。', '厚生労働省令で定める賃金について、厚生労働省令で定める確実な支払の方法による').
+
+%% ---- 第24条第1項 全額を ----
+控除の段(C, []) :- 欄(控除, C, 無い), !.
+控除の段(C, [s(kojo, '一部を控除して払えるか', 段(St, T, ['24条1項'], [F]))]) :-
+    欄(控除, C, V), 控除の答え(V, St, T, F).
+
+控除の答え(なし, できない, '賃金は全額を支払わなければなりません。', '法令の別段の定めも、労働者の過半数で組織する労働組合か労働者の過半数を代表する者との書面による協定も無いのに、賃金から引かれた').
+控除の答え(法令, できる, '賃金の一部を控除して支払うことができます。', '法令に別段の定めがある').
+控除の答え(協定, できる, '賃金の一部を控除して支払うことができます。', '労働者の過半数で組織する労働組合（無いときは労働者の過半数を代表する者）との書面による協定がある').
+
+%% ---- 第24条第2項 毎月一回以上、一定の期日 ----
+期日の段(C, []) :- 欄(回数, C, 毎月), !.
+期日の段(C, [s(kijitsu, '毎月1回以上、一定の期日', 段(当たらない, '臨時の賃金等には、毎月1回以上、一定の期日を定めて支払う定めは適用されません。', ['24条2項'], ['臨時に支払われる賃金、賞与その他これに準ずるもので厚生労働省令で定める賃金（臨時の賃金等）']))]) :-
+    欄(臨時, C, はい), !.
+期日の段(C, [s(kijitsu, '毎月1回以上、一定の期日', 段(できない, '賃金は、毎月1回以上、一定の期日を定めて支払わなければなりません。', ['24条2項'], [F]))]) :-
+    欄(回数, C, V), 期日の語(V, F).
+
+期日の語(少ない, '払われるのが毎月1回より少ない').
+期日の語(期日なし, '払う日が決まっていない').
+期日の語(両方, '払われるのが毎月1回より少なく、払う日も決まっていない').
+
+%% ---- 第25条 非常時払 ----
+非常の段(C, []) :- 欄(費用, C, 無い), !.
+非常の段(C, [s(hijo, '支払期日前の支払い', 段(当たらない, '第25条の支払期日前の支払いには当たりません。', ['25条'], ['請求した賃金の使い道は、出産、疾病、災害その他厚生労働省令で定める非常の場合の費用ではない']))]) :-
+    欄(費用, C, それ以外), !.
+非常の段(C, [s(hijo, '支払期日前の支払い', 段(当たらない, 'まだ働いていない分の賃金は、第25条の支払期日前の支払いに当たりません。', ['25条'], [F, '第25条が書くのは既往の労働に対する賃金（既に働いた分）だけ']))]) :-
+    欄(既往, C, いいえ), !,
+    欄(費用, C, H), 費用の葉(H, F).
+非常の段(C, [s(hijo, '支払期日前の支払い', 段(当たる, '使用者は、支払期日前であっても、既に働いた分の賃金を支払わなければなりません。', ['25条'], [F, '請求したのは、既往の労働に対する賃金（既に働いた分）']))]) :-
+    欄(費用, C, H), 費用の葉(H, F).
+
+費用の葉(出産, '出産の費用に充てるために請求した').
+費用の葉(疾病, '疾病の費用に充てるために請求した').
+費用の葉(災害, '災害の費用に充てるために請求した').
+費用の葉(省令, '厚生労働省令で定める非常の場合の費用に充てるために請求した').
+
+%% ---- 第26条 休業手当 ----
+休業の段(C, []) :- 欄(休業手当, C, 無い), !.
+休業の段(C, [s(kyugyo, '休業の手当', 段(当たる, '使用者は、休業期間中、休まされた労働者に、平均賃金の100分の60以上の手当を支払わなければなりません。', ['26条'], ['使用者の責に帰すべき事由（原因が使用者の側にある事由）で休まされた']))]) :-
+    欄(休業手当, C, 使用者), !.
+休業の段(_, [s(kyugyo, '休業の手当', 段(当たらない, '第26条の休業の手当には当たりません。', ['26条'], ['休まされた原因は使用者の側に無い（使用者の責に帰すべき事由ではない）']))]).
+</script>
+<script type="text/prolog" data-name="rules_g_hantei.pl">% rules/g_hantei.pl — 段をまとめ、見出し・根拠条文・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 箱の条, 葉の文のリスト)　結論ごとの段 = s(画面のid, 見出し, 段)
+%   形は sorin-prolog の g_hantei.pl（話が4つある本）と、tokusho-prolog の b_kekka.pl（組の番号・節の文/3）を合わせたもの（2026-11-24 案A）。
+%   前は入口（解雇／退職／賃金）の段だけを出し、見出しは段の答えを全部つないでいた（atomic_list_concat(Ws, '', S)。A7）。
+%   木は全部の段を「次のすべてが成り立つ」の下にぶら下げた1本で（B5）、全部の段に 評価の約束 を付けていた。
+%   組の番号/2 の最後は受け皿 組の番号(_, 2) で、25条の 判定しない が2番に化けて「…判定しません。…選んでください」が結論の箱に出ていた（A1・A5）。
+%   今は状態を全部名前で書き、知らない状態は throw で止める（agents/dog/rules.md:96）。補足の段（語・有効か・秘密）と 判定しない・場面外 の状態は消した。
+%   段の文は、末尾の「。」を外して、そのまま結論の箱と番号つきの節に出す。葉の文（「〜ので」の前半）は論理の木にだけ出す（A2）。
+
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 成り立たない組があれば、その組だけを段にする（REVIEW_RULES C3。ほかの段は出さない）。
+% 無ければ4つの話（解雇→辞めるときの証明書→辞めたときの賃金と金品→賃金の払い方）を同じ入力で全部当てる（REVIEW_RULES C4・C5）。
+% 並びは話の順で、話の中は 当たった答えを先に で並べる。
+% どの話も入っていない（頭の欄 1・10・13・15・16・17・19・21 が全部「無い」側）ときは nashi の1段だけを出す（決め3）。
+% 同じ述語を別のファイルに分けて書くと後の読み込みで消えるので、まとめはここに1つだけ置く
+全部の段(C, Steps) :- 組み合わせなし(C, Ws, As), !,
+    Steps = [s(mujun, 'この組み合わせはありません', 段(組み合わせなし, 'この組み合わせはありません。', As, Ws))].
+全部の段(C, Steps) :-
+    解雇の段(C, L1), 当たった答えを先に(L1, S1),
+    証明書の段(C, L2), 当たった答えを先に(L2, S2),
+    金品の段(C, L3), 当たった答えを先に(L3, S3),
+    賃金の段(C, L4), 当たった答えを先に(L4, S4),
+    append([S1, S2, S3, S4], Steps0),
+    ( Steps0 == [] -> 何も無い段(Steps) ; Steps = Steps0 ).
+
+何も無い段([s(nashi, '答える条', 段(当たらない, '解雇、辞めるときの証明書、辞めたときの賃金と金品、賃金の払い方のどれも入っていないので、答える条はありません。', [], []))]).
+
+% 話の中の並びは ①止まる答え ②当たった答え ③答えを支える文（止まらないので聞いた答えの後ろ） ④「当たりません」の文
+% ①②が無いときは「当たりません」が聞いた答えなので、③より前に出す（sorin-prolog と同じ並べ方）
+% 組の番号 は番号を空のまま呼んで後で比べる。番号を束ねて呼ぶと頭に合わず、最後の throw の節に落ちて止まる（sorin-prolog 2026-11-22 22:50 run_cases）
+当たった答えを先に([], []) :- !.
+当たった答えを先に(L0, L) :-
+    ( member(s(_, _, 段(St0, _, _, _)), L0), 組の番号(St0, N0), N0 =< 2 -> Order = [1, 2, 3, 4] ; Order = [4, 3] ),
+    findall(S, ( member(N, Order), member(S, L0), S = s(_, _, 段(St, _, _, _)), 組の番号(St, M), M =:= N ), L).
+
+% 組の番号(状態, 1=止まる答え | 2=当たった答え | 3=答えを支える文 | 4=当たりません)。
+% 状態は全部名前で書き、知らない状態は止める（agents/dog/rules.md:96。前の受け皿 組の番号(_, 2) をやめた。tokusho-prolog と同じ）
+組の番号(組み合わせなし, 1) :- !.  % ア 20条1項・22条2項、エ 19条2項・20条3項
+組の番号(できない, 1) :- !.        % 19条で解雇してはならない・認定が要る・20条を満たさない・24条1項で通貨以外／控除できない・24条2項を満たさない・22条3項の記入の禁止
+組の番号(当たる, 2) :- !.          % 21条ただし書で20条が適用される・22条の交付・23条の7日以内・25条の支払・26条の手当
+組の番号(できる, 2) :- !.          % 24条1項ただし書で通貨以外／控除できる
+組の番号(足りる, 3) :- !.          % 20条を満たす
+組の番号(当たらない, 4) :- !.      % 19条・20条（認定）・21条・22条2項ただし書・22条3項・23条2項・24条2項ただし書・25条・26条に当たらない、nashi
+組の番号(St, _) :- throw(知らない状態(St)).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、段の文だけを出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」を付けない）。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(_, Steps, Ws) :-
+    findall(W, ( member(s(_, _, S), Steps), 問いの答え(S, W) ), Ws).
+
+% 答えの文に箱の条を（）で付ける。条の無い段（nashi）は付けない（「（）」を画面に出さない）
+問いの答え(S, W) :-
+    S = 段(_, _, As, _),
+    答え(S, W0),
+    ( As == [] -> W = W0 ; 条の表記(As, A), format(atom(W), '~w（~w）', [W0, A]) ).
+
+% 節の文：答えの文（条を付けない）
+節の文(_, S, W) :- 答え(S, W).
+
+% 答え(段, 答えの文)：段の文の末尾の「。」を外す。
+% 段の文には、画面の上で指す先の無い指示語（その・この・同項・当該 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6。rules/*.pl の段の文で守る）
+答え(段(_, M, _, _), W) :-
+    ( atom_concat(M0, '。', M) -> W = M0 ; W = M ).
+
+%% ---- 根拠条文 ----
+% 段の順に並べ、重複は1つに
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As, _), Ss), member(A, As) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5。結論をつないだ行と「次のすべてが成り立つ」の節は置かない）。
+% 並びは結論の箱と同じ。一番上の行は結論の箱の文で、その下に段の条の原文、葉の文（起きた事実・条文の読み）、約束事を置く。
+木(_, Steps, Trees) :-
+    findall(T, ( member(s(Id, _, S), Steps), 段の木(Id, S, T) ), Trees).
+
+段の木(Id, S, t(K, W, '', Cs)) :-
+    S = 段(St, _, Arts, Fs),
+    問いの答え(S, W),
+    list_to_set(Arts, As),
+    maplist(原文規定, As, Rs),
+    maplist(文, Fs, Ls),
+    段の約束(Id, St, Ys),
+    append([Rs, Ls, Ys], Kids),
+    すべて(W, '', Kids, t(_, W, _, Cs)),
+    印(St, K).
+
+% 止まった段（組み合わせなし・できない・当たらない）は info、そのほかは ok（木ごとに、その段で決める。sorin-prolog と同じ）
+印(St, K) :- 組の番号(St, _), ( memberchk(St, [組み合わせなし, できない, 当たらない]) -> K = info ; K = ok ).
+
+% 葉に置くのは結論を支える規則と事実だけ。断り書き（当てはめは判定しない・本人の考えのとおりに答える 等）は about の「判定について」に置く（REVIEW_RULES A5。
+% 前は全部の段に 評価の約束 を付けていた）。「当たりません」の段には 場面外の約束 を付ける（条文に無いアプリの決めごと。D1）。nashi は条が無いので付けない
+段の約束(nashi, _, []) :- !.
+段の約束(_, 当たらない, [Y]) :- !, 場面外の約束(Y).
+段の約束(_, _, []).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は tokusho-prolog の web.pl と同じ（2026-11-24 案A）。
+%   前は result・explain の2つで、explain は木1本を平らにしていた。今は木を結論ごとに1本にした（B5）。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+</script>
+<script type="application/json" id="law">{"19":{"t":"第十九条","c":"（解雇制限）","p":[{"n":"1","s":"使用者は、労働者が業務上負傷し、又は疾病にかかり療養のために休業する期間及びその後三十日間並びに産前産後の女性が第六十五条の規定によつて休業する期間及びその後三十日間は、解雇してはならない。ただし、使用者が、第八十一条の規定によつて打切補償を支払う場合又は天災事変その他やむを得ない事由のために事業の継続が不可能となつた場合においては、この限りでない。","i":[]},{"n":"2","s":"前項但書後段の場合においては、その事由について行政官庁の認定を受けなければならない。","i":[]}]},"20":{"t":"第二十条","c":"（解雇の予告）","p":[{"n":"1","s":"使用者は、労働者を解雇しようとする場合においては、少くとも三十日前にその予告をしなければならない。三十日前に予告をしない使用者は、三十日分以上の平均賃金を支払わなければならない。但し、天災事変その他やむを得ない事由のために事業の継続が不可能となつた場合又は労働者の責に帰すべき事由に基いて解雇する場合においては、この限りでない。","i":[]},{"n":"2","s":"前項の予告の日数は、一日について平均賃金を支払つた場合においては、その日数を短縮することができる。","i":[]},{"n":"3","s":"前条第二項の規定は、第一項但書の場合にこれを準用する。","i":[]}]},"21":{"t":"第二十一条","c":"","p":[{"n":"1","s":"前条の規定は、左の各号の一に該当する労働者については適用しない。但し、第一号に該当する者が一箇月を超えて引き続き使用されるに至つた場合、第二号若しくは第三号に該当する者が所定の期間を超えて引き続き使用されるに至つた場合又は第四号に該当する者が十四日を超えて引き続き使用されるに至つた場合においては、この限りでない。","i":[{"n":"1","t":"一","s":"日日雇い入れられる者","sub":[]},{"n":"2","t":"二","s":"二箇月以内の期間を定めて使用される者","sub":[]},{"n":"3","t":"三","s":"季節的業務に四箇月以内の期間を定めて使用される者","sub":[]},{"n":"4","t":"四","s":"試の使用期間中の者","sub":[]}]}]},"22":{"t":"第二十二条","c":"（退職時等の証明）","p":[{"n":"1","s":"労働者が、退職の場合において、使用期間、業務の種類、その事業における地位、賃金又は退職の事由（退職の事由が解雇の場合にあつては、その理由を含む。）について証明書を請求した場合においては、使用者は、遅滞なくこれを交付しなければならない。","i":[]},{"n":"2","s":"労働者が、第二十条第一項の解雇の予告がされた日から退職の日までの間において、当該解雇の理由について証明書を請求した場合においては、使用者は、遅滞なくこれを交付しなければならない。ただし、解雇の予告がされた日以後に労働者が当該解雇以外の事由により退職した場合においては、使用者は、当該退職の日以後、これを交付することを要しない。","i":[]},{"n":"3","s":"前二項の証明書には、労働者の請求しない事項を記入してはならない。","i":[]},{"n":"4","s":"使用者は、あらかじめ第三者と謀り、労働者の就業を妨げることを目的として、労働者の国籍、信条、社会的身分若しくは労働組合運動に関する通信をし、又は第一項及び第二項の証明書に秘密の記号を記入してはならない。","i":[]}]},"23":{"t":"第二十三条","c":"（金品の返還）","p":[{"n":"1","s":"使用者は、労働者の死亡又は退職の場合において、権利者の請求があつた場合においては、七日以内に賃金を支払い、積立金、保証金、貯蓄金その他名称の如何を問わず、労働者の権利に属する金品を返還しなければならない。","i":[]},{"n":"2","s":"前項の賃金又は金品に関して争がある場合においては、使用者は、異議のない部分を、同項の期間中に支払い、又は返還しなければならない。","i":[]}]},"24":{"t":"第二十四条","c":"（賃金の支払）","p":[{"n":"1","s":"賃金は、通貨で、直接労働者に、その全額を支払わなければならない。ただし、法令若しくは労働協約に別段の定めがある場合又は厚生労働省令で定める賃金について確実な支払の方法で厚生労働省令で定めるものによる場合においては、通貨以外のもので支払い、また、法令に別段の定めがある場合又は当該事業場の労働者の過半数で組織する労働組合があるときはその労働組合、労働者の過半数で組織する労働組合がないときは労働者の過半数を代表する者との書面による協定がある場合においては、賃金の一部を控除して支払うことができる。","i":[]},{"n":"2","s":"賃金は、毎月一回以上、一定の期日を定めて支払わなければならない。ただし、臨時に支払われる賃金、賞与その他これに準ずるもので厚生労働省令で定める賃金（第八十九条において「臨時の賃金等」という。）については、この限りでない。","i":[]}]},"25":{"t":"第二十五条","c":"（非常時払）","p":[{"n":"1","s":"使用者は、労働者が出産、疾病、災害その他厚生労働省令で定める非常の場合の費用に充てるために請求する場合においては、支払期日前であつても、既往の労働に対する賃金を支払わなければならない。","i":[]}]},"26":{"t":"第二十六条","c":"（休業手当）","p":[{"n":"1","s":"使用者の責に帰すべき事由による休業の場合においては、使用者は、休業期間中当該労働者に、その平均賃金の百分の六十以上の手当を支払わなければならない。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"第一章　総則","a":[{"k":"1","t":"第一条","c":"（労働条件の原則）","u":0},{"k":"2","t":"第二条","c":"（労働条件の決定）","u":0},{"k":"3","t":"第三条","c":"（均等待遇）","u":0},{"k":"4","t":"第四条","c":"（男女同一賃金の原則）","u":0},{"k":"5","t":"第五条","c":"（強制労働の禁止）","u":0},{"k":"6","t":"第六条","c":"（中間搾取の排除）","u":0},{"k":"7","t":"第七条","c":"（公民権行使の保障）","u":0},{"k":"8","t":"第八条","c":"","u":2},{"k":"9","t":"第九条","c":"（定義）","u":0},{"k":"10","t":"第十条","c":"","u":0},{"k":"11","t":"第十一条","c":"","u":0},{"k":"12","t":"第十二条","c":"","u":0}]},{"t":"第二章　労働契約","a":[{"k":"13","t":"第十三条","c":"（この法律違反の契約）","u":0},{"k":"14","t":"第十四条","c":"（契約期間等）","u":0},{"k":"15","t":"第十五条","c":"（労働条件の明示）","u":0},{"k":"16","t":"第十六条","c":"（賠償予定の禁止）","u":0},{"k":"17","t":"第十七条","c":"（前借金相殺の禁止）","u":0},{"k":"18","t":"第十八条","c":"（強制貯金）","u":0},{"k":"19","t":"第十九条","c":"（解雇制限）","u":1},{"k":"20","t":"第二十条","c":"（解雇の予告）","u":1},{"k":"21","t":"第二十一条","c":"","u":1},{"k":"22","t":"第二十二条","c":"（退職時等の証明）","u":1},{"k":"23","t":"第二十三条","c":"（金品の返還）","u":1}]},{"t":"第三章　賃金","a":[{"k":"24","t":"第二十四条","c":"（賃金の支払）","u":1},{"k":"25","t":"第二十五条","c":"（非常時払）","u":1},{"k":"26","t":"第二十六条","c":"（休業手当）","u":1},{"k":"27","t":"第二十七条","c":"（出来高払制の保障給）","u":0},{"k":"28","t":"第二十八条","c":"（最低賃金）","u":0},{"k":"29:31","t":"第二十九条から第三十一条まで","c":"","u":2}]},{"t":"第四章　労働時間、休憩、休日及び年次有給休暇","a":[{"k":"32","t":"第三十二条","c":"（労働時間）","u":0},{"k":"32_2","t":"第三十二条の二","c":"","u":0},{"k":"32_3","t":"第三十二条の三","c":"","u":0},{"k":"32_3_2","t":"第三十二条の三の二","c":"","u":0},{"k":"32_4","t":"第三十二条の四","c":"","u":0},{"k":"32_4_2","t":"第三十二条の四の二","c":"","u":0},{"k":"32_5","t":"第三十二条の五","c":"","u":0},{"k":"33","t":"第三十三条","c":"（災害等による臨時の必要がある場合の時間外労働等）","u":0},{"k":"34","t":"第三十四条","c":"（休憩）","u":0},{"k":"35","t":"第三十五条","c":"（休日）","u":0},{"k":"36","t":"第三十六条","c":"（時間外及び休日の労働）","u":0},{"k":"37","t":"第三十七条","c":"（時間外、休日及び深夜の割増賃金）","u":0},{"k":"38","t":"第三十八条","c":"（時間計算）","u":0},{"k":"38_2","t":"第三十八条の二","c":"","u":0},{"k":"38_3","t":"第三十八条の三","c":"","u":0},{"k":"38_4","t":"第三十八条の四","c":"","u":0},{"k":"39","t":"第三十九条","c":"（年次有給休暇）","u":0},{"k":"40","t":"第四十条","c":"（労働時間及び休憩の特例）","u":0},{"k":"41","t":"第四十一条","c":"（労働時間等に関する規定の適用除外）","u":0},{"k":"41_2","t":"第四十一条の二","c":"","u":0}]},{"t":"第五章　安全及び衛生","a":[{"k":"42","t":"第四十二条","c":"","u":0},{"k":"43:55","t":"第四十三条から第五十五条まで","c":"","u":2}]},{"t":"第六章　年少者","a":[{"k":"56","t":"第五十六条","c":"（最低年齢）","u":0},{"k":"57","t":"第五十七条","c":"（年少者の証明書）","u":0},{"k":"58","t":"第五十八条","c":"（未成年者の労働契約）","u":0},{"k":"59","t":"第五十九条","c":"","u":0},{"k":"60","t":"第六十条","c":"（労働時間及び休日）","u":0},{"k":"61","t":"第六十一条","c":"（深夜業）","u":0},{"k":"62","t":"第六十二条","c":"（危険有害業務の就業制限）","u":0},{"k":"63","t":"第六十三条","c":"（坑内労働の禁止）","u":0},{"k":"64","t":"第六十四条","c":"（帰郷旅費）","u":0}]},{"t":"第六章の二　妊産婦等","a":[{"k":"64_2","t":"第六十四条の二","c":"（坑内業務の就業制限）","u":0},{"k":"64_3","t":"第六十四条の三","c":"（危険有害業務の就業制限）","u":0},{"k":"65","t":"第六十五条","c":"（産前産後）","u":0},{"k":"66","t":"第六十六条","c":"","u":0},{"k":"67","t":"第六十七条","c":"（育児時間）","u":0},{"k":"68","t":"第六十八条","c":"（生理日の就業が著しく困難な女性に対する措置）","u":0}]},{"t":"第七章　技能者の養成","a":[{"k":"69","t":"第六十九条","c":"（徒弟の弊害排除）","u":0},{"k":"70","t":"第七十条","c":"（職業訓練に関する特例）","u":0},{"k":"71","t":"第七十一条","c":"","u":0},{"k":"72","t":"第七十二条","c":"","u":0},{"k":"73","t":"第七十三条","c":"","u":0},{"k":"74","t":"第七十四条","c":"","u":2}]},{"t":"第八章　災害補償","a":[{"k":"75","t":"第七十五条","c":"（療養補償）","u":0},{"k":"76","t":"第七十六条","c":"（休業補償）","u":0},{"k":"77","t":"第七十七条","c":"（障害補償）","u":0},{"k":"78","t":"第七十八条","c":"（休業補償及び障害補償の例外）","u":0},{"k":"79","t":"第七十九条","c":"（遺族補償）","u":0},{"k":"80","t":"第八十条","c":"（葬祭料）","u":0},{"k":"81","t":"第八十一条","c":"（打切補償）","u":0},{"k":"82","t":"第八十二条","c":"（分割補償）","u":0},{"k":"83","t":"第八十三条","c":"（補償を受ける権利）","u":0},{"k":"84","t":"第八十四条","c":"（他の法律との関係）","u":0},{"k":"85","t":"第八十五条","c":"（審査及び仲裁）","u":0},{"k":"86","t":"第八十六条","c":"","u":0},{"k":"87","t":"第八十七条","c":"（請負事業に関する例外）","u":0},{"k":"88","t":"第八十八条","c":"（補償に関する細目）","u":0}]},{"t":"第九章　就業規則","a":[{"k":"89","t":"第八十九条","c":"（作成及び届出の義務）","u":0},{"k":"90","t":"第九十条","c":"（作成の手続）","u":0},{"k":"91","t":"第九十一条","c":"（制裁規定の制限）","u":0},{"k":"92","t":"第九十二条","c":"（法令及び労働協約との関係）","u":0},{"k":"93","t":"第九十三条","c":"（労働契約との関係）","u":0}]},{"t":"第十章　寄宿舎","a":[{"k":"94","t":"第九十四条","c":"（寄宿舎生活の自治）","u":0},{"k":"95","t":"第九十五条","c":"（寄宿舎生活の秩序）","u":0},{"k":"96","t":"第九十六条","c":"（寄宿舎の設備及び安全衛生）","u":0},{"k":"96_2","t":"第九十六条の二","c":"（監督上の行政措置）","u":0},{"k":"96_3","t":"第九十六条の三","c":"","u":0}]},{"t":"第十一章　監督機関","a":[{"k":"97","t":"第九十七条","c":"（監督機関の職員等）","u":0},{"k":"98","t":"第九十八条","c":"","u":2},{"k":"99","t":"第九十九条","c":"（労働基準主管局長等の権限）","u":0},{"k":"100","t":"第百条","c":"（女性主管局長の権限）","u":0},{"k":"101","t":"第百一条","c":"（労働基準監督官の権限）","u":0},{"k":"102","t":"第百二条","c":"","u":0},{"k":"103","t":"第百三条","c":"","u":0},{"k":"104","t":"第百四条","c":"（監督機関に対する申告）","u":0},{"k":"104_2","t":"第百四条の二","c":"（報告等）","u":0},{"k":"105","t":"第百五条","c":"（労働基準監督官の義務）","u":0}]},{"t":"第十二章　雑則","a":[{"k":"105_2","t":"第百五条の二","c":"（国の援助義務）","u":0},{"k":"106","t":"第百六条","c":"（法令等の周知義務）","u":0},{"k":"107","t":"第百七条","c":"（労働者名簿）","u":0},{"k":"108","t":"第百八条","c":"（賃金台帳）","u":0},{"k":"109","t":"第百九条","c":"（記録の保存）","u":0},{"k":"110","t":"第百十条","c":"","u":2},{"k":"111","t":"第百十一条","c":"（無料証明）","u":0},{"k":"112","t":"第百十二条","c":"（国及び公共団体についての適用）","u":0},{"k":"113","t":"第百十三条","c":"（命令の制定）","u":0},{"k":"114","t":"第百十四条","c":"（付加金の支払）","u":0},{"k":"115","t":"第百十五条","c":"（時効）","u":0},{"k":"115_2","t":"第百十五条の二","c":"（経過措置）","u":0},{"k":"116","t":"第百十六条","c":"（適用除外）","u":0}]},{"t":"第十三章　罰則","a":[{"k":"117","t":"第百十七条","c":"","u":0},{"k":"118","t":"第百十八条","c":"","u":0},{"k":"119","t":"第百十九条","c":"","u":0},{"k":"120","t":"第百二十条","c":"","u":0},{"k":"121","t":"第百二十一条","c":"","u":0}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+// ==== 共有ここから（別ページでも同じ部品を使う） ====
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+// parseArt・lawHTML はこの本の前の template.html のまま（号のボタンで条の文とその号だけを出すため。tokusho の lawHTML は号を絞らない）
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  // '466条2項' '466条1項本文' '509条第1号' '466条の2第1項' '469条2項第1号' '469条2項ただし書' のような形。複数条が「・」で区切られることもある → 最初の条だけ見る
+  const first = String(a).split("・")[0];
+  const m = first.match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(?:第?(\d+)号((?:の\d+)*))?([イロハニホ])?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[4] ? m[4] + (m[5] || "").replace(/の/g, "_") : null, sub: m[6] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para);
+  // 号まで指定があれば、項の本文とその号だけ出す
+  if (r.item) ps = ps.filter(p => p.i.some(it => it.n === r.item));
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const list = r.item ? p.i.filter(it => it.n === r.item) : p.i;
+    const its = list.map(it => `<p class="it">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => r.sub && x.startsWith(r.sub + " ") ? `<br><span class="hit">　${esc(x)}</span>` : `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなく、このアプリの決め事（収録範囲・仕組みのページに一覧）。</p>`;
+// 凡例は最初の木の上に1回だけ出す（legend＝false で外す。shohi-prolog・gyotetsu-prolog と同じ）
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+// ==== 共有ここまで ====
+
+async function boot(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const need = ["result/2", "explain/2", "heads/2", "answers/2"].filter(p => !once(`current_predicate(${p})`));
+    if (need.length) throw new Error(`Prologの読み込みが不完全です（${need.join("・")} がありません）。${errBuf.slice(-3).join(" ")}`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    renderPresets();
+    ask();
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+    $("answer").innerHTML = `<p class="loading err">エラー：${esc(e.message)}</p>`;
+  }
+}
+
+// ---- 入力 → ctx の文字 ----
+// 欄はいつも全部出し、出し消しをしない（REVIEW_RULES C5。形は sorin-prolog・tokusho-prolog と同じ）。
+// 並びは schema.pl の ctx の引数の順（1〜21）。前の SLOTS・updateSlots・shown（隠れた欄を 関係なし で渡す）はやめた
+const IDS = ["kyok","ktas","kkyu","kuch","khat","ktsu","kten","kseki","knin","qsei","qta","qki","qken","qaso","ctsu","ckou","ckai","crin","chiy","ckio","cseki"];
+function buildCtx(){
+  return `ctx(${IDS.map(id => atom($(id).value)).join(",")})`;
+}
+
+// ---- 判定と表示 ----
+const HEAD = `<div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div>`;
+const lawBtn = a => a === "@約束事" ? `<span class="yk">アプリの約束事</span>` : (a ? `<button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : "");
+const artsHTML = as => as.map(String).map(lawBtn).join(" ");
+// 断り書き（当てはめは判定しない・条文だけを読む・平均賃金と打切補償は計算しない・別の法律は読まない・解雇が有効かは判定しない）は
+// about.html の「判定について」「載せなかったもの」に置く（REVIEW_RULES A1・A5。2026-11-24 結果の下の注意3つ（NOTE_HANTEI・NOTE_JOBUN・NOTE_HOKA）と、
+// 頭の注意の2文、欄の説明の「計算はしません」を移した）。頭の注意は見本の1文だけ（A3）。左だけ色の線の .tokurei は消した（E1）
+
+// 段(状態, 文, 箱の条, 葉の文) を1段ぶんの行にする。文は答え（answers/2。段の文から末尾の「。」を外したもの）
+function stepHTML(id, title, s, ans){
+  const [st, , as] = T(s).args;
+  return `<p class="sec">${esc(title)}</p><p class="step" id="${id}" data-st="${esc(st)}">${esc(ans)}。 ${artsHTML(as)}</p>`;
+}
+
+function ask(){
+  const c = buildCtx();
+  $("qline").textContent = `?- result(${c}, R).`;
+  if (!pl) return;
+  try{
+    // 木は結論1つにつき1本（REVIEW_RULES B5）。凡例は最初の木の上に1回だけ
+    const lr = once(`explain(${c}, Lines)`);
+    const trees = lr ? lr.Lines.map(ls => ls.map(T).map(t => t.args)) : [];
+    const r = once(`result(${c}, r(Head,Steps,Arts))`);
+    if (!r){
+      $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">判定できませんでした</div></div><p class="hint">入力を確かめてください。</p></div>`;
+      return;
+    }
+    const ar = once(`answers(${c}, L)`);
+    const ans = Object.fromEntries((ar ? ar.L : []).map(T).map(t => t.args));
+    const steps = r.Steps.map(T).map(t => t.args).filter(([id]) => ans[id] !== undefined);
+    // 答えが2つ以上なら箇条書き、1つなら1文のまま（REVIEW_RULES A7）。並びは話の順（解雇→辞めるときの証明書→辞めたときの賃金と金品→賃金の払い方）
+    const hr = once(`heads(${c}, L)`);
+    const hs = hr ? hr.L.map(String) : [];
+    const big = hs.length > 1 ? `<ul>${hs.map(h => `<li>${esc(h)}</li>`).join("")}</ul>` : esc(r.Head);
+    $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">${big}</div></div>
+      ${steps.map(([id, title, s], i) => stepHTML("st-" + id, `${i + 1}　${title}`, s, ans[id])).join("")}
+      <p class="sec">根拠条文</p><p class="arts" id="arts">${r.Arts.length ? artsHTML(r.Arts) : "当てはまる条文はありません。"}</p>
+      ${trees.length ? `<p class="sec">なぜそうなるか（論理の木）</p>${trees.map((ls, i) => treeHTML(ls, i === 0)).join("")}` : ""}</div>`;
+  } catch(e){ $("answer").innerHTML = `<p class="hint">エラー：${esc(e.message)}</p>`; }
+}
+
+// ---- 例（名前は起きた事実の言葉で書く。条文の文を写さず、指示語で始めない（REVIEW_RULES C2・C4））----
+function presetList(){
+  // 欄の値は DEFAULTS から変えるものだけ書く。2026-11-24 21欄で組み直した（前の例54個は 入口 の欄を使い、名前は条文の語だった）。
+  // 前の「休業がどちらでもない」「証明書を請求していない」「権利者の請求なし」は、頭の欄の「無い」側で答えが「答える条はありません」になるので消した（決め3）
+  const K = {kyok:"以上"}, N = {kyok:"足りない",ktas:"いいえ"};
+  return [
+    // 例1〜10は休業の状態を「解雇の日」のこととして言う（19条1項が禁じるのは解雇で、予告ではない。2026-11-24 LLMレビュー）
+    ["仕事のけがで休んでいる間が解雇の日（30日前に予告）", {...K,kkyu:"療養中"}],
+    ["仕事のけがの休みが明けて30日以内が解雇の日（30日前に予告）", {...K,kkyu:"療養後以内"}],
+    ["仕事のけがの休みが明けて30日を過ぎてからが解雇の日（30日前に予告）", {...K,kkyu:"療養後過ぎた"}],
+    ["産前産後の休みの間が解雇の日（30日前に予告）", {...K,kkyu:"産休中"}],
+    ["産前産後の休みが明けて30日以内が解雇の日（30日前に予告）", {...K,kkyu:"産休後以内"}],
+    ["産前産後の休みが明けて30日を過ぎてからが解雇の日（30日前に予告）", {...K,kkyu:"産休後過ぎた"}],
+    ["仕事のけがで休んでいる間が解雇の日で、打切補償が払われた（30日前に予告）", {...K,kkyu:"療養中",kuch:"はい"}],
+    ["仕事のけがで休んでいる間が解雇の日で、災害で事業が続けられなくなり、役所の認定を受けた（30日前に予告）", {...K,kkyu:"療養中",kten:"はい",knin:"はい"}],
+    ["仕事のけがで休んでいる間が解雇の日で、災害で事業が続けられなくなったが、役所の認定は受けていない（30日前に予告）", {...K,kkyu:"療養中",kten:"はい"}],
+    ["仕事のけがで休んでいる間が解雇の日で、自分の側に理由があるとされた（30日前に予告）", {...K,kkyu:"療養中",kseki:"はい"}],
+    ["30日前に解雇を予告された", K],
+    ["10日前に解雇を予告され、20日分の平均賃金が払われた", {kyok:"足りない"}],
+    ["今日すぐ解雇と言われ、平均賃金も払われない", N],
+    ["今日すぐ解雇と言われた。災害で事業が続けられなくなり、役所の認定を受けている", {...N,kten:"はい",knin:"はい"}],
+    ["今日すぐ解雇と言われた。災害で事業が続けられなくなったが、役所の認定は受けていない", {...N,kten:"はい"}],
+    ["今日すぐ解雇と言われた。自分の側に理由があるとされ、役所の認定を受けている", {...N,kseki:"はい",knin:"はい"}],
+    ["今日すぐ解雇と言われた。自分の側に理由があるとされたが、役所の認定は受けていない", {...N,kseki:"はい"}],
+    ["日々雇われて2週間で、今日すぐ解雇と言われた", {...N,khat:"日日"}],
+    ["日々雇われて2か月続いたあと、今日すぐ解雇と言われた", {...N,khat:"日日",ktsu:"超えた"}],
+    ["1か月の期間で雇われ、期間の途中で今日すぐ解雇と言われた", {...N,khat:"二箇月"}],
+    ["1か月の期間で雇われ、期間を超えて働いたあと、今日すぐ解雇と言われた", {...N,khat:"二箇月",ktsu:"超えた"}],
+    ["夏の間だけ3か月の期間で雇われ、期間の途中で今日すぐ解雇と言われた", {...N,khat:"季節"}],
+    ["夏の間だけ3か月の期間で雇われ、期間を超えて働いたあと、今日すぐ解雇と言われた", {...N,khat:"季節",ktsu:"超えた"}],
+    ["試用期間に入って10日で、今日すぐ解雇と言われた", {...N,khat:"試用"}],
+    ["試用期間に入って1か月で、今日すぐ解雇と言われた", {...N,khat:"試用",ktsu:"超えた"}],
+    ["試用期間に入って10日で、仕事のけがで休んでいる間に今日すぐ解雇と言われた", {...N,khat:"試用",kkyu:"療養中"}],
+    ["退職の後に、退職の証明書を頼んだ", {qsei:"退職後"}],
+    ["退職の後に頼んだ証明書に、頼んでいない事項が書かれていた", {qsei:"退職後",qki:"はい"}],
+    ["解雇を予告され、退職の日までに解雇の理由の証明書を頼んだ", {...K,qsei:"予告後"}],
+    ["解雇を予告された後に自分から辞め、辞めた後で解雇の理由の証明書を頼んだ", {...K,qsei:"予告後",qta:"はい"}],
+    ["辞めた後に、残りの給料と積立金を返すよう請求した", {qken:"はい"}],
+    ["辞めた後に請求した給料のうち、争いの無い部分", {qken:"はい",qaso:"異議なし"}],
+    ["辞めた後に請求した給料のうち、争いのある部分", {qken:"はい",qaso:"異議あり"}],
+    ["給料をお金以外のもので払われた（法令や労働協約の定めは無い）", {ctsu:"なし"}],
+    ["給料をお金以外のもので払われた（労働協約に定めがある）", {ctsu:"定め"}],
+    ["給料を、省令で決めた確実な方法で払われた", {ctsu:"省令"}],
+    ["給料から、法令の定めも書面の協定も無いのに引かれた", {ckou:"なし"}],
+    ["給料から、法令で決まっているものを引かれた", {ckou:"法令"}],
+    ["給料から、労働組合との書面の協定で引かれた", {ckou:"協定"}],
+    ["給料が2か月に1回しか払われない", {ckai:"少ない"}],
+    ["給料を払う日が決まっていない", {ckai:"期日なし"}],
+    ["賞与が年2回払われる", {ckai:"少ない",crin:"はい"}],
+    ["出産の費用のために、働いた分の給料を支払日より前に請求した", {chiy:"出産"}],
+    ["病気の費用のために、働いた分の給料を支払日より前に請求した", {chiy:"疾病"}],
+    ["災害の費用のために、働いた分の給料を支払日より前に請求した", {chiy:"災害"}],
+    ["出産・病気・災害のどれでもない費用のために、給料を支払日より前に請求した", {chiy:"それ以外"}],
+    ["出産の費用のために、まだ働いていない分の給料を前もって請求した", {chiy:"出産",ckio:"いいえ"}],
+    ["省令で決めた非常の場合の費用のために、働いた分の給料を支払日より前に請求した", {chiy:"省令"}],
+    ["会社の都合で休まされた", {cseki:"使用者"}],
+    ["休まされたが、原因は会社の側に無い", {cseki:"ほか"}],
+    ["今日すぐ解雇と言われ、辞めた後に証明書と残りの給料を請求した", {...N,qsei:"退職後",qken:"はい"}],
+  ];
+}
+// 例に書いていない欄は既定に戻す（前の例の値を残すと、名前と違う入力になるため）
+// 既定は 頭の欄（1・10・13・15・16・17・19・21）が全部「無い」側で、答えは「答える条はありません」の1段（決め3）。9の欄は「いいえ」（決め2。前は「はい」）
+const DEFAULTS = {kyok:"無い",ktas:"はい",kkyu:"無い",kuch:"いいえ",khat:"どれでもない",ktsu:"以内",kten:"いいえ",kseki:"いいえ",knin:"いいえ",qsei:"無い",qta:"いいえ",qki:"いいえ",qken:"いいえ",qaso:"無い",ctsu:"通貨",ckou:"無い",ckai:"毎月",crin:"いいえ",chiy:"無い",ckio:"はい",cseki:"無い"};
+function setDefaults(p){
+  for (const [id, v] of Object.entries(DEFAULTS)) $(id).value = p[id] !== undefined ? p[id] : v;
+}
+function applyPreset(p){
+  setDefaults(p);
+  ask();
+}
+function renderPresets(){
+  $("presets").innerHTML = presetList().map((p, i) => `<button type="button" data-preset="${i}">${esc(p[0])}</button>`).join("");
+}
+
+// 初期表示（既定の値）
+setDefaults({});
+
+document.addEventListener("change", e => { if (e.target.closest("#slots")) ask(); });
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.preset !== undefined){ applyPreset(presetList()[+b.dataset.preset][1]); $("answer").scrollIntoView?.(); }
+  else if (b.dataset.art && pl){
+    const host = b.closest(".tr") || b.closest("li") || b.parentElement, nx = host.nextElementSibling;
+    if (nx && nx.classList.contains("lawtext") && nx.dataset.for === b.dataset.art) nx.remove();
+    else { host.insertAdjacentHTML("afterend", lawHTML(b.dataset.art)); host.nextElementSibling.dataset.for = b.dataset.art; }
+  }
+});
+
+if (typeof SWIPL === "function") boot();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; $("answer").innerHTML = `<p class="loading err">Prolog（swipl-wasm）を読み込めませんでした。ページを再読み込みしてください。</p>`; }
+</script>
