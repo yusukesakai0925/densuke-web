@@ -1,0 +1,1621 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="「処分を争う訴えを逆から引く」の収録範囲、全条文の地図、アプリの約束事、Prologのソース全部。">
+<title>収録範囲・仕組み｜処分を争う訴えを逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+/* 欄の番号は小見出しをまたいで 1〜20 を続けて振る（.slots を小見出しごとに分けたので、番号の振り直しは .ask で1回だけ） */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;counter-reset:slot}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper)}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+.input{display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.input input{font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 10px;min-width:0;width:100%}
+.input input:focus-visible{outline:none}
+.input:hover{border-color:var(--blue)}
+.input:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.step.off{color:var(--muted)}
+.flow{margin:0;padding-left:1.2em}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+.disclaimer-inline{margin-top:10px;font-size:.78rem;color:var(--muted);border-top:1px solid var(--hair);padding-top:8px;line-height:1.65}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border-left:2px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+/* 日付の欄を「◯ヶ月前」で入れる（rd-。8本で同じ文字列） */
+.rd{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;min-width:0}
+.rd.rd-m{margin:4px 10px 6px}
+.rd input,.rd select{font:inherit;font-size:1rem;color:var(--ink);background:var(--field,var(--bg));border:1px solid var(--line);border-radius:0;padding:6px 8px;min-width:0}
+.rd input:disabled,.rd select:disabled{opacity:.45}
+.rd select option{background:var(--paper);color:var(--ink)}
+.rd .rd-n{flex:0 0 4.6em;width:4.6em}
+.rd .rd-u{flex:0 1 auto;width:auto}
+.rd-to{font-size:.8rem;color:var(--muted);white-space:nowrap}
+.rd-hide{display:none!important}
+.rd-other{min-width:0}
+.rd-other summary{cursor:pointer;font-size:.84rem;font-weight:400;color:var(--muted)}
+.rd-other label{display:block}
+.rd-other.rd-m > summary{padding:6px 10px}
+.rd-note{font-size:.76rem;color:var(--muted)}
+.rd-other.rd-m .rd-note{padding:0 10px 6px}
+.rd-when{font-size:.84rem;font-weight:700;color:var(--muted);margin:0 0 6px}
+</style>
+
+<div class="wrap about">
+  <header class="mast sub">
+    <p class="backlink"><a href="./" id="back">← 判定ページに戻る</a></p>
+    <h1>収録範囲・仕組み</h1>
+    <p class="lead">「処分を争う訴えを逆から引く」で、どの条文をどこまでルールにしたか、アプリが決めたこと、プログラムの中身です。</p>
+  </header>
+
+  <div class="appendix">
+  <details class="box" id="scope-box" open>
+    <summary>収録範囲と、入っていないもの</summary>
+    <div class="scope" id="scope">
+      <p><b>行政事件訴訟法の、抗告訴訟の種類・提起できる人・審査請求との関係・被告・管轄・出訴期間・止める手段の規定（本則の3条2項〜7項、7条、8条、9条1項、10条2項、11条、12条1項〜4項、14条、15条1項、25条1項・2項・4項、29条、36条、37条、37条の2第1項・第3項、37条の3第1項〜第3項・第7項、37条の4第1項・第3項、37条の5第1項〜第3項、38条1項・3項・4項）をルールにしています。</b></p>
+      <p>起きたことと、あなたの考えを聞く20個の欄から、同じ入力で全部の条を当てます。訴えの種類（処分の取消しの訴え・無効等確認の訴え・義務付けの訴えなど）を先に選ぶ欄は置いておらず、1の欄（申請をしたか）と2の欄（行政庁がしたこと）から、提起できる訴えを全部出します。欄を出したり消したりもしません。日付の欄は、起きたことの日を1つずつ聞きます。分からない日・まだ起きていないことは空けておけば、その日を使う答えは期間の文で出します。個別のことは法律の専門家に聞いてください。</p>
+      <p id="scope-hani">行政事件訴訟は、他の法律に特別の定めがある場合を除くほか、行政事件訴訟法の定めるところによります（1条）。個別の法律に特別の定めがあれば、審査請求との関係（8条）・出訴期間（14条）などが変わることがあります。このページは、個別の法律の定めの中身を読んでいません。</p>
+      <p id="scope-44">44条（行政庁の処分その他公権力の行使に当たる行為については、民事保全法に規定する仮処分をすることができない）は、提起できる訴えを変えないので、この画面では扱いません。</p>
+      <p id="scope-46">46条（取消訴訟等の提起に関する事項の教示）は行政庁の義務の定めで、提起できる訴えを変えないので、この画面では扱いません。</p>
+      <p id="scope-ban">行政事件訴訟法の条文は2026年11月2日に取得した版で、それ以後の改正と、公布済みで施行前の改正は読んでいません。</p>
+      <p><b>判定について：</b></p>
+      <ul id="hantei-notes" style="margin:0;padding-left:1.2em">
+        <li id="note-kangae">欄名の後ろに「（あなたの考え）」と書いた6つの欄（3：法律上の利益、4：現在の法律関係に関する訴えによって目的を達することができるか、5：重大な損害、6：他に適当な方法、7：相当の期間、15：緊急の必要・正当な理由）は、条文だけでは決まりません。このアプリは当たるかを判定せず、選んだあなたの考えのとおりに答えます。入力したあなたの考えが裁判所に認められるかは、このページでは判定しません。</li>
+        <li id="note-tadashi">14条の各項のただし書「正当な理由があるときは、この限りでない」の当否は判定しません。結論の箱には最終日だけを書き、ただし書は論理の木の原文の行に置いています。</li>
+        <li id="note-kakei">16の欄（訴えを提起する日）が最終日より後のときは「◯年◯月◯日を過ぎたので、提起できません」と書きます。このときも、14条1項ただし書・2項ただし書（正当な理由があるときは、この限りでない）に当たって提起できるかは判定しません。</li>
+        <li id="note-manryo">出訴期間の最終日は、知った日（処分又は裁決の日）の翌日を起算日とし、起算日に応当する日の前日として数えました。14条は「知つた日から」「処分又は裁決の日から」で、数え方は行政事件訴訟法の条文に無く、7条（「行政事件訴訟に関し、この法律に定めがない事項については、民事訴訟の例による。」）で民事訴訟の例によるとしているためです。1日ずれることがあるので、最終日の前後は裁判所にご確認ください。最終日が休日に当たるときは、民事訴訟法95条3項（「期間の末日が日曜日、土曜日、国民の祝日に関する法律（昭和二十三年法律第百七十八号）に規定する休日、一月二日、一月三日又は十二月二十九日から十二月三十一日までの日に当たるときは、期間は、その翌日に満了する。」）で、休日でない次の日を期限として結論の箱に書きます。祝日は今の国民の祝日に関する法律の決まりで数え、春分の日・秋分の日は1980年〜2099年に当たる式で数えています。今日の日付とは比べません。期間を過ぎたかどうかは、16の欄に訴えを提起する日を入れたときだけ出します。</li>
+        <li id="note-sangatsu">8条2項1号の「三箇月」は、審査請求をした日の翌日から数えた最終日を書きます。裁決をする行政庁の側の期間なので、休日でずらしません。</li>
+        <li id="note-kyouji">教示（46条）があったかどうかは欄にしていません。行政事件訴訟法には、教示をしなかったときの効果の定めがありません。教示がなかったことが14条のただし書の「正当な理由」に当たるかは判定しません。</li>
+        <li id="note-hoka">裁決を経た後でなければ処分の取消しの訴えを提起できない旨の定め（8条1項ただし書）は、他の法律の定めの中身を調べていないので、あるかどうかだけを10の欄で聞きます。</li>
+        <li id="note-kankatsu">具体的な裁判所名は出しません。12条4項の「別表に掲げる法人」に当たるかは、18の欄で聞きます。</li>
+        <li id="note-teishi">執行停止・仮の義務付け・仮の差止めの要件に当たるかと、訴えが認められるかどうかは判定しません。</li>
+        <li id="note-bamengai">「出訴期間の定めがありません」「執行停止の定めがありません」は、38条が14条・25条を準用していないという答えで、他の法律に定めがないとは言っていません。</li>
+        <li id="note-kankei">関係のない欄（たとえば、処分のときの1・5・6・7の欄、まだ処分をしていないときの4・14・16の欄、10の欄が「ない」ときの15の欄）は、答えを出さないだけで、「この組み合わせはありません」にはしません。「この組み合わせはありません」になるのは、下の「条文だけで決まらなかった点」の (k) の組です。</li>
+      </ul>
+      <p>入っていないもの：審理の手続、判決の効力、当事者訴訟・民衆訴訟・機関訴訟、国家賠償、判例（アプリの約束事に置いた1件のほか）。どこへ・いつまでに審査請求するかは<a href="../fufuku/">行政不服審査法のページ</a>です。詳しくは<a href="#notes-box">載せなかった条</a>をご覧ください。</p>
+    </div>
+  </details>
+
+  <details class="box" id="cover-box">
+    <summary>行政事件訴訟法のどこまでをルールにしたか（全条文の地図）</summary>
+    <p class="hint" style="margin-top:6px">行政事件訴訟法の本則の全条文を章ごとに1マスずつ並べました。<span class="cell u1"></span> はプログラムのルールの中で使っている条、<span class="cell u0"></span> は使っていない条、<span class="cell u2"></span> は「削除」された条です。マスを押すと条の名前（使っている条は原文）が出ます。</p>
+    <div id="cover"></div>
+  </details>
+
+  <details class="box" id="yaku-box">
+    <summary>アプリの約束事（行政事件訴訟法の条文にないもの）</summary>
+    <p class="hint" style="margin-top:6px">判定のためにこのアプリが決めたことで、行政事件訴訟法の条文そのものではありません。論理の木では <span class="yk">アプリの約束事</span> の印が付きます。</p>
+    <ul class="hint" style="margin:8px 0 0;padding-left:1.2em">
+      <li>起算日は知った日（処分又は裁決の日）の翌日とし、最終日は起算日に応当する日の前日として数える（14条は「知つた日から」で、数え方を書いていない。7条は民事訴訟の例によるとする）</li>
+      <li>最終日が休日に当たるときは、期限を休日でない次の日にする（7条で民事訴訟の例により、民事訴訟法95条3項。休日は日曜日・土曜日・国民の祝日に関する法律に規定する休日・1月2日・1月3日・12月29日〜12月31日）。論理の木に、どの日からどの日にずれたかを書く</li>
+      <li>審査請求を却下する裁決があったときは、処分の取消しの訴えの出訴期間を、14条3項で裁決から数えず、14条1項・2項で処分から数える（最高裁昭和56年2月24日第三小法廷判決。不服申立てが不適法で、実体的判断をせずに却下されたときは、当時の14条4項（今の14条3項）を適用する余地はないとした）</li>
+      <li>前置の定めがあるときは、審査請求を却下した裁決を、8条1項ただし書の「審査請求に対する裁決を経た」に当たると読まない（適法な審査請求を誤って却下したときも同じに読む。却下が誤っていたかは条文からは決まらないため）</li>
+      <li>条の場面の外にあるという答えは、反対の結論を言うものではない</li>
+    </ul>
+  </details>
+
+  <details class="box" id="notes-box">
+    <summary>載せなかった条と、条文だけで決まらなかった点</summary>
+    <div class="scope">
+      <p><b>載せなかったもの（理由）：</b></p>
+      <ul style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>4条〜6条（当事者訴訟・民衆訴訟・機関訴訟の定義）・39条〜43条：抗告訴訟だけを収録する</li>
+        <li>16条〜24条（関連請求の移送・併合、訴えの変更、第三者の参加、職権証拠調べなどの審理の手続）：どの訴えを・誰に・いつまでにを確かめる範囲の外</li>
+        <li>13条・12条5項（移送）：提起した後に裁判所が決めることで、提起先の結論を変えない</li>
+        <li>26条〜28条（執行停止の取消しなど）：申し立てた後の手続</li>
+        <li>30条〜35条（判決の効力。30条の裁量処分の取消し・31条の特別の事情による請求の棄却を含む）：勝ち負けは判定しない</li>
+        <li>38条2項（無効等確認の訴えへの10条2項の準用）：裁決の無効等確認の訴えで求められることの定めで、提起できる訴えを変えない</li>
+        <li>44条（仮処分の排除）・46条（教示）：提起できる訴えを変えない（上の「収録範囲」）</li>
+        <li>45条（私法上の法律関係に関する訴訟）：抗告訴訟の話ではない</li>
+        <li>民事訴訟法95条（期間の計算）・国民の祝日に関する法律：範囲を行政事件訴訟法の本則にしたため。最終日の数え方と休日はアプリの約束事にした</li>
+        <li>判例：条文だけをルールにするため。ただし、審査請求を却下する裁決があったときの14条3項の1件（最高裁昭和56年2月24日判決）は、アプリの約束事に置いた</li>
+      </ul>
+      <p><b>条文だけで決まらなかった点（14点）：</b></p>
+      <ul id="kimaranai" style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>（a）裁決の取消しの訴えの期間 → 14条1項・2項の「裁決」で読み、14条3項は処分の取消しの訴えで審査請求をした者に当てる。裁決につきさらに審査請求をしたときは入力に入れていない</li>
+        <li>（b）最終日の数え方 → 行政事件訴訟法の条文に無いので、知った日の翌日を起算日とし、起算日に応当する日の前日として数える（アプリの約束事）。1日ずれることがある</li>
+        <li>（c）申請をしていない人の不作為の違法確認の訴え → 「法令に基づく申請をしていないので、不作為の違法確認の訴えは提起できません（37条）」を出す。被告・管轄は、ほかに立つ訴え（非申請型の義務付けの訴え）があればその分として出し、1つも立たなければ出さない</li>
+        <li>（d）審査請求が不適法とされたときの14条3項 → 「審査請求があつたとき」に当たるかは条文だけで決まらない。最高裁昭和56年2月24日第三小法廷判決（昭和53(行ツ)51）は、不服申立てが不適法で、実体的判断をせずに却下されたときは、当時の14条4項（今の14条3項）を適用する余地はないとした。このアプリは、14の欄が「審査請求を却下した」で裁決があるときは、処分の取消しの訴えの期間を14条1項・2項で処分から数える（アプリの約束事）。裁決の取消しの訴えの期間は14条1項・2項で裁決から数える。前置の定め（8条1項ただし書）があるときも、審査請求を却下した裁決は「裁決を経た」と読まず、裁決を経た後でなければ処分の取消しの訴えは提起できないと答える。適法な審査請求を誤って却下したときも、このアプリは「裁決を経た」と読まない。誤った却下かどうかは条文からは決まらないため（アプリの約束事）</li>
+        <li>（e）他の人がした申請の場合 → 3条6項2号は「申請…がされた場合」、37条の3第2項は「をした者に限り」。1の欄で「申請をしたか」を聞く</li>
+        <li>（f）裁決をすべき旨を命ずる義務付けの訴え（37条の3第7項）→ 「処分についての審査請求がされた場合」で、申請の却下に限っていないので、2の欄が処分でも申請の却下・棄却でも、裁決が審査請求を棄却・却下したものなら出す。処分の取消しの訴え又は無効等確認の訴えを提起することができないとき（7項）は、16の欄（訴えを提起する日）が処分の取消しの訴えの最終日より後で、無効等確認の訴えも立たないときと読む。却下の裁決では、処分の取消しの訴えの期間を処分から、裁決の取消しの訴えの期間を裁決から数えるので、その間の日に提起すると7項が立つ</li>
+        <li>（g）2つの期間の関係 → 14条1項と2項（3項も同じ）は、どちらかを経過すると提起できなくなる定めと読み、両方の日付があれば早いほうの最終日を1つにまとめる。片方だけなら、その日と、入っていないほうの期間の文を並べる。論理の木には2つの行を残す</li>
+        <li>（h）裁決があったか → 12（裁決の日）か13（裁決があったことを知った日）のどちらかに日付があれば、裁決があったと読む</li>
+        <li>（i）審査請求をして、まだ裁決がないときの処分の取消しの訴えの期間 → 14条3項は裁決を起点にするので、14条1項・2項の日付は出さず、裁決があったときの期間を文で言う</li>
+        <li>（j）立つ訴えが1つも無いとき → 訴えごとの「〜ので、〜は提起できません」だけを出し、被告・管轄・期間の段は出さない</li>
+        <li>（k）まだ処分をしていない（又は処分がされようとしている）のに処分の日・知った日が入っている組、審査請求をしていないのに裁決の日・知った日が入っている組と、日付の前後が逆の組（知った日が処分の日より前、裁決が審査請求より前、裁決を知った日が裁決の日より前、審査請求が処分より前）→ 「この組み合わせはありません」にする。条文の文からの読みで、解説・判例とは照らしていません</li>
+        <li>（l）処分が書面か口頭か → 46条1項ただし書にだけ効く区別で、46条をこの画面で扱わないので、2の欄で聞かない</li>
+        <li>（m）裁決の内容 → 10条2項は「棄却した裁決」だけ、37条の3第1項2号・第7項は「却下し又は棄却する」なので、14の欄は棄却・却下・そのほかの3つで聞く</li>
+        <li>（n）前置の定めがあり、審査請求をして、まだ裁決がないとき → 8条2項1号の「三箇月を経過しても裁決がない」を欄で聞かず、11の日付から最終日を計算して「◯年◯月◯日を過ぎても裁決がないときは」と言う</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="box" id="src-box">
+    <summary>プログラムの中身（Prologのソース全部）</summary>
+    <p class="hint" style="margin-top:6px">このページで動いているPrologのプログラムそのものです。ファイルを開くと全文が出ます。</p>
+    <div id="src"></div>
+  </details>
+
+  <details class="box" id="core-box">
+    <summary>仕組みを見る（上級者向け）</summary>
+    <p class="hint" style="margin-top:6px">Prologに直接聞く（最初の20件まで）：</p>
+    <textarea id="q" spellcheck="false">result(ctx(していない,処分,有する,できない,ある,ない,経過した,date(2026,4,1),date(2026,4,10),ない,未入力,未入力,未入力,棄却,当たらない,未入力,所属する,違う,違う,ない), R).</textarea>
+    <button type="button" class="btn" id="run">実行</button>
+    <pre id="out"></pre>
+  </details>
+  </div>
+
+  <p class="foot techline"><span>行政事件訴訟法／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot">e-Gov法令検索の行政事件訴訟法（昭和三十七年法律第百三十九号）の本則の原文から、抗告訴訟の種類・被告・管轄・出訴期間などの規定をルールにしたものです。判例（アプリの約束事に置いた1件のほか）・法律の解釈・裁判所の運用は含みません。他の法律に特別の定めがあれば、結論が変わることがあります（1条）。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 行政事件訴訟法Prolog（処分を裁判で争うとき、どの訴えを・誰を相手に・いつまでに）共通の型・欄の読み出し・組み合わせなし・日付・休日・木の部品
+%
+% ctx(申請, 行為, 利益, 法律関係, 損害, 他の方法, 相当の期間, 処分日, 処分知日, 前置の定め, 審査請求日, 裁決日, 裁決知日,
+%     裁決の内容, 前置の号, 提起日, 所属, 国等, 場所, 下級)
+%   欄は起きた事実と、あなたの考えを聞く20個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-23 「何が起きているか」（ki）と
+%   「求めること」（mo）の2欄で訴えの形を先に選ばせる作り、欄の出し消し（updateSlots）、値の「関係なし」、審査請求の状況で欄名を変える
+%   日付の欄（d1・d2）、教示の欄（ky）・処分の方法の欄（hh）をやめた）。引数の順は画面の欄の番号（1〜20）と同じ。
+%   案は ../gyosos_form_plan_answer_1123.md の案A（依頼書 task_beaver_gyosos_fixed_fields_1123.md の決めたこと1）。fufuku-prolog と同じ形。
+%   訴えの形（3条2項〜7項）は選ばせず、1と2の欄（申請をしたか・行政庁がしたこと）から、立つ訴えを全部出す（C4）。
+%   前の「審査請求」（sj）と日付の欄（d1・d2）は、起きたことの日（8・9・11〜13）に分けた。裁決があったかは、12か13に日付があるかで決める。
+%   2の欄を4つにした（回答ファイルの6つから、書面・口頭の区別を外した）。書面・口頭は46条1項ただし書にだけ効いていて、
+%   46条は結論の箱に出さない（決めたこと2-2）ので、区別しても答えが変わらないため。
+%   14の欄を「裁決の内容」の3つにした（回答ファイルは「却下し又は棄却するものだったか」の2つ）。10条2項は「棄却した裁決」だけ、
+%   37条の3第1項2号・第7項は「却下し又は棄却する」で、2つでは区別できないため（依頼書 ⑦）。
+%   「あなたの考え」の欄は 3〜7・15 の6つ。本人の考えのとおりに答える。
+%   2026-11-23 16の欄を「処分の取消しの訴え又は無効等確認の訴えを提起できるか（あなたの考え）」から「訴えを提起する日」（日付）に替えた
+%   （LLMレビュー①・案A）。前の欄はアプリ自身の答え（処分取消しが立つ）と重なる考えを聞いていて（C1）、「できない」を選ぶと、箱の
+%   「処分の取消しの訴えは…提起できます」と37条の3第7項の「提起できます」が食い違った。今は期限を過ぎたかをアプリが数える（rules/e_kikan.pl）。
+%    1 申請       : した | していない（法令に基づき、行政庁に処分又は裁決を求める申請をしたか。3条5項・3条6項・37条・37条の3第2項）
+%    2 行為       : 処分 | 却下棄却 | 不作為 | されようとしている（行政庁がしたこと。処分をした・申請を却下し又は棄却する処分をした・
+%                   まだ処分をしていない・処分又は裁決をしようとしている。3条2項〜7項）
+%    3 利益       : 有する | 有しない（訴えで求めることにつき法律上の利益を有するか。あなたの考え。9条1項・36条・37条の2第3項・37条の4第3項）
+%    4 法律関係   : できない | できる（現在の法律関係に関する訴えによって目的を達することができるか。あなたの考え。36条）
+%    5 損害       : ある | ない（処分がされないこと又はされることにより、重大な損害を生ずるおそれがあるか。あなたの考え。37条の2第1項・37条の4第1項）
+%    6 他の方法   : ない | ある（重大な損害を避けるため他に適当な方法があるか。あなたの考え。37条の2第1項・37条の4第1項ただし書）
+%    7 相当の期間 : 経過した | 経過していない（申請から相当の期間が経過したか。あなたの考え。3条5項・37条の3第1項1号）
+%    8 処分日     : 未入力 | date(年,月,日)（処分の日。14条2項本文）
+%    9 処分知日   : 未入力 | date（処分があったことを知った日。14条1項本文）
+%   10 前置の定め : ない | ある（裁決を経た後でなければ処分の取消しの訴えを提起できない旨の法律の定めがあるか。8条1項ただし書）
+%   11 審査請求日 : 未入力 | date（審査請求をした日。8条2項1号・14条3項）
+%   12 裁決日     : 未入力 | date（裁決の日。3条3項・14条2項・14条3項）
+%   13 裁決知日   : 未入力 | date（裁決があったことを知った日。14条1項・14条3項）
+%   14 裁決の内容 : 棄却 | 却下 | そのほか（裁決は審査請求を棄却したか・却下したか。10条2項・37条の3第1項2号・37条の3第7項）
+%   15 前置の号   : 当たらない | 緊急の必要 | 正当な理由（裁決を経ないことにつき、8条2項2号・3号に当たるか。あなたの考え）
+%   16 提起日     : 未入力 | date（訴えを提起する日。14条1項本文・14条2項本文・14条3項本文・37条の3第7項）
+%   17 所属       : 所属する | 所属しない | 被告なし（行政庁が国又は公共団体に所属するか。11条1項〜3項）
+%   18 国等       : 違う | そうである（被告が国又は独立行政法人若しくは別表に掲げる法人か。12条4項）
+%   19 場所       : 違う | そうである（不動産又は特定の場所に係る処分又は裁決か。12条2項）
+%   20 下級       : ない | ある（事案の処理に当たった下級行政機関があるか。12条3項）
+%
+%   関係のない欄（たとえば、処分のときの1・5・6・7の欄、まだ処分をしていないときの4・14・16の欄、10の欄が「ない」ときの15の欄）は、
+%   組み合わせなしにせず、その欄を使う段を出さない（fufuku-prolog と同じ）。欄どうしで成り立たない組は 組み合わせなし/4 が欄の番号と一緒に返す（REVIEW_RULES C3）。
+%
+% 書き方のきまり：
+%   ・条番号は '3条6項1号' '37条の3第3項2号' '8条1項ただし書' のような原子。
+%   ・段は 段(状態, 文, 箱の条, 木だけの条)。箱の条は結論の箱の（）に出し、木だけの条（ただし書・柱書き・定義の条など）は論理の木の原文の葉にだけ出す。
+%     結論ごとの段は s(画面のid, 見出し, 段)。段の文は、末尾の「。」を外して結論の箱にも出す。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | and | or | info
+%   ・アプリの約束事の行は 条 を '@約束事' にする。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか。組の成り立ちは 組み合わせなし/4 で見る）----
+ctx_valid(C) :-
+    functor(C, ctx, 20),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )),
+    forall(日の欄(N), ( arg(N, C, D), 日の欄OK(D) )).
+
+欄の値(1, [した, していない]).
+欄の値(2, [処分, 却下棄却, 不作為, されようとしている]).
+欄の値(3, [有する, 有しない]).
+欄の値(4, [できない, できる]).
+欄の値(5, [ある, ない]).
+欄の値(6, [ない, ある]).
+欄の値(7, [経過した, 経過していない]).
+欄の値(10, [ない, ある]).
+欄の値(14, [棄却, 却下, そのほか]).
+欄の値(15, [当たらない, 緊急の必要, 正当な理由]).
+欄の値(17, [所属する, 所属しない, 被告なし]).
+欄の値(18, [違う, そうである]).
+欄の値(19, [違う, そうである]).
+欄の値(20, [ない, ある]).
+
+日の欄(8). 日の欄(9). 日の欄(11). 日の欄(12). 日の欄(13). 日の欄(16).
+
+日の欄OK(未入力).
+日の欄OK(D) :- 日付OK(D).
+
+%% ---- 欄の読み出し（番号は画面の欄の番号）----
+欄の番号(申請, 1).
+欄の番号(行為, 2).
+欄の番号(利益, 3).
+欄の番号(法律関係, 4).
+欄の番号(損害, 5).
+欄の番号(他の方法, 6).
+欄の番号(相当の期間, 7).
+欄の番号(処分日, 8).
+欄の番号(処分知日, 9).
+欄の番号(前置の定め, 10).
+欄の番号(審査請求日, 11).
+欄の番号(裁決日, 12).
+欄の番号(裁決知日, 13).
+欄の番号(裁決の内容, 14).
+欄の番号(前置の号, 15).
+欄の番号(提起日, 16).
+欄の番号(所属, 17).
+欄の番号(国等, 18).
+欄の番号(場所, 19).
+欄の番号(下級, 20).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+日付がある(C, Name) :- 欄(Name, C, date(_, _, _)).
+% 日付の前後（date(年,月,日) の標準の順で比べる。同じ日は前にしない）
+前の日(C, A, B) :- 欄(A, C, DA), 欄(B, C, DB), DA = date(_, _, _), DB = date(_, _, _), DA @< DB.
+% 日付が入っている欄の番号だけを残す
+埋まった欄(C, Ns0, Ns) :- include(番号の日付がある(C), Ns0, Ns).
+番号の日付がある(C, N) :- arg(N, C, date(_, _, _)).
+
+%% ---- 段を出すかを決める語 ----
+% 処分（申請を却下し又は棄却する処分を含む）がされている
+処分の場合(C) :- 欄(行為, C, K), memberchk(K, [処分, 却下棄却]).
+審査請求をした(C) :- 日付がある(C, 審査請求日).
+% 裁決があったか（12か13に日付がある。fufuku-prolog の 決定がある と同じ読み）
+裁決がある(C) :- ( 日付がある(C, 裁決日) ; 日付がある(C, 裁決知日) ), !.
+% 8条1項ただし書の「審査請求に対する裁決を経た後」に当たるか。審査請求を却下する裁決（14の欄が 却下）は、裁決を経たと読まない
+% （2026-11-23 LLMレビュー・案A。適法な審査請求を誤って却下したときも同じ。アプリの約束事＝yakusoku/kihon.pl の 前置却下の約束）
+前置の裁決を経た(C) :- 裁決がある(C), \+ 欄(裁決の内容, C, 却下).
+% 8条1項ただし書の定めがあって、裁決を経ておらず、8条2項2号・3号にも当たらない（取消しの訴えは今は提起できない）
+前置で止まる(C) :- 欄(前置の定め, C, ある), \+ 前置の裁決を経た(C), 欄(前置の号, C, 当たらない).
+
+%% ---- 立つ訴え（3条2項〜7項と、各訴えの要件。段の文は rules/b_uttae.pl）----
+処分取消しが立つ(C) :- 処分の場合(C), 欄(利益, C, 有する).
+裁決取消しが立つ(C) :- 処分の場合(C), 裁決がある(C), 欄(利益, C, 有する).
+無効が立つ(C) :- 処分の場合(C), 欄(利益, C, 有する), 欄(法律関係, C, できない).
+不作為確認が立つ(C) :- 欄(行為, C, 不作為), 欄(申請, C, した), 欄(相当の期間, C, 経過した).
+申請型が立つ(C) :- 欄(申請, C, した), 欄(行為, C, 不作為), 欄(相当の期間, C, 経過した), !.
+% 併合して提起する処分の取消しの訴え又は無効等確認の訴え（37条の3第3項2号）が提起できないときは立たない（処分の取消しの訴えは期限を過ぎていないか、
+% 前置の定めがあって審査請求を却下する裁決で止まっていないか。2026-11-23 その5・案B。その6で、審査請求をしていない組・裁決がまだの組
+% ＝前置で止まる組全部に広げた）
+申請型が立つ(C) :- 欄(申請, C, した), 欄(行為, C, 却下棄却), 欄(利益, C, 有する), ( 処分取消しが提起できる(C) ; 無効が立つ(C) ), !.
+% 37条の3第7項「処分の取消しの訴え又は無効等確認の訴えを提起することができないときに限り」。処分の取消しの訴えは期限を過ぎたか
+% （16の欄の日と14条の最終日。rules/e_kikan.pl の 処分取消しが提起できる）で決める。前置×却下の裁決で止まった組も「提起することができない」に入る（その5・案B。その6で前置で止まる組全部）。
+% 併合して提起する裁決の取消しの訴え又は無効等確認の訴え（37条の3第3項2号）が立たないときは立たない（申請型が立つ の2つ目の節と同じ）
+裁決義務付けが立つ(C) :- 裁決の義務付けの場合(C), 欄(利益, C, 有する),
+    \+ 処分取消しが提起できる(C), \+ 無効が立つ(C), 裁決取消しが提起できる(C).
+裁決の義務付けの場合(C) :- 処分の場合(C), 裁決がある(C), 欄(裁決の内容, C, K), memberchk(K, [棄却, 却下]).
+非申請が立つ(C) :- 欄(行為, C, 不作為), 欄(申請, C, していない), 損害の要件(C).
+差止めが立つ(C) :- 欄(行為, C, されようとしている), 損害の要件(C).
+損害の要件(C) :- 欄(損害, C, ある), 欄(他の方法, C, ない), 欄(利益, C, 有する).
+義務付けが立つ(C) :- ( 申請型が立つ(C) ; 裁決義務付けが立つ(C) ; 非申請が立つ(C) ), !.
+
+訴えが立つ(C) :-
+    ( 処分取消しが立つ(C) ; 無効が立つ(C) ; 不作為確認が立つ(C) ; 義務付けが立つ(C) ; 差止めが立つ(C) ), !.
+
+%% ---- 成り立たない組（REVIEW_RULES C3。根拠は rules/a_genbun.pl の原文の行で確かめた）----
+% 組み合わせなし(C, 欄の番号のリスト, 理由の文, 根拠のリスト)
+% 既定の値（日付はどれも空）はどの組にも当たらない。ア〜カの名前は回答ファイルの表のまま。
+% ア：3条5項「行政庁が…処分又は裁決をすべきであるにかかわらず、これをしないこと」・3条6項1号「これがされないとき」・
+%     3条7項「これがされようとしている場合」。処分がされていないので、処分の日も、知った日も無い
+組み合わせなし(C, [2|Ns], '行政庁がまだ処分をしていないので、処分の日も、処分があったことを知った日もありません', ['3条5項', '3条6項1号']) :-
+    欄(行為, C, 不作為), 埋まった欄(C, [8, 9], Ns), Ns \== [].
+組み合わせなし(C, [2|Ns], '処分又は裁決はされようとしていて、まだされていないので、処分の日も、処分があったことを知った日もありません', ['3条7項']) :-
+    欄(行為, C, されようとしている), 埋まった欄(C, [8, 9], Ns), Ns \== [].
+% イ：14条1項本文「処分…があつたことを知つた日」・2項本文「処分…の日」
+組み合わせなし(C, [8, 9], '処分があったことを、処分の日より前に知ることはありません', ['14条1項本文', '14条2項本文']) :-
+    前の日(C, 処分知日, 処分日).
+% ウ：3条3項「審査請求その他の不服申立て…に対する行政庁の裁決」
+組み合わせなし(C, [11|Ns], '裁決は審査請求に対するものなので、審査請求をしていないときに、裁決の日も、裁決があったことを知った日もありません', ['3条3項']) :-
+    \+ 審査請求をした(C), 埋まった欄(C, [12, 13], Ns), Ns \== [].
+% エ：3条3項（同上）
+組み合わせなし(C, [11, 12], '裁決は審査請求に対するものなので、審査請求をした日より前に裁決があることはありません', ['3条3項']) :-
+    前の日(C, 裁決日, 審査請求日).
+% オ：14条3項本文「これに対する裁決があつたことを知つた日」「当該裁決の日」
+組み合わせなし(C, [12, 13], '裁決があったことを、裁決の日より前に知ることはありません', ['14条3項本文']) :-
+    前の日(C, 裁決知日, 裁決日).
+% カ：14条3項本文「処分又は裁決につき審査請求をすることができる場合…において、審査請求があつたときは」。処分についての審査請求は処分の後
+組み合わせなし(C, [8, 11], '審査請求は処分についてするものなので、処分の日より前に審査請求をすることはありません', ['14条3項本文']) :-
+    処分の場合(C), 前の日(C, 審査請求日, 処分日).
+
+組み合わせなしがある(C) :- 組み合わせなし(C, _, _, _), !.
+
+%% ---- 日付（date(年,月,日)。fufuku-prolog/schema.pl と同じ）----
+閏年(Y) :- Y mod 400 =:= 0, !.
+閏年(Y) :- Y mod 100 =\= 0, Y mod 4 =:= 0.
+月日数(Y, 2, 29) :- 閏年(Y), !.
+月日数(_, 2, 28) :- !.
+月日数(_, M, 30) :- memberchk(M, [4, 6, 9, 11]), !.
+月日数(_, M, 31) :- integer(M), M >= 1, M =< 12.
+
+日付OK(date(Y, M, D)) :-
+    integer(Y), integer(M), integer(D),
+    M >= 1, M =< 12, D >= 1,
+    月日数(Y, M, Max), D =< Max.
+
+翌日(date(Y, M, D), date(Y, M, D1)) :- 月日数(Y, M, Max), D < Max, !, D1 is D + 1.
+翌日(date(Y, M, _), date(Y, M1, 1)) :- M < 12, !, M1 is M + 1.
+翌日(date(Y, 12, _), date(Y1, 1, 1)) :- Y1 is Y + 1.
+
+前日(date(Y, M, D), date(Y, M, D1)) :- D > 1, !, D1 is D - 1.
+前日(date(Y, M, 1), date(Y, M1, D1)) :- M > 1, !, M1 is M - 1, 月日数(Y, M1, D1).
+前日(date(Y, 1, 1), date(Y1, 12, 31)) :- Y1 is Y - 1.
+
+日付表示(date(Y, M, D), S) :- format(atom(S), '~w年~w月~w日', [Y, M, D]).
+
+%% ---- 曜日と休日（出訴期間の期限だけに使う。fufuku-prolog/rules/e_kikan.pl の 曜日 を写し、祝日と年末年始を足した）----
+% 2026-11-23 依頼書 決めたこと2-4：期限の休日は 7条（民事訴訟の例による）経由の民事訴訟法95条3項で数える（日曜日・土曜日・
+% 国民の祝日に関する法律に規定する休日・1月2日・1月3日・12月29日〜12月31日）。民事訴訟法・祝日法は行政事件訴訟法の本則の外なので、
+% 条文の原文は rules に入れず、計算だけをここに置く（木の約束事と about に1回ずつ書く）。fufuku は祝日・年末年始の暦を持たない形だった。
+% 祝日は今の国民の祝日に関する法律の決まり（2条の日・3条2項の振替休日・3条3項の休日）で数える。春分の日・秋分の日は毎年2月の官報で
+% 決まるので、1980〜2099年に当たる近似の式で数える（その外の年は春分の日・秋分の日を休日にしない）。2020年・2021年の特例（オリンピック）は見ない。
+% 曜日番号(日付, 0〜6)。坂本の式（1月・2月は前の年の年数で数える）。0 が日曜
+曜日番号(date(Y, M, D), N) :-
+    nth1(M, [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4], T),
+    ( M < 3 -> Y1 is Y - 1 ; Y1 = Y ),
+    N is (Y1 + Y1 // 4 - Y1 // 100 + Y1 // 400 + T + D) mod 7.
+
+曜日(D, W) :- 曜日番号(D, N), nth0(N, ['日', '月', '火', '水', '木', '金', '土'], W).
+
+% 月の第N月曜日の日
+第n月曜(Y, M, N, Day) :- 曜日番号(date(Y, M, 1), W1), Day is 1 + ((8 - W1) mod 7) + 7 * (N - 1).
+
+固定祝日(1, 1).   % 元日
+固定祝日(2, 11).  % 建国記念の日
+固定祝日(2, 23).  % 天皇誕生日
+固定祝日(4, 29).  % 昭和の日
+固定祝日(5, 3).   % 憲法記念日
+固定祝日(5, 4).   % みどりの日
+固定祝日(5, 5).   % こどもの日
+固定祝日(8, 11).  % 山の日
+固定祝日(11, 3).  % 文化の日
+固定祝日(11, 23). % 勤労感謝の日
+月曜祝日(1, 2).   % 成人の日（1月の第2月曜日）
+月曜祝日(7, 3).   % 海の日（7月の第3月曜日）
+月曜祝日(9, 3).   % 敬老の日（9月の第3月曜日）
+月曜祝日(10, 2).  % スポーツの日（10月の第2月曜日）
+
+春分日(Y, D) :- Y >= 1980, Y =< 2099, D is floor(20.8431 + 0.242194 * (Y - 1980)) - (Y - 1980) // 4.
+秋分日(Y, D) :- Y >= 1980, Y =< 2099, D is floor(23.2488 + 0.242194 * (Y - 1980)) - (Y - 1980) // 4.
+
+% 国民の祝日（祝日法2条の日）
+祝日(date(_, M, D)) :- 固定祝日(M, D), !.
+祝日(date(Y, M, D)) :- 月曜祝日(M, N), 第n月曜(Y, M, N, D0), D0 =:= D, !.
+祝日(date(Y, 3, D)) :- 春分日(Y, D0), D0 =:= D, !.
+祝日(date(Y, 9, D)) :- 秋分日(Y, D0), D0 =:= D.
+
+% 振替休日（祝日法3条2項）：祝日が日曜日に当たるときは、その後の最も近い祝日でない日
+振替休日(D) :- \+ 祝日(D), 前日(D, P), 日曜から続く祝日(P).
+日曜から続く祝日(P) :- 祝日(P), ( 曜日番号(P, 0) -> true ; 前日(P, Q), 日曜から続く祝日(Q) ).
+% 国民の休日（祝日法3条3項）：前日と翌日が祝日の日（祝日でない日に限る）
+国民の休日(D) :- \+ 祝日(D), 前日(D, P), 祝日(P), 翌日(D, N), 祝日(N).
+% 年末年始（民事訴訟法95条3項の「一月二日、一月三日又は十二月二十九日から十二月三十一日までの日」）
+年末年始(date(_, 12, D)) :- D >= 29.
+年末年始(date(_, 1, D)) :- D =< 3.
+
+休日(D) :- 曜日番号(D, N), ( N =:= 0 ; N =:= 6 ), !.
+休日(D) :- 年末年始(D), !.
+休日(D) :- 祝日(D), !.
+休日(D) :- 振替休日(D), !.
+休日(D) :- 国民の休日(D).
+
+% 最終日が休日なら、休日でない次の日まで後ろへずらす
+休日でない日(D, E) :- 休日(D), !, 翌日(D, N), 休日でない日(N, E).
+休日でない日(D, D).
+
+%% ---- 理由の語をつなぐ ----
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---- 木の部品 ----
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+原文規定(Art, X) :- 原文(Art, W), 規定(Art, W, X).
+約束(X, t(ok, X, '@約束事', [])).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（行政事件訴訟法の条文にないもの）
+%
+%   ① 期間の起算日と最終日の数え方。14条は「知つた日から」「処分又は裁決の日から」で、起算日（翌日か当日か）も最終日も書いていない。
+%      7条は民事訴訟の例によるとする（日付の入った期間の段の木に付ける。8条2項1号の三箇月にも付ける）。
+%   ② 期限が休日に当たるときに、休日でない次の日へずらすこと。7条経由の民事訴訟法95条3項（2026-11-23 依頼書 決めたこと2-4。
+%      でんすけが e-Gov 法令API で原文を読んだ）。民事訴訟法は行政事件訴訟法の本則の外なので rules/ の条文にせず、
+%      箱の期限が休日でずれたとき、その期間の段の木に、どの日からどの日にずれたかを書いて付ける（e_kikan.pl の 期間の葉）。
+%   ③ 条の場面の外にあるという答えは、反対の結論を言うものではない（「出訴期間の定めがありません」「執行停止の定めがありません」の段に付ける。
+%      文は fufuku-prolog・kokubai-prolog の 場面外の約束 と同じ）。
+%   2026-11-23 前の約束事のうち 当否の約束・前置の定めの約束・号の当否の約束・管轄の約束・正当な理由の約束・止める手段の約束 を消した。
+%   6つとも「判定しない・調べていない」の断りで、条文に無い決めごとではないため（REVIEW_RULES A5・D1）。法律上の利益・重大な損害・
+%   他に適当な方法・相当の期間・緊急の必要・正当な理由は欄名に「（あなたの考え）」と書いて聞き、断り書きは about の「判定について」へ移した。
+%   最終日の約束 から「1日ずれることがある」を外し、about へ移した（回答ファイル「今の形」4）。
+%   ④ 審査請求を却下する裁決があったときに、処分の取消しの訴えの期間を14条3項で数えず、14条1項・2項で数えること（2026-11-23 LLMレビュー ②）。
+%      最高裁昭和56年2月24日第三小法廷判決（昭和53(行ツ)51）「再審の請求自体が不適法であつて、再審事由の存否についての実体的判断が
+%      されることなく再審の請求が却下されたときは、行政事件訴訟法一四条四項の規定を適用する余地はない」（当時の14条4項が今の14条3項）。
+%      でんすけが裁判所の全文PDFで原文を読んだ（11月23日）。判決は条文ではないので rules/ の原文にせず、ここに置き、木と about に判決名を書く。
+%      結論の箱には判決名を書かない（REVIEW_RULES A1）。
+%   ⑤ 前置の定め（8条1項ただし書）があって、審査請求を却下する裁決があったときに、「審査請求に対する裁決を経た」と読まないこと
+%      （2026-11-23 LLMレビュー・案A）。適法な審査請求を誤って却下したときも同じに読む。却下が誤っていたかは条文からは決まらないため。
+%      判例名は書かない（判決文を読んでいないため）。8条の段が 裁決必要 になった木に付ける（h_hantei.pl の 段の約束）。結論の箱には書かない（A1）。
+
+最終日の約束(X) :-
+    約束('起算日は知った日（処分又は裁決の日）の翌日とし、最終日は起算日に応当する日の前日として数える（14条は「知つた日から」で、数え方を書いていない。7条は民事訴訟の例によるとする）', X).
+
+% 休日の約束(休日でずらす前の最終日, ずらした期限, 木の行)
+休日の約束(E0, E, X) :-
+    日付表示(E0, S0), 曜日(E0, W0), 日付表示(E, S), 曜日(E, W),
+    format(atom(T), '最終日 ~w（~w）が休日に当たるので、期限は、休日でない次の日の ~w（~w）とする（7条で民事訴訟の例により、民事訴訟法95条3項。休日は日曜日・土曜日・国民の祝日に関する法律に規定する休日・1月2日・1月3日・12月29日〜12月31日）', [S0, W0, S, W]),
+    約束(T, X).
+
+却下の約束(X) :-
+    約束('審査請求を却下する裁決があったときは、処分の取消しの訴えの出訴期間を、14条3項で裁決から数えず、14条1項・2項で処分から数える（最高裁昭和56年2月24日第三小法廷判決。不服申立てが不適法で、実体的判断をせずに却下されたときは、当時の14条4項（今の14条3項）を適用する余地はないとした）', X).
+
+前置却下の約束(X) :-
+    約束('前置の定めがあるときは、審査請求を却下した裁決を、8条1項ただし書の「審査請求に対する裁決を経た」に当たると読まない（適法な審査請求を誤って却下したときも同じに読む。却下が誤っていたかは条文からは決まらないため）', X).
+
+場面外の約束(X) :-
+    約束('条の場面の外にあるという答えは、反対の結論を言うものではない', X).
+</script>
+<script type="text/prolog" data-name="rules_a_genbun.pl">% rules/a_genbun.pl — 判定に使う条文の原文（law/gyosos.xml の本則のまま）
+%
+%   原文(条, 文)。test/page_test.mjs が XML を別に読み、全行が一字一句一致するかを確かめる。
+%   11条1項の号・37条の3第3項の号のように XML で欄（Column）が分かれている号は、全角の空白でつないでいる。
+%   37条の3第3項は Sentence が2つあって本文・ただし書に分かれないので、続けて1行にしている。
+%   2026-11-23 4条〜6条（当事者訴訟・民衆訴訟・機関訴訟の定義）・38条2項・44条・46条の行を外した。どれも結論の箱に出す段が無くなった
+%   （44条・46条は依頼書 決めたこと2-2で箱に出さず、about の「収録範囲」に1行ずつ書く。4条〜6条は前の結果の下の NOTE にだけ使っていた）。
+%   8条2項（柱書き）・25条2項ただし書・37条の3第1項（柱書き）を足した。8条2項の各号・37条の3第1項の各号の木に柱書きを置き、
+%   25条2項のただし書を落とさないため（依頼書 ④）。1条は木と根拠条文から外し、about の「収録範囲」だけで使う（fufuku-prolog の1条2項と同じ）。
+
+原文('1条', '行政事件訴訟については、他の法律に特別の定めがある場合を除くほか、この法律の定めるところによる。').
+
+原文('3条2項', 'この法律において「処分の取消しの訴え」とは、行政庁の処分その他公権力の行使に当たる行為（次項に規定する裁決、決定その他の行為を除く。以下単に「処分」という。）の取消しを求める訴訟をいう。').
+原文('3条3項', 'この法律において「裁決の取消しの訴え」とは、審査請求その他の不服申立て（以下単に「審査請求」という。）に対する行政庁の裁決、決定その他の行為（以下単に「裁決」という。）の取消しを求める訴訟をいう。').
+原文('3条4項', 'この法律において「無効等確認の訴え」とは、処分若しくは裁決の存否又はその効力の有無の確認を求める訴訟をいう。').
+原文('3条5項', 'この法律において「不作為の違法確認の訴え」とは、行政庁が法令に基づく申請に対し、相当の期間内に何らかの処分又は裁決をすべきであるにかかわらず、これをしないことについての違法の確認を求める訴訟をいう。').
+原文('3条6項1号', '行政庁が一定の処分をすべきであるにかかわらずこれがされないとき（次号に掲げる場合を除く。）。').
+原文('3条6項2号', '行政庁に対し一定の処分又は裁決を求める旨の法令に基づく申請又は審査請求がされた場合において、当該行政庁がその処分又は裁決をすべきであるにかかわらずこれがされないとき。').
+原文('3条7項', 'この法律において「差止めの訴え」とは、行政庁が一定の処分又は裁決をすべきでないにかかわらずこれがされようとしている場合において、行政庁がその処分又は裁決をしてはならない旨を命ずることを求める訴訟をいう。').
+
+原文('7条', '行政事件訴訟に関し、この法律に定めがない事項については、民事訴訟の例による。').
+
+原文('8条1項本文', '処分の取消しの訴えは、当該処分につき法令の規定により審査請求をすることができる場合においても、直ちに提起することを妨げない。').
+原文('8条1項ただし書', 'ただし、法律に当該処分についての審査請求に対する裁決を経た後でなければ処分の取消しの訴えを提起することができない旨の定めがあるときは、この限りでない。').
+原文('8条2項', '前項ただし書の場合においても、次の各号の一に該当するときは、裁決を経ないで、処分の取消しの訴えを提起することができる。').
+原文('8条2項1号', '審査請求があつた日から三箇月を経過しても裁決がないとき。').
+原文('8条2項2号', '処分、処分の執行又は手続の続行により生ずる著しい損害を避けるため緊急の必要があるとき。').
+原文('8条2項3号', 'その他裁決を経ないことにつき正当な理由があるとき。').
+原文('8条3項', '第一項本文の場合において、当該処分につき審査請求がされているときは、裁判所は、その審査請求に対する裁決があるまで（審査請求があつた日から三箇月を経過しても裁決がないときは、その期間を経過するまで）、訴訟手続を中止することができる。').
+
+原文('9条1項', '処分の取消しの訴え及び裁決の取消しの訴え（以下「取消訴訟」という。）は、当該処分又は裁決の取消しを求めるにつき法律上の利益を有する者（処分又は裁決の効果が期間の経過その他の理由によりなくなつた後においてもなお処分又は裁決の取消しによつて回復すべき法律上の利益を有する者を含む。）に限り、提起することができる。').
+
+原文('10条2項', '処分の取消しの訴えとその処分についての審査請求を棄却した裁決の取消しの訴えとを提起することができる場合には、裁決の取消しの訴えにおいては、処分の違法を理由として取消しを求めることができない。').
+
+原文('11条1項', '処分又は裁決をした行政庁（処分又は裁決があつた後に当該行政庁の権限が他の行政庁に承継されたときは、当該他の行政庁。以下同じ。）が国又は公共団体に所属する場合には、取消訴訟は、次の各号に掲げる訴えの区分に応じてそれぞれ当該各号に定める者を被告として提起しなければならない。').
+原文('11条1項1号', '処分の取消しの訴え　当該処分をした行政庁の所属する国又は公共団体').
+原文('11条1項2号', '裁決の取消しの訴え　当該裁決をした行政庁の所属する国又は公共団体').
+原文('11条2項', '処分又は裁決をした行政庁が国又は公共団体に所属しない場合には、取消訴訟は、当該行政庁を被告として提起しなければならない。').
+原文('11条3項', '前二項の規定により被告とすべき国若しくは公共団体又は行政庁がない場合には、取消訴訟は、当該処分又は裁決に係る事務の帰属する国又は公共団体を被告として提起しなければならない。').
+原文('11条4項', '第一項又は前項の規定により国又は公共団体を被告として取消訴訟を提起する場合には、訴状には、民事訴訟の例により記載すべき事項のほか、次の各号に掲げる訴えの区分に応じてそれぞれ当該各号に定める行政庁を記載するものとする。').
+
+原文('12条1項', '取消訴訟は、被告の普通裁判籍の所在地を管轄する裁判所又は処分若しくは裁決をした行政庁の所在地を管轄する裁判所の管轄に属する。').
+原文('12条2項', '土地の収用、鉱業権の設定その他不動産又は特定の場所に係る処分又は裁決についての取消訴訟は、その不動産又は場所の所在地の裁判所にも、提起することができる。').
+原文('12条3項', '取消訴訟は、当該処分又は裁決に関し事案の処理に当たつた下級行政機関の所在地の裁判所にも、提起することができる。').
+原文('12条4項', '国又は独立行政法人通則法（平成十一年法律第百三号）第二条第一項に規定する独立行政法人若しくは別表に掲げる法人を被告とする取消訴訟は、原告の普通裁判籍の所在地を管轄する高等裁判所の所在地を管轄する地方裁判所（次項において「特定管轄裁判所」という。）にも、提起することができる。').
+
+原文('14条1項本文', '取消訴訟は、処分又は裁決があつたことを知つた日から六箇月を経過したときは、提起することができない。').
+原文('14条1項ただし書', 'ただし、正当な理由があるときは、この限りでない。').
+原文('14条2項本文', '取消訴訟は、処分又は裁決の日から一年を経過したときは、提起することができない。').
+原文('14条2項ただし書', 'ただし、正当な理由があるときは、この限りでない。').
+原文('14条3項本文', '処分又は裁決につき審査請求をすることができる場合又は行政庁が誤つて審査請求をすることができる旨を教示した場合において、審査請求があつたときは、処分又は裁決に係る取消訴訟は、その審査請求をした者については、前二項の規定にかかわらず、これに対する裁決があつたことを知つた日から六箇月を経過したとき又は当該裁決の日から一年を経過したときは、提起することができない。').
+原文('14条3項ただし書', 'ただし、正当な理由があるときは、この限りでない。').
+
+原文('15条1項', '取消訴訟において、原告が故意又は重大な過失によらないで被告とすべき者を誤つたときは、裁判所は、原告の申立てにより、決定をもつて、被告を変更することを許すことができる。').
+
+原文('25条1項', '処分の取消しの訴えの提起は、処分の効力、処分の執行又は手続の続行を妨げない。').
+原文('25条2項本文', '処分の取消しの訴えの提起があつた場合において、処分、処分の執行又は手続の続行により生ずる重大な損害を避けるため緊急の必要があるときは、裁判所は、申立てにより、決定をもつて、処分の効力、処分の執行又は手続の続行の全部又は一部の停止（以下「執行停止」という。）をすることができる。').
+原文('25条2項ただし書', 'ただし、処分の効力の停止は、処分の執行又は手続の続行の停止によつて目的を達することができる場合には、することができない。').
+原文('25条4項', '執行停止は、公共の福祉に重大な影響を及ぼすおそれがあるとき、又は本案について理由がないとみえるときは、することができない。').
+
+原文('29条', '前四条の規定は、裁決の取消しの訴えの提起があつた場合における執行停止に関する事項について準用する。').
+
+原文('36条', '無効等確認の訴えは、当該処分又は裁決に続く処分により損害を受けるおそれのある者その他当該処分又は裁決の無効等の確認を求めるにつき法律上の利益を有する者で、当該処分若しくは裁決の存否又はその効力の有無を前提とする現在の法律関係に関する訴えによつて目的を達することができないものに限り、提起することができる。').
+
+原文('37条', '不作為の違法確認の訴えは、処分又は裁決についての申請をした者に限り、提起することができる。').
+
+原文('37条の2第1項', '第三条第六項第一号に掲げる場合において、義務付けの訴えは、一定の処分がされないことにより重大な損害を生ずるおそれがあり、かつ、その損害を避けるため他に適当な方法がないときに限り、提起することができる。').
+原文('37条の2第3項', '第一項の義務付けの訴えは、行政庁が一定の処分をすべき旨を命ずることを求めるにつき法律上の利益を有する者に限り、提起することができる。').
+
+原文('37条の3第1項', '第三条第六項第二号に掲げる場合において、義務付けの訴えは、次の各号に掲げる要件のいずれかに該当するときに限り、提起することができる。').
+原文('37条の3第1項1号', '当該法令に基づく申請又は審査請求に対し相当の期間内に何らの処分又は裁決がされないこと。').
+原文('37条の3第1項2号', '当該法令に基づく申請又は審査請求を却下し又は棄却する旨の処分又は裁決がされた場合において、当該処分又は裁決が取り消されるべきものであり、又は無効若しくは不存在であること。').
+原文('37条の3第2項', '前項の義務付けの訴えは、同項各号に規定する法令に基づく申請又は審査請求をした者に限り、提起することができる。').
+原文('37条の3第3項', '第一項の義務付けの訴えを提起するときは、次の各号に掲げる区分に応じてそれぞれ当該各号に定める訴えをその義務付けの訴えに併合して提起しなければならない。この場合において、当該各号に定める訴えに係る訴訟の管轄について他の法律に特別の定めがあるときは、当該義務付けの訴えに係る訴訟の管轄は、第三十八条第一項において準用する第十二条の規定にかかわらず、その定めに従う。').
+原文('37条の3第3項1号', '第一項第一号に掲げる要件に該当する場合　同号に規定する処分又は裁決に係る不作為の違法確認の訴え').
+原文('37条の3第3項2号', '第一項第二号に掲げる要件に該当する場合　同号に規定する処分又は裁決に係る取消訴訟又は無効等確認の訴え').
+原文('37条の3第7項', '第一項の義務付けの訴えのうち、行政庁が一定の裁決をすべき旨を命ずることを求めるものは、処分についての審査請求がされた場合において、当該処分に係る処分の取消しの訴え又は無効等確認の訴えを提起することができないときに限り、提起することができる。').
+
+原文('37条の4第1項本文', '差止めの訴えは、一定の処分又は裁決がされることにより重大な損害を生ずるおそれがある場合に限り、提起することができる。').
+原文('37条の4第1項ただし書', 'ただし、その損害を避けるため他に適当な方法があるときは、この限りでない。').
+原文('37条の4第3項', '差止めの訴えは、行政庁が一定の処分又は裁決をしてはならない旨を命ずることを求めるにつき法律上の利益を有する者に限り、提起することができる。').
+
+原文('37条の5第1項', '義務付けの訴えの提起があつた場合において、その義務付けの訴えに係る処分又は裁決がされないことにより生ずる償うことのできない損害を避けるため緊急の必要があり、かつ、本案について理由があるとみえるときは、裁判所は、申立てにより、決定をもつて、仮に行政庁がその処分又は裁決をすべき旨を命ずること（以下この条において「仮の義務付け」という。）ができる。').
+原文('37条の5第2項', '差止めの訴えの提起があつた場合において、その差止めの訴えに係る処分又は裁決がされることにより生ずる償うことのできない損害を避けるため緊急の必要があり、かつ、本案について理由があるとみえるときは、裁判所は、申立てにより、決定をもつて、仮に行政庁がその処分又は裁決をしてはならない旨を命ずること（以下この条において「仮の差止め」という。）ができる。').
+原文('37条の5第3項', '仮の義務付け又は仮の差止めは、公共の福祉に重大な影響を及ぼすおそれがあるときは、することができない。').
+
+原文('38条1項', '第十一条から第十三条まで、第十六条から第十九条まで、第二十一条から第二十三条まで、第二十四条、第三十三条及び第三十五条の規定は、取消訴訟以外の抗告訴訟について準用する。').
+原文('38条3項', '第二十三条の二、第二十五条から第二十九条まで及び第三十二条第二項の規定は、無効等確認の訴えについて準用する。').
+原文('38条4項', '第八条及び第十条第二項の規定は、不作為の違法確認の訴えに準用する。').
+</script>
+<script type="text/prolog" data-name="rules_b_uttae.pl">% rules/b_uttae.pl — 立つ訴え（3条2項〜7項と、9条1項・36条・37条・37条の2・37条の3・37条の4の要件）・10条2項：1〜7・12〜14・16の欄
+%
+%   2026-11-23 16の欄を「訴えを提起する日」にした（LLMレビュー①・案A）。37条の3第7項と、申請型の義務付けの併合（37条の3第3項2号）は、
+%   処分の取消しの訴え・裁決の取消しの訴えが期限を過ぎたか（rules/e_kikan.pl の 処分取消しが提起できる・裁決取消しが提起できる）で決める。
+%   2026-11-23 前置の定めがあって審査請求を却下する裁決で止まった組も、処分の取消しの訴えは提起できないと読む（その5・案B。7項は「提起できるので」を出さない）。
+%   2026-11-23 前置の定めがあって審査請求をしていない組・裁決がまだの組も同じに読む（その6。申請型の義務付けは無効等確認の訴えが立たなければ立たない）。
+%   2026-11-23 訴えの形を「何が起きているか」×「求めること」で先に1つ選ばせる作り（段1）と、要件の段（段2）をやめた（REVIEW_RULES C4・C5。案A）。
+%   1と2の欄（申請をしたか・行政庁がしたこと）から立つ訴えを全部出し、訴えごとに1段にする（fufuku-prolog で再調査の請求と審査請求を両方出したのと同じ）。
+%   立つ訴えの表（回答ファイル案A）：
+%     2が処分             → 処分の取消し・無効等確認（12か13に日付があれば裁決の取消し、裁決の内容が棄却・却下なら裁決の義務付けも）
+%     2が却下棄却         → 上に加えて申請型の義務付け（1が「していない」なら37条の3第2項で提起できない）
+%     2が不作為           → 1が「した」：不作為の違法確認・申請型の義務付け／1が「していない」：非申請型の義務付け（不作為の違法確認は37条で提起できない）
+%     2がされようとしている → 差止め
+%   処分の取消しの訴え・裁決の取消しの訴えが立つときは、段を立てず、期間の段（e_kikan.pl）と前置の段（c_zenchi.pl）が答える
+%   （「処分の取消しの訴えは、◯年◯月◯日までに提起できます」の1行で、立つことと期限を言う）。立たないときだけ、ここで「提起できません」の段を出す。
+%   依頼書 ⑤：当たらないときの答えは要件の否定で写さず、欠けた語を主語に立てて「〜ので、〜は提起できません」と書く。
+%   要件が2つ以上欠けたときは、条の順で最初の1つを言う（37条の2第1項の損害→他に適当な方法→第3項の法律上の利益）。
+%   状態 = 無効確認可 | 不作為確認可 | 申請型義務付け可 | 裁決義務付け可 | 非申請義務付け可 | 差止め可 | 要件に当たらない | 原処分主義
+%   要件に当たらない段は、ほかの訴えが1つでも立てば箱の最後（組の番号4）、1つも立たなければ h_hantei の 全部の段 が 提起できる訴えなし に替えて先頭に出す。
+%   前の「〜という入力です」「当否はアプリで判定しません」「（「求めること」を変えると出ます）」「それが取り消されるべきものか…は判定しません」は外した（A2・A5）。
+%   原文の「その処分」「当該処分」「その損害」は、指すものの名詞（処分・重大な損害）で書く（A6）。
+
+訴えの段(C, L) :-
+    findall(S, 訴えの一段(C, S), L).
+
+訴えの一段(C, S) :- 処分の場合(C), 処分の訴え(C, S).
+訴えの一段(C, S) :- 欄(行為, C, 不作為), 不作為の訴え(C, S).
+訴えの一段(C, S) :- 欄(行為, C, されようとしている), 差止めの訴え(C, S).
+
+%% ---- 処分（申請を却下し又は棄却する処分を含む）----
+% 処分の取消しの訴え：立たないときだけ段を出す（立つときは期間の段が答える）
+処分の訴え(C, s(torikeshi, '処分の取消しの訴え（9条1項）', 段(要件に当たらない, '法律上の利益を有しないので、処分の取消しの訴えは提起できません。', ['9条1項'], ['3条2項']))) :-
+    欄(利益, C, 有しない).
+処分の訴え(C, s(saitori, '裁決の取消しの訴え（9条1項）', 段(要件に当たらない, '法律上の利益を有しないので、裁決の取消しの訴えは提起できません。', ['9条1項'], ['3条3項']))) :-
+    裁決がある(C), 欄(利益, C, 有しない).
+処分の訴え(C, s(mukou, '無効等確認の訴え（36条）', S)) :-
+    無効の段(C, S).
+処分の訴え(C, s(gimu, '申請型の義務付けの訴え（37条の3）', S)) :-
+    欄(行為, C, 却下棄却), 申請型の段(C, S).
+処分の訴え(C, s(saigimu, '裁決をすべき旨を命ずる義務付けの訴え（37条の3第7項）', S)) :-
+    裁決の義務付けの場合(C), 裁決義務付けの段(C, S).
+
+% 3条4項は「処分若しくは裁決の存否又はその効力の有無」。裁決があれば、裁決の無効等確認の訴えも同じ行で言う
+無効の段(C, 段(無効確認可, M, ['3条4項', '36条'], [])) :-
+    無効が立つ(C), !,
+    無効の対象(C, N),
+    format(atom(M), '~wの無効等確認の訴えを提起できます。', [N]).
+無効の段(C, 段(要件に当たらない, '法律上の利益を有しないので、無効等確認の訴えは提起できません。', ['36条'], ['3条4項'])) :-
+    欄(利益, C, 有しない), !.
+無効の段(_, 段(要件に当たらない, '処分若しくは裁決の存否又は効力の有無を前提とする現在の法律関係に関する訴えによって目的を達することができるので、無効等確認の訴えは提起できません。', ['36条'], ['3条4項'])).
+
+無効の対象(C, '処分又は裁決') :- 裁決がある(C), !.
+無効の対象(_, '処分').
+
+% 37条の3第1項2号（却下し又は棄却する処分）。併合する訴え（37条の3第3項2号）は処分の取消しの訴え又は無効等確認の訴え
+申請型の段(C, 段(要件に当たらない, '法令に基づく申請をしていないので、義務付けの訴えは提起できません。', ['37条の3第2項'], ['3条6項2号'])) :-
+    欄(申請, C, していない), !.
+申請型の段(C, 段(申請型義務付け可, '処分をすべき旨を命ずることを求める義務付けの訴えを提起できます。処分の取消しの訴え又は無効等確認の訴えを併合して提起します。', ['3条6項2号', '37条の3第1項2号', '37条の3第3項2号'], ['37条の3第1項', '37条の3第2項', '37条の3第3項'])) :-
+    申請型が立つ(C), !.
+% 前置の定めがあって裁決を経ておらず（審査請求をしていない・裁決がまだ・却下する裁決があった）、8条2項2号・3号に当たらない
+% （処分の取消しの訴えは裁決を経ていないので提起できない）。無効等確認の訴えも立たない（37条の3第3項2号の併合ができない）。
+% 2026-11-23 その5・案B（却下）、その6で前置で止まる組全部に広げた（文に「却下」の語が無く、3つの組のどれにも当たるので、文は分けない）。
+% 下の節の「期間を経過し」は、この組では当たらないので先に答える
+申請型の段(C, 段(要件に当たらない, '裁決を経た後でなければ処分の取消しの訴えは提起できず、無効等確認の訴えも提起できないので、義務付けの訴えは提起できません。', ['37条の3第3項2号', '8条1項ただし書'], ['37条の3第1項2号', '36条'])) :-
+    欄(利益, C, 有する), 前置で止まる(C), !.
+% 法律上の利益を有するが、処分の取消しの訴えの期限を過ぎ、無効等確認の訴えも立たない（37条の3第3項2号の併合ができない）
+申請型の段(C, 段(要件に当たらない, '処分の取消しの訴えの期間を経過し、無効等確認の訴えも提起できないので、義務付けの訴えは提起できません。', ['37条の3第3項2号'], ['37条の3第1項2号', '36条'])) :-
+    欄(利益, C, 有する), !.
+申請型の段(_, 段(要件に当たらない, '法律上の利益を有しないので、併合して提起する処分の取消しの訴えも無効等確認の訴えも提起できず、義務付けの訴えは提起できません。', ['37条の3第3項2号'], ['37条の3第1項2号', '9条1項', '36条'])).
+
+% 37条の3第7項：処分についての審査請求を却下し又は棄却する裁決があったとき。処分の取消しの訴え又は無効等確認の訴えを提起できるかは、
+% 16の欄の日で処分の取消しの訴えの期限を過ぎたかと、無効が立つ で決める（2026-11-23 LLMレビュー①。前は16の欄で本人の考えを聞いていて、
+% 例13 で箱の「処分の取消しの訴えは…提起できます」と食い違った）。
+% 法律上の利益を有しないときは、先に答える（「提起できるので」と出て、同じ箱の「提起できません」と食い違う。依頼書 ⑥）
+裁決義務付けの段(C, 段(要件に当たらない, '法律上の利益を有しないので、併合して提起する裁決の取消しの訴えも無効等確認の訴えも提起できず、裁決をすべき旨を命ずることを求める義務付けの訴えは提起できません。', ['37条の3第3項2号'], ['37条の3第7項', '9条1項', '36条'])) :-
+    欄(利益, C, 有しない), !.
+裁決義務付けの段(C, 段(裁決義務付け可, '裁決をすべき旨を命ずることを求める義務付けの訴えを提起できます。裁決の取消しの訴え又は無効等確認の訴えを併合して提起します。', ['37条の3第7項', '37条の3第3項2号'], ['3条6項2号', '37条の3第1項2号'])) :-
+    裁決義務付けが立つ(C), !.
+裁決義務付けの段(C, 段(要件に当たらない, '処分の取消しの訴え又は無効等確認の訴えを提起できるので、裁決をすべき旨を命ずることを求める義務付けの訴えは提起できません。', ['37条の3第7項'], [])) :-
+    ( 処分取消しが提起できる(C) ; 無効が立つ(C) ), !.
+% 処分の取消しの訴えも裁決の取消しの訴えも期限を過ぎ、無効等確認の訴えも立たない（37条の3第3項2号の併合ができない）
+裁決義務付けの段(_, 段(要件に当たらない, '裁決の取消しの訴えの期間を経過し、無効等確認の訴えも提起できないので、裁決をすべき旨を命ずることを求める義務付けの訴えは提起できません。', ['37条の3第3項2号'], ['37条の3第7項', '36条'])).
+
+%% ---- まだ処分をしていない ----
+不作為の訴え(C, s(fusakui, '不作為の違法確認の訴え（3条5項・37条）', S)) :- 不作為確認の段(C, S).
+不作為の訴え(C, s(gimu, '申請型の義務付けの訴え（37条の3）', S)) :- 欄(申請, C, した), 不作為の義務付けの段(C, S).
+不作為の訴え(C, s(hishinsei, '非申請型の義務付けの訴え（37条の2）', S)) :- 欄(申請, C, していない), 非申請の段(C, S).
+
+不作為確認の段(C, 段(要件に当たらない, '法令に基づく申請をしていないので、不作為の違法確認の訴えは提起できません。', ['37条'], ['3条5項'])) :-
+    欄(申請, C, していない), !.
+不作為確認の段(C, 段(要件に当たらない, '申請から相当の期間が経過していないので、不作為の違法確認の訴えは提起できません。', ['3条5項'], [])) :-
+    欄(相当の期間, C, 経過していない), !.
+不作為確認の段(_, 段(不作為確認可, '不作為の違法確認の訴えを提起できます。', ['3条5項', '37条'], [])).
+
+% 37条の3第1項1号（相当の期間内に何らの処分もされない）。併合する訴え（37条の3第3項1号）は不作為の違法確認の訴え
+不作為の義務付けの段(C, 段(要件に当たらない, '申請から相当の期間が経過していないので、義務付けの訴えは提起できません。', ['37条の3第1項1号'], ['37条の3第1項'])) :-
+    欄(相当の期間, C, 経過していない), !.
+不作為の義務付けの段(_, 段(申請型義務付け可, '処分をすべき旨を命ずることを求める義務付けの訴えを提起できます。不作為の違法確認の訴えを併合して提起します。', ['3条6項2号', '37条の3第1項1号', '37条の3第3項1号'], ['37条の3第1項', '37条の3第2項', '37条の3第3項'])).
+
+% 3条6項1号（申請をしていない）・37条の2
+非申請の段(C, 段(非申請義務付け可, '処分をすべき旨を命ずることを求める義務付けの訴えを提起できます。', ['3条6項1号', '37条の2第1項', '37条の2第3項'], [])) :-
+    非申請が立つ(C), !.
+非申請の段(C, 段(要件に当たらない, '処分がされないことにより重大な損害を生ずるおそれがないので、義務付けの訴えは提起できません。', ['37条の2第1項'], ['3条6項1号'])) :-
+    欄(損害, C, ない), !.
+非申請の段(C, 段(要件に当たらない, '重大な損害を避けるため他に適当な方法があるので、義務付けの訴えは提起できません。', ['37条の2第1項'], ['3条6項1号'])) :-
+    欄(他の方法, C, ある), !.
+非申請の段(_, 段(要件に当たらない, '法律上の利益を有しないので、義務付けの訴えは提起できません。', ['37条の2第3項'], ['3条6項1号'])).
+
+%% ---- 処分又は裁決がされようとしている ----
+差止めの訴え(C, s(sashitome, '差止めの訴え（37条の4）', S)) :- 差止めの段(C, S).
+
+% 37条の4第1項ただし書「その損害を避けるため他に適当な方法があるときは、この限りでない」を落とさない（依頼書 ④。立つときは木の葉に置く）
+差止めの段(C, 段(差止め可, '処分又は裁決をしてはならない旨を命ずることを求める差止めの訴えを提起できます。', ['3条7項', '37条の4第1項本文', '37条の4第3項'], ['37条の4第1項ただし書'])) :-
+    差止めが立つ(C), !.
+差止めの段(C, 段(要件に当たらない, '処分又は裁決がされることにより重大な損害を生ずるおそれがないので、差止めの訴えは提起できません。', ['37条の4第1項本文'], ['3条7項'])) :-
+    欄(損害, C, ない), !.
+差止めの段(C, 段(要件に当たらない, '重大な損害を避けるため他に適当な方法があるので、差止めの訴えは提起できません。', ['37条の4第1項ただし書'], ['3条7項'])) :-
+    欄(他の方法, C, ある), !.
+差止めの段(_, 段(要件に当たらない, '法律上の利益を有しないので、差止めの訴えは提起できません。', ['37条の4第3項'], ['3条7項'])).
+
+%% ---- 10条2項（原処分主義）----
+% 「処分の取消しの訴えとその処分についての審査請求を棄却した裁決の取消しの訴えとを提起することができる場合」。却下・そのほかの裁決には当たらない（⑦）
+% 裁決の取消しの訴えの期限を過ぎたときは出さない（2026-11-23 LLMレビュー①）
+原処分の段(C, [s(genshobun, '裁決の取消しの訴えで求められること（10条2項）', 段(原処分主義, '裁決の取消しの訴えでは、処分の違法を理由として取消しを求めることができません。', ['10条2項'], []))]) :-
+    裁決取消しが提起できる(C), 欄(裁決の内容, C, 棄却), !.
+原処分の段(_, []).
+</script>
+<script type="text/prolog" data-name="rules_c_zenchi.pl">% rules/c_zenchi.pl — 8条（審査請求との関係。不作為の違法確認の訴えは38条4項で準用）：10〜13・15の欄
+%
+%   状態 = 直ちに | 裁決必要 | 裁決不要 | 裁決済み ／ 8条2項1号の日の状態 = 三箇月の日（裁決必要で、11に日付があるとき）
+%   2026-11-23 前の「審査請求」の欄（sj の なし・裁決待ち・裁決あり）と「号」の欄（go）をやめ、11〜13の日付と15の欄で状態を決める形にした（C1・C5）。
+%   「三箇月を経過しても裁決がない」（8条2項1号）は、利用者に数えさせず、11の日付から最終日を計算して「◯年◯月◯日を過ぎても」と言う
+%   （fufuku-prolog の 三月の日 と同じ。行政庁の側の期間なので、曜日と休日は付けない）。
+%   段を出すのは、処分の取消しの訴えか不作為の違法確認の訴えが立つとき（8条は処分の取消しの訴えの定め、38条4項で不作為の違法確認の訴えに準用）。
+%   前の「前置対象外」の段（裁決の取消し・無効等確認・義務付け・差止めには当たりません）と「判定しない」の段は消し、段を出さない形にした（A5）。
+%   前の「〜という入力なので」「「緊急の必要」「正当な理由」の当否はアプリで判定しません」は外し、about の「判定について」へ移した（A2・A5）。
+%   8条1項ただし書（この限りでない）と8条2項（柱書き）は、木の原文の葉に置く（依頼書 ④）。
+%   2026-11-23 定めがあって審査請求を却下する裁決があったときは、裁決済み にせず 裁決必要 にした（LLMレビュー・案A。前は12・13の日付だけで
+%   「裁決を経たので、…を提起できます」と答えていた）。却下が誤っていたかは条文からは決まらないので、アプリの約束事として木と about に書く。
+%   2026-11-23 この組では14条の段を出さない（rules/e_kikan.pl の 処分の期間の段。LLMレビュー その5・案B）。8条の段の文は変えていない。
+
+前置の段(C, L) :-
+    前置の訴え(C, N, As0), !,
+    前置の結論(C, N, As0, L).
+前置の段(_, []).
+
+% 処分の取消しの訴えが期限を過ぎたとき（16の欄の日。rules/e_kikan.pl）は、8条の段を出さない（期間の段が「提起できません」と答える。2026-11-23 LLMレビュー①）
+% 処分取消しが提起できる は前置で止まる組で成り立たない（その5・案B、その6）ので、ここでは期限だけを見る 処分取消しが期限内 で決める（8条の段が消えないように）
+% 2026-11-23 前置×却下の裁決で、16の欄の日が処分の期限より後の組も、8条の段を出す（その6。前は箱に処分の取消しの訴えの行が1つも無かった。
+% 前置×却下なら期限に関係なく裁決を経ていないので、8条の「裁決を経た後でなければ…提起できません」で答える。14条の段は出さないまま）
+前置の訴え(C, '処分の取消しの訴え', []) :- ( 処分取消しが期限内(C) ; 前置却下で止まる(C), 処分取消しが立つ(C) ), !.
+前置の訴え(C, '不作為の違法確認の訴え', ['38条4項']) :- 不作為確認が立つ(C).
+
+% 定めがない：8条1項本文。裁決があったあとは、審査請求との関係を言う段を出さない（期間の段が14条3項で答える）
+前置の結論(C, _, _, []) :-
+    欄(前置の定め, C, ない), 裁決がある(C), !.
+前置の結論(C, N, As0, [s(zenchi, '審査請求との関係（8条）', 段(直ちに, M, ['8条1項本文'|As0], ['8条1項ただし書', '8条3項']))]) :-
+    欄(前置の定め, C, ない), 審査請求をした(C), !,
+    format(atom(M), '~wは、審査請求に対する裁決を経ないで、直ちに提起できます。', [N]).
+前置の結論(C, N, As0, [s(zenchi, '審査請求との関係（8条）', 段(直ちに, M, ['8条1項本文'|As0], ['8条1項ただし書']))]) :-
+    欄(前置の定め, C, ない), !,
+    format(atom(M), '~wは、審査請求をしないで、直ちに提起できます。', [N]).
+% 定めがある（8条1項ただし書）。審査請求を却下する裁決は、裁決を経たと読まない（schema.pl の 前置の裁決を経た。2026-11-23 LLMレビュー・案A）
+前置の結論(C, N, As0, [s(zenchi, '審査請求との関係（8条）', 段(裁決済み, M, ['8条1項ただし書'|As0], ['8条1項本文']))]) :-
+    前置の裁決を経た(C), !,
+    format(atom(M), '裁決を経たので、~wを提起できます。', [N]).
+前置の結論(C, N, As0, [s(zenchi, '審査請求との関係（8条）', 段(裁決不要, M, [A|As0], ['8条1項ただし書', '8条2項']))]) :-
+    欄(前置の号, C, G), 二項の号(G, A, W), !,
+    format(atom(M), '~wので、裁決を経ないで、~wを提起できます。', [W, N]).
+% 裁決を経ておらず、8条2項2号・3号にも当たらない：裁決を経るまで提起できない。審査請求をしていて裁決がまだなら、8条2項1号の日を別の段で出す
+% （却下の裁決があったときは「三箇月を経過しても裁決がない」に当たらないので出さない。木の約束事は h_hantei.pl の 段の約束 が足す）
+前置の結論(C, N, As0, [s(zenchi, '審査請求との関係（8条）', 段(裁決必要, M, ['8条1項ただし書'|As0], ['8条1項本文', '8条2項']))|L]) :-
+    format(atom(M), '裁決を経た後でなければ、~wは提起できません。', [N]),
+    三箇月の段(C, N, As0, L).
+
+二項の号(緊急の必要, '8条2項2号', '処分、処分の執行又は手続の続行により生ずる著しい損害を避けるため緊急の必要がある').
+二項の号(正当な理由, '8条2項3号', '裁決を経ないことにつき正当な理由がある').
+
+三箇月の段(C, N, As0, [s(sangatsu, '裁決がないとき（8条2項1号）', 段(三箇月の日, M, ['8条2項1号'|As0], ['8条2項']))]) :-
+    欄(審査請求日, C, D), D = date(_, _, _), \+ 裁決がある(C), !,
+    満了日(D, 3, E), 日付表示(E, ES),
+    format(atom(M), '~wを過ぎても裁決がないときは、裁決を経ないで、~wを提起できます。', [ES, N]).
+三箇月の段(_, _, _, []).
+
+三箇月の葉(C, [t(ok, T, '8条2項1号', []), Y]) :-
+    欄(審査請求日, C, D),
+    満了日(D, 3, E), 日付表示(D, DS), 日付表示(E, ES),
+    format(atom(T), '審査請求をした日（~w）から三箇月：最終日 ~w', [DS, ES]),
+    最終日の約束(Y).
+</script>
+<script type="text/prolog" data-name="rules_d_hikoku.pl">% rules/d_hikoku.pl — 11条（誰を被告にするか）・12条（どの裁判所か）：17〜20の欄
+%
+%   被告の段の状態 = 所属被告 | 行政庁被告 | 事務帰属被告 ／ 管轄の段の状態 = 管轄
+%   取消訴訟以外の抗告訴訟は38条1項で11条〜13条を準用するので、立つ訴えに取消訴訟以外があれば、箱の（）に38条1項も書く。
+%   2026-11-23 段を出すのは、立つ訴えが1つでもあるとき（h_hantei.pl の 全部の段 が、立たないときはこの段を呼ばない。依頼書 決めたこと2-3）。
+%   前の「判定しない」の段（申請をしていない人の不作為の違法確認）は消した。立つ訴え（非申請型の義務付け）があれば、その分として被告・管轄を出す（NOTES (c)）。
+%   前の準用の注意・救済の注意（15条1項は38条の準用先に入っていません）は段の文から外し、15条1項は取消訴訟が立つときの木の原文の葉にした。
+%   前の「具体的な裁判所名は出しません」「「別表に掲げる法人」の中身は判定しません」は about の「判定について」へ移した（A5）。
+%   原文の「当該行政庁」「その不動産又は場所」は、指すものの名詞（処分をした行政庁・不動産又は特定の場所）で書く（A6）。
+
+% 行政庁を言う語（2の欄と、裁決の取消しの訴えが立つか）
+行政庁の語(C, '処分又は裁決をした行政庁') :- 裁決取消しが立つ(C), !.
+行政庁の語(C, '処分をした行政庁') :- 処分の場合(C), !.
+行政庁の語(C, '処分をすべき行政庁') :- 欄(行為, C, 不作為), !.
+行政庁の語(_, '処分又は裁決をしようとしている行政庁').
+
+% 取消訴訟（9条1項。処分の取消しの訴え・裁決の取消しの訴え）が立つか・取消訴訟以外の抗告訴訟が立つか
+取消訴訟が立つ(C) :- ( 処分取消しが立つ(C) ; 裁決取消しが立つ(C) ), !.
+取消訴訟以外が立つ(C) :- ( 無効が立つ(C) ; 不作為確認が立つ(C) ; 義務付けが立つ(C) ; 差止めが立つ(C) ), !.
+
+準用の条(C, ['38条1項']) :- 取消訴訟以外が立つ(C), !.
+準用の条(_, []).
+
+%% ---- 11条 ----
+被告の段(C, [s(hikoku, '被告（11条）', 段(St, M, As, Ex))]) :-
+    欄(所属, C, Zo), 行政庁の語(C, G),
+    被告の結論(Zo, C, G, St, M, As0),
+    準用の条(C, A38), append(As0, A38, As),
+    被告の木の条(Zo, C, Ex).
+
+% 11条1項の号は取消訴訟の区分（処分の取消しの訴え＝1号・裁決の取消しの訴え＝2号）。取消訴訟が立たなければ号を書かず11条1項（38条1項で準用）
+被告の結論(所属する, C, G, 所属被告, M, As) :-
+    format(atom(M), '被告は、~wが所属する国又は公共団体です。訴状には、~wを書きます。', [G, G]),
+    号の条(C, Gs), append(Gs, ['11条4項'], As).
+被告の結論(所属しない, _, G, 行政庁被告, M, ['11条2項']) :-
+    format(atom(M), '被告は、~wです。', [G]).
+被告の結論(被告なし, _, G, 事務帰属被告, M, ['11条3項', '11条4項']) :-
+    format(atom(M), '被告は、処分又は裁決に係る事務の帰属する国又は公共団体です。訴状には、~wを書きます。', [G]).
+
+号の条(C, Gs) :-
+    findall(A, ( 処分取消しが立つ(C), A = '11条1項1号' ; 裁決取消しが立つ(C), A = '11条1項2号' ), Gs0),
+    ( Gs0 == [] -> Gs = ['11条1項'] ; Gs = Gs0 ).
+
+% 号を書いたときは11条1項の柱書き、取消訴訟が立つときは15条1項（被告を誤ったときの変更。38条の準用先に無い）を木の葉に置く
+被告の木の条(所属する, C, Ex) :- !,
+    号の条(C, Gs), ( Gs == ['11条1項'] -> Ex0 = [] ; Ex0 = ['11条1項'] ),
+    救済の条(C, Ex1), append(Ex0, Ex1, Ex).
+被告の木の条(_, C, Ex) :- 救済の条(C, Ex).
+
+救済の条(C, ['15条1項']) :- 取消訴訟が立つ(C), !.
+救済の条(_, []).
+
+%% ---- 12条 ----
+管轄の段(C, [s(kankatsu, '裁判所（12条）', 段(管轄, M, As, []))]) :-
+    行政庁の語(C, G),
+    欄(場所, C, Ba), 欄(下級, C, Ka), 欄(国等, C, Ku),
+    場所の行(Ba, W2, A2),
+    下級の行(Ka, W3, A3),
+    国等の行(Ku, W4, A4),
+    format(atom(W1), '訴えは、被告の普通裁判籍の所在地を管轄する裁判所、又は~wの所在地を管轄する裁判所に提起します。', [G]),
+    atomic_list_concat([W1, W2, W3, W4], M),
+    準用の条(C, A38),
+    append([['12条1項'], A2, A3, A4, A38], As).
+
+場所の行(そうである, '不動産又は特定の場所の所在地の裁判所にも、提起できます。', ['12条2項']).
+場所の行(違う, '', []).
+下級の行(ある, '事案の処理に当たった下級行政機関の所在地の裁判所にも、提起できます。', ['12条3項']).
+下級の行(ない, '', []).
+国等の行(そうである, '原告の普通裁判籍の所在地を管轄する高等裁判所の所在地を管轄する地方裁判所にも、提起できます。', ['12条4項']).
+国等の行(違う, '', []).
+</script>
+<script type="text/prolog" data-name="rules_e_kikan.pl">% rules/e_kikan.pl — 14条（出訴期間）：8・9・11〜13の欄。38条で14条が準用されない訴え（期間なし）の段もここで作る
+%
+%   段の状態 = 出訴期間（14条1項・2項）| 裁決後の出訴期間（14条3項）| 起算前（審査請求をして裁決がまだ）| 裁決取消しの出訴期間 | 期間経過 | 期間なし
+%   2026-11-23 16の欄（訴えを提起する日）が最終日（休日でずらした日）より後なら、状態を 期間経過 にして「◯は、◯年◯月◯日（曜）を過ぎたので、
+%   提起できません」と言う（LLMレビュー①・案A）。箱の（）は過ぎた日を決めた行の条だけ。ただし書（正当な理由）の当否は判定せず、about に書く（A1）。
+%   期限を過ぎた処分の取消しの訴え・裁決の取消しの訴えは、37条の3第3項2号・第7項、8条、25条・29条、10条2項でも「提起できない」として読む
+%   （処分取消しが提起できる/1・裁決取消しが提起できる/1。8条だけは 処分取消しが期限内/1）。被告・管轄（11条・12条）は訴えの種類で決まるので、期限では変えない。
+%   2026-11-23 前置の定めがあって審査請求を却下する裁決があり、8条2項2号・3号に当たらない組は、処分の取消しの訴えを提起できないと読む
+%   （LLMレビュー その5・案B）。14条の段を出さず（処分の期間の段）、37条の3第3項2号・第7項、25条でも「提起できない」として読む（処分取消しが提起できる/1）。
+%   2026-11-23 前置の定めがあって審査請求をしていない組・裁決がまだの組（前置で止まる/1）も、処分取消しが提起できる/1 を成り立たせない（その6）。
+%   2026-11-23 期間の起点を、起きたことの日の欄（処分の日8・9／裁決の日12・13）から別々に読む形にした（C1・C5）。
+%   前は1組の日付の欄（d1・d2）を、審査請求の状況で「処分の日」にも「裁決の日」にも使っていた。形は fufuku-prolog/rules/e_kikan.pl と同じ。
+%   処分の取消しの訴えは、審査請求をした（11に日付）なら14条3項（裁決を起点）、していなければ14条1項・2項（処分を起点）。
+%   裁決の取消しの訴えは14条1項・2項の「裁決」で読む（NOTES の (a)）。
+%   両方の日付が入っていれば、早いほうの最終日を1つにして「◯年◯月◯日までに提起できます」と言い、箱の（）には早いほうの条だけを書く
+%   （依頼書 決めたこと3「処分の取消しの訴えは、2026年10月13日（火）までに提起できます（14条1項本文）」）。遅いほうの条は木だけの条に置く。
+%   片方だけなら、その日付の行と、入っていないほうの期間の文を並べる。どちらも空なら、2つの期間の文を言う。
+%   2026-11-23 片方だけのときも「◯年◯月◯日までに提起できます。ただし、…を経過したときは、提起できません」にした（LLMレビュー ③）。
+%   前は「◯年◯月◯日を過ぎると、提起できません。…を経過したときも、提起できません」で、両方の日付のとき（「までに提起できます」）と、同じ問いに違う形で答えていた。
+%   2026-11-23 審査請求を却下する裁決があったときは、処分の取消しの訴えの期間を14条3項（裁決を起点）で延ばさず、14条1項・2項（処分を起点）で数える
+%   （LLMレビュー ②。最高裁昭和56年2月24日第三小法廷判決。判決は条文ではないので、木の約束事に置く＝yakusoku/kihon.pl の 却下の約束）。
+%   期限が休日に当たるときは、休日でない次の日にずらした日だけを箱に書き、ずらし方は木の約束事に置く（依頼書 決めたこと2-4・3。A1）。
+%   休日の判定は schema.pl の 休日/1（7条経由の民事訴訟法95条3項。祝日と12月29日〜1月3日を含む）。
+%   前の段の文の断り「（当否は判定しません）」「審査請求をしたときは14条3項で裁決が基準になります」と、前置で止まった組の期間の行は外した（A1・A5・依頼書 ⑥）。
+%   ただし書（正当な理由があるときは、この限りでない）は、木の原文の葉に置く（依頼書 ④。段の 木だけの条）。
+%   前の「期間なし」の段（「他の法律に期間の定めがあるかは判定していません」）は、決めたこと2-5で、主語を立てた肯定の文にして箱に出す。
+
+%% ---- 最終日（fufuku-prolog/rules/e_kikan.pl の 満了日 と同じ）----
+% 満了日(起点の日, 月数, 最終日)
+%   起算日＝翌日。最後の月の、起算日に応当する日の前日。応当する日が無ければその月の末日（数え方は yakusoku/kihon.pl の 最終日の約束）。
+満了日(Start, Months, Last) :-
+    翌日(Start, date(Ys, Ms, Ds)),
+    Total is Ys*12 + (Ms - 1) + Months,
+    Y2 is Total // 12,
+    M2 is (Total mod 12) + 1,
+    月日数(Y2, M2, Max),
+    ( Ds > Max -> Last = date(Y2, M2, Max)
+    ; 前日(date(Y2, M2, Ds), Last) ).
+
+%% ---- 期間の行 r(起点の名, 長さの語, 月数, 起点の日, 条) ----
+処分の行(C, [r('処分があったことを知った日', '六箇月', 6, D1, '14条1項本文'), r('処分の日', '一年', 12, D2, '14条2項本文')]) :-
+    欄(処分知日, C, D1), 欄(処分日, C, D2).
+裁決三項の行(C, [r('裁決があったことを知った日', '六箇月', 6, D1, '14条3項本文'), r('裁決の日', '一年', 12, D2, '14条3項本文')]) :-
+    欄(裁決知日, C, D1), 欄(裁決日, C, D2).
+裁決一項の行(C, [r('裁決があったことを知った日', '六箇月', 6, D1, '14条1項本文'), r('裁決の日', '一年', 12, D2, '14条2項本文')]) :-
+    欄(裁決知日, C, D1), 欄(裁決日, C, D2).
+
+行の最終日(r(_, _, Mo, D, _), L) :- D = date(_, _, _), 満了日(D, Mo, L).
+
+% 結論の箱に出す最終日（休日でずらす前）と、その日を決めた行の条。両方あれば早いほう（同じ日なら両方の条）
+% 14条3項は2つの行が同じ条なので、条は重ねない
+早いほう([R1, R2], E, As) :-
+    R1 = r(_, _, _, D1, A1), R2 = r(_, _, _, D2, A2),
+    (   D1 = date(_, _, _), D2 = date(_, _, _)
+    ->  行の最終日(R1, E1), 行の最終日(R2, E2),
+        ( E1 == E2 -> E = E1, As0 = [A1, A2] ; E2 @< E1 -> E = E2, As0 = [A2] ; E = E1, As0 = [A1] )
+    ;   D1 = date(_, _, _)
+    ->  行の最終日(R1, E), As0 = [A1, A2]
+    ;   D2 = date(_, _, _),
+        行の最終日(R2, E), As0 = [A1, A2]
+    ),
+    list_to_set(As0, As).
+
+% 期限の表示(最終日, 休日でずらした期限の「YYYY年M月D日（曜）」)
+期限の表示(E0, S) :-
+    休日でない日(E0, E),
+    日付表示(E, ES), 曜日(E, W),
+    format(atom(S), '~w（~w）', [ES, W]).
+
+% 期間の文(主語, 2つの行, 文, 箱の条)。どちらかを経過すると提起できないので、早いほうの最終日が「提起できる最後の日」（14条の各項の本文）
+期間の文(Subj, [R1, R2], M, As) :-
+    R1 = r(N1, L1, _, D1, A1), R2 = r(N2, L2, _, D2, A2),
+    (   D1 = date(_, _, _), D2 = date(_, _, _)
+    ->  早いほう([R1, R2], E, As), 期限の表示(E, ES),
+        format(atom(M), '~wは、~wまでに提起できます。', [Subj, ES])
+    ;   D1 = date(_, _, _)
+    ->  早いほう([R1, R2], E, As), 期限の表示(E, ES),
+        format(atom(M), '~wは、~wまでに提起できます。ただし、~wから~wを経過したときは、提起できません。', [Subj, ES, N2, L2])
+    ;   D2 = date(_, _, _)
+    ->  早いほう([R1, R2], E, As), 期限の表示(E, ES),
+        format(atom(M), '~wは、~wまでに提起できます。ただし、~wから~wを経過したときは、提起できません。', [Subj, ES, N1, L1])
+    ;   list_to_set([A1, A2], As),
+        format(atom(M), '~wは、~wから~w、~wから~wの、どちらかを経過したときは、提起できません。', [Subj, N1, L1, N2, L2])
+    ).
+
+% 木だけの条：箱に出さなかった行の条（両方の日付があって遅いほうの条）と、ただし書・定義の条・7条（日付が1つでもあるとき）
+期間の木の条(Rows, Box, Fixed, Ex) :-
+    findall(A, ( member(r(_, _, _, _, A), Rows), \+ memberchk(A, Box) ), Other),
+    ( member(r(_, _, _, date(_, _, _), _), Rows) -> Shichi = ['7条'] ; Shichi = [] ),
+    append([Other, Fixed, Shichi], Ex0), list_to_set(Ex0, Ex).
+
+% 木の葉：日付の入った行だけ（B4。入っていない行の最終日は書かない）と、最終日の数え方の約束事（日付が1つでもあるとき）。
+% 箱の期限が休日でずれたときは、休日の約束も置く（どの日からどの日にずれたかを書く）
+期間の葉(Rows, Ys) :-
+    findall(t(ok, T, A, []),
+            ( member(r(N, L, Mo, D, A), Rows), D = date(_, _, _),
+              満了日(D, Mo, E), 日付表示(D, DS), 日付表示(E, ES),
+              format(atom(T), '~w（~w）から~w：最終日 ~w', [N, DS, L, ES]) ),
+            Ls),
+    (   Ls == [] -> Ys = []
+    ;   最終日の約束(Y),
+        早いほう(Rows, E0, _), 休日でない日(E0, E),
+        ( E0 \== E -> 休日の約束(E0, E, Z), append(Ls, [Y, Z], Ys) ; append(Ls, [Y], Ys) )
+    ).
+
+%% ---- 14条 ----
+期間の段(C, L) :-
+    処分の期間の段(C, L1),
+    裁決の期間の段(C, L2),
+    append(L1, L2, L).
+
+% 処分の取消しの訴え。前置で止まって審査請求もしていない組は、期間の段を出さない（裁決を経ないと提起できないので。依頼書 ⑥）
+% 2026-11-23 前置で止まって審査請求を却下する裁決があった組も出さない（LLMレビュー その5・案B。却下の裁決は「裁決を経た」に当たらないので、
+% 8条の「提起できません」と14条の「◯までに提起できます」を同じ箱に並べない）。裁決がまだの組は下の 起算前 の節で出す
+処分の期間の段(C, []) :- \+ 処分取消しが立つ(C), !.
+処分の期間の段(C, []) :- 前置で止まる(C), ( \+ 審査請求をした(C) ; 却下の裁決がある(C) ), !.
+% 審査請求をしていない、又は審査請求を却下する裁決があった：14条1項・2項（処分を起点）。却下の木の約束事は h_hantei.pl の 段の約束 が足す
+処分の期間の段(C, [s(kikan, '処分の取消しの訴えの期間（14条1項・2項）', S)]) :-
+    ( \+ 審査請求をした(C) ; 却下の裁決がある(C) ), !,
+    処分の行(C, Rs), 期間の中身(C, '処分の取消しの訴え', Rs, 出訴期間, ['14条1項ただし書', '14条2項ただし書', '3条2項', '9条1項'], S).
+% 審査請求をして、裁決があった：14条3項（その審査請求をした者は、裁決を起点）
+処分の期間の段(C, [s(kikan, '処分の取消しの訴えの期間（14条3項）', S)]) :-
+    裁決がある(C), !,
+    裁決三項の行(C, Rs), 期間の中身(C, '処分の取消しの訴え', Rs, 裁決後の出訴期間, ['14条3項ただし書', '3条2項', '9条1項'], S).
+% 審査請求をして、裁決がまだ：起点が来ていないので、裁決があったときの期間を言う（14条1項・2項の日付を出さない。依頼書 ③。16の欄の日は見ない）
+処分の期間の段(_, [s(kikan, '処分の取消しの訴えの期間（14条3項）', 段(起算前, '裁決があったときは、処分の取消しの訴えは、裁決があったことを知った日から六箇月、裁決の日から一年の、どちらかを経過したときは、提起できません。', ['14条3項本文'], ['14条3項ただし書', '3条2項', '9条1項']))]).
+
+裁決の期間の段(C, [s(skikan, '裁決の取消しの訴えの期間（14条1項・2項）', S)]) :-
+    裁決取消しが立つ(C), !,
+    裁決一項の行(C, Rs), 期間の中身(C, '裁決の取消しの訴え', Rs, 裁決取消しの出訴期間, ['14条1項ただし書', '14条2項ただし書', '3条3項', '9条1項'], S).
+裁決の期間の段(_, []).
+
+% 期間の中身(C, 主語, 行, 過ぎていないときの状態, 木だけの条の固定分, 段)。16の欄の日が最終日を過ぎていれば 期間経過
+期間の中身(C, Subj, Rs, St0, Fixed, 段(St, M, As, Ex)) :-
+    (   期限を過ぎた(C, Rs, ES, As)
+    ->  St = 期間経過,
+        format(atom(M), '~wは、~wを過ぎたので、提起できません。', [Subj, ES])
+    ;   St = St0, 期間の文(Subj, Rs, M, As)
+    ),
+    期間の木の条(Rs, As, Fixed, Ex).
+
+% 期限を過ぎた(C, 行, 期限の表示, 箱の条)：16の欄に日付があり、日付の入った行の最終日（早いほう。休日でずらした日）より後。
+% 期限は「どちらかを経過したとき」なので、早いほうを過ぎれば足りる。箱の条は、その最終日を決めた行の条だけ
+期限を過ぎた(C, Rs, ES, As) :-
+    欄(提起日, C, T), T = date(_, _, _),
+    memberchk(r(_, _, _, date(_, _, _), _), Rs),
+    早いほう(Rs, E0, _), 休日でない日(E0, E), E @< T,
+    findall(A, ( member(R, Rs), R = r(_, _, _, date(_, _, _), A), 行の最終日(R, E1), E1 == E0 ), As0),
+    list_to_set(As0, As),
+    期限の表示(E0, ES).
+
+% 処分の取消しの訴えの期間を数える行（処分の期間の段 と同じ分け方。裁決がまだのときと、前置で止まったときは数えない）
+処分の起点の行(C, Rs) :- \+ 審査請求をした(C), !, \+ 前置で止まる(C), 処分の行(C, Rs).
+処分の起点の行(C, Rs) :- 却下の裁決がある(C), !, 処分の行(C, Rs).
+処分の起点の行(C, Rs) :- 裁決がある(C), 裁決三項の行(C, Rs).
+
+% 要件が立ち、期限も過ぎていない（8条の段で使う。rules/c_zenchi.pl の 前置の訴え）
+処分取消しが期限内(C) :- 処分取消しが立つ(C), \+ ( 処分の起点の行(C, Rs), 期限を過ぎた(C, Rs, _, _) ).
+% 期限内で、前置で止まってもいない（37条の3第3項2号・第7項、25条の段で使う）。
+% 2026-11-23 前置の定めがあって審査請求を却下する裁決があり、8条2項2号・3号にも当たらない組は、裁決を経ていないので提起できない（LLMレビュー その5・案B）
+% 2026-11-23 前置の定めがあって審査請求をしていない組・裁決がまだの組（前置で止まる）も、8条1項ただし書で今は提起できない（その6）。
+% 前は期限を数える行が無いので常に成り立ち、申請型の義務付け（37条の3第3項2号の併合）が立っていた
+処分取消しが提起できる(C) :- 処分取消しが期限内(C), \+ 前置で止まる(C).
+前置却下で止まる(C) :- 前置で止まる(C), 却下の裁決がある(C).
+裁決取消しが提起できる(C) :- 裁決取消しが立つ(C), \+ ( 裁決一項の行(C, Rs), 期限を過ぎた(C, Rs, _, _) ).
+
+% 審査請求をして、却下する裁決があった（14の欄が 却下 で、12か13に日付がある）
+却下の裁決がある(C) :- 審査請求をした(C), 裁決がある(C), 欄(裁決の内容, C, 却下).
+
+%% ---- 38条（14条を準用していない訴え。決めたこと2-5）----
+% 38条1項（取消訴訟以外の抗告訴訟）・3項（無効等確認の訴え）・4項（不作為の違法確認の訴え）のどれにも14条が入っていない。
+% 箱の（）は h_hantei.pl の 準用なしの条 が「38条1項・38条3項・38条4項は14条を準用していません」と書く
+期間なしの段(C, [s(kikannashi, '出訴期間の定め（38条）', 段(期間なし, M, ['38条1項', '38条3項', '38条4項'], []))]) :-
+    findall(N, 期間の定めのない訴え(C, N), Ns0), list_to_set(Ns0, Ns), Ns \== [], !,
+    atomic_list_concat(Ns, '・', NS),
+    format(atom(M), '~wには、出訴期間の定めがありません。', [NS]).
+期間なしの段(_, []).
+
+期間の定めのない訴え(C, '無効等確認の訴え') :- 無効が立つ(C).
+期間の定めのない訴え(C, '不作為の違法確認の訴え') :- 不作為確認が立つ(C).
+期間の定めのない訴え(C, '義務付けの訴え') :- 義務付けが立つ(C).
+期間の定めのない訴え(C, '差止めの訴え') :- 差止めが立つ(C).
+</script>
+<script type="text/prolog" data-name="rules_f_tomeru.pl">% rules/f_tomeru.pl — 止める手段（25条・29条・38条3項・37条の5）
+%
+%   状態 = 執行停止 | 仮の義務付け | 仮の差止め | 手段なし
+%   立つ訴えごとに段を出す。執行停止は、処分の取消しの訴え（25条）・裁決の取消しの訴え（29条）・無効等確認の訴え（38条3項）を1行にまとめる。
+%   処分の取消しの訴えが前置で止まる組（裁決を経た後でなければ提起できない）では、処分の取消しの訴えを執行停止の行に入れない（依頼書 ⑥）。
+%   2026-11-23 前の「要件の当否はアプリで判定しません」と44条の仮処分の文は外した。44条は決めたこと2-2で結論の箱に出さず、about の「収録範囲」に1行。
+%   前の「手段なし」（不作為の違法確認の訴えには執行停止の準用がありません）は、決めたこと2-5で、主語を立てた肯定の文にして箱に出す。
+%   箱の（）は h_hantei.pl の 準用なしの条 が「38条3項・38条4項は25条を準用していません」と書く。
+%   25条2項ただし書（処分の効力の停止は…することができない）・25条4項・37条の5第3項は、木の原文の葉に置く（依頼書 ④）。
+
+止める段(C, L) :-
+    執行停止の段(C, L1),
+    仮の義務付けの段(C, L2),
+    仮の差止めの段(C, L3),
+    手段なしの段(C, L4),
+    append([L1, L2, L3, L4], L).
+
+執行停止の段(C, [s(teishi, '執行停止（25条）', 段(執行停止, M, As, ['25条2項ただし書', '25条4項']))]) :-
+    findall(N-A, 執行停止の訴え(C, N, A), Ps), Ps \== [], !,
+    findall(N, member(N-_, Ps), Ns), atomic_list_concat(Ns, '・', NS),
+    findall(A, ( member(_-A, Ps), A \== '' ), Ex),
+    ( 裁決取消しが提起できる(C) -> T = '処分又は裁決の効力・執行・手続の続行' ; T = '処分の効力・処分の執行・手続の続行' ),
+    format(atom(M), '~wを提起しても、~wは止まりません。止めるには、執行停止を申し立てることができます。', [NS, T]),
+    append(['25条1項', '25条2項本文'], Ex, As).
+執行停止の段(_, []).
+
+% 期限を過ぎた取消しの訴え（16の欄の日。rules/e_kikan.pl）は挙げない（2026-11-23 LLMレビュー①）
+執行停止の訴え(C, '処分の取消しの訴え', '') :- 処分取消しが提起できる(C), \+ 前置で止まる(C).
+執行停止の訴え(C, '裁決の取消しの訴え', '29条') :- 裁決取消しが提起できる(C).
+執行停止の訴え(C, '無効等確認の訴え', '38条3項') :- 無効が立つ(C).
+
+仮の義務付けの段(C, [s(karigimu, '仮の義務付け（37条の5第1項）', 段(仮の義務付け, '仮の義務付けを申し立てることができます。', ['37条の5第1項'], ['37条の5第3項']))]) :-
+    義務付けが立つ(C), !.
+仮の義務付けの段(_, []).
+
+仮の差止めの段(C, [s(karisashi, '仮の差止め（37条の5第2項）', 段(仮の差止め, '仮の差止めを申し立てることができます。', ['37条の5第2項'], ['37条の5第3項']))]) :-
+    差止めが立つ(C), !.
+仮の差止めの段(_, []).
+
+% 38条3項（25条〜29条の準用）は無効等確認の訴えだけ、38条4項は8条・10条2項だけ
+手段なしの段(C, [s(shudannashi, '不作為の違法確認の訴えと執行停止（38条）', 段(手段なし, '不作為の違法確認の訴えには、執行停止の定めがありません。', ['38条3項', '38条4項'], ['25条2項本文']))]) :-
+    不作為確認が立つ(C), !.
+手段なしの段(_, []).
+</script>
+<script type="text/prolog" data-name="rules_h_hantei.pl">% rules/h_hantei.pl — 段をまとめ、見出し・根拠条文・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 箱の条, 木だけの条)　結論ごとの段 = s(画面のid, 見出し, 段)
+%   形は fufuku-prolog/rules/g_hantei.pl と同じ（2026-11-23。8つの段を r(見出し, 段1, …, 段8, 根拠条文) に並べ、見出し/4 で
+%   形の名＋添え書きの1行だけを出す形をやめ、結論の箱を箇条書きにし、結論1つにつき木1本にした。REVIEW_RULES A7・B5）。
+%   前の木は全部の段を「次のすべてが成り立つ」の下にぶら下げた1本で、どの木にも1条の原文を足していた（根拠条文にも必ず足していた）。
+%   1条は「他の法律に特別の定めがある場合を除くほか」という範囲の文なので、about の「収録範囲」へ移し、木と根拠条文から外した（A5・B6）。
+%   前の 見出しの添え書き/3（受け皿で黙って添え書きなしになる）・止まった段がある/1（3つの状態だけを名前で見ていた）は消した。
+%   止まった段は 印/2 が 組の番号/2 を呼んでから名前で見るので、知らない状態は throw で止まる（依頼書 4）。
+%   段の約束/4 も状態を全部名前で書き、最後を throw にした（前は受け皿 段の約束(_, _, []) で黙って通っていた）。
+%   段の文は、末尾の「。」を外して、そのまま結論の箱と番号つきの節に出す（段と箱で文が食い違わないように）。
+
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 成り立たない組があれば、その組だけを段にする（REVIEW_RULES C3。ほかの段は出さない）。
+% 立つ訴えが1つも無ければ、訴えの段（どれも「〜ので、〜は提起できません」）だけを出し、被告・管轄・期間の段は出さない
+% （依頼書 決めたこと2-3。fufuku-prolog の 三条で止まった と同じ。前は b_uttae.pl:6 で「後の段は止めない」だった）。
+% どちらでもなければ、3条・8条〜12条・14条・25条・29条・36条〜38条を同じ入力で全部当てる（REVIEW_RULES C4・C5）。
+% 箱の並びは 組の番号 の順で、同じ番号の中は下の append の順（取消しの訴えの期間→ほかの訴え→8条→10条2項→11条→12条→38条→止める手段）。
+% 同じ述語を別のファイルに分けて書くと後の読み込みで消えるので、まとめはここに1つだけ置く
+全部の段(C, Steps) :- 組み合わせなしがある(C), !, 組み合わせなしの段(C, Steps).
+全部の段(C, Steps) :- \+ 訴えが立つ(C), !, 訴えの段(C, L), maplist(立たない段, L, Steps).
+全部の段(C, Steps) :-
+    期間の段(C, L1),
+    訴えの段(C, L2),
+    前置の段(C, L3),
+    原処分の段(C, L4),
+    被告の段(C, L5),
+    管轄の段(C, L6),
+    期間なしの段(C, L7),
+    止める段(C, L8),
+    append([L1, L2, L3, L4, L5, L6, L7, L8], L0),
+    箱の順(L0, Steps).
+
+% 立つ訴えが無いときは、要件に当たらない段を 提起できる訴えなし（先頭に出す止まる答え）にする
+立たない段(s(Id, T, 段(要件に当たらない, M, As, Ex)), s(Id, T, 段(提起できる訴えなし, M, As, Ex))).
+
+% 組の番号 は番号を空のまま呼んで後で比べる。番号を束ねて呼ぶと頭に合わず、最後の throw の節に落ちて止まる（sorin-prolog 2026-11-22）
+箱の順(L0, L) :-
+    findall(S, ( member(N, [1, 2, 3, 4]), member(S, L0), S = s(_, _, 段(St, _, _, _)), 組の番号(St, M), M =:= N ), L).
+
+組み合わせなしの段(C, Steps) :-
+    組み合わせなしの一覧(C, L),
+    findall(s(Id, 'この組み合わせはありません', 段(組み合わせなし, M, As, [])),
+            ( nth1(I, L, _-M-As), atom_concat(mujun, I, Id) ), Steps).
+
+組み合わせなしの一覧(C, L) :- findall(Ns-M-As, 組み合わせなし(C, Ns, M, As), L).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、段の文だけを出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」を付けない）。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(C, Steps, Ws) :-
+    結論の段(C, Steps, Ps),
+    findall(W, member(_-_-W, Ps), Ws).
+
+% 結論の箱に出す段を 段のid-段-答え の組で、箱の並びのまま返す（論理の木も同じ並びで結論1つにつき1本立てる。REVIEW_RULES B5）
+% 訴えの段はどの行為でも1つ以上立つので、下の どれにも当たらない は今の欄では出ない（空の箱を出さないための受け皿。fufuku-prolog と同じ形）。
+結論の段(C, Steps, Ps) :-
+    findall(Id-S-W, ( member(s(Id, _, S), Steps), 問いの答え(C, Id, S, W) ), Ps0),
+    ( Ps0 == [] -> どれにも当たらない(W0, S0), Ps = [none-S0-W0] ; Ps = Ps0 ).
+
+どれにも当たらない('当てる条がありません', 段(当たらない, '当てる条がありません。', [], [])).
+
+% 根拠の無い段は結論の箱に出さない。答え/4 の書き損じで立っても「（）」を画面に出さない
+% 「;」で書くと、根拠の付いた組み合わせなしで両方の枝が成り立ち、同じ文が結論の箱に2回出た（dairi-prolog 2026-11-19）。「->」で解を1つにする
+問いの答え(C, Id, S, W) :-
+    S = 段(St, _, As, _),
+    As \== [],
+    答え(C, Id, S, W0), !,
+    (   St == 組み合わせなし -> 組み合わせなしの条(C, Id, A)
+    ;   準用なしの条(St, As, A0) -> A = A0
+    ;   条の表記(As, A)
+    ),
+    format(atom(W), '~w（~w）', [W0, A]).
+
+% 成り立たない組は「この組み合わせはありません。…（2と8の欄・3条5項・3条6項1号）」
+組み合わせなしの条(C, Id, S) :-
+    atom_concat(mujun, IA, Id), atom_number(IA, I),
+    組み合わせなしの一覧(C, L), nth1(I, L, Ns-_-As),
+    atomic_list_concat(Ns, 'と', N),
+    条の表記(As, A),
+    format(atom(S), '~wの欄・~w', [N, A]).
+
+% 「定めがありません」の答えは、どの条が何を準用していないかを（）に書く（依頼書 決めたこと2-5「（38条1項は14条を準用していません）」の形）
+準用なしの条(期間なし, As, S) :- 条の表記(As, A), format(atom(S), '~wは14条を準用していません', [A]).
+準用なしの条(手段なし, As, S) :- 条の表記(As, A), format(atom(S), '~wは25条を準用していません', [A]).
+
+% 節の文：答えの文（条を付けない）
+節の文(C, Id, S, W) :- 答え(C, Id, S, W).
+
+% 答え(C, 段のid, 段, 答えの文)：段の文の末尾の「。」を外す。組み合わせなしは頭に「この組み合わせはありません。」を付ける。
+% 段の文には、画面の上で指す先の無い指示語（その・この・同項・当該 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6。rules/*.pl の段の文で守る）
+答え(_, _, 段(St, M, _, _), W) :-
+    ( atom_concat(M0, '。', M) -> true ; M0 = M ),
+    ( St == 組み合わせなし -> atomic_list_concat(['この組み合わせはありません。', M0], W) ; W = M0 ).
+
+%% ---- 根拠条文 ----
+% 段の順に並べ、重複は1つに。箱の条のあとに木だけの条（ただし書・柱書き・定義の条・7条など）も並べる
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As, Ex), Ss), ( member(A, As) ; member(A, Ex) ) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5。結論をつないだ行と「次のすべてが成り立つ」の節は置かない）。
+% 並びは結論の箱と同じ。一番上の行は結論の箱の文で、その下に段の条の原文（と期間の行・約束事）を置く。
+% 段の文は結論の箱の文と同じなので、木に2回書かない（B4・B6）
+木(C, Steps, Trees) :-
+    結論の段(C, Steps, Ps),
+    findall(T, ( member(Id-S-W, Ps), 段の木(C, Id, S, W, T) ), Trees).
+
+段の木(C, Id, 段(St, _, As, Ex), W, t(K, W, A, Cs)) :-
+    append(As, Ex, All), list_to_set(All, Arts),
+    maplist(原文規定, Arts, Rs),
+    段の約束(C, Id, St, Ys),
+    append(Rs, Ys, Kids),
+    すべて(W, '', Kids, t(_, W, A, Cs)),
+    印(St, K).
+
+% 止まった段・できない段（組み合わせなし・立つ訴えなし・裁決必要・要件に当たらない）は info、そのほかは ok（木ごとに、その段で決める）
+印(St, K) :- 組の番号(St, _), ( memberchk(St, [組み合わせなし, 提起できる訴えなし, 裁決必要, 期間経過, 要件に当たらない]) -> K = info ; K = ok ).
+
+% 組の番号(状態, 1=先頭に出す答え | 2=当たった答え | 3=答えを支える文 | 4=当たりません)。状態は全部名前で書き、知らない状態は止める（依頼書 4）。
+% 2026-11-23 前の 9つの形の名前（処分取消し など）・満たす入力・満たさない入力・提起できない・判定しない・前置対象外・教示あり・教示なし・
+% 義務なし・教示対象外 は、段を出さないか、下の名前に寄せたので消した。回答ファイルの 取消し可・裁決取消し可 は、期間の段
+% （出訴期間・裁決後の出訴期間・起算前・裁決取消しの出訴期間）が立つことと期限を1行で言うので使わない。被告の変更（15条1項）は被告の木の葉にした。
+% 仮処分不可（44条）・教示（46条）・義務なし は決めたこと2-2で箱に出さないので消した
+組の番号(組み合わせなし, 1) :- !.
+組の番号(提起できる訴えなし, 1) :- !.   % 9条1項・36条・37条・37条の2・37条の3・37条の4 で、立つ訴えが1つも無い
+組の番号(裁決必要, 1) :- !.             % 8条1項ただし書（裁決を経ないと提起できない）
+組の番号(出訴期間, 2) :- !.             % 14条1項・2項（処分の取消しの訴え）
+組の番号(裁決後の出訴期間, 2) :- !.     % 14条3項（審査請求をして裁決があった）
+組の番号(起算前, 2) :- !.               % 14条3項（裁決がまだ）
+組の番号(裁決取消しの出訴期間, 2) :- !. % 14条1項・2項（裁決の取消しの訴え）
+組の番号(期間経過, 2) :- !.             % 14条（16の欄の日が最終日より後。処分の取消しの訴え・裁決の取消しの訴え）
+組の番号(無効確認可, 2) :- !.           % 3条4項・36条
+組の番号(不作為確認可, 2) :- !.         % 3条5項・37条
+組の番号(申請型義務付け可, 2) :- !.     % 3条6項2号・37条の3
+組の番号(裁決義務付け可, 2) :- !.       % 37条の3第7項
+組の番号(非申請義務付け可, 2) :- !.     % 3条6項1号・37条の2
+組の番号(差止め可, 2) :- !.             % 3条7項・37条の4
+組の番号(直ちに, 2) :- !.               % 8条1項本文
+組の番号(三箇月の日, 2) :- !.           % 8条2項1号（◯日を過ぎても裁決がなければ）
+組の番号(裁決不要, 2) :- !.             % 8条2項2号・3号
+組の番号(所属被告, 2) :- !.             % 11条1項
+組の番号(行政庁被告, 2) :- !.           % 11条2項
+組の番号(事務帰属被告, 2) :- !.         % 11条3項
+組の番号(管轄, 2) :- !.                 % 12条
+組の番号(執行停止, 2) :- !.             % 25条・29条・38条3項
+組の番号(仮の義務付け, 2) :- !.         % 37条の5第1項
+組の番号(仮の差止め, 2) :- !.           % 37条の5第2項
+組の番号(裁決済み, 3) :- !.             % 8条1項ただし書（裁決を経た）
+組の番号(原処分主義, 3) :- !.           % 10条2項
+組の番号(期間なし, 3) :- !.             % 38条（14条の準用が無い）
+組の番号(手段なし, 3) :- !.             % 38条3項・4項（25条の準用が無い）
+組の番号(要件に当たらない, 4) :- !.     % 訴えごとの「〜ので、〜は提起できません」（ほかの訴えが立つとき）
+組の番号(当たらない, 4) :- !.           % どれにも当たらない（受け皿）
+組の番号(St, _) :- throw(知らない状態(St)).
+
+% 葉に置くのは結論を支える規則と、期間の行・約束事だけ。断り書き（法律上の利益・重大な損害・緊急の必要・正当な理由の当否は判定しない 等）は
+% about の「判定について」に置く（REVIEW_RULES A5・D1。前は段ごとに 当否の約束・前置の定めの約束・号の当否の約束・管轄の約束・正当な理由の約束・
+% 止める手段の約束 を付けていた）。「定めがありません」の段（期間なし・手段なし）には 場面外の約束 を付ける（条文に無いアプリの決めごと。D1）
+% 却下する裁決があって14条1項・2項で数えたときは、14条3項を当てない理由（判決）を約束事として足す（2026-11-23 LLMレビュー ②。判決名は木と about だけに書く。A1）
+段の約束(C, kikan, 出訴期間, Ys) :- !, 処分の行(C, Rs), 期間の葉(Rs, Ys0),
+    ( 却下の裁決がある(C) -> 却下の約束(Y), append(Ys0, [Y], Ys) ; Ys = Ys0 ).
+段の約束(C, kikan, 裁決後の出訴期間, Ys) :- !, 裁決三項の行(C, Rs), 期間の葉(Rs, Ys).
+段の約束(C, skikan, 裁決取消しの出訴期間, Ys) :- !, 裁決一項の行(C, Rs), 期間の葉(Rs, Ys).
+% 期限を過ぎた（2026-11-23 LLMレビュー①）：期間の行と約束事は上と同じ。処分の取消しの訴えは、どの起点で数えたかを 処分の起点の行 で選ぶ
+段の約束(C, kikan, 期間経過, Ys) :- !, 処分の起点の行(C, Rs), 期間の葉(Rs, Ys0),
+    ( 却下の裁決がある(C) -> 却下の約束(Y), append(Ys0, [Y], Ys) ; Ys = Ys0 ).
+段の約束(C, skikan, 期間経過, Ys) :- !, 裁決一項の行(C, Rs), 期間の葉(Rs, Ys).
+段の約束(C, sangatsu, 三箇月の日, Ys) :- !, 三箇月の葉(C, Ys).
+% 前置の定めがあって審査請求を却下する裁決があったときは、裁決を経たと読まない理由を約束事として足す（2026-11-23 LLMレビュー・案A）
+段の約束(C, zenchi, 裁決必要, Ys) :- !, ( 却下の裁決がある(C) -> 前置却下の約束(Y), Ys = [Y] ; Ys = [] ).
+段の約束(_, _, St, [Y]) :- memberchk(St, [期間なし, 手段なし]), !, 場面外の約束(Y).
+段の約束(_, _, St, []) :-
+    memberchk(St, [組み合わせなし, 提起できる訴えなし, 起算前, 無効確認可, 不作為確認可, 申請型義務付け可, 裁決義務付け可,
+                   非申請義務付け可, 差止め可, 直ちに, 裁決不要, 所属被告, 行政庁被告, 事務帰属被告, 管轄, 執行停止, 仮の義務付け,
+                   仮の差止め, 裁決済み, 原処分主義, 要件に当たらない, 当たらない]), !.
+段の約束(_, _, St, _) :- throw(知らない状態(St)).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は fufuku-prolog の web.pl と同じ（2026-11-23）。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(C, Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+</script>
+<script type="application/json" id="law">{"1":{"t":"第一条","c":"（この法律の趣旨）","p":[{"n":"1","s":"行政事件訴訟については、他の法律に特別の定めがある場合を除くほか、この法律の定めるところによる。","i":[]}]},"3":{"t":"第三条","c":"（抗告訴訟）","p":[{"n":"1","s":"この法律において「抗告訴訟」とは、行政庁の公権力の行使に関する不服の訴訟をいう。","i":[]},{"n":"2","s":"この法律において「処分の取消しの訴え」とは、行政庁の処分その他公権力の行使に当たる行為（次項に規定する裁決、決定その他の行為を除く。以下単に「処分」という。）の取消しを求める訴訟をいう。","i":[]},{"n":"3","s":"この法律において「裁決の取消しの訴え」とは、審査請求その他の不服申立て（以下単に「審査請求」という。）に対する行政庁の裁決、決定その他の行為（以下単に「裁決」という。）の取消しを求める訴訟をいう。","i":[]},{"n":"4","s":"この法律において「無効等確認の訴え」とは、処分若しくは裁決の存否又はその効力の有無の確認を求める訴訟をいう。","i":[]},{"n":"5","s":"この法律において「不作為の違法確認の訴え」とは、行政庁が法令に基づく申請に対し、相当の期間内に何らかの処分又は裁決をすべきであるにかかわらず、これをしないことについての違法の確認を求める訴訟をいう。","i":[]},{"n":"6","s":"この法律において「義務付けの訴え」とは、次に掲げる場合において、行政庁がその処分又は裁決をすべき旨を命ずることを求める訴訟をいう。","i":[{"n":"1","t":"一","s":"行政庁が一定の処分をすべきであるにかかわらずこれがされないとき（次号に掲げる場合を除く。）。","sub":[]},{"n":"2","t":"二","s":"行政庁に対し一定の処分又は裁決を求める旨の法令に基づく申請又は審査請求がされた場合において、当該行政庁がその処分又は裁決をすべきであるにかかわらずこれがされないとき。","sub":[]}]},{"n":"7","s":"この法律において「差止めの訴え」とは、行政庁が一定の処分又は裁決をすべきでないにかかわらずこれがされようとしている場合において、行政庁がその処分又は裁決をしてはならない旨を命ずることを求める訴訟をいう。","i":[]}]},"7":{"t":"第七条","c":"（この法律に定めがない事項）","p":[{"n":"1","s":"行政事件訴訟に関し、この法律に定めがない事項については、民事訴訟の例による。","i":[]}]},"8":{"t":"第八条","c":"（処分の取消しの訴えと審査請求との関係）","p":[{"n":"1","s":"処分の取消しの訴えは、当該処分につき法令の規定により審査請求をすることができる場合においても、直ちに提起することを妨げない。ただし、法律に当該処分についての審査請求に対する裁決を経た後でなければ処分の取消しの訴えを提起することができない旨の定めがあるときは、この限りでない。","i":[]},{"n":"2","s":"前項ただし書の場合においても、次の各号の一に該当するときは、裁決を経ないで、処分の取消しの訴えを提起することができる。","i":[{"n":"1","t":"一","s":"審査請求があつた日から三箇月を経過しても裁決がないとき。","sub":[]},{"n":"2","t":"二","s":"処分、処分の執行又は手続の続行により生ずる著しい損害を避けるため緊急の必要があるとき。","sub":[]},{"n":"3","t":"三","s":"その他裁決を経ないことにつき正当な理由があるとき。","sub":[]}]},{"n":"3","s":"第一項本文の場合において、当該処分につき審査請求がされているときは、裁判所は、その審査請求に対する裁決があるまで（審査請求があつた日から三箇月を経過しても裁決がないときは、その期間を経過するまで）、訴訟手続を中止することができる。","i":[]}]},"9":{"t":"第九条","c":"（原告適格）","p":[{"n":"1","s":"処分の取消しの訴え及び裁決の取消しの訴え（以下「取消訴訟」という。）は、当該処分又は裁決の取消しを求めるにつき法律上の利益を有する者（処分又は裁決の効果が期間の経過その他の理由によりなくなつた後においてもなお処分又は裁決の取消しによつて回復すべき法律上の利益を有する者を含む。）に限り、提起することができる。","i":[]},{"n":"2","s":"裁判所は、処分又は裁決の相手方以外の者について前項に規定する法律上の利益の有無を判断するに当たつては、当該処分又は裁決の根拠となる法令の規定の文言のみによることなく、当該法令の趣旨及び目的並びに当該処分において考慮されるべき利益の内容及び性質を考慮するものとする。この場合において、当該法令の趣旨及び目的を考慮するに当たつては、当該法令と目的を共通にする関係法令があるときはその趣旨及び目的をも参酌するものとし、当該利益の内容及び性質を考慮するに当たつては、当該処分又は裁決がその根拠となる法令に違反してされた場合に害されることとなる利益の内容及び性質並びにこれが害される態様及び程度をも勘案するものとする。","i":[]}]},"10":{"t":"第十条","c":"（取消しの理由の制限）","p":[{"n":"1","s":"取消訴訟においては、自己の法律上の利益に関係のない違法を理由として取消しを求めることができない。","i":[]},{"n":"2","s":"処分の取消しの訴えとその処分についての審査請求を棄却した裁決の取消しの訴えとを提起することができる場合には、裁決の取消しの訴えにおいては、処分の違法を理由として取消しを求めることができない。","i":[]}]},"11":{"t":"第十一条","c":"（被告適格等）","p":[{"n":"1","s":"処分又は裁決をした行政庁（処分又は裁決があつた後に当該行政庁の権限が他の行政庁に承継されたときは、当該他の行政庁。以下同じ。）が国又は公共団体に所属する場合には、取消訴訟は、次の各号に掲げる訴えの区分に応じてそれぞれ当該各号に定める者を被告として提起しなければならない。","i":[{"n":"1","t":"一","s":"処分の取消しの訴え　当該処分をした行政庁の所属する国又は公共団体","sub":[]},{"n":"2","t":"二","s":"裁決の取消しの訴え　当該裁決をした行政庁の所属する国又は公共団体","sub":[]}]},{"n":"2","s":"処分又は裁決をした行政庁が国又は公共団体に所属しない場合には、取消訴訟は、当該行政庁を被告として提起しなければならない。","i":[]},{"n":"3","s":"前二項の規定により被告とすべき国若しくは公共団体又は行政庁がない場合には、取消訴訟は、当該処分又は裁決に係る事務の帰属する国又は公共団体を被告として提起しなければならない。","i":[]},{"n":"4","s":"第一項又は前項の規定により国又は公共団体を被告として取消訴訟を提起する場合には、訴状には、民事訴訟の例により記載すべき事項のほか、次の各号に掲げる訴えの区分に応じてそれぞれ当該各号に定める行政庁を記載するものとする。","i":[{"n":"1","t":"一","s":"処分の取消しの訴え　当該処分をした行政庁","sub":[]},{"n":"2","t":"二","s":"裁決の取消しの訴え　当該裁決をした行政庁","sub":[]}]},{"n":"5","s":"第一項又は第三項の規定により国又は公共団体を被告として取消訴訟が提起された場合には、被告は、遅滞なく、裁判所に対し、前項各号に掲げる訴えの区分に応じてそれぞれ当該各号に定める行政庁を明らかにしなければならない。","i":[]},{"n":"6","s":"処分又は裁決をした行政庁は、当該処分又は裁決に係る第一項の規定による国又は公共団体を被告とする訴訟について、裁判上の一切の行為をする権限を有する。","i":[]}]},"12":{"t":"第十二条","c":"（管轄）","p":[{"n":"1","s":"取消訴訟は、被告の普通裁判籍の所在地を管轄する裁判所又は処分若しくは裁決をした行政庁の所在地を管轄する裁判所の管轄に属する。","i":[]},{"n":"2","s":"土地の収用、鉱業権の設定その他不動産又は特定の場所に係る処分又は裁決についての取消訴訟は、その不動産又は場所の所在地の裁判所にも、提起することができる。","i":[]},{"n":"3","s":"取消訴訟は、当該処分又は裁決に関し事案の処理に当たつた下級行政機関の所在地の裁判所にも、提起することができる。","i":[]},{"n":"4","s":"国又は独立行政法人通則法（平成十一年法律第百三号）第二条第一項に規定する独立行政法人若しくは別表に掲げる法人を被告とする取消訴訟は、原告の普通裁判籍の所在地を管轄する高等裁判所の所在地を管轄する地方裁判所（次項において「特定管轄裁判所」という。）にも、提起することができる。","i":[]},{"n":"5","s":"前項の規定により特定管轄裁判所に同項の取消訴訟が提起された場合であつて、他の裁判所に事実上及び法律上同一の原因に基づいてされた処分又は裁決に係る抗告訴訟が係属している場合においては、当該特定管轄裁判所は、当事者の住所又は所在地、尋問を受けるべき証人の住所、争点又は証拠の共通性その他の事情を考慮して、相当と認めるときは、申立てにより又は職権で、訴訟の全部又は一部について、当該他の裁判所又は第一項から第三項までに定める裁判所に移送することができる。","i":[]}]},"14":{"t":"第十四条","c":"（出訴期間）","p":[{"n":"1","s":"取消訴訟は、処分又は裁決があつたことを知つた日から六箇月を経過したときは、提起することができない。ただし、正当な理由があるときは、この限りでない。","i":[]},{"n":"2","s":"取消訴訟は、処分又は裁決の日から一年を経過したときは、提起することができない。ただし、正当な理由があるときは、この限りでない。","i":[]},{"n":"3","s":"処分又は裁決につき審査請求をすることができる場合又は行政庁が誤つて審査請求をすることができる旨を教示した場合において、審査請求があつたときは、処分又は裁決に係る取消訴訟は、その審査請求をした者については、前二項の規定にかかわらず、これに対する裁決があつたことを知つた日から六箇月を経過したとき又は当該裁決の日から一年を経過したときは、提起することができない。ただし、正当な理由があるときは、この限りでない。","i":[]}]},"15":{"t":"第十五条","c":"（被告を誤つた訴えの救済）","p":[{"n":"1","s":"取消訴訟において、原告が故意又は重大な過失によらないで被告とすべき者を誤つたときは、裁判所は、原告の申立てにより、決定をもつて、被告を変更することを許すことができる。","i":[]},{"n":"2","s":"前項の決定は、電子決定書（民事訴訟法（平成八年法律第百九号）第百二十二条において準用する同法第二百五十二条第一項の規定により作成された電磁的記録（電子的方式、磁気的方式その他人の知覚によつては認識することができない方式で作られる記録であつて、電子計算機による情報処理の用に供されるものをいう。）をいう。以下この項において同じ。）を作成してするものとし、その電子決定書（同法第百二十二条において準用する同法第二百五十三条第二項の規定により裁判所の使用に係る電子計算機（入出力装置を含む。）に備えられたファイルに記録されたものに限る。）を新たな被告に送達しなければならない。","i":[]},{"n":"3","s":"第一項の決定があつたときは、出訴期間の遵守については、新たな被告に対する訴えは、最初に訴えを提起した時に提起されたものとみなす。","i":[]},{"n":"4","s":"第一項の決定があつたときは、従前の被告に対しては、訴えの取下げがあつたものとみなす。","i":[]},{"n":"5","s":"第一項の決定に対しては、不服を申し立てることができない。","i":[]},{"n":"6","s":"第一項の申立てを却下する決定に対しては、即時抗告をすることができる。","i":[]},{"n":"7","s":"上訴審において第一項の決定をしたときは、裁判所は、その訴訟を管轄裁判所に移送しなければならない。","i":[]}]},"25":{"t":"第二十五条","c":"（執行停止）","p":[{"n":"1","s":"処分の取消しの訴えの提起は、処分の効力、処分の執行又は手続の続行を妨げない。","i":[]},{"n":"2","s":"処分の取消しの訴えの提起があつた場合において、処分、処分の執行又は手続の続行により生ずる重大な損害を避けるため緊急の必要があるときは、裁判所は、申立てにより、決定をもつて、処分の効力、処分の執行又は手続の続行の全部又は一部の停止（以下「執行停止」という。）をすることができる。ただし、処分の効力の停止は、処分の執行又は手続の続行の停止によつて目的を達することができる場合には、することができない。","i":[]},{"n":"3","s":"裁判所は、前項に規定する重大な損害を生ずるか否かを判断するに当たつては、損害の回復の困難の程度を考慮するものとし、損害の性質及び程度並びに処分の内容及び性質をも勘案するものとする。","i":[]},{"n":"4","s":"執行停止は、公共の福祉に重大な影響を及ぼすおそれがあるとき、又は本案について理由がないとみえるときは、することができない。","i":[]},{"n":"5","s":"第二項の決定は、疎明に基づいてする。","i":[]},{"n":"6","s":"第二項の決定は、口頭弁論を経ないですることができる。ただし、あらかじめ、当事者の意見をきかなければならない。","i":[]},{"n":"7","s":"第二項の申立てに対する決定に対しては、即時抗告をすることができる。","i":[]},{"n":"8","s":"第二項の決定に対する即時抗告は、その決定の執行を停止する効力を有しない。","i":[]}]},"29":{"t":"第二十九条","c":"（執行停止に関する規定の準用）","p":[{"n":"1","s":"前四条の規定は、裁決の取消しの訴えの提起があつた場合における執行停止に関する事項について準用する。","i":[]}]},"36":{"t":"第三十六条","c":"（無効等確認の訴えの原告適格）","p":[{"n":"1","s":"無効等確認の訴えは、当該処分又は裁決に続く処分により損害を受けるおそれのある者その他当該処分又は裁決の無効等の確認を求めるにつき法律上の利益を有する者で、当該処分若しくは裁決の存否又はその効力の有無を前提とする現在の法律関係に関する訴えによつて目的を達することができないものに限り、提起することができる。","i":[]}]},"37":{"t":"第三十七条","c":"（不作為の違法確認の訴えの原告適格）","p":[{"n":"1","s":"不作為の違法確認の訴えは、処分又は裁決についての申請をした者に限り、提起することができる。","i":[]}]},"37_2":{"t":"第三十七条の二","c":"（義務付けの訴えの要件等）","p":[{"n":"1","s":"第三条第六項第一号に掲げる場合において、義務付けの訴えは、一定の処分がされないことにより重大な損害を生ずるおそれがあり、かつ、その損害を避けるため他に適当な方法がないときに限り、提起することができる。","i":[]},{"n":"2","s":"裁判所は、前項に規定する重大な損害を生ずるか否かを判断するに当たつては、損害の回復の困難の程度を考慮するものとし、損害の性質及び程度並びに処分の内容及び性質をも勘案するものとする。","i":[]},{"n":"3","s":"第一項の義務付けの訴えは、行政庁が一定の処分をすべき旨を命ずることを求めるにつき法律上の利益を有する者に限り、提起することができる。","i":[]},{"n":"4","s":"前項に規定する法律上の利益の有無の判断については、第九条第二項の規定を準用する。","i":[]},{"n":"5","s":"義務付けの訴えが第一項及び第三項に規定する要件に該当する場合において、その義務付けの訴えに係る処分につき、行政庁がその処分をすべきであることがその処分の根拠となる法令の規定から明らかであると認められ又は行政庁がその処分をしないことがその裁量権の範囲を超え若しくはその濫用となると認められるときは、裁判所は、行政庁がその処分をすべき旨を命ずる判決をする。","i":[]}]},"37_3":{"t":"第三十七条の三","c":"","p":[{"n":"1","s":"第三条第六項第二号に掲げる場合において、義務付けの訴えは、次の各号に掲げる要件のいずれかに該当するときに限り、提起することができる。","i":[{"n":"1","t":"一","s":"当該法令に基づく申請又は審査請求に対し相当の期間内に何らの処分又は裁決がされないこと。","sub":[]},{"n":"2","t":"二","s":"当該法令に基づく申請又は審査請求を却下し又は棄却する旨の処分又は裁決がされた場合において、当該処分又は裁決が取り消されるべきものであり、又は無効若しくは不存在であること。","sub":[]}]},{"n":"2","s":"前項の義務付けの訴えは、同項各号に規定する法令に基づく申請又は審査請求をした者に限り、提起することができる。","i":[]},{"n":"3","s":"第一項の義務付けの訴えを提起するときは、次の各号に掲げる区分に応じてそれぞれ当該各号に定める訴えをその義務付けの訴えに併合して提起しなければならない。この場合において、当該各号に定める訴えに係る訴訟の管轄について他の法律に特別の定めがあるときは、当該義務付けの訴えに係る訴訟の管轄は、第三十八条第一項において準用する第十二条の規定にかかわらず、その定めに従う。","i":[{"n":"1","t":"一","s":"第一項第一号に掲げる要件に該当する場合　同号に規定する処分又は裁決に係る不作為の違法確認の訴え","sub":[]},{"n":"2","t":"二","s":"第一項第二号に掲げる要件に該当する場合　同号に規定する処分又は裁決に係る取消訴訟又は無効等確認の訴え","sub":[]}]},{"n":"4","s":"前項の規定により併合して提起された義務付けの訴え及び同項各号に定める訴えに係る弁論及び裁判は、分離しないでしなければならない。","i":[]},{"n":"5","s":"義務付けの訴えが第一項から第三項までに規定する要件に該当する場合において、同項各号に定める訴えに係る請求に理由があると認められ、かつ、その義務付けの訴えに係る処分又は裁決につき、行政庁がその処分若しくは裁決をすべきであることがその処分若しくは裁決の根拠となる法令の規定から明らかであると認められ又は行政庁がその処分若しくは裁決をしないことがその裁量権の範囲を超え若しくはその濫用となると認められるときは、裁判所は、その義務付けの訴えに係る処分又は裁決をすべき旨を命ずる判決をする。","i":[]},{"n":"6","s":"第四項の規定にかかわらず、裁判所は、審理の状況その他の事情を考慮して、第三項各号に定める訴えについてのみ終局判決をすることがより迅速な争訟の解決に資すると認めるときは、当該訴えについてのみ終局判決をすることができる。この場合において、裁判所は、当該訴えについてのみ終局判決をしたときは、当事者の意見を聴いて、当該訴えに係る訴訟手続が完結するまでの間、義務付けの訴えに係る訴訟手続を中止することができる。","i":[]},{"n":"7","s":"第一項の義務付けの訴えのうち、行政庁が一定の裁決をすべき旨を命ずることを求めるものは、処分についての審査請求がされた場合において、当該処分に係る処分の取消しの訴え又は無効等確認の訴えを提起することができないときに限り、提起することができる。","i":[]}]},"37_4":{"t":"第三十七条の四","c":"（差止めの訴えの要件）","p":[{"n":"1","s":"差止めの訴えは、一定の処分又は裁決がされることにより重大な損害を生ずるおそれがある場合に限り、提起することができる。ただし、その損害を避けるため他に適当な方法があるときは、この限りでない。","i":[]},{"n":"2","s":"裁判所は、前項に規定する重大な損害を生ずるか否かを判断するに当たつては、損害の回復の困難の程度を考慮するものとし、損害の性質及び程度並びに処分又は裁決の内容及び性質をも勘案するものとする。","i":[]},{"n":"3","s":"差止めの訴えは、行政庁が一定の処分又は裁決をしてはならない旨を命ずることを求めるにつき法律上の利益を有する者に限り、提起することができる。","i":[]},{"n":"4","s":"前項に規定する法律上の利益の有無の判断については、第九条第二項の規定を準用する。","i":[]},{"n":"5","s":"差止めの訴えが第一項及び第三項に規定する要件に該当する場合において、その差止めの訴えに係る処分又は裁決につき、行政庁がその処分若しくは裁決をすべきでないことがその処分若しくは裁決の根拠となる法令の規定から明らかであると認められ又は行政庁がその処分若しくは裁決をすることがその裁量権の範囲を超え若しくはその濫用となると認められるときは、裁判所は、行政庁がその処分又は裁決をしてはならない旨を命ずる判決をする。","i":[]}]},"37_5":{"t":"第三十七条の五","c":"（仮の義務付け及び仮の差止め）","p":[{"n":"1","s":"義務付けの訴えの提起があつた場合において、その義務付けの訴えに係る処分又は裁決がされないことにより生ずる償うことのできない損害を避けるため緊急の必要があり、かつ、本案について理由があるとみえるときは、裁判所は、申立てにより、決定をもつて、仮に行政庁がその処分又は裁決をすべき旨を命ずること（以下この条において「仮の義務付け」という。）ができる。","i":[]},{"n":"2","s":"差止めの訴えの提起があつた場合において、その差止めの訴えに係る処分又は裁決がされることにより生ずる償うことのできない損害を避けるため緊急の必要があり、かつ、本案について理由があるとみえるときは、裁判所は、申立てにより、決定をもつて、仮に行政庁がその処分又は裁決をしてはならない旨を命ずること（以下この条において「仮の差止め」という。）ができる。","i":[]},{"n":"3","s":"仮の義務付け又は仮の差止めは、公共の福祉に重大な影響を及ぼすおそれがあるときは、することができない。","i":[]},{"n":"4","s":"第二十五条第五項から第八項まで、第二十六条から第二十八条まで及び第三十三条第一項の規定は、仮の義務付け又は仮の差止めに関する事項について準用する。","i":[]},{"n":"5","s":"前項において準用する第二十五条第七項の即時抗告についての裁判又は前項において準用する第二十六条第一項の決定により仮の義務付けの決定が取り消されたときは、当該行政庁は、当該仮の義務付けの決定に基づいてした処分又は裁決を取り消さなければならない。","i":[]}]},"38":{"t":"第三十八条","c":"（取消訴訟に関する規定の準用）","p":[{"n":"1","s":"第十一条から第十三条まで、第十六条から第十九条まで、第二十一条から第二十三条まで、第二十四条、第三十三条及び第三十五条の規定は、取消訴訟以外の抗告訴訟について準用する。","i":[]},{"n":"2","s":"第十条第二項の規定は、処分の無効等確認の訴えとその処分についての審査請求を棄却した裁決に係る抗告訴訟とを提起することができる場合に、第二十条の規定は、処分の無効等確認の訴えをその処分についての審査請求を棄却した裁決に係る抗告訴訟に併合して提起する場合に準用する。","i":[]},{"n":"3","s":"第二十三条の二、第二十五条から第二十九条まで及び第三十二条第二項の規定は、無効等確認の訴えについて準用する。","i":[]},{"n":"4","s":"第八条及び第十条第二項の規定は、不作為の違法確認の訴えに準用する。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"第一章　総則","a":[{"k":"1","t":"第一条","c":"（この法律の趣旨）","u":1},{"k":"2","t":"第二条","c":"（行政事件訴訟）","u":0},{"k":"3","t":"第三条","c":"（抗告訴訟）","u":1},{"k":"4","t":"第四条","c":"（当事者訴訟）","u":0},{"k":"5","t":"第五条","c":"（民衆訴訟）","u":0},{"k":"6","t":"第六条","c":"（機関訴訟）","u":0},{"k":"7","t":"第七条","c":"（この法律に定めがない事項）","u":1}]},{"t":"第二章　抗告訴訟","a":[{"k":"8","t":"第八条","c":"（処分の取消しの訴えと審査請求との関係）","u":1},{"k":"9","t":"第九条","c":"（原告適格）","u":1},{"k":"10","t":"第十条","c":"（取消しの理由の制限）","u":1},{"k":"11","t":"第十一条","c":"（被告適格等）","u":1},{"k":"12","t":"第十二条","c":"（管轄）","u":1},{"k":"13","t":"第十三条","c":"（関連請求に係る訴訟の移送）","u":0},{"k":"14","t":"第十四条","c":"（出訴期間）","u":1},{"k":"15","t":"第十五条","c":"（被告を誤つた訴えの救済）","u":1},{"k":"16","t":"第十六条","c":"（請求の客観的併合）","u":0},{"k":"17","t":"第十七条","c":"（共同訴訟）","u":0},{"k":"18","t":"第十八条","c":"（第三者による請求の追加的併合）","u":0},{"k":"19","t":"第十九条","c":"（原告による請求の追加的併合）","u":0},{"k":"20","t":"第二十条","c":"","u":0},{"k":"21","t":"第二十一条","c":"（国又は公共団体に対する請求への訴えの変更）","u":0},{"k":"22","t":"第二十二条","c":"（第三者の訴訟参加）","u":0},{"k":"23","t":"第二十三条","c":"（行政庁の訴訟参加）","u":0},{"k":"23_2","t":"第二十三条の二","c":"（釈明処分の特則）","u":0},{"k":"24","t":"第二十四条","c":"（職権証拠調べ）","u":0},{"k":"25","t":"第二十五条","c":"（執行停止）","u":1},{"k":"26","t":"第二十六条","c":"（事情変更による執行停止の取消し）","u":0},{"k":"27","t":"第二十七条","c":"（内閣総理大臣の異議）","u":0},{"k":"28","t":"第二十八条","c":"（執行停止等の管轄裁判所）","u":0},{"k":"29","t":"第二十九条","c":"（執行停止に関する規定の準用）","u":1},{"k":"30","t":"第三十条","c":"（裁量処分の取消し）","u":0},{"k":"31","t":"第三十一条","c":"（特別の事情による請求の棄却）","u":0},{"k":"32","t":"第三十二条","c":"（取消判決等の効力）","u":0},{"k":"33","t":"第三十三条","c":"","u":0},{"k":"34","t":"第三十四条","c":"（第三者の再審の訴え）","u":0},{"k":"35","t":"第三十五条","c":"（訴訟費用の裁判の効力）","u":0},{"k":"36","t":"第三十六条","c":"（無効等確認の訴えの原告適格）","u":1},{"k":"37","t":"第三十七条","c":"（不作為の違法確認の訴えの原告適格）","u":1},{"k":"37_2","t":"第三十七条の二","c":"（義務付けの訴えの要件等）","u":1},{"k":"37_3","t":"第三十七条の三","c":"","u":1},{"k":"37_4","t":"第三十七条の四","c":"（差止めの訴えの要件）","u":1},{"k":"37_5","t":"第三十七条の五","c":"（仮の義務付け及び仮の差止め）","u":1},{"k":"38","t":"第三十八条","c":"（取消訴訟に関する規定の準用）","u":1}]},{"t":"第三章　当事者訴訟","a":[{"k":"39","t":"第三十九条","c":"（出訴の通知）","u":0},{"k":"40","t":"第四十条","c":"（出訴期間の定めがある当事者訴訟）","u":0},{"k":"41","t":"第四十一条","c":"（抗告訴訟に関する規定の準用）","u":0}]},{"t":"第四章　民衆訴訟及び機関訴訟","a":[{"k":"42","t":"第四十二条","c":"（訴えの提起）","u":0},{"k":"43","t":"第四十三条","c":"（抗告訴訟又は当事者訴訟に関する規定の準用）","u":0}]},{"t":"第五章　補則","a":[{"k":"44","t":"第四十四条","c":"（仮処分の排除）","u":0},{"k":"45","t":"第四十五条","c":"（処分の効力等を争点とする訴訟）","u":0},{"k":"46","t":"第四十六条","c":"（取消訴訟等の提起に関する事項の教示）","u":0}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// ---- 日付の欄：「◯ヶ月前」で入れる（8本で同じ文字列）----
+// 計算した日付を今の date 入力へ入れて change を出すだけ。値の読み方と判定の処理は変えない。
+// 例・リセットは .value へ直接書くので、その書き込みを受けて表示を切り替える（利用者の入力はこの setter を通らない）
+const RD_DATE = "日付で入れる", RD_NATIVE = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+const rdIso = t => `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;   // toISOString は UTC になり、朝9時前は前日にずれる
+const rdShow = iso => iso.split("-").map(Number).join("/");
+function rdCalc(raw, unit){
+  const n = Number(raw);
+  if (raw === "" || !Number.isInteger(n) || n < 0) return "";
+  const t = new Date(), y = t.getFullYear(), m = t.getMonth(), day = t.getDate(), s = unit.endsWith("後") ? n : -n;
+  // 月は同じ日にそろえ、その日が無い月は月末にする
+  const r = unit.includes("ヶ月") ? new Date(y, m + s, Math.min(day, new Date(y, m + s + 1, 0).getDate())) : new Date(y, m, day + s);
+  return r.getFullYear() >= 1000 && r.getFullYear() <= 9999 ? rdIso(r) : "";
+}
+for (const d of document.querySelectorAll('input[type="date"]')){
+  const box = d.closest(".input") || d, m = box !== d ? " rd-m" : "";   // 欄の形は2種類（.input の中／.slot の直下）
+  const lab = document.querySelector(`label[for="${d.id}"]`);
+  if (d.hasAttribute("data-rd-today")){   // 判定の基準日：空なら今日。読むたびに今日を返すので、必須のエラーも出ない
+    const other = document.createElement("details"), when = document.createElement("p"), ans = $("answer");
+    other.className = "rd-other" + m;
+    other.innerHTML = `<summary>別の日で判定する</summary><p class="rd-note">消すと今日で判定します</p>`;
+    box.before(other);
+    other.querySelector("summary").after(lab, box);
+    Object.defineProperty(d, "value", { get: () => RD_NATIVE.get.call(d) || rdIso(new Date()), set: v => { RD_NATIVE.set.call(d, v); other.open = !!v; } });
+    when.className = "rd-when";
+    new MutationObserver(() => {   // 答えを書き直すたびに、答えの先頭へ入れ直す（欄が隠れている種類・答えが出ていないときは出さない）
+      if (d.closest(".slot").hidden || !ans.querySelector(".verdict")){ when.remove(); return; }
+      const v = d.value;
+      when.textContent = `${rdShow(v)}${v === rdIso(new Date()) ? "（今日）" : " "}時点の判定`;
+      if (!when.isConnected){ ans.prepend(when); const y = when.getBoundingClientRect().top; if (y < 0) window.scrollBy(0, y); }   // 例を押すと答えへ動いた後で入るので、画面の上に隠れた分だけ戻す
+    }).observe(ans, { childList: true });
+    continue;
+  }
+  const base = d.dataset.rdUnit || "ヶ月前", row = document.createElement("span");
+  row.className = "rd" + m;
+  row.innerHTML = `<input class="rd-n" type="number" min="0" step="1" inputmode="numeric"><select class="rd-u" aria-label="単位">${["ヶ月前", "日前", "ヶ月後", RD_DATE].map(u => `<option>${u}</option>`).join("")}</select><span class="rd-to"></span>`;
+  box.before(row);
+  const n = row.querySelector(".rd-n"), u = row.querySelector(".rd-u"), to = row.querySelector(".rd-to");
+  const show = () => {
+    const direct = u.value === RD_DATE, iso = RD_NATIVE.get.call(d);
+    n.classList.toggle("rd-hide", direct);
+    box.classList.toggle("rd-hide", !direct);
+    to.textContent = !direct && iso ? `→ ${rdShow(iso)}` : "";
+  };
+  const calc = () => {
+    if (u.value !== RD_DATE) RD_NATIVE.set.call(d, rdCalc(n.value, u.value));
+    show();
+    d.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+  n.addEventListener("input", calc);
+  u.addEventListener("change", calc);
+  Object.defineProperty(d, "value", { get: () => RD_NATIVE.get.call(d), set: v => { RD_NATIVE.set.call(d, v); n.value = ""; u.value = v ? RD_DATE : base; show(); } });
+  if (!lab.id) lab.id = "l-" + d.id;
+  n.setAttribute("aria-labelledby", lab.id);
+  lab.addEventListener("click", e => { if (box.classList.contains("rd-hide")){ e.preventDefault(); n.focus(); } });
+  const sameDisabled = () => { n.disabled = u.disabled = d.disabled; };   // 今のコードは date 入力の disabled だけを切り替える
+  new MutationObserver(sameDisabled).observe(d, { attributes: true, attributeFilter: ["disabled"] });
+  sameDisabled();
+  u.value = base;
+  show();
+}
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  // '4条1号' '18条1項本文' '18条1項括弧書き' のような形。複数条が「・」で区切られることもある → 最初の条だけ見る
+  const first = String(a).split("・")[0];
+  const m = first.match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(?:第?(\d+)号)?([イロハニ])?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[4] || null, sub: m[5] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para);
+  // 号まで指定があれば、項の本文とその号だけ出す（7条1項は号が多いので全部は出さない）
+  if (r.item) ps = ps.filter(p => p.i.some(it => it.n === r.item));
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const list = r.item ? p.i.filter(it => it.n === r.item) : p.i;
+    const its = list.map(it => `<p class="it">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => r.sub && x.startsWith(r.sub + " ") ? `<br><span class="hit">　${esc(x)}</span>` : `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなくこのアプリの決め事。</p>`;
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+
+// ---------- ここから別ページ（about.html）だけの処理 ----------
+if (location.protocol === "file:") $("back").href = "gyosos.html";
+function openHash(){ const d = location.hash && document.getElementById(location.hash.slice(1)); if (d && d.tagName === "DETAILS") d.open = true; }
+openHash(); window.addEventListener("hashchange", openHash);
+
+async function bootAbout(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    // 全条文の地図
+    let C = []; try{ C = JSON.parse(document.getElementById("cover-data").textContent); }catch(e){}
+    const cover = $("cover");
+    C.forEach(ch => {
+      const div = document.createElement("div"); div.className = "cover-ch";
+      div.innerHTML = `<h4>${esc(ch.t)} <span>${ch.a.length}条</span></h4><div class="cells"></div>`;
+      const cells = div.querySelector(".cells");
+      ch.a.forEach(a => {
+        const btn = document.createElement("button"); btn.type = "button";
+        btn.className = `cell u${a.u}`; btn.title = `${a.t}${a.c}`;
+        btn.addEventListener("click", () => {
+          const old = document.getElementById("cover-pick"); if (old) old.remove();
+          const pk = document.createElement("div"); pk.id = "cover-pick";
+          pk.innerHTML = a.u === 1 ? lawHTML(a.k.includes("_") ? a.k.replace("_", "条の").replace(/_/g, "の") : a.k + "条") : `<p class="hint" style="margin-top:6px">${esc(a.t)}${esc(a.c)}${a.u === 2 ? "（削除）" : "（このアプリでは使用しない条）"}</p>`;
+          div.appendChild(pk);
+        });
+        cells.appendChild(btn);
+      });
+      cover.appendChild(div);
+    });
+    const used = C.flatMap(c => c.a).filter(a => a.u === 1).length;
+    const total = C.flatMap(c => c.a).filter(a => a.u !== 2).length;
+    cover.insertAdjacentHTML("afterbegin", `<p class="cover-total">使っている条：${used} / ${total} 条</p>`);
+    // ソース表示
+    const src = $("src");
+    files.forEach(f => {
+      const det = document.createElement("details"); det.className = "srcfile";
+      det.innerHTML = `<summary>${esc(f.dataset.name.replace(/_/g, "/"))}</summary><pre>${esc(f.textContent)}</pre>`;
+      src.appendChild(det);
+    });
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+  }
+}
+
+// 直接クエリ実行
+$("run").addEventListener("click", () => {
+  if (!pl){ $("out").textContent = "まだ読み込み中です。"; return; }
+  const q = $("q").value.trim().replace(/\.$/, "");
+  try{
+    const it = pl.prolog.query(q); const out = [];
+    for (let i = 0; i < 20; i++){
+      const r = it.next();
+      if (!r) break;
+      if (r.error){ out.push("エラー：" + r.message); break; }
+      // 最後の解は done:true に値が付いて返る。done で先に抜けると、その解を捨てて「解なし」に見える
+      if (r.value && r.value.$tag === "bindings"){
+        const { $tag, ...vars } = r.value;
+        out.push(Object.keys(vars).length ? JSON.stringify(vars, null, 2) : "true");
+      }
+      if (r.done) break;
+    }
+    $("out").textContent = out.length ? out.join("\n---\n") : "（解なし）";
+  } catch(e){ $("out").textContent = "エラー：" + e.message; }
+});
+
+if (typeof SWIPL === "function") bootAbout();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; }
+</script>
