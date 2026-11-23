@@ -1,0 +1,1052 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="「有給休暇、いま何日もらえる？ 労働基準法39条を条文から引く」の収録範囲、判定について、全条文の地図、Prologのソース全部。">
+<title>収録範囲・仕組み｜有給休暇、いま何日もらえる？ 労働基準法39条を条文から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+/* 欄の上の区切りの見出し（当事者・契約するまでの勧誘・契約書の条項）。選ばせる欄ではないので番号を数えない */
+.slots .slot-h{margin:0;padding:8px 10px 4px;border-bottom:2px solid var(--line);border-right:2px solid var(--line);background:var(--paper)}
+.checks{display:grid;gap:6px;margin:4px 10px 8px}
+.checks label{display:flex;gap:8px;align-items:flex-start;font-size:.84rem;font-weight:400;padding:0;letter-spacing:0;line-height:1.5}
+.checks label::before{content:none}
+.checks input{flex:0 0 auto;margin-top:.25em}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.step.off{color:var(--muted)}
+.flow{margin:0;padding-left:1.2em}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+.disclaimer-inline{margin-top:10px;font-size:.78rem;color:var(--muted);border-top:1px solid var(--hair);padding-top:8px;line-height:1.65}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border-left:2px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+/* ── 日付の欄（shohi-prolog には無い。.field と同じ枠で、日付は .input の中に置く）── */
+.slot .input{display:block;margin:4px 10px 6px;min-width:0}
+.slot .input input{font:inherit;font-size:1rem;font-weight:700;color:var(--ink);background:var(--field);border:2px solid var(--line);border-radius:0;padding:6px 8px;min-width:0;width:100%}
+/* 日付の欄を「◯ヶ月前」で入れる（rd-。8本で同じ文字列） */
+.rd{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;min-width:0}
+.rd.rd-m{margin:4px 10px 6px}
+.rd input,.rd select{font:inherit;font-size:1rem;color:var(--ink);background:var(--field,var(--bg));border:1px solid var(--line);border-radius:0;padding:6px 8px;min-width:0}
+.rd input:disabled,.rd select:disabled{opacity:.45}
+.rd select option{background:var(--paper);color:var(--ink)}
+.rd .rd-n{flex:0 0 4.6em;width:4.6em}
+.rd .rd-u{flex:0 1 auto;width:auto}
+.rd-to{font-size:.8rem;color:var(--muted);white-space:nowrap}
+.rd-hide{display:none!important}
+.rd-other{min-width:0}
+.rd-other summary{cursor:pointer;font-size:.84rem;font-weight:400;color:var(--muted)}
+.rd-other label{display:block}
+.rd-other.rd-m > summary{padding:6px 10px}
+.rd-note{font-size:.76rem;color:var(--muted)}
+.rd-other.rd-m .rd-note{padding:0 10px 6px}
+.rd-when{font-size:.84rem;font-weight:700;color:var(--muted);margin:0 0 6px}
+/* ── 条文の原文の中の表（39条2項・規則24条の3第3項。tokusho には無い。前の yukyu の .lawtext table を写した）── */
+.lawtext table{width:auto;border-top:0;margin:4px 0 8px;font-size:.8rem}
+.lawtext td{border:1px solid var(--hair);padding:2px 6px;text-align:center;white-space:nowrap}
+</style>
+
+<div class="wrap about">
+  <header class="mast sub">
+    <p class="backlink"><a href="./" id="back">← 判定ページに戻る</a></p>
+    <h1>収録範囲・仕組み</h1>
+    <p class="lead">「有給休暇、いま何日もらえる？」で、どの条文をどこまでルールにしたか、アプリが決めたこと、プログラムの中身です。</p>
+  </header>
+
+  <div class="appendix">
+  <details class="box" id="scope-box" open>
+    <summary>収録範囲と、入っていないもの</summary>
+    <div class="scope" id="scope">
+      <p id="scope-hani"><b>労働基準法39条1項〜3項（年次有給休暇の日数）と、労働基準法施行規則24条の3（比例付与の時間・日数と表）をルールにしています。</b>6か月で10労働日（1項）、1年ごとの加算と、出勤が8割に届かなかった区切りの次の1年（2項）、1週間の労働時間が30時間より少なく、週4日以下か年216日以下の人の比例付与（3項・規則24条の3）を判定します。</p>
+      <p>起きたことを聞く6個の欄から、同じ入力で全部の条を当てます。欄を出したり消したり、選べなくしたりはしません。使わない欄は、判定で見ないだけです（下の「欄と使う条」）。</p>
+      <p id="scope-nai">入っていないもの：時季変更権（39条5項）・計画的付与（6項）・年5日の時季指定（7項）・時間単位の年休（4項）・前倒しの付与、与えられた日数のうち何日残っているか（使った日数・繰越し）。判例・学説・行政の通達は入れていません。</p>
+      <p id="scope-ban">労働基準法と労働基準法施行規則の条文は2026年10月9日までに取得した版で、それ以後の改正と、公布済みで施行前の改正は読んでいません。</p>
+      <p><b>判定について：</b></p>
+      <ul id="hantei-notes" style="margin:0;padding-left:1.2em">
+        <li id="note-shusseki">6の欄（8割以上出勤したか）は、入れた答えに従います。出勤率の数え方（全労働日に何を数えるか、業務上の負傷・育児休業・介護休業・産前産後の休業を出勤したものとみなすこと）は39条10項にありますが、このアプリは出勤率を数えません。</li>
+        <li id="note-kugiri">6の欄で聞く区切りは、数える時点の直近の付与日の前の区切りです（最初の付与日なら雇われた日から6か月、その後は前の付与日からの1年）。答えの先頭に、どの区切りとして数えたかを日付で出します。最初の付与日より前なら、6の欄は見ません。</li>
+        <li id="note-tochu">1週間の労働時間・1週間に働く日数・1年間に働く日数が途中で変わった場合は見ていません。入れた値で全部の期間を数えます。</li>
+        <li id="note-hyou">39条2項の表は「六箇月経過日から起算した継続勤務年数」（一年・二年 …）、規則24条の3第3項の表は「雇入れの日から起算した継続勤務期間」（六箇月・一年六箇月 …）で区切っていて、同じ付与日でも呼び名が半年ずれます。結論の箱では表の呼び名を出さず、付与日の日付で書きます。</li>
+        <li id="note-ha">結論の箱には判定だけを書きます。付与日の数え方（雇われた日を1日目に数えること）、数える時点と付与日の比べ、表のどの行・列かは、論理の木の行にだけ置いています。</li>
+      </ul>
+      <p><b>欄と使う条：</b></p>
+      <div class="tbl"><table id="ran-table">
+        <thead><tr><th>欄</th><th>使う条</th><th>見るとき</th></tr></thead>
+        <tbody>
+          <tr><td>1　雇われた日</td><td>39条1項・2項</td><td>いつも</td></tr>
+          <tr><td>2　いつの時点で数えるか</td><td>（条文の語ではない）</td><td>いつも</td></tr>
+          <tr><td>3　1週間の労働時間</td><td>39条3項括弧書・規則24条の3第1項</td><td>いつも</td></tr>
+          <tr><td>4　1週間に働く日数</td><td>39条3項1号・規則24条の3第4項</td><td>3が30時間より少ないとき</td></tr>
+          <tr><td>5　1年間に働く日数</td><td>39条3項2号・規則24条の3第5項</td><td>3が30時間より少なく、4が「週では決まっていない」とき</td></tr>
+          <tr><td>6　出勤</td><td>39条1項・2項ただし書</td><td>2の日が最初の付与日と同じか後のとき</td></tr>
+        </tbody>
+      </table></div>
+      <p id="ran-ryoho">週と年の両方の日数を言える人（たとえば週4日で年208日）は、4の欄で1週間の日数を選び、5の欄は空のままにしてください。39条3項は、1週間に働く日数が決まっている人を1号（週の日数）、週以外の期間で決まっている人を2号（1年間の日数）で数えるので、3が30時間より少ないときに4で1週間の日数を選び5にも数を入れると「この組み合わせはありません（39条3項2号）」と答えます。</p>
+      <p>入っていないもの：下の<a href="#notes-box">載せなかったもの</a>もご覧ください。</p>
+    </div>
+  </details>
+
+  <details class="box" id="cover-box">
+    <summary>労働基準法のどこまでをルールにしたか（全条文の地図）</summary>
+    <p class="hint" style="margin-top:6px">労働基準法の本則の全条文を章ごとに1マスずつ並べました。<span class="cell u1"></span> はプログラムのルールの中で使っている条、<span class="cell u0"></span> は使っていない条、<span class="cell u2"></span> は「削除」された条です。マスを押すと原文が出ます。施行規則の条はこの地図に入れていません。</p>
+    <div id="cover"></div>
+  </details>
+
+  <details class="box" id="yaku-box">
+    <summary>アプリの約束事（法律の条文にないもの）</summary>
+    <p class="hint" style="margin-top:6px">判定のためにこのアプリが決めたことで、条文そのものではありません。プログラムでは <code>yakusoku/</code> のファイルと、ルールの中の「約束」の行に書いています。論理の木では <span class="yk">アプリの約束事</span> の印が付きます。</p>
+    <ul class="hint" id="yaku-list" style="margin:8px 0 0;padding-left:1.2em">
+      <li>「雇入れの日から起算して六箇月」「六箇月経過日から起算した継続勤務年数一年」は、起算の日を1日目に数え、N か月後の同じ日の前日で終わると読む。その月に同じ日がなければ、その月の末日で終わる（例：8月31日に雇入れ → 2月末日で六箇月が終わり、3月1日が最初の付与日）</li>
+      <li>付与日の当日は「与えられた」に入れる</li>
+      <li>3項（比例付与）は日数を定める規定と読み、8割以上の出勤（1項）と、8割に届かなかった区切りの次の1年は与えなくてよい（2項ただし書）は、比例付与の人にもそのまま当てはめる</li>
+      <li>規則24条の3第3項の表の列（雇入れの日から起算した継続勤務期間 六箇月・一年六箇月 …）は、1番目・2番目 … の付与日に当てはめる</li>
+      <li>次の付与日の日数は「次の付与日までの区切りに8割以上出勤した場合」として出す（まだ決まっていないため）</li>
+      <li id="yaku-keizoku">契約の更新・出向があっても途切れずに勤めているなら、最初に雇われた日を1の欄に入れる。「雇入れの日」「継続勤務」に当たるか（39条1項）は条文の文言だけでは決まらないので、このアプリは1の欄の日から途切れずに勤めているものとして数える</li>
+      <li id="yaku-mae">2の日が雇われた日より前なら、まだ与えられていないとして答える（最初の付与日は雇われた日から数えるため）</li>
+    </ul>
+  </details>
+
+  <details class="box" id="notes-box">
+    <summary>載せなかったものと、条文だけで決まらなかった点</summary>
+    <div class="scope">
+      <p><b>載せなかったもの（理由）：</b></p>
+      <ul style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>39条4項（時間単位の年休）・5項（時季変更権）・6項（計画的付与）・7項と8項（年5日の時季指定）・9項（賃金）：何日与えられるかではなく、与え方・取り方・賃金の定めで、別の入力（労使協定・請求した時季など）が要るため</li>
+        <li>前倒しの付与（7項ただし書の「基準日より前の日から与えることとしたとき」）：就業規則の中身によるため</li>
+        <li id="no-115">115条（時効）：115条は「この法律の規定による…災害補償その他の請求権（賃金の請求権を除く。）」を2年としますが、39条は「請求権」の語を使っていない（5項は「労働者の請求する時季に与えなければならない」）ので、年次有給休暇が「その他の請求権」に当たるかは条文の文言だけでは言えないため。使わなかった日数の繰越しも、このため入れていません</li>
+        <li>規則24条の3第2項（五・二日）：3項の表がこの数を織り込み済みで、判定に使う所がないため</li>
+      </ul>
+      <p><b>条文だけで決まらなかった点：</b></p>
+      <ul id="kimaranai" style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>「全労働日」に何を数えるか → 39条10項の「出勤したものとみなす」期間のほかは、条文の文言だけでは決まらない。このアプリは6の欄の答えに従う（上の「判定について」）</li>
+        <li>「雇入れの日」「継続勤務」に当たるか（契約の更新・出向など） → 条文の文言だけでは決まらない。このアプリは1の欄の日から途切れずに勤めているものとして数える（上の「アプリの約束事」）</li>
+        <li>1年間に働く日数が47日以下の人 → 3項2号に当たるが、規則24条の3第3項の表のどの行にもない。日数を0にせず、条文の表からは決まらないと答える</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="box" id="src-box">
+    <summary>プログラムの中身（Prologのソース全部）</summary>
+    <p class="hint" style="margin-top:6px">このページで動いているPrologのプログラムそのものです。ファイルを開くと全文が出ます。</p>
+    <div id="src"></div>
+  </details>
+
+  <details class="box" id="core-box">
+    <summary>仕組みを見る（上級者向け）</summary>
+    <p class="hint" style="margin-top:6px">まず雇われた日から最初の付与日（六箇月経過日）と、そこから1年ごとの付与日を数え、数える時点で直近の付与日を探します。次に、その前の区切りの出勤が8割以上かを見ます。8割以上なら、1週間の労働時間と働く日数で39条3項（比例付与）の対象かを決め、1項・2項の表か、規則24条の3第3項の表から日数を引きます。最後に、数える時点より後で最初の付与日と、その日数を出します。</p>
+    <p class="hint" style="margin-top:10px">Prologに直接聞く（最初の20件まで）：</p>
+    <textarea id="q" spellcheck="false">result(ctx('2026-04-01','2026-10-01',40,5,なし,八割以上), R).</textarea>
+    <button type="button" class="btn" id="run">実行</button>
+    <pre id="out"></pre>
+  </details>
+  </div>
+
+  <p class="foot techline"><span>労働基準法 第39条・労働基準法施行規則 第24条の3／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot">e-Gov法令検索の労働基準法（昭和二十二年法律第四十九号）と労働基準法施行規則（昭和二十二年厚生省令第二十三号）の原文をルールにしたものです。法律の解釈・判例・行政の通達は含みません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 労働基準法の年次有給休暇Prolog（いま何日もらえる？）の共通の型・日付・欄の読み出し・木の部品
+%
+% ctx(雇入れの日, 時点, 週の時間, 週の日数, 年の日数, 出勤)
+%   欄は起きた事実を聞く6個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-23 案A。
+%   案は ../yukyu_form_plan_answer_1123.md の案A（依頼書 task_beaver_yukyu_planA_1123.md の決まったこと1）。
+%   前は ctx(雇入れの日, 週の所定労働時間, 日数の定め方, 週の所定労働日数, 年間の所定労働日数, 出勤率, 判定日) の7欄で、
+%   画面が日数の定め方で週・年の日数の欄を無効にし（ask() の disabled）、欄名を差し替え、使わない欄を なし に書き換えて渡していた（C5）。
+%   今は「日数の定め方」と「週の所定労働日数」を4の欄1つにし（同じことを2回聞かない。C1）、使わない欄は判定で見ないだけにした。
+%   引数の順は画面の欄の番号（1〜6）と同じ（tokusho-prolog の schema.pl と同じ形）。
+%    1 雇入れの日 : 日
+%    2 時点       : 日（いつの時点で数えるか。空なら画面が今日を入れる。条文の語ではない）
+%    3 週の時間   : 数（契約で決まっている1週間の労働時間。0より大きく168以下）
+%    4 週の日数   : 1〜7 | 週では決まっていない（契約で決まっている1週間に働く日数。39条3項1号・2号の分かれ目）
+%    5 年の日数   : 1〜366 | なし（契約で決まっている1年間に働く日数。週では決まっていないとき。39条3項2号）
+%    6 出勤       : 八割以上 | 八割未満（最後に終わった区切りに、全労働日の八割以上出勤したか。最初の付与日より前なら見ない）
+%
+%   使わない欄：3が三十時間以上なら4・5を見ない。4が1〜7なら5を見ない（三十時間未満で5に数があれば「ありません」）。
+%   最初の付与日より前なら6を見ない。
+%   値の範囲（3の0以下・168超、5の0・367以上）は「ありません」にせず、ctx_valid が受けない（画面は入力の決まりと「入れてください」で止める。C3）。
+%   「この組み合わせはありません」は yakusoku/kihon.pl の no_such/3 の1つで、根拠条を持つ（C3）。
+%
+% rules/*.pl が書くもの（条文から来たものだけ）：
+%   基準日(雇入れの日, K, 日, 木).                                a_kijunbi.pl（K = 0, 1, 2, … 番目の付与日）
+%   日数(ctx(...), K, 日(N) | 表にない, 条, 行, 木).              b_nissu.pl
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), 木のリスト).  c_kekka.pl
+% yakusoku/*.pl が書くもの（法律にないアプリの約束事）：
+%   no_such(ctx(...), 理由, 根拠条のリスト).  足りない欄(ctx(...), 欄の言い方).
+%
+% 書き方のきまり：
+%   ・条番号は '39条1項' '39条2項ただし書' '規則24条の3第3項' のような原子。
+%     条文は労働基準法と労働基準法施行規則の2つ。番号が重なる（法24条と規則24条）ので、規則の条は「規則24条の3」と書く
+%     （build.py でキーに k をつける。tokusho の「民法」と同じやり方）。
+%   ・条文の文の中で別の条を指すところは、原文どおり漢数字で書く（'法第三十九条第三項'）。
+%     build.py は算用数字の条番号だけを拾うので、判定に使っていない条を「使っている条」に数えないため。
+%   ・段は 段(状態, 文, 箱の条, 木だけの条)。結論ごとの段は s(画面のid, 見出し, 段)。段の文は、末尾の「。」を外して結論の箱にも出す（tokusho と同じ）。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | info | and | or。
+%     規定を当てはめる行は (A, A→B) ⊢ B の形：「規定：…」の行（A→B）と、条件の行（A）を and で並べる。
+%   ・アプリの約束事の行は 条 を '@約束事' にする（画面で印がつく）。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+:- use_module(library(aggregate)).
+:- discontiguous no_such/3, 足りない欄/2, 比例の表/7, 加算の表/4.
+:- multifile no_such/3, 足りない欄/2, 比例の表/7, 加算の表/4.
+:- dynamic no_such/3, 足りない欄/2, 比例の表/7, 加算の表/4.
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか・日付の欄が日付か・数の欄が範囲の中か）----
+ctx_valid(C) :-
+    functor(C, ctx, 6),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )),
+    arg(1, C, H), 日付(H, _),
+    arg(2, C, J), 日付(J, _),
+    arg(3, C, Hr), number(Hr), Hr > 0, Hr =< 168,
+    arg(5, C, Y), ( Y == なし -> true ; integer(Y), Y >= 1, Y =< 366 ).
+
+欄の値(4, [1, 2, 3, 4, 5, 6, 7, 週では決まっていない]).
+欄の値(6, [八割以上, 八割未満]).
+
+%% ---- 欄の読み出し（番号は画面の欄の番号）----
+欄の番号(雇入れの日, 1).
+欄の番号(時点, 2).
+欄の番号(週の時間, 3).
+欄の番号(週の日数, 4).
+欄の番号(年の日数, 5).
+欄の番号(出勤, 6).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+%% ---------- 日付（暦の計算。期間の数え方そのものは rules/a_kijunbi.pl） ----------
+% '2026-08-31' ⇔ date(2026, 8, 31)
+日付(A, date(Y, M, D)) :-
+    atom(A), atomic_list_concat([Ys, Ms, Ds], '-', A),
+    atom_number(Ys, Y), atom_number(Ms, M), atom_number(Ds, D),
+    integer(Y), integer(M), integer(D), M >= 1, M =< 12, D >= 1,
+    月の日数(Y, M, L), D =< L.
+
+日付の原子(date(Y, M, D), A) :-
+    二桁(M, MA), 二桁(D, DA), format(atom(A), '~d-~w-~w', [Y, MA, DA]).
+二桁(N, A) :- N < 10, !, format(atom(A), '0~d', [N]).
+二桁(N, A) :- format(atom(A), '~d', [N]).
+
+% 画面に出す形：'2026-08-31' → '2026年8月31日'
+日付の表示(A, S) :- 日付(A, date(Y, M, D)), !, format(atom(S), '~d年~d月~d日', [Y, M, D]).
+日付の表示(date(Y, M, D), S) :- !, format(atom(S), '~d年~d月~d日', [Y, M, D]).
+日付の表示(X, X).
+
+うるう年(Y) :- ( Y mod 400 =:= 0 -> true ; Y mod 100 =:= 0 -> fail ; Y mod 4 =:= 0 ).
+
+月の日数(Y, 2, 29) :- うるう年(Y), !.
+月の日数(_, 2, 28) :- !.
+月の日数(_, M, 30) :- memberchk(M, [4, 6, 9, 11]), !.
+月の日数(_, _, 31).
+
+翌日(date(Y, M, D), date(Y, M, D1)) :- 月の日数(Y, M, L), D < L, !, D1 is D + 1.
+翌日(date(Y, 12, 31), date(Y1, 1, 1)) :- !, Y1 is Y + 1.
+翌日(date(Y, M, _), date(Y, M1, 1)) :- M1 is M + 1.
+
+前日(date(Y, M, D), date(Y, M, D1)) :- D > 1, !, D1 is D - 1.
+前日(date(Y, 1, 1), date(Y1, 12, 31)) :- !, Y1 is Y - 1.
+前日(date(Y, M, 1), date(Y, M1, L)) :- M1 is M - 1, 月の日数(Y, M1, L).
+
+% N か月後の年と月（日は見ない）
+月を足す(date(Y, M, _), N, Y2, M2) :-
+    T is Y * 12 + (M - 1) + N, Y2 is T // 12, M2 is T mod 12 + 1.
+
+% 通し日数（大小を比べるためだけに使う）
+通日(date(Y, M, D), N) :-
+    ( M =< 2 -> Y1 is Y - 1, M1 is M + 12 ; Y1 = Y, M1 = M ),
+    N is 365 * Y1 + Y1 // 4 - Y1 // 100 + Y1 // 400 + (153 * (M1 - 3) + 2) // 5 + D.
+日数(A, N) :- 日付(A, X), 通日(X, N).
+
+% 原子の日付どうしを比べる
+日が前(A, B)       :- 日数(A, NA), 日数(B, NB), NA < NB.
+日が同じか前(A, B) :- 日数(A, NA), 日数(B, NB), NA =< NB.
+
+%% ---- 理由の語をつなぐ ----
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---------- 木の部品 ----------
+% 子が2つ以上のときだけ「かつ」「または」の節をはさむ（子が1つの節は置かない。REVIEW_RULES B6）
+ex_and(_, [], []) :- !.
+ex_and(_, [X], [X]) :- !.
+ex_and(Title, Xs, [t(and, Title, '', Xs)]).
+ex_or(_, [], []) :- !.
+ex_or(_, [X], [X]) :- !.
+ex_or(Title, Xs, [t(or, Title, '', Xs)]).
+
+% 規定の行（A→B にあたる前提）
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+% 成り立つ文（起きた事実など）
+文(X, t(ok, X, '', [])).
+% アプリの約束事の行
+約束(X, t(ok, X, '@約束事', [])).
+% 上の行 H（種類 K・条 Ar）を、子 Cs のすべてから導く
+導く(K, H, Ar, Cs, t(K, H, Ar, Cs1)) :- ex_and('次のすべてが成り立つ', Cs, Cs1).
+
+% 文の中に入れる日付の表示
+d(A, S) :- 日付の表示(A, S).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（法律にないもの）：ありえない組み合わせ・入れてほしい欄
+%
+% ここに書くのは、このアプリが判定のために決めた約束事。労働基準法・施行規則の条文そのものではない。
+%   ・ありえない組み合わせの除外（no_such/3）。根拠条を持つ（C3）
+%   ・判定に要るのに空の欄（足りない欄/2）。画面は「〜を入れてください」で止める
+%   ・出勤が八割以上かは利用者が入れる。「全労働日」「出勤」に何を数えるか（39条10項など）は判定しない
+%   2026-11-23 案A。欄の選択肢（前の 選択肢/3。説明に「（3項1号）」の号番号と「直近の基準日」の語があった）は消し、
+%   画面の選択肢は web/template.html に事実の言葉で直書きした（C2。tokusho-prolog と同じ）。値の確かめは schema.pl の ctx_valid。
+%   前の no_such の4つ（判定日が雇入れより前・週の時間が0以下か168超・週の日数・年の日数が範囲の外）は、どれも根拠条が [] で、
+%   条文の組み合わせではなく値の範囲だった。範囲は ctx_valid と画面の入力の決まりに移し、雇入れより前の時点は「まだ」として答える
+%   （最初の付与日は雇入れの日から数えるので、雇われる前もまだ与えられていない）。
+
+%% ---------- ありえない組み合わせ（根拠条は39条3項2号） ----------
+% 1年間の所定労働日数で数えるのは、週以外の期間によって所定労働日数が定められている労働者（3項2号）だけ。
+% 4の欄で1週間に働く日数を選んだなら、5の欄（週では決まっていないとき）には当たらない（決まったこと6）。
+% 三十時間以上なら4・5を見ないので、「ありません」にしない。
+no_such(C, '1年間に働く日数で数えるのは、週では働く日数が決まっていない人だけで、1週間に働く日数が決まっている人には当たらない', ['39条3項2号']) :-
+    欄(週の時間, C, Hr), 規則の時間(TH, _), Hr < TH,
+    欄(週の日数, C, W), integer(W),
+    欄(年の日数, C, Y), Y \== なし.
+
+%% ---------- 判定に要るのに空の欄 ----------
+% 週では決まっていない人で、1週間の労働時間が三十時間未満なら、3項2号に当たるかを見るために1年間に働く日数が要る
+足りない欄(C, '1年間に働く日数') :-
+    欄(週の日数, C, 週では決まっていない), 欄(年の日数, C, なし),
+    欄(週の時間, C, Hr), 規則の時間(TH, _), Hr < TH.
+</script>
+<script type="text/prolog" data-name="rules_a_kijunbi.pl">% rules/a_kijunbi.pl — 付与日（六箇月経過日と、そこから1年ごとの日）の数え方（39条1項・2項）
+%
+%   39条1項は「雇入れの日から起算して六箇月間継続勤務し」、2項は「雇入れの日から起算して六箇月を超えて継続勤務する日
+%   （以下「六箇月経過日」という。）から起算した継続勤務年数一年ごとに」。
+%   どちらも起算の日（雇入れの日・六箇月経過日）を条文が名指ししているので、その日を1日目に数える（tokusho-prolog の
+%   「〜の日から起算して」と同じ読み）。月・年の期間は、起算の日の N か月後の同じ日（応当日）の前日で終わり、
+%   その月に同じ日がなければその月の末日で終わる、と数える（約束事の行を出す）。
+%     例：4月1日に雇入れ → 4/1〜9/30 が六箇月間 → 六箇月経過日は 10月1日。
+%         8月31日に雇入れ → 2月に31日がないので 2月末日で六箇月が終わる → 六箇月経過日は 3月1日。
+%   付与日 K 番目（K = 0, 1, 2, …）は、K = 0 が六箇月経過日、K ≥ 1 は六箇月経過日から起算して K 年を経過した翌日
+%   （2項ただし書の「六箇月経過日から一年ごとに区分した各期間」の初日）。
+
+二項の六箇月経過日('雇入れの日から起算して六箇月を超えて継続勤務する日（以下「六箇月経過日」という。）から起算した継続勤務年数一年ごとに、前項の日数に、次の表の上欄に掲げる六箇月経過日から起算した継続勤務年数の区分に応じ同表の下欄に掲げる労働日を加算した有給休暇を与えなければならない').
+
+% 起算の日 S（date）から起算して N か月の期間が終わる日 End と、その翌日 Next。Ou = 応当日あり | 応当日なし
+起算して月を経過(S, N, End, Next, Ou) :-
+    S = date(_, _, D), 月を足す(S, N, Y2, M2), 月の日数(Y2, M2, L),
+    (   D =< L
+    ->  Next = date(Y2, M2, D), 前日(Next, End), Ou = 応当日あり
+    ;   End = date(Y2, M2, L), 翌日(End, Next), Ou = 応当日なし ).
+
+% 数え方の説明の行（約束事）
+数え方の約束(Y) :-
+    約束('「〜の日から起算して N 箇月（年）」は、その日を1日目に数え、N か月後の同じ日の前日で終わると読む。その月に同じ日がなければ、その月の末日で終わる', Y).
+
+% 期間の計算の文：S から起算して L（'六箇月' など）は End で終わり、Next がその次の日
+期間の文(S, N, L, End, Next, Ou, F) :-
+    d(S, SS), d(End, SE), d(Next, SN),
+    ( Ou == 応当日あり
+    ->  format(atom(T), '~w を1日目として~wは ~w で終わる（~d か月後の同じ日の前日）。その翌日は ~w', [SS, L, SE, N, SN])
+    ;   format(atom(T), '~w を1日目として~wは ~w で終わる（~d か月後の月に同じ日がないので、その月の末日）。その翌日は ~w', [SS, L, SE, N, SN]) ),
+    文(T, F).
+
+% 基準日(雇入れの日, K, 付与日, 木)：K 番目の付与日（原子）と、その数え方の木
+基準日(HA, 0, EA, t(ok, H, '39条2項', Cs)) :- !,
+    日付(HA, HD), 起算して月を経過(HD, 6, End, E, Ou), 日付の原子(E, EA),
+    d(EA, SE), format(atom(H), '最初の付与日（六箇月経過日）は ~w', [SE]),
+    規定('39条2項', '雇入れの日から起算して六箇月を超えて継続勤務する日を「六箇月経過日」という', R),
+    d(HA, SH), format(atom(T1), '雇入れの日は ~w', [SH]), 文(T1, F1),
+    数え方の約束(Y), 期間の文(HD, 6, '六箇月', End, E, Ou, F2),
+    ex_and('次のすべてが成り立つ', [R, F1, Y, F2], Cs).
+基準日(HA, K, EA, t(ok, H, '39条2項', Cs)) :-
+    integer(K), K >= 1,
+    基準日(HA, 0, E0A, T0), 日付(E0A, E0),
+    M is 12 * K, 起算して月を経過(E0, M, End, E, Ou), 日付の原子(E, EA),
+    d(EA, SE), K1 is K + 1, format(atom(H), '~d番目の付与日（六箇月経過日から ~d 年を経過した翌日）は ~w', [K1, K, SE]),
+    二項の六箇月経過日(W), 規定('39条2項', W, R),
+    数え方の約束(Y), format(atom(L), '~d年', [K]), 期間の文(E0, M, L, End, E, Ou, F2),
+    ex_and('次のすべてが成り立つ', [T0, R, Y, F2], Cs).
+
+% 数える時点 J で直近の付与日の番号 K（最初の付与日より前なら まだ。雇入れの日より前の時点も まだ）
+直近の番号(HA, J, X) :-
+    基準日(HA, 0, E0, _),
+    (   日が前(J, E0) -> X = まだ
+    ;   直近の番号から(HA, J, 0, X) ).
+直近の番号から(HA, J, K, X) :-
+    K1 is K + 1, 基準日(HA, K1, E1, _),
+    (   日が同じか前(E1, J) -> 直近の番号から(HA, J, K1, X)
+    ;   X = K ).
+
+% K 番目の付与日の前の期間（出勤率を見る期間）：開始日と終了日（原子）
+%   K = 0 は雇入れの日から六箇月間（1項）、K ≥ 1 は前の付与日から1年（2項ただし書の「初日の前日の属する期間」）
+前の期間(HA, 0, HA, EndA) :- !,
+    基準日(HA, 0, E0A, _), 日付(E0A, E0), 前日(E0, End), 日付の原子(End, EndA).
+前の期間(HA, K, SA, EndA) :-
+    Kp is K - 1, 基準日(HA, Kp, SA, _),
+    基準日(HA, K, EA, _), 日付(EA, E), 前日(E, End), 日付の原子(End, EndA).
+</script>
+<script type="text/prolog" data-name="rules_b_nissu.pl">% rules/b_nissu.pl — 付与日 K 番目の日数（39条1項・2項・3項、施行規則24条の3）
+%
+%   日数(C, K, X, 条, 行, 木)：X = 日(N) | 表にない。行 は根拠の表の行・列を言葉にしたもの（表を使わないときは ''）
+%   1. 39条3項の対象か（区分/3）：
+%      一週間の所定労働時間が規則24条の3第1項の時間（三十時間）以上なら対象外（3項の括弧書）。
+%      三十時間未満で、4の欄（週の日数）が1〜7なら週の所定労働日数が4項の日数（四日）以下（3項1号）、
+%      4の欄が 週では決まっていない なら5の欄（1年間の所定労働日数）が5項の日数（二百十六日）以下（3項2号）なら対象。
+%      2026-11-23 案A：前は「日数の定め方」の欄（週・週以外）で分けていた。今は4の欄の値で分ける（決め方と週の日数を1つの欄にした。C1）。
+%      木の葉の「入力：」はやめ、事実の文にした（A2。tokusho と同じ）。
+%   2. 対象外なら、K = 0 は1項の十労働日、K ≥ 1 は十労働日に2項の表の労働日を加算（加算の表/4）。
+%   3. 対象なら、規則24条の3第3項の表（比例の表/7）の行（1号は週の日数、2号は1年間の日数の区分）と、
+%      列（雇入れの日から起算した継続勤務期間：K = 0 が六箇月、K = 1 が一年六箇月、…、K ≥ 6 が六年六箇月以上）の日数。
+%      2号で1年間の所定労働日数が表のどの行にも入らない（四十八日未満）ときは 表にない。
+
+%% ---------- 条文の数と表（原文から写したもの） ----------
+% 1項：六箇月間継続勤務し八割以上出勤した労働者に十労働日
+一項の日数(10, '十労働日').
+一項の原文('使用者は、その雇入れの日から起算して六箇月間継続勤務し全労働日の八割以上出勤した労働者に対して、継続し、又は分割した十労働日の有給休暇を与えなければならない').
+% 2項の表：加算の表(六箇月経過日から起算した継続勤務年数, 加算する労働日, 上欄の表示, 下欄の表示)
+加算の表(1, 1, '一年', '一労働日').
+加算の表(2, 2, '二年', '二労働日').
+加算の表(3, 4, '三年', '四労働日').
+加算の表(4, 6, '四年', '六労働日').
+加算の表(5, 8, '五年', '八労働日').
+加算の表(6, 10, '六年以上', '十労働日').     % 6年以上はこの行
+% 規則24条の3第3項の表：比例の表(行, 週所定労働日数, 1年間の下限, 1年間の上限, 上欄の表示, 中欄の表示, 下欄の日数（六箇月〜六年六箇月以上の7列）)
+比例の表(四日, 4, 169, 216, '四日', '百六十九日から二百十六日まで', [7, 8, 9, 10, 12, 13, 15]).
+比例の表(三日, 3, 121, 168, '三日', '百二十一日から百六十八日まで', [5, 6, 6, 8, 9, 10, 11]).
+比例の表(二日, 2, 73, 120, '二日', '七十三日から百二十日まで', [3, 4, 4, 5, 6, 6, 7]).
+比例の表(一日, 1, 48, 72, '一日', '四十八日から七十二日まで', [1, 2, 2, 2, 3, 3, 3]).
+継続勤務期間の列(['六箇月', '一年六箇月', '二年六箇月', '三年六箇月', '四年六箇月', '五年六箇月', '六年六箇月以上']).
+% 規則24条の3第1項・4項・5項
+規則の時間(30, '三十時間').
+一号の日数(4, '四日').
+二号の日数(216, '二百十六日').
+
+二号の原文('週以外の期間によつて所定労働日数が定められている労働者については、一年間の所定労働日数が、前号の厚生労働省令で定める日数に一日を加えた日数を一週間の所定労働日数とする労働者の一年間の所定労働日数その他の事情を考慮して厚生労働省令で定める日数以下の労働者').
+三項の原文('次に掲げる労働者（一週間の所定労働時間が厚生労働省令で定める時間以上の者を除く。）の有給休暇の日数については、前二項の規定にかかわらず、これらの規定による有給休暇の日数を基準とし、通常の労働者の一週間の所定労働日数として厚生労働省令で定める日数と当該労働者の一週間の所定労働日数又は一週間当たりの平均所定労働日数との比率を考慮して厚生労働省令で定める日数とする').
+規則三項の原文('法第三十九条第三項の厚生労働省令で定める日数は、同項第一号に掲げる労働者にあつては次の表の上欄の週所定労働日数の区分に応じ、同項第二号に掲げる労働者にあつては同表の中欄の一年間の所定労働日数の区分に応じて、それぞれ同表の下欄に雇入れの日から起算した継続勤務期間の区分ごとに定める日数とする').
+
+%% ---------- 39条3項の対象か ----------
+% 区分(C, X, 木)：X = 通常 | 一号(行) | 二号(行) | 二号で表にない
+区分(C, X, t(ok, H, Art, Cs)) :-
+    欄(週の時間, C, Hr), 規則の時間(TH, TL),
+    format(atom(TR), '法第三十九条第三項の厚生労働省令で定める時間は、~wとする', [TL]), 規定('規則24条の3第1項', TR, RJ),
+    ( Hr >= TH -> Lim = 外 ; 枠の内外(C, Lim) ),
+    (   Lim == 外
+    ->  X = 通常, Art = '39条3項',
+        H = '39条3項（比例付与）の対象ではない。1項・2項の日数になる',
+        外れる理由(C, Hr, TH, TL, RJ, Rs),
+        ex_or('次のどれか1つが成り立つ', Rs, Cs)
+    ;   Lim = 内(Gou, GA, GL, V, VL),
+        三項の原文(W3), 規定('39条3項', W3, R3),
+        format(atom(T1), '1週間の所定労働時間は ~w 時間で、~wより少ない（3項の括弧書に当たらない）', [Hr, TL]), 文(T1, F1),
+        format(atom(TG), '法第三十九条第三項第~wの厚生労働省令で定める日数は、~wとする', [Gou, GL]), 規定(GA, TG, RG),
+        format(atom(T2), '~wは ~w 日で、~w以下（3項~w）', [VL, V, GL, Gou]), 文(T2, F2),
+        約束('3項は日数を定める規定と読み、八割以上の出勤（1項）と、八割未満の期間の次の1年は与えなくてよい（2項ただし書）は、比例付与の人にもそのまま当てはめる', Y),
+        行を選ぶ(Gou, V, X, RowT),
+        ( Gou == 一号 -> Art = '39条3項1号' ; Art = '39条3項2号' ),
+        format(atom(H), '39条3項~wの比例付与の対象（~w）', [Gou, RowT]),
+        ex_and('次のすべてが成り立つ', [R3, RJ, F1, RG, F2, Y], Cs) ).
+
+% 週の時間が三十時間未満のとき：3項1号・2号の枠に入るか（内(号, 規則の条, 日数の表示, 欄の値, 欄の言い方) | 外）
+%   4の欄が1〜7なら1号、週では決まっていない なら2号。知らない値は止める（agents/dog/rules.md:96）。
+%   2号で5の欄が なし のときは失敗する（yakusoku/kihon.pl の 足りない欄/2 で、judge に入る前に止める）
+枠の内外(C, L) :-
+    欄(週の日数, C, V), integer(V), !, 一号の日数(GN, GL),
+    ( V =< GN -> L = 内(一号, '規則24条の3第4項', GL, V, '1週間の所定労働日数') ; L = 外 ).
+枠の内外(C, L) :-
+    欄(週の日数, C, 週では決まっていない), !,
+    欄(年の日数, C, V), integer(V), 二号の日数(GN, GL),
+    ( V =< GN -> L = 内(二号, '規則24条の3第5項', GL, V, '1年間の所定労働日数') ; L = 外 ).
+枠の内外(C, _) :- 欄(週の日数, C, V), throw(知らない値(週の日数, V)).
+
+% 対象外になる理由（当てはまるものを全部並べる。どれか1つで足りる）
+外れる理由(C, Hr, TH, TL, RJ, Rs) :-
+    findall(R, 外れる理由1(C, Hr, TH, TL, RJ, R), Rs).
+外れる理由1(_, Hr, TH, TL, RJ, R) :-
+    Hr >= TH,
+    規定('39条3項', '一週間の所定労働時間が厚生労働省令で定める時間以上の者を除く（3項の括弧書）', R0),
+    format(atom(T), '1週間の所定労働時間は ~w 時間で、~w以上', [Hr, TL]), 文(T, F),
+    導く(ok, '1週間の所定労働時間が三十時間以上なので、3項の対象から除かれる', '39条3項', [R0, RJ, F], R).
+外れる理由1(C, _, _, _, _, R) :-
+    欄(週の日数, C, V), integer(V), 一号の日数(GN, GL), V > GN,
+    format(atom(TG), '法第三十九条第三項第一号の厚生労働省令で定める日数は、~wとする', [GL]), 規定('規則24条の3第4項', TG, RG),
+    format(atom(T), '1週間の所定労働日数は ~w 日で、~wより多い', [V, GL]), 文(T, F),
+    導く(ok, '3項1号（1週間の所定労働日数が四日以下）に当たらない', '39条3項1号', [RG, F], R).
+外れる理由1(C, _, _, _, _, R) :-
+    欄(週の日数, C, 週では決まっていない), 欄(年の日数, C, V), integer(V), 二号の日数(GN, GL), V > GN,
+    format(atom(TG), '法第三十九条第三項第二号の厚生労働省令で定める日数は、~wとする', [GL]), 規定('規則24条の3第5項', TG, RG),
+    format(atom(T), '1年間の所定労働日数は ~w 日で、~wより多い', [V, GL]), 文(T, F),
+    導く(ok, '3項2号（1年間の所定労働日数が二百十六日以下）に当たらない', '39条3項2号', [RG, F], R).
+
+% 表の行を選ぶ：1号は週の日数（上欄）、2号は1年間の日数（中欄）
+行を選ぶ(一号, V, 一号(Row), T) :-
+    比例の表(Row, V, _, _, UL, _, _), !,
+    format(atom(T), '規則24条の3第3項の表の上欄「~w」の行', [UL]).
+行を選ぶ(二号, V, 二号(Row), T) :-
+    比例の表(Row, _, Lo, Hi, _, ML, _), V >= Lo, V =< Hi, !,
+    format(atom(T), '規則24条の3第3項の表の中欄「~w」の行', [ML]).
+行を選ぶ(二号, _, 二号で表にない, '規則24条の3第3項の表の中欄に当てはまる行がない（いちばん少ない行が「四十八日から七十二日まで」）').
+
+%% ---------- 日数 ----------
+日数(C, K, X, Art, Row, t(ok, H, Art, Cs)) :-
+    区分(C, Kb, KT),
+    日数の本体(Kb, K, X, Art, Row, Fs),
+    ( X = 日(N) -> format(atom(H), '~d日（~w~w）', [N, Art, Row]) ; format(atom(H), '日数は表から決まらない（~w~w）', [Art, Row]) ),
+    ex_and('次のすべてが成り立つ', [KT | Fs], Cs).
+
+日数の本体(通常, 0, 日(N), '39条1項', '', [R, F]) :- !,
+    一項の日数(N, L), 一項の原文(W), 規定('39条1項', W, R),
+    format(atom(T), '最初の付与日（六箇月経過日）なので、1項の~w', [L]), 文(T, F).
+日数の本体(通常, K, 日(N), '39条2項', Row, [R1, R2, F]) :-
+    一項の日数(N0, L0), Kt is min(K, 6), 加算の表(Kt, A, UL, LL), N is N0 + A,
+    format(atom(Row), 'の表「~w」の行', [UL]),
+    一項の原文(W1), 規定('39条1項', W1, R1),
+    二項の六箇月経過日(W2), 規定('39条2項', W2, R2),
+    format(atom(T), '六箇月経過日から起算した継続勤務年数は ~d 年なので、表の上欄「~w」の行で下欄は~w。1項の~wに加算して ~d労働日', [K, UL, LL, L0, N]),
+    文(T, F).
+日数の本体(二号で表にない, _, 表にない, '規則24条の3第3項', 'の表の中欄に当てはまる行がない', [R, F]) :- !,
+    規則三項の原文(W), 規定('規則24条の3第3項', W, R),
+    文('表の中欄は「四十八日から七十二日まで」がいちばん少ない行で、それより少ない1年間の所定労働日数の行はない。日数は条文の表からは決まらない', F).
+日数の本体(Kb, K, 日(N), '規則24条の3第3項', Row, [R, Y, F]) :-
+    ( Kb = 一号(RowA) ; Kb = 二号(RowA) ), !,
+    比例の表(RowA, _, _, _, UL, ML, Ns), 継続勤務期間の列(Cols),
+    Kt is min(K, 6), nth0(Kt, Ns, N), nth0(Kt, Cols, ColL),
+    ( Kb = 一号(_) -> format(atom(Row), 'の表 上欄「~w」の行・「~w」の列', [UL, ColL])
+    ;                 format(atom(Row), 'の表 中欄「~w」の行・「~w」の列', [ML, ColL]) ),
+    規則三項の原文(W), 規定('規則24条の3第3項', W, R),
+    約束('表の下欄の列（雇入れの日から起算した継続勤務期間）は、六箇月が最初の付与日、一年六箇月が2番目の付与日、…、六年六箇月以上が7番目以降の付与日に当たると読む', Y),
+    K1 is K + 1,
+    format(atom(T), '~d番目の付与日なので「~w」の列。その行の日数は ~d日', [K1, ColL, N]), 文(T, F).
+</script>
+<script type="text/prolog" data-name="rules_c_kekka.pl">% rules/c_kekka.pl — 数える時点の直近の付与と次の付与を判定し、結論の箱・根拠条文・論理の木を作る（39条1項・2項ただし書）
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 箱の条, 木だけの条)　結論ごとの段 = s(画面のid, 見出し, 段)
+%   形は tokusho-prolog/rules/b_kekka.pl と同じ（2026-11-23 案A）。前は 直近/3・次回/3 の if-then-else で見出しを選び、
+%   6の欄が 八割未満 でなければ全部「八割以上」の枝に、日数が 日(N) でなければ全部「表にない」の枝に落ちた（知らない値が別の答えに化けた）。
+%   今は 出勤の状態/2・日数の状態/2・組の番号/2 が値と状態を全部名前で受け、知らない値・状態は throw で止める（agents/dog/rules.md:96）。
+%   状態：組み合わせなし | 表にない（1行）／ まだ | 付与 | 要しない（①直近の付与 ②次の付与 の2行）
+%     数える時点が最初の付与日（六箇月経過日）より前なら まだ。そうでなければ、数える時点と同じか前で最後の付与日 K 番目について、
+%     6の欄（その付与日の前の区切りの出勤）を見る：K = 0 は1項（雇入れの日から六箇月間）、K ≥ 1 は2項ただし書（前の1年が八割未満なら、
+%     その付与日以後の1年は与えることを要しない）。八割以上なら rules/b_nissu.pl の日数。付与日の当日は「与えられた」に入れる。
+%     次の付与日は、数える時点より後で最初の付与日。そこまでの区切りの出勤はまだ決まっていないので、「八割以上出勤したときに限る」と書く。
+%     比例付与の表に当てはまる行がない（1年間の所定労働日数が47日以下）ときは、直近も次も同じ答えなので 表にない の1行にする。
+%   結論の箱は ①②の箇条書き（A7。1行の状態は1行）。数える時点を言い直さない（A2。前の「~w の時点では、まだ…」をやめた）。
+%   論理の木は ①と② の2本（B5）。数える時点と付与日を比べた行は木の葉にだけ置き、指示語を置かない（A6。前の「それより後の付与日」をやめた）。
+%   「判定日」の語はやめ、「数える時点」と書く（A1・A6）。前の web.pl の注意4本は、1本を6の欄に、3本を about に移した（A5）。
+
+二項ただし書('継続勤務した期間を六箇月経過日から一年ごとに区分した各期間（最後に一年未満の期間を生じたときは、当該期間）の初日の前日の属する期間において出勤した日数が全労働日の八割未満である者に対しては、当該初日以後の一年間においては有給休暇を与えることを要しない').
+
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C), \+ 足りない欄(C, _),
+    全部の段(C, Steps, Trees),
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Trees, Arts).
+
+% ありえない組み合わせなら、その1行だけ（根拠条は no_such の第3引数。C3）
+全部の段(C, Steps, Trees) :-
+    no_such(C, W, As), !,
+    S = 段(組み合わせなし, 'この組み合わせはありません。', As, []),
+    Steps = [s(kekka, '有給休暇', S)],
+    findall(R, ( member(A, As), ありえない組の規定(A, R) ), Rs),
+    文(W, F), append(Rs, [F], Cs),
+    問いの答え(S, Ans), 印(組み合わせなし, M),
+    導く(M, Ans, '', Cs, T), Trees = [T].
+全部の段(C, Steps, Trees) :-
+    区分(C, Kb, KT),
+    欄(雇入れの日, C, HA), 欄(時点, C, J),
+    直近の番号(HA, J, KX),
+    欄(出勤, C, V), 出勤の状態(V, At),
+    直近の状態(Kb, KX, At, St),
+    組の番号(St, N),
+    箱の段(N, St, C, KT, KX, Steps, Trees).
+
+% no_such の根拠条の規定の行。知らない条は止める
+ありえない組の規定('39条3項2号', R) :- !, 二号の原文(W), 規定('39条3項2号', W, R).
+ありえない組の規定(A, _) :- throw(知らない条(A)).
+
+% 6の欄の値を、状態の名前で受ける。知らない値は止める（前は 八割未満 でなければ全部「八割以上」に化けた）
+出勤の状態(八割以上, 足りる) :- !.
+出勤の状態(八割未満, 足りない) :- !.
+出勤の状態(V, _) :- throw(知らない値(出勤, V)).
+
+% 日数/6 の返す値を、状態の名前で受ける。知らない値は止める（前は 日(N) でなければ全部「表にない」に化けた）
+日数の状態(日(N), 日(N)) :- integer(N), !.
+日数の状態(表にない, 表にない) :- !.
+日数の状態(X, _) :- throw(知らない値(日数, X)).
+
+% 直近の状態(区分, 直近の付与日の番号 | まだ, 出勤の状態, 状態)
+直近の状態(二号で表にない, _, _, 表にない) :- !.
+直近の状態(_, まだ, _, まだ) :- !.
+直近の状態(_, K, 足りない, 要しない) :- integer(K), !.
+直近の状態(_, K, 足りる, 付与) :- integer(K), !.
+直近の状態(Kb, KX, At, _) :- throw(知らない状態(Kb-KX-At)).
+
+% 組の番号(状態, 1=1行の答え | 2=①直近の付与 ②次の付与)。
+% 状態は全部名前で書き、知らない状態は止める（agents/dog/rules.md:96）
+組の番号(組み合わせなし, 1) :- !.   % no_such（39条3項2号）
+組の番号(表にない, 1) :- !.         % 規則24条の3第3項：1年間の所定労働日数が47日以下（直近も次も同じ答えなので1行）
+組の番号(まだ, 2) :- !.             % 39条1項：最初の付与日より前
+組の番号(付与, 2) :- !.             % 39条1項・2項・規則24条の3第3項
+組の番号(要しない, 2) :- !.         % 39条1項・2項ただし書：前の区切りが八割未満
+組の番号(St, _) :- throw(知らない状態(St)).
+
+% 木の一番上の印：与えられる（付与）は ok、そのほか（ありません・表にない・まだ・要しない）は info。②次の付与の木はいつも ok
+印(St, K) :- 組の番号(St, _), ( St == 付与 -> K = ok ; K = info ).
+
+%% ---- 箱の段と木（組の番号ごと）----
+% 1：表にないの1行。木は日数の木（区分の木と、表に行がない葉）をそのまま下げる
+箱の段(1, 表にない, C, _, _, [s(kekka, '有給休暇の日数', S)], [T]) :- !,
+    日数(C, 0, X, Art, _, t(_, _, _, Cs)), 日数の状態(X, 表にない),
+    S = 段(表にない, '1年間に働く日数が47日以下の人は、表のどの行にも当たらず、有給休暇の日数は条文の表からは決まりません。', [Art], []),
+    問いの答え(S, A), 印(表にない, M),
+    T = t(M, A, '', Cs).
+% 2：①直近の付与 ②次の付与
+箱の段(2, St, C, _, KX, Steps, [T1, T2]) :- !,
+    欄(雇入れの日, C, HA), 欄(時点, C, J),
+    直近の段(St, C, HA, J, KX, S1, Cs1),
+    次の段(St, C, HA, J, KX, S2, Cs2),
+    Steps = [s(chokkin, '直近の付与', S1), s(jikai, '次の付与', S2)],
+    印(St, M1),
+    問いの答え(S1, A1), 導く(M1, A1, '', Cs1, T1),
+    問いの答え(S2, A2), 導く(ok, A2, '', Cs2, T2).
+箱の段(N, St, _, _, _, _, _) :- throw(知らない状態(N-St)).
+
+% ①直近の付与（結論の箱。指示語を置かず、名詞で書く。A6）
+直近の段(まだ, _, HA, J, まだ, 段(まだ, '有給休暇はまだ与えられていません。', ['39条1項'], []), [R1, T0, F]) :- !,
+    基準日(HA, 0, E0, T0), d(J, SJ), d(E0, S0),
+    一項の原文(W), 規定('39条1項', W, R1),
+    format(atom(T), '数える時点 ~w は、最初の付与日 ~w より前（雇入れの日から起算して六箇月間の継続勤務がまだ終わっていない）', [SJ, S0]), 文(T, F).
+直近の段(付与, C, HA, J, K, 段(付与, W, [Art], []), [TK, FJ, FA, TN]) :- !,
+    基準日(HA, K, EK, TK), d(EK, SK),
+    時点の葉(HA, J, K, FJ),
+    前の期間(HA, K, PS, PE), d(PS, SPS), d(PE, SPE),
+    format(atom(TA), '~w〜~w に、全労働日の八割以上出勤した', [SPS, SPE]), 文(TA, FA),
+    日数(C, K, X, Art, _, TN), 日数の状態(X, XS),
+    ( XS = 日(N) -> true ; throw(知らない状態(付与-XS)) ),
+    format(atom(W), '~wに、~d労働日の有給休暇が与えられます。', [SK, N]).
+直近の段(要しない, _, HA, J, K, 段(要しない, W, [Art], []), Cs) :- !,
+    基準日(HA, K, EK, TK), d(EK, SK),
+    時点の葉(HA, J, K, FJ),
+    前の期間(HA, K, PS, PE), d(PS, SPS), d(PE, SPE),
+    要しない理由(K, SPS, SPE, Art, Rs),
+    (   K =:= 0
+    ->  format(atom(W), '~wには、有給休暇は与えられません。', [SK])
+    ;   format(atom(W), '~wからの1年は、有給休暇を与えなくてよいことになっています。', [SK]) ),
+    append([TK, FJ], Rs, Cs).
+直近の段(St, _, _, _, _, _, _) :- throw(知らない状態(St)).
+
+% 数える時点と、直近の付与日・次の付与日を比べた葉（論理の木の①にだけ置く。結論の箱では言い直さない。A2）
+時点の葉(HA, J, K, F) :-
+    K1 is K + 1, 基準日(HA, K, EK, _), 基準日(HA, K1, EN, _),
+    d(J, SJ), d(EK, SK), d(EN, SN),
+    format(atom(T), '数える時点 ~w は、付与日 ~w と同じか後で、次の付与日 ~w より前', [SJ, SK, SN]), 文(T, F).
+
+要しない理由(0, SPS, SPE, '39条1項', [R, F, G]) :- !,
+    一項の原文(W), 規定('39条1項', W, R),
+    format(atom(T), '雇入れの日から六箇月間（~w〜~w）に出勤した日数は、全労働日の八割に届かなかった', [SPS, SPE]), 文(T, F),
+    文('1項の「全労働日の八割以上出勤した労働者」に当たらないので、1項による有給休暇はない', G).
+要しない理由(_, SPS, SPE, '39条2項ただし書', [R, F]) :-
+    二項ただし書(W), 規定('39条2項ただし書', W, R),
+    format(atom(T), '~w〜~w に出勤した日数は、全労働日の八割に届かなかった', [SPS, SPE]), 文(T, F).
+
+% ②次の付与（結論の箱。出勤の区切りは日付で書き、「それまで」などの指示語を置かない。A6）
+次の段(St, C, HA, J, KX, 段(St, W, [Art], []), [TK, FJ, FC, TN]) :-
+    ( KX == まだ -> K = 0 ; integer(KX) -> K is KX + 1 ; throw(知らない状態(次-KX)) ),
+    基準日(HA, K, EK, TK), d(EK, SK),
+    前の期間(HA, K, PS, PE), d(PS, SPS), d(PE, SPE),
+    d(J, SJ), format(atom(TJ), '数える時点 ~w より後で、最初に来る付与日は ~w', [SJ, SK]), 文(TJ, FJ),
+    日数(C, K, X, Art, _, TN), 日数の状態(X, XS),
+    ( XS = 日(N) -> true ; throw(知らない状態(次-XS)) ),
+    (   K =:= 0
+    ->  format(atom(W), '最初は~wに~d労働日です。雇われた日から~wまでに、全労働日の8割以上出勤したときに限ります。', [SK, N, SPE]),
+        format(atom(TC), '雇入れの日から六箇月間（~w〜~w）に全労働日の八割以上出勤すれば与えられる（1項）。八割未満なら1項による有給休暇はない', [SPS, SPE]),
+        文(TC, FC)
+    ;   format(atom(W), '次は~wに~d労働日です。~wから~wまでに、全労働日の8割以上出勤したときに限ります。', [SK, N, SPS, SPE]),
+        format(atom(TC), '~w〜~w に全労働日の八割以上出勤すれば与えられる。八割未満なら、~w からの1年は与えることを要しない（2項ただし書）', [SPS, SPE, SK]),
+        二項ただし書(WT), 規定('39条2項ただし書', WT, RT),
+        導く(ok, TC, '39条2項ただし書', [RT], FC) ).
+
+% 6の欄で数えた区切り（直近の付与日の前の区切り）。最初の付与日より前・ありません・表にないなら失敗（6の欄を見ない）。
+% 画面は答えの先頭の「時点の判定」の行の下に出す（決まったこと3）
+% judge は Steps を束縛せずに呼び、そのあとで chokkin の段を探す（前は Steps の頭を s(chokkin, …) に決め打ちして渡したので、
+% 表にない（[s(kekka, …)]）では 箱の段(1, …) と単一化できずに最後の節の throw(知らない状態(1-表にない)) に落ちた。11/23 page_test の NG 2件）
+区切り(C, PS, PE) :-
+    judge(C, r(_, Steps, _), _), !,
+    memberchk(s(chokkin, _, 段(St, _, _, _)), Steps),
+    memberchk(St, [付与, 要しない]),
+    欄(雇入れの日, C, HA), 欄(時点, C, J),
+    直近の番号(HA, J, K), integer(K),
+    前の期間(HA, K, PS, PE).
+
+%% ---- 見出し（結論の箱）と節の文（tokusho-prolog/rules/b_kekka.pl と同じ）----
+% 結論の箱と番号つきの節には、段の文だけを出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」を付けない）。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(_, Steps, Ws) :-
+    findall(W, ( member(s(_, _, S), Steps), 問いの答え(S, W) ), Ws).
+
+% 答えの文に箱の条を（）で付ける
+問いの答え(S, W) :-
+    S = 段(_, _, As, _),
+    答え(S, W0),
+    条の表記(As, A),
+    format(atom(W), '~w（~w）', [W0, A]).
+
+% 節の文：答えの文（条を付けない）
+節の文(_, S, W) :- 答え(S, W).
+
+% 答え(段, 答えの文)：段の文の末尾の「。」を外す
+答え(段(_, M, _, _), W) :-
+    ( atom_concat(M0, '。', M) -> W = M0 ; W = M ).
+
+%% ---- 根拠条文 ----
+% 箱の条を段の順に並べ、そのあとに木の中の条（規定の行など）を並べる。重複は1つに
+根拠条文(Ss, Trees, Arts) :-
+    findall(A, ( member(段(_, _, As, Ex), Ss), ( member(A, As) ; member(A, Ex) ) ), A1),
+    findall(A, ( member(T, Trees), 木の条(T, A) ), A2),
+    append(A1, A2, All), list_to_set(All, Arts).
+
+木の条(t(_, _, A, _), A) :- A \== '', A \== '@約束事'.
+木の条(t(_, _, _, Cs), A) :- member(C, Cs), 木の条(C, A).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は tokusho-prolog の web.pl と同じ（2026-11-23 案A）。
+%   前の kekka_row・jikai_row・judge/2・jikai/2・jikai_explain・choice_list・notes/note（結果の下の注意4本）はやめた。
+%   注意4本は、1本（出勤率は入力に従う）を6の欄に、3本を about の「判定について」「収録範囲」「アプリの約束事」に移した（A5）。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+
+%% ---- 判定に要るのに空の欄（画面は「〜を入れてください」で止める。yakusoku/kihon.pl）----
+missing(C, L) :- findall(X, 足りない欄(C, X), L).
+
+%% ---- 6の欄で数えた区切り（答えの先頭の「時点の判定」の行の下に出す。決まったこと3）----
+kugiri(C, PS, PE) :- 区切り(C, PS, PE), !.
+</script>
+<script type="application/json" id="law">{"39":{"t":"第三十九条","c":"（年次有給休暇）","p":[{"n":"1","s":"使用者は、その雇入れの日から起算して六箇月間継続勤務し全労働日の八割以上出勤した労働者に対して、継続し、又は分割した十労働日の有給休暇を与えなければならない。","i":[],"tb":[]},{"n":"2","s":"使用者は、一年六箇月以上継続勤務した労働者に対しては、雇入れの日から起算して六箇月を超えて継続勤務する日（以下「六箇月経過日」という。）から起算した継続勤務年数一年ごとに、前項の日数に、次の表の上欄に掲げる六箇月経過日から起算した継続勤務年数の区分に応じ同表の下欄に掲げる労働日を加算した有給休暇を与えなければならない。ただし、継続勤務した期間を六箇月経過日から一年ごとに区分した各期間（最後に一年未満の期間を生じたときは、当該期間）の初日の前日の属する期間において出勤した日数が全労働日の八割未満である者に対しては、当該初日以後の一年間においては有給休暇を与えることを要しない。","i":[],"tb":[[[{"s":"六箇月経過日から起算した継続勤務年数","c":1,"r":1},{"s":"労働日","c":1,"r":1}],[{"s":"一年","c":1,"r":1},{"s":"一労働日","c":1,"r":1}],[{"s":"二年","c":1,"r":1},{"s":"二労働日","c":1,"r":1}],[{"s":"三年","c":1,"r":1},{"s":"四労働日","c":1,"r":1}],[{"s":"四年","c":1,"r":1},{"s":"六労働日","c":1,"r":1}],[{"s":"五年","c":1,"r":1},{"s":"八労働日","c":1,"r":1}],[{"s":"六年以上","c":1,"r":1},{"s":"十労働日","c":1,"r":1}]]]},{"n":"3","s":"次に掲げる労働者（一週間の所定労働時間が厚生労働省令で定める時間以上の者を除く。）の有給休暇の日数については、前二項の規定にかかわらず、これらの規定による有給休暇の日数を基準とし、通常の労働者の一週間の所定労働日数として厚生労働省令で定める日数（第一号において「通常の労働者の週所定労働日数」という。）と当該労働者の一週間の所定労働日数又は一週間当たりの平均所定労働日数との比率を考慮して厚生労働省令で定める日数とする。","i":[{"n":"1","t":"一","s":"一週間の所定労働日数が通常の労働者の週所定労働日数に比し相当程度少ないものとして厚生労働省令で定める日数以下の労働者","sub":[]},{"n":"2","t":"二","s":"週以外の期間によつて所定労働日数が定められている労働者については、一年間の所定労働日数が、前号の厚生労働省令で定める日数に一日を加えた日数を一週間の所定労働日数とする労働者の一年間の所定労働日数その他の事情を考慮して厚生労働省令で定める日数以下の労働者","sub":[]}],"tb":[]},{"n":"4","s":"使用者は、当該事業場に、労働者の過半数で組織する労働組合があるときはその労働組合、労働者の過半数で組織する労働組合がないときは労働者の過半数を代表する者との書面による協定により、次に掲げる事項を定めた場合において、第一号に掲げる労働者の範囲に属する労働者が有給休暇を時間を単位として請求したときは、前三項の規定による有給休暇の日数のうち第二号に掲げる日数については、これらの規定にかかわらず、当該協定で定めるところにより時間を単位として有給休暇を与えることができる。","i":[{"n":"1","t":"一","s":"時間を単位として有給休暇を与えることができることとされる労働者の範囲","sub":[]},{"n":"2","t":"二","s":"時間を単位として与えることができることとされる有給休暇の日数（五日以内に限る。）","sub":[]},{"n":"3","t":"三","s":"その他厚生労働省令で定める事項","sub":[]}],"tb":[]},{"n":"5","s":"使用者は、前各項の規定による有給休暇を労働者の請求する時季に与えなければならない。ただし、請求された時季に有給休暇を与えることが事業の正常な運営を妨げる場合においては、他の時季にこれを与えることができる。","i":[],"tb":[]},{"n":"6","s":"使用者は、当該事業場に、労働者の過半数で組織する労働組合がある場合においてはその労働組合、労働者の過半数で組織する労働組合がない場合においては労働者の過半数を代表する者との書面による協定により、第一項から第三項までの規定による有給休暇を与える時季に関する定めをしたときは、これらの規定による有給休暇の日数のうち五日を超える部分については、前項の規定にかかわらず、その定めにより有給休暇を与えることができる。","i":[],"tb":[]},{"n":"7","s":"使用者は、第一項から第三項までの規定による有給休暇（これらの規定により使用者が与えなければならない有給休暇の日数が十労働日以上である労働者に係るものに限る。以下この項及び次項において同じ。）の日数のうち五日については、基準日（継続勤務した期間を六箇月経過日から一年ごとに区分した各期間（最後に一年未満の期間を生じたときは、当該期間）の初日をいう。以下この項において同じ。）から一年以内の期間に、労働者ごとにその時季を定めることにより与えなければならない。ただし、第一項から第三項までの規定による有給休暇を当該有給休暇に係る基準日より前の日から与えることとしたときは、厚生労働省令で定めるところにより、労働者ごとにその時季を定めることにより与えなければならない。","i":[],"tb":[]},{"n":"8","s":"前項の規定にかかわらず、第五項又は第六項の規定により第一項から第三項までの規定による有給休暇を与えた場合においては、当該与えた有給休暇の日数（当該日数が五日を超える場合には、五日とする。）分については、時季を定めることにより与えることを要しない。","i":[],"tb":[]},{"n":"9","s":"使用者は、第一項から第三項までの規定による有給休暇の期間又は第四項の規定による有給休暇の時間については、就業規則その他これに準ずるもので定めるところにより、それぞれ、平均賃金若しくは所定労働時間労働した場合に支払われる通常の賃金又はこれらの額を基準として厚生労働省令で定めるところにより算定した額の賃金を支払わなければならない。ただし、当該事業場に、労働者の過半数で組織する労働組合がある場合においてはその労働組合、労働者の過半数で組織する労働組合がない場合においては労働者の過半数を代表する者との書面による協定により、その期間又はその時間について、それぞれ、健康保険法（大正十一年法律第七十号）第四十条第一項に規定する標準報酬月額の三十分の一に相当する金額（その金額に、五円未満の端数があるときは、これを切り捨て、五円以上十円未満の端数があるときは、これを十円に切り上げるものとする。）又は当該金額を基準として厚生労働省令で定めるところにより算定した金額を支払う旨を定めたときは、これによらなければならない。","i":[],"tb":[]},{"n":"10","s":"労働者が業務上負傷し、又は疾病にかかり療養のために休業した期間及び育児休業、介護休業等育児又は家族介護を行う労働者の福祉に関する法律第二条第一号に規定する育児休業又は同条第二号に規定する介護休業をした期間並びに産前産後の女性が第六十五条の規定によつて休業した期間は、第一項及び第二項の規定の適用については、これを出勤したものとみなす。","i":[],"tb":[]}]},"k24_3":{"t":"労働基準法施行規則第二十四条の三","c":"","p":[{"n":"1","s":"法第三十九条第三項の厚生労働省令で定める時間は、三十時間とする。","i":[],"tb":[]},{"n":"2","s":"法第三十九条第三項の通常の労働者の一週間の所定労働日数として厚生労働省令で定める日数は、五・二日とする。","i":[],"tb":[]},{"n":"3","s":"法第三十九条第三項の通常の労働者の一週間の所定労働日数として厚生労働省令で定める日数と当該労働者の一週間の所定労働日数又は一週間当たりの平均所定労働日数との比率を考慮して厚生労働省令で定める日数は、同項第一号に掲げる労働者にあつては次の表の上欄の週所定労働日数の区分に応じ、同項第二号に掲げる労働者にあつては同表の中欄の一年間の所定労働日数の区分に応じて、それぞれ同表の下欄に雇入れの日から起算した継続勤務期間の区分ごとに定める日数とする。","i":[],"tb":[[[{"s":"週所定労働日数","c":1,"r":2},{"s":"一年間の所定労働日数","c":1,"r":2},{"s":"雇入れの日から起算した継続勤務期間","c":7,"r":1}],[{"s":"六箇月","c":1,"r":1},{"s":"一年六箇月","c":1,"r":1},{"s":"二年六箇月","c":1,"r":1},{"s":"三年六箇月","c":1,"r":1},{"s":"四年六箇月","c":1,"r":1},{"s":"五年六箇月","c":1,"r":1},{"s":"六年六箇月以上","c":1,"r":1}],[{"s":"四日","c":1,"r":1},{"s":"百六十九日から二百十六日まで","c":1,"r":1},{"s":"七日","c":1,"r":1},{"s":"八日","c":1,"r":1},{"s":"九日","c":1,"r":1},{"s":"十日","c":1,"r":1},{"s":"十二日","c":1,"r":1},{"s":"十三日","c":1,"r":1},{"s":"十五日","c":1,"r":1}],[{"s":"三日","c":1,"r":1},{"s":"百二十一日から百六十八日まで","c":1,"r":1},{"s":"五日","c":1,"r":1},{"s":"六日","c":1,"r":1},{"s":"六日","c":1,"r":1},{"s":"八日","c":1,"r":1},{"s":"九日","c":1,"r":1},{"s":"十日","c":1,"r":1},{"s":"十一日","c":1,"r":1}],[{"s":"二日","c":1,"r":1},{"s":"七十三日から百二十日まで","c":1,"r":1},{"s":"三日","c":1,"r":1},{"s":"四日","c":1,"r":1},{"s":"四日","c":1,"r":1},{"s":"五日","c":1,"r":1},{"s":"六日","c":1,"r":1},{"s":"六日","c":1,"r":1},{"s":"七日","c":1,"r":1}],[{"s":"一日","c":1,"r":1},{"s":"四十八日から七十二日まで","c":1,"r":1},{"s":"一日","c":1,"r":1},{"s":"二日","c":1,"r":1},{"s":"二日","c":1,"r":1},{"s":"二日","c":1,"r":1},{"s":"三日","c":1,"r":1},{"s":"三日","c":1,"r":1},{"s":"三日","c":1,"r":1}]]]},{"n":"4","s":"法第三十九条第三項第一号の厚生労働省令で定める日数は、四日とする。","i":[],"tb":[]},{"n":"5","s":"法第三十九条第三項第二号の厚生労働省令で定める日数は、二百十六日とする。","i":[],"tb":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"第一章　総則","a":[{"k":"1","t":"第一条","c":"（労働条件の原則）","u":0},{"k":"2","t":"第二条","c":"（労働条件の決定）","u":0},{"k":"3","t":"第三条","c":"（均等待遇）","u":0},{"k":"4","t":"第四条","c":"（男女同一賃金の原則）","u":0},{"k":"5","t":"第五条","c":"（強制労働の禁止）","u":0},{"k":"6","t":"第六条","c":"（中間搾取の排除）","u":0},{"k":"7","t":"第七条","c":"（公民権行使の保障）","u":0},{"k":"8","t":"第八条","c":"","u":2},{"k":"9","t":"第九条","c":"（定義）","u":0},{"k":"10","t":"第十条","c":"","u":0},{"k":"11","t":"第十一条","c":"","u":0},{"k":"12","t":"第十二条","c":"","u":0}]},{"t":"第二章　労働契約","a":[{"k":"13","t":"第十三条","c":"（この法律違反の契約）","u":0},{"k":"14","t":"第十四条","c":"（契約期間等）","u":0},{"k":"15","t":"第十五条","c":"（労働条件の明示）","u":0},{"k":"16","t":"第十六条","c":"（賠償予定の禁止）","u":0},{"k":"17","t":"第十七条","c":"（前借金相殺の禁止）","u":0},{"k":"18","t":"第十八条","c":"（強制貯金）","u":0},{"k":"19","t":"第十九条","c":"（解雇制限）","u":0},{"k":"20","t":"第二十条","c":"（解雇の予告）","u":0},{"k":"21","t":"第二十一条","c":"","u":0},{"k":"22","t":"第二十二条","c":"（退職時等の証明）","u":0},{"k":"23","t":"第二十三条","c":"（金品の返還）","u":0}]},{"t":"第三章　賃金","a":[{"k":"24","t":"第二十四条","c":"（賃金の支払）","u":0},{"k":"25","t":"第二十五条","c":"（非常時払）","u":0},{"k":"26","t":"第二十六条","c":"（休業手当）","u":0},{"k":"27","t":"第二十七条","c":"（出来高払制の保障給）","u":0},{"k":"28","t":"第二十八条","c":"（最低賃金）","u":0},{"k":"29:31","t":"第二十九条から第三十一条まで","c":"","u":2}]},{"t":"第四章　労働時間、休憩、休日及び年次有給休暇","a":[{"k":"32","t":"第三十二条","c":"（労働時間）","u":0},{"k":"32_2","t":"第三十二条の二","c":"","u":0},{"k":"32_3","t":"第三十二条の三","c":"","u":0},{"k":"32_3_2","t":"第三十二条の三の二","c":"","u":0},{"k":"32_4","t":"第三十二条の四","c":"","u":0},{"k":"32_4_2","t":"第三十二条の四の二","c":"","u":0},{"k":"32_5","t":"第三十二条の五","c":"","u":0},{"k":"33","t":"第三十三条","c":"（災害等による臨時の必要がある場合の時間外労働等）","u":0},{"k":"34","t":"第三十四条","c":"（休憩）","u":0},{"k":"35","t":"第三十五条","c":"（休日）","u":0},{"k":"36","t":"第三十六条","c":"（時間外及び休日の労働）","u":0},{"k":"37","t":"第三十七条","c":"（時間外、休日及び深夜の割増賃金）","u":0},{"k":"38","t":"第三十八条","c":"（時間計算）","u":0},{"k":"38_2","t":"第三十八条の二","c":"","u":0},{"k":"38_3","t":"第三十八条の三","c":"","u":0},{"k":"38_4","t":"第三十八条の四","c":"","u":0},{"k":"39","t":"第三十九条","c":"（年次有給休暇）","u":1},{"k":"40","t":"第四十条","c":"（労働時間及び休憩の特例）","u":0},{"k":"41","t":"第四十一条","c":"（労働時間等に関する規定の適用除外）","u":0},{"k":"41_2","t":"第四十一条の二","c":"","u":0}]},{"t":"第五章　安全及び衛生","a":[{"k":"42","t":"第四十二条","c":"","u":0},{"k":"43:55","t":"第四十三条から第五十五条まで","c":"","u":2}]},{"t":"第六章　年少者","a":[{"k":"56","t":"第五十六条","c":"（最低年齢）","u":0},{"k":"57","t":"第五十七条","c":"（年少者の証明書）","u":0},{"k":"58","t":"第五十八条","c":"（未成年者の労働契約）","u":0},{"k":"59","t":"第五十九条","c":"","u":0},{"k":"60","t":"第六十条","c":"（労働時間及び休日）","u":0},{"k":"61","t":"第六十一条","c":"（深夜業）","u":0},{"k":"62","t":"第六十二条","c":"（危険有害業務の就業制限）","u":0},{"k":"63","t":"第六十三条","c":"（坑内労働の禁止）","u":0},{"k":"64","t":"第六十四条","c":"（帰郷旅費）","u":0}]},{"t":"第六章の二　妊産婦等","a":[{"k":"64_2","t":"第六十四条の二","c":"（坑内業務の就業制限）","u":0},{"k":"64_3","t":"第六十四条の三","c":"（危険有害業務の就業制限）","u":0},{"k":"65","t":"第六十五条","c":"（産前産後）","u":0},{"k":"66","t":"第六十六条","c":"","u":0},{"k":"67","t":"第六十七条","c":"（育児時間）","u":0},{"k":"68","t":"第六十八条","c":"（生理日の就業が著しく困難な女性に対する措置）","u":0}]},{"t":"第七章　技能者の養成","a":[{"k":"69","t":"第六十九条","c":"（徒弟の弊害排除）","u":0},{"k":"70","t":"第七十条","c":"（職業訓練に関する特例）","u":0},{"k":"71","t":"第七十一条","c":"","u":0},{"k":"72","t":"第七十二条","c":"","u":0},{"k":"73","t":"第七十三条","c":"","u":0},{"k":"74","t":"第七十四条","c":"","u":2}]},{"t":"第八章　災害補償","a":[{"k":"75","t":"第七十五条","c":"（療養補償）","u":0},{"k":"76","t":"第七十六条","c":"（休業補償）","u":0},{"k":"77","t":"第七十七条","c":"（障害補償）","u":0},{"k":"78","t":"第七十八条","c":"（休業補償及び障害補償の例外）","u":0},{"k":"79","t":"第七十九条","c":"（遺族補償）","u":0},{"k":"80","t":"第八十条","c":"（葬祭料）","u":0},{"k":"81","t":"第八十一条","c":"（打切補償）","u":0},{"k":"82","t":"第八十二条","c":"（分割補償）","u":0},{"k":"83","t":"第八十三条","c":"（補償を受ける権利）","u":0},{"k":"84","t":"第八十四条","c":"（他の法律との関係）","u":0},{"k":"85","t":"第八十五条","c":"（審査及び仲裁）","u":0},{"k":"86","t":"第八十六条","c":"","u":0},{"k":"87","t":"第八十七条","c":"（請負事業に関する例外）","u":0},{"k":"88","t":"第八十八条","c":"（補償に関する細目）","u":0}]},{"t":"第九章　就業規則","a":[{"k":"89","t":"第八十九条","c":"（作成及び届出の義務）","u":0},{"k":"90","t":"第九十条","c":"（作成の手続）","u":0},{"k":"91","t":"第九十一条","c":"（制裁規定の制限）","u":0},{"k":"92","t":"第九十二条","c":"（法令及び労働協約との関係）","u":0},{"k":"93","t":"第九十三条","c":"（労働契約との関係）","u":0}]},{"t":"第十章　寄宿舎","a":[{"k":"94","t":"第九十四条","c":"（寄宿舎生活の自治）","u":0},{"k":"95","t":"第九十五条","c":"（寄宿舎生活の秩序）","u":0},{"k":"96","t":"第九十六条","c":"（寄宿舎の設備及び安全衛生）","u":0},{"k":"96_2","t":"第九十六条の二","c":"（監督上の行政措置）","u":0},{"k":"96_3","t":"第九十六条の三","c":"","u":0}]},{"t":"第十一章　監督機関","a":[{"k":"97","t":"第九十七条","c":"（監督機関の職員等）","u":0},{"k":"98","t":"第九十八条","c":"","u":2},{"k":"99","t":"第九十九条","c":"（労働基準主管局長等の権限）","u":0},{"k":"100","t":"第百条","c":"（女性主管局長の権限）","u":0},{"k":"101","t":"第百一条","c":"（労働基準監督官の権限）","u":0},{"k":"102","t":"第百二条","c":"","u":0},{"k":"103","t":"第百三条","c":"","u":0},{"k":"104","t":"第百四条","c":"（監督機関に対する申告）","u":0},{"k":"104_2","t":"第百四条の二","c":"（報告等）","u":0},{"k":"105","t":"第百五条","c":"（労働基準監督官の義務）","u":0}]},{"t":"第十二章　雑則","a":[{"k":"105_2","t":"第百五条の二","c":"（国の援助義務）","u":0},{"k":"106","t":"第百六条","c":"（法令等の周知義務）","u":0},{"k":"107","t":"第百七条","c":"（労働者名簿）","u":0},{"k":"108","t":"第百八条","c":"（賃金台帳）","u":0},{"k":"109","t":"第百九条","c":"（記録の保存）","u":0},{"k":"110","t":"第百十条","c":"","u":2},{"k":"111","t":"第百十一条","c":"（無料証明）","u":0},{"k":"112","t":"第百十二条","c":"（国及び公共団体についての適用）","u":0},{"k":"113","t":"第百十三条","c":"（命令の制定）","u":0},{"k":"114","t":"第百十四条","c":"（付加金の支払）","u":0},{"k":"115","t":"第百十五条","c":"（時効）","u":0},{"k":"115_2","t":"第百十五条の二","c":"（経過措置）","u":0},{"k":"116","t":"第百十六条","c":"（適用除外）","u":0}]},{"t":"第十三章　罰則","a":[{"k":"117","t":"第百十七条","c":"","u":0},{"k":"118","t":"第百十八条","c":"","u":0},{"k":"119","t":"第百十九条","c":"","u":0},{"k":"120","t":"第百二十条","c":"","u":0},{"k":"121","t":"第百二十一条","c":"","u":0}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+// parseArt・tableHTML・lawHTML はこの本の前の template.html のまま（施行規則の条「規則24条の3」と、項の中の表を読むため。tokusho の parseArt は民法を読み、表を出さない）
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+// '39条2項ただし書' → {key:'39', para:'2'}、'39条3項1号' → {key:'39', para:'3', item:'1'}、'規則24条の3第3項' → {key:'k24_3', para:'3'}
+function parseArt(a){
+  a = String(a);
+  const m = a.match(/^(規則)?(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(本文|ただし書|前段|後段|括弧書)?(?:(\d+)号)?/);
+  if (!m) return null;
+  return { key: (m[1] ? "k" : "") + m[2] + m[3].replace(/の/g, "_"), para: m[4] || null, item: m[6] || null };
+}
+// 項の中の表（39条2項・規則24条の3第3項）
+const tableHTML = tb => tb.map(rows => `<table>${rows.map(r => `<tr>${r.map(c => `<td${c.c > 1 ? ` colspan="${c.c}"` : ""}${c.r > 1 ? ` rowspan="${c.r}"` : ""}>${esc(c.s)}</td>`).join("")}</tr>`).join("")}</table>`).join("");
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para); else if (ps.length > 1 && r.item) ps = ps.slice(0, 1);
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const its = p.i.map(it => `<p class="it${r.item && it.n === r.item ? " hit" : ""}">${it.t ? esc(it.t) + "　" : ""}${esc(it.s)}${it.sub.map(x => `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p${!r.item && r.para ? ' class="hit"' : ""}>${esc(head + p.s)}</p>${tableHTML(p.tb || [])}${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなく、このアプリの決め事（収録範囲・仕組みのページに一覧）。</p>`;
+// 凡例は最初の木の上に1回だけ出す（legend＝false で外す。shohi-prolog・gyotetsu-prolog・tokusho-prolog と同じ）
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+
+// ---------- ここから別ページ（about.html）だけの処理 ----------
+if (location.protocol === "file:") $("back").href = "yukyu.html";
+function openHash(){ const d = location.hash && document.getElementById(location.hash.slice(1)); if (d && d.tagName === "DETAILS") d.open = true; }
+openHash(); window.addEventListener("hashchange", openHash);
+
+async function bootAbout(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    // 全条文の地図
+    let C = []; try{ C = JSON.parse(document.getElementById("cover-data").textContent); }catch(e){}
+    const cover = $("cover");
+    C.forEach(ch => {
+      const div = document.createElement("div"); div.className = "cover-ch";
+      div.innerHTML = `<h4>${esc(ch.t)} <span>${ch.a.length}条</span></h4><div class="cells"></div>`;
+      const cells = div.querySelector(".cells");
+      ch.a.forEach(a => {
+        const btn = document.createElement("button"); btn.type = "button";
+        btn.className = `cell u${a.u}`; btn.title = `${a.t}${a.c}`;
+        btn.addEventListener("click", () => {
+          const old = document.getElementById("cover-pick"); if (old) old.remove();
+          const pk = document.createElement("div"); pk.id = "cover-pick";
+          pk.innerHTML = a.u === 1 ? lawHTML(a.k.includes("_") ? a.k.replace("_", "条の").replace(/_/g, "の") : a.k + "条") : `<p class="hint" style="margin-top:6px">${esc(a.t)}${esc(a.c)}${a.u === 2 ? "（削除）" : "（このアプリでは使用しない条）"}</p>`;
+          div.appendChild(pk);
+        });
+        cells.appendChild(btn);
+      });
+      cover.appendChild(div);
+    });
+    const used = C.flatMap(c => c.a).filter(a => a.u === 1).length;
+    const total = C.flatMap(c => c.a).filter(a => a.u !== 2).length;
+    cover.insertAdjacentHTML("afterbegin", `<p class="cover-total">使っている条：${used} / ${total} 条（削除された条を除く）</p>`);
+    // ソース表示
+    const src = $("src");
+    files.forEach(f => {
+      const det = document.createElement("details"); det.className = "srcfile";
+      det.innerHTML = `<summary>${esc(f.dataset.name.replace(/_/g, "/"))}</summary><pre>${esc(f.textContent)}</pre>`;
+      src.appendChild(det);
+    });
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+  }
+}
+
+// 直接クエリ実行
+$("run").addEventListener("click", () => {
+  if (!pl){ $("out").textContent = "まだ読み込み中です。"; return; }
+  const q = $("q").value.trim().replace(/\.$/, "");
+  try{
+    const it = pl.prolog.query(q); const out = [];
+    for (let i = 0; i < 20; i++){
+      const r = it.next();
+      if (!r) break;
+      if (r.error){ out.push("エラー：" + r.message); break; }
+      // 最後の解は done:true に値が付いて返る。done で先に抜けると、その解を捨てて「解なし」に見える
+      if (r.value && r.value.$tag === "bindings"){
+        const { $tag, ...vars } = r.value;
+        out.push(Object.keys(vars).length ? JSON.stringify(vars, null, 2) : "true");
+      }
+      if (r.done) break;
+    }
+    $("out").textContent = out.length ? out.join("\n---\n") : "（解なし）";
+  } catch(e){ $("out").textContent = "エラー：" + e.message; }
+});
+
+if (typeof SWIPL === "function") bootAbout();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; }
+</script>
