@@ -1,0 +1,1228 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="「再議・不信任・専決処分を逆から引く」の収録範囲、全条文の地図、アプリの約束事、Prologのソース全部。">
+<title>収録範囲・仕組み｜再議・不信任・専決処分を逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+/* 欄の上の小見出し（議会の議決と、長の再議／長の不信任の議決／長が議会に代わってする処分）。選ばせる欄ではないので番号を数えない（giin-prolog と同じ。2026-11-25 案A）。
+   前の .input（数字の欄）・.step.off（判定していない段の色）・.flow・前の特例の枠の赤い左線（E1）・.disclaimer-inline・.lawtext .hit の青い左の影（E1）・pre の左線は、giin の style に揃えて外した */
+.slots .slot-h{margin:0;padding:8px 10px 4px;border-bottom:2px solid var(--line);border-right:2px solid var(--line);background:var(--paper)}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border:1px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+/* 人数の欄（数字を打つので ▼ を出さない）*/
+.field.num::after{display:none}
+.field input{appearance:textfield;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 10px;min-width:0;width:100%}
+.field input:focus-visible{outline:none}
+</style>
+
+<div class="wrap about">
+  <header class="mast sub">
+    <p class="backlink"><a href="./" id="back">← 判定ページに戻る</a></p>
+    <h1>収録範囲・仕組み</h1>
+    <p class="lead">「再議・不信任・専決処分を逆から引く」で、どの条文をどこまでルールにしたか、アプリが決めたこと、プログラムの中身です。</p>
+  </header>
+
+  <div class="appendix">
+  <details class="box" id="scope-box" open>
+    <summary>収録範囲と、入っていないもの</summary>
+    <div class="scope" id="scope">
+      <p><b>地方自治法の本則のうち、第176条〜第180条をルールにしています。</b></p>
+      <p>収録しているのは「議会の議決・選挙に長が異議や違反を示したときの再議と、その後の審査・裁定・訴え」「予算から義務の経費・災害の経費を削る・減らす議決の再議」「長の不信任の議決と、議会の解散・長が職を失うこと」「長が議会に代わってする処分と、議会への報告・承認」です。</p>
+      <p id="scope-kakunin">入っていないもの：議決に本当に異議があるか・本当に違法か・本当に緊急か（どれも長の認識が要件で、このアプリは長が示した理由・長の判断を事実として聞くだけです。下の約束事①）、判例・行政実例、会議規則、第113条・第162条・第252条の20の2 の中身、地方公営企業など別の法律の再議。詳しくは<a href="#notes-box">載せなかったもの</a>をご覧ください。同じ地方自治法の住民監査請求は<a href="../jumin/">住民監査請求のページ</a>で引いてください。</p>
+      <p id="scope-ran">判定ページは22個の欄をいつも全部出し、選んだ値によって欄を出したり消したり、欄の名前を変えたりしません。入力に関わらない欄は、判定で見ないだけです。3つの小見出しの答えは、同じ入力で全部出します。</p>
+      <ul id="ran-list" style="font-size:.86rem;line-height:1.75;padding-left:1.2em;margin:0">
+        <li>4の欄（再議に付した日までの日数）：3の欄が「議決に異議がある」でなければ見ません。空なら、まだ付していないとして10日の期限だけを出します</li>
+        <li>6・7の欄（再議の議決の出席・賛成）：3の欄が「議決に異議がある」で、5の欄が「前と同じ議決・選挙をした」で、2の欄が条例・予算（経費を削る・減らす議決を含む）のときだけ見ます。どちらかが空なら、確定するかの答えを出しません</li>
+        <li>8の欄（審査を申し立てた日までの日数）：空なら、申し立てていないとして21日の期限だけを出します</li>
+        <li>9〜11の欄（裁定・訴え）：審査を21日以内に申し立てたときだけ見ます。10の欄が空なら、訴えを起こしていないとして60日の期限だけを出します。11の欄は、60日以内に訴えを起こしたときだけ見ます</li>
+        <li>13〜17の欄（不信任の議決の数・解散・通知）：12の欄が「していない」なら見ません。13〜15の欄のどれかが空か、議員数が0なら、不信任の答えを出しません。17の欄が空なら、通知はまだとして10日の期限だけを出します。12の欄が「解散のあと初めて招集された議会で、再びした」なら、16・17の欄は見ません（下の (18)）</li>
+        <li>18〜20の欄（事件・議会・中身）：19の欄が「開ける」なら、179条の答えを出しません（22の欄で処分していて、21の欄が「指定していない」ときを除く。下の (28)）</li>
+        <li>21・22の欄（議会の指定・処分と報告）：21の欄で指定しているなら、19の欄に関わらず180条の答えを出します（下の (25)）</li>
+      </ul>
+      <p id="scope-nashi">「この組み合わせはありません」と出すのは11の組です。ア：2の欄が「議会がした選挙」で、3の欄が「議決に異議がある」（176条1項。異議の再議は議決について行うもの）。イ：2の欄が経費を削る・減らす議決でなく、5の欄が「なお経費を削る・減らす議決をした」（177条1項）。ウ：3の欄が「示していない」で、2の欄が経費を削る・減らす議決でなく、5の欄が「再議・再選挙はまだ」以外（176条1項・176条4項。再議・再選挙は長が理由を示してさせるもの）。エ：8の欄に日数があり、3の欄が違反以外（176条5項）。オ：8の欄に日数があり、5の欄が「再議・再選挙はまだ」（176条5項）。カ：9の欄で裁定が出て、8の欄が空（176条6項。裁定は審査の申立てがあったときに出るもの）。キ：10の欄に日数があり、9の欄が「出ていない」（176条7項）。ク：12の欄が「していない」で、17の欄に日数がある（178条1項前段）。ケ：7の欄が6の欄より多い（5の欄が「再議・再選挙はまだ」なら見ません）。コ：14の欄が13の欄より多い。サ：15の欄が14の欄より多い（コ・サは12の欄が「していない」なら見ません）。ケ・コ・サは数のぶつかりで、条文の定めではないので条を付けず、論理の木に欄の番号を書きます。2つ以上の組が重なれば、全部出します。</p>
+      <p id="tokubetsu"><b>特別区について：</b>ここの条の語は「普通地方公共団体」「市町村長」で、特別区に直接触れていません。第283条1項の原文は次のとおりです。特別区の長がこのページの答えをそのまま使えるかは書いていません。</p>
+      <p id="jo283" class="lawtext">第二百八十三条（市に関する規定の適用）第1項　この法律又は政令で特別の定めをするものを除くほか、第二編及び第四編中市に関する規定は、特別区にこれを適用する。</p>
+    </div>
+  </details>
+
+  <details class="box" id="cover-box">
+    <summary>地方自治法のどこまでをルールにしたか（全条文の地図）</summary>
+    <p class="hint" style="margin-top:6px">本則の全条文を1マスずつ並べました。<span class="cell u1"></span> はプログラムのルールの中で使っている条、<span class="cell u0"></span> は使っていない条です。使っている条のマスを押すと原文が出ます。</p>
+    <div id="cover"></div>
+  </details>
+
+  <details class="box" id="yaku-box">
+    <summary>アプリの約束事（地方自治法の条文にないもの）</summary>
+    <p class="hint" style="margin-top:6px">判定のためにこのアプリが決めたことで、条文そのものではありません。論理の木では <span class="yk">アプリの約束事</span> の印が付きます。</p>
+    <ul class="hint" id="yaku-list" style="margin:8px 0 0;padding-left:1.2em">
+      <li>①第176条第1項「異議があるとき」・第4項「違反すると認めるとき」・第179条第1項「長において…明らかであると認めるとき」は、どれも長の認識が要件なので、このアプリは議決が本当に違法か・本当に緊急かを判定しない。判定ページでは、3の欄で長が示した理由を、19の欄で長が判断したことを、事実として選んでもらう。第180条第1項の「軽易な事項」は聞かず、21の欄で議会が指定したかだけを聞く（下の (26)）</li>
+      <li>②日数の数え方（初日を含むか）は条文に無いので、入れた日数のまま比べる</li>
+      <li>③「当たりません」は、その条に当たらないと言うだけで、反対の結論を言うものではない</li>
+    </ul>
+  </details>
+
+  <details class="box" id="notes-box">
+    <summary>載せなかったものと、条文だけで決まらなかった点</summary>
+    <div class="scope">
+      <p><b>載せなかったもの（理由）：</b></p>
+      <ul style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>判例・行政実例：条文だけを読むアプリのため</li>
+        <li>会議規則：法律の条文でなく、議会ごとに定めるもののため</li>
+        <li>第113条の中身：第179条第1項が指す先で、この範囲の外のため。会議を開くための出席は<a href="../giin/">議員と議事のページ</a>で引けます</li>
+        <li>第162条・第252条の20の2 の中身：第179条第1項ただし書が指す先で、この範囲の外のため。20の欄で同意を選ぶだけにした</li>
+        <li>議員の除名など他の議決：この範囲の条の外のため。除名・懲罰は<a href="../giin/">議員と議事のページ</a>で引けます</li>
+        <li>地方公営企業など別の法律の再議：別の法律のため</li>
+      </ul>
+      <p><b>条文だけで決まらなかった点（31点）：</b></p>
+      <ul id="kimaranai" style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>（1）「三分の二以上」「四分の三以上」と端数 → 端数の語が無いので、割合を整数のまま掛けて比べ、要る人数は切り上げる（出席60人の3分の2は40人、出席27人の4分の3は21人、議員40人の3分の2は27人）</li>
+        <li>（2）特別区 → 条の語は「普通地方公共団体」「市町村長」で特別区に直接触れていないので、そのまま使えるかは書かず、上の範囲の節の第283条第1項の原文に留める</li>
+        <li>（3）第176条第1項の十日の起算 → 4の欄で、議決の日（条例・予算の議決は、長が送付を受けた日）からの日数を聞く。経費を削る・減らす議決も予算の議決として、送付を受けた日から数える。初日を含むかは語が無いので、入れた日数のまま比べる（約束事②）</li>
+        <li>（4）第177条第3項でみなされた不信任の議決と第178条 → 第178条第3項の「議員数の三分の二以上」「四分の三以上」や第178条第2項の「解散後初めて招集された議会」がどう当たるかは、第177条第3項にも第178条にも書いていない。第177条第3項の答えから不信任の小見出しへはつながず、12の欄で不信任の議決をしたかを別に聞く</li>
+        <li>（5）第176条第1項の「この法律に特別の定めがあるものを除くほか」と第177条 → 第177条が特別の定めに当たるかの語が無いので、2の欄で経費を削る・減らす議決を選び、3の欄で「議決に異議がある」を選んだら、第176条第1項と第177条第1項の両方の条を当てる</li>
+        <li>（6）第176条第2項で前と違う議決 → 確定の語が無いので「176条2項の確定に当たりません」とだけ出す。「中身を変えたが、なお経費を削る・減らす議決」も、前と同じ議決ではないとする</li>
+        <li>（7）第176条第4項の「再議に付し又は再選挙を行わせ」 → 2の欄で議決と選挙を分け、議決なら再議、選挙なら再選挙と出す</li>
+        <li>（8）第176条第5項の「なお…違反すると認めるとき」 → 長が審査を申し立てたこと自体が、なお違反と認めたことを示すと読み、8の欄の日数で受ける</li>
+        <li>（9）第176条第6項・第7項の「前項の裁定」 → 第6項の語は「取り消す旨の裁定をすることができる」だが、第8項は「議会の議決又は選挙の取消しを求める」訴えを書き、議決が取り消されていない場面で長が訴えることを前提にしていると読む。9の欄を「取り消す裁定」「取り消さない裁定」の3択にし、どちらでも第7項の訴えを出す。審査の結果の中身は読まない</li>
+        <li>（10）第176条第7項の「議会又は長」 → どちらが訴えるかは欄で分けず、「議会または長」と出す</li>
+        <li>（11）第176条第8項以外の訴えの被告 → 語が無いので、裁定の取消しを求める訴えは「議会を被告にする訴えに当たりません」とだけ出す</li>
+        <li>（12）第177条第1項の再議の期限 → 十日の語が無いので、期限を出さない。4の欄は3の欄が「議決に異議がある」のときだけ見る</li>
+        <li>（13）第177条の再議のあとの賛成の割合 → 語が無いので、6・7の欄は第176条第3項のときだけ見る</li>
+        <li>（14）第177条第2項・第3項の「なお…削除し又は減額したとき」 → 5の欄の「前と同じ議決・選挙をした」「中身を変えたが、なお経費を削る・減らす議決をした」が当たると読み、「前と違う議決・選挙をした」は経費を削っていない議決と読む。第177条に確定の語は無いので、確定とは出さない</li>
+        <li>（15）第178条第3項の「議員数」と「その四分の三以上」「その過半数」の「その」 → 「議員数」は今いる議員の数、「その」は出席した者を指すと読む。西宮市議会「<a href="https://www.nishi.or.jp/nishinomiyashigikai/about/shikumi/shigikaishikumi.html">市議会のしくみ</a>」（2026年11月25日に取得）は「市長の不信任議決や議員の除名議決を行う場合などには、在職議員数の3分の2以上の出席が必要となります」と書く</li>
+        <li>（16）通知から十日を過ぎて解散した → 「前項の期間内に議会を解散しないとき」に当たると読み、期間が過ぎた日に職を失うと出す</li>
+        <li>（17）第178条第1項前段の通知 → 不信任の議決が成り立つときだけ出す。解散のあとの再びの不信任の議決にも出す</li>
+        <li>（18）再びの不信任のあとの解散 → 第178条第2項どおり、議長から通知があった日に職を失うと出し、解散を聞かない</li>
+        <li>（19）「解散後初めて招集された議会」か → 語の当てはめはしないで、12の欄の選択肢で事実として聞く</li>
+        <li>（20）第179条第1項ただし書と4つの場面 → ただし書はどの場面にもかかると読み、4つのどれでも「処分できません」と出す</li>
+        <li>（21）第179条第2項の「前項の例による」とただし書 → 選任の同意は議決すべき事件だが、20の欄で同意を選べば、18の欄に関わらずただし書を当てる</li>
+        <li>（22）第179条第3項で承認されなかったときの処分の効力 → 語が無いので出さない</li>
+        <li>（23）第179条第4項の措置の中身 → 語は「必要と認める措置」だけなので、中身を出さない</li>
+        <li>（24）第180条第2項の報告 → 語は「報告」で承認の語が無いので、承認とは出さない。議会が指定した専決処分も承認が必要と読める解説もある（野洲市議会「<a href="https://www.city.yasu.lg.jp/soshiki/gikai/1682317011197.html">議会用語集</a>」（2026年11月25日に取得）は「このほか、議会の議決によりあらかじめ指定した専決処分もあります。」に続けて「専決処分をしたときは議会に報告し、承認が必要です。」と書く）が、第180条第2項の語は報告だけ。鏡野町議会「<a href="https://www.town.kagamino.lg.jp/site/gikai/2173.html">議会用語集</a>」（2026年11月25日に取得）は「専決処分をしたときは、次の議会においてこれを報告し、議会の委任に基づいて行った場合を除いては、議会の承認を求めることになっています。」と書き、同じ読み</li>
+        <li>（25）第179条と第180条が重なるとき → 語が無いので、19の欄で4つの場面のどれかを選び、21の欄で指定しているなら、両方の条を当てる</li>
+        <li>（26）第180条第1項の「軽易な事項」 → 軽易かは議会が指定するときに見るものと読み、聞かない。21の欄で議会が議決で指定したかだけを聞く</li>
+        <li>（27）第179条第1項の「長において…明らかであると認めるとき」 → 要件が長の判断そのものなので、19の欄の選択肢「緊急で議会を招集する時間が無いのが明らかだと、長が判断した」で事実として聞き、緊急かどうかを利用者に評価させない（約束事①）</li>
+        <li>（28）19の欄が「開ける」・21の欄が「指定していない」で、22の欄で処分した → 第179条第1項の4つの場面のどれでもないので「処分できません」と出す。法に反する処分も起きうる事実なので、「この組み合わせはありません」にはしない</li>
+        <li>（29）数字の欄が空 → 4・8・10・17の欄は「まだ付していない」「申し立てていない」「起こしていない」「通知はまだ」と読み、期限だけを出す。6・7の欄が空なら確定するかを、13〜15の欄のどれかが空なら不信任の答えを出さない</li>
+        <li>（30）期限を過ぎた後の段 → 4の欄が10日を超えたら第176条第2項・第3項の答えを、8の欄が21日を超えたら第176条第6項〜第8項の答えを、10の欄が60日を超えたら第176条第8項の答えを出さない</li>
+        <li>（31）数のぶつかり（賛成が出席より多い・出席が議員数より多い）→ 条文の定めではないので、条を付けずに「この組み合わせはありません」とし、論理の木に欄の番号を書く（上のケ・コ・サ）</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="box" id="src-box">
+    <summary>プログラムの中身（Prologのソース全部）</summary>
+    <p class="hint" style="margin-top:6px">このページで動いているPrologのプログラムそのものです。ファイルを開くと全文が出ます。</p>
+    <div id="src"></div>
+  </details>
+
+  <details class="box" id="core-box">
+    <summary>仕組みを見る（上級者向け）</summary>
+    <p class="hint" style="margin-top:6px">Prologに直接聞く（最初の20件まで）：</p>
+    <textarea id="q" spellcheck="false">heads(ctx(市町村長, 災害経費, 異議, 10, 同じ, 60, 40, 未入力, 出ていない, 未入力, 議決, していない, 40, 27, 21, していない, 未入力, 議決, 開ける, それ以外, していない, まだ), L).</textarea>
+    <button type="button" class="btn" id="run">実行</button>
+    <pre id="out"></pre>
+  </details>
+  </div>
+
+  <p class="foot techline"><span>地方自治法 第176条〜第180条（再議・不信任・専決処分）／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot">e-Gov法令検索の地方自治法（昭和二十二年法律第六十七号）の本則の原文をルールにしたものです。判例・行政実例・会議規則・第113条・第162条・第252条の20の2 の中身・別の法律の再議は含みません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 地方自治法の再議・不信任・専決処分のProlog 共通の型・欄の読み出し・成り立たない組・木の部品
+%
+% ctx(長, 議決, 理由, 再議日数, 再議後, 再議出席, 再議賛成, 申立日数, 裁定, 出訴日数, 訴え,
+%     不信任, 議員数, 出席, 賛成, 解散, 通知日数, 事件, 議会, 中身, 指定, 処分)
+%   欄は起きた事実を聞く22個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-25 案A。
+%   案は ../gikai_form_plan_answer_1125.md の案A、決めは ../gikai_form_plan_decision_1125.md）。形は giin-prolog と同じ。
+%   前は ctx(入口, 詳細) で、入口（再議 | 不信任 | 専決）を先に選ばせ、中でも「認識」「条」を選ばせていた。
+%   画面が欄を出し消しして、隠れた欄を 関係なし で渡していた（再議の欄/14・不信任の欄/7・専決の欄/9 が欄の形を入口ごとに直書きしていた）。
+%   今は使わない欄を判定で見ないだけにした。認識・経費・議決の種類は2・3・5の欄に、事件の同意と処置の種類は20の欄に、
+%   処置と否決は22の欄にまとめた。不服・なお・十日以内に解散しない・再度の通知・軽易の欄は消した（案A「消す欄」）。
+%   引数の順は画面の欄の番号（1〜22）と同じ。画面では3つの小見出し（議会の議決と、長の再議／長の不信任の議決／長が議会に代わってする処分）の下に並べる。
+%    1 長       : 市町村長 | 知事
+%    2 議決     : 条例 | 予算 | 義務経費 | 災害経費 | それ以外 | 選挙（議会がした議決・選挙。予算は下の2つの経費を削っていないもの）
+%    3 理由     : 示していない | 異議 | 違反（長が示した理由。176条1項・4項）
+%    4 再議日数 : 議決の日（条例・予算の議決は送付を受けた日）から長が再議に付した日までの日数（0以上の整数 | 未入力。未入力は、まだ付していない）
+%    5 再議後   : まだ | 同じ | なお削る | 違う（再議・再選挙のあとの議会。176条2項・177条2項・3項）
+%    6 再議出席 : 再議の議決に出席した議員の数（0以上の整数 | 未入力）
+%    7 再議賛成 : 再議の議決に賛成した議員の数（0以上の整数 | 未入力。176条3項）
+%    8 申立日数 : 再議・再選挙のあとの議決・選挙の日から長が審査を申し立てた日までの日数（0以上の整数 | 未入力。未入力は、申し立てていない。176条5項）
+%    9 裁定     : 出ていない | 取り消す | 取り消さない（総務大臣・都道府県知事の裁定。176条6項・7項。決め2で3択）
+%   10 出訴日数 : 裁定のあった日から訴えを起こした日までの日数（0以上の整数 | 未入力。未入力は、起こしていない。176条7項）
+%   11 訴え     : 裁定 | 議決（訴えで求めたこと：裁定を取り消すこと | 議会の議決・選挙を取り消すこと。176条8項）
+%   12 不信任   : していない | した | 再び（議会がした長の不信任の議決。再び＝解散のあと初めて招集された議会で、再びした）
+%   13 議員数   : 今いる議員の数（0以上の整数 | 未入力。178条3項の「議員数」）
+%   14 出席     : 不信任の議決に出席した議員の数（0以上の整数 | 未入力）
+%   15 賛成     : 不信任の議決に賛成した議員の数（0以上の整数 | 未入力）
+%   16 解散     : していない | した（議会の解散）
+%   17 通知日数 : 議長から通知を受けた日から、解散した日（解散していなければ今日）までの日数（0以上の整数 | 未入力。未入力は、通知はまだ）
+%   18 事件     : 議決 | 決定（長が議会に代わって処分する事件：議会が議決すべき事件 | 決定すべき事件。179条1項・2項）
+%   19 議会     : 開ける | 不成立 | 開けない | 議決しない | 緊急（そのときの議会。179条1項の4つの場面。緊急は「長が判断した」。決め4）
+%   20 中身     : 条例 | 予算 | 副知事 | 総合区長 | それ以外（事件の中身。179条1項ただし書・4項）
+%   21 指定     : していない | している（長が処分してよい事項として、議会が議決で指定したか。180条1項。「軽易な事項」は聞かない。決め3）
+%   22 処分     : まだ | 未報告 | 承認 | 否決（処分と議会への報告。179条3項・4項・180条2項）
+%
+%   数字の欄は画面で空か数字でないとき 未入力 が来る。空の読みは欄ごとに違う（4・8・10・17 は「まだ・していない」、
+%   6・7 は再議の確定の段を出さない、13〜15 は不信任の段を出さない。案A「数字の欄が空のとき」）。
+%   関係のない欄（3の欄が「異議」でないときの4、2の欄が経費の2つでないときの177条、12の欄が「していない」ときの13〜17 など）は、
+%   組み合わせなしにせず見ないだけ（giin-prolog と同じ）。欄どうしで成り立たない組はこのファイルの 組み合わせなし/4 が返す（REVIEW_RULES C3）。
+%
+% 書き方のきまり：
+%   ・条番号は '176条1項' '177条1項1号' '178条1項後段' '179条1項ただし書' のような原子。
+%   ・ルールの中で範囲の外の条を、原子の先頭に条番号を置く形で書かない。書くと build.py が使う条に数え、画面に中身が埋まる。
+%   ・段は 段(状態, 文, 箱の条, 葉のリスト)。結論ごとの段は s(画面のid, 見出し, 段)。段の文は、末尾の「。」を外して結論の箱にも出す。
+%     段の文は本題だけを書き、入力の言い直しは葉に置く（REVIEW_RULES A2。葉は論理の木にだけ出る）。
+%     葉は文（原子）か、木の行 t(...) そのもの（規定・約束の行。schema の 葉の行）。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | and | or | info
+%   ・アプリの約束事の行は 条 を '@約束事' にする。
+%   ・割合は割り算で丸めず、整数のまま掛けて比べる（40人の3分の2を 26.67 にしない）。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか。組の成り立ちは 組み合わせなし/4 で見る）----
+ctx_valid(C) :-
+    functor(C, ctx, 22),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )),
+    forall(数の欄(N), ( arg(N, C, V), 数の値(V) )).
+
+欄の値(1, [市町村長, 知事]).
+欄の値(2, [条例, 予算, 義務経費, 災害経費, それ以外, 選挙]).
+欄の値(3, [示していない, 異議, 違反]).
+欄の値(5, [まだ, 同じ, なお削る, 違う]).
+欄の値(9, [出ていない, 取り消す, 取り消さない]).
+欄の値(11, [裁定, 議決]).
+欄の値(12, [していない, した, 再び]).
+欄の値(16, [していない, した]).
+欄の値(18, [議決, 決定]).
+欄の値(19, [開ける, 不成立, 開けない, 議決しない, 緊急]).
+欄の値(20, [条例, 予算, 副知事, 総合区長, それ以外]).
+欄の値(21, [していない, している]).
+欄の値(22, [まだ, 未報告, 承認, 否決]).
+
+数の欄(4). 数の欄(6). 数の欄(7). 数の欄(8). 数の欄(10). 数の欄(13). 数の欄(14). 数の欄(15). 数の欄(17).
+
+% 人数・日数は0以上の整数。画面の欄が空か数字でないときは 未入力
+数の値(未入力) :- !.
+数の値(X) :- integer(X), X >= 0.
+
+%% ---- 欄の読み出し（番号は画面の欄の番号）----
+欄の番号(長, 1).
+欄の番号(議決, 2).
+欄の番号(理由, 3).
+欄の番号(再議日数, 4).
+欄の番号(再議後, 5).
+欄の番号(再議出席, 6).
+欄の番号(再議賛成, 7).
+欄の番号(申立日数, 8).
+欄の番号(裁定, 9).
+欄の番号(出訴日数, 10).
+欄の番号(訴え, 11).
+欄の番号(不信任, 12).
+欄の番号(議員数, 13).
+欄の番号(出席, 14).
+欄の番号(賛成, 15).
+欄の番号(解散, 16).
+欄の番号(通知日数, 17).
+欄の番号(事件, 18).
+欄の番号(議会, 19).
+欄の番号(中身, 20).
+欄の番号(指定, 21).
+欄の番号(処分, 22).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+% 数の欄に整数が入っているときだけ成り立つ
+数(Name, C, X) :- 欄(Name, C, X), integer(X).
+% 数の欄が空（未入力）
+空(Name, C) :- 欄(Name, C, 未入力).
+
+% 2の欄のうち、177条1項の経費を削る・減らす議決（1号・2号）
+経費の議決(義務経費).
+経費の議決(災害経費).
+% 2の欄のうち、176条1項・3項の「条例の制定若しくは改廃又は予算に関する議決」（経費を削る・減らす議決も予算の議決）
+条例予算の議決(条例).
+条例予算の議決(予算).
+条例予算の議決(義務経費).
+条例予算の議決(災害経費).
+
+%% ---- 成り立たない組（組み合わせなし/4。REVIEW_RULES C3。案A「この組み合わせはありません」）----
+% 組み合わせなし(C, 記号, 葉のリスト, 箱の条)。rules/e_hantei.pl の 全部の段 が findall で全部集める（REVIEW_RULES 末尾「AI同士で決めた書き方」1・2）。
+%   ア 2の欄が選挙で、3の欄が異議。根拠は176条1項（異議の再議は議決について。選挙は176条4項だけ）
+%   イ 2の欄が経費の2つ以外で、5の欄が「なお経費を削る・減らす」。根拠は177条1項
+%   ウ 3の欄が「示していない」・2の欄が経費の2つ以外で、5の欄が「まだ」以外。根拠は176条1項・176条4項（再議・再選挙は長が理由を示してさせるもの）
+%   エ 8の欄に日数があり、3の欄が違反以外。オ 8の欄に日数があり、5の欄が「まだ」。根拠は176条5項（「前項の規定による」議決・選挙が「なお」違反）
+%   カ 9の欄で裁定が出て、8の欄が空。根拠は176条6項（申立てがあった場合）
+%   キ 10の欄に日数があり、9の欄が「出ていない」。根拠は176条7項（裁定に不服があるとき）
+%   ク 12の欄が「していない」で、17の欄に日数がある。根拠は178条1項前段（議長の通知は不信任の議決をしたとき）
+%   ケ 7の欄が6の欄より多い（5の欄が「まだ」なら見ない）・コ 14の欄が13の欄より多い・サ 15の欄が14の欄より多い（12の欄が「していない」なら見ない）
+%   ケ・コ・サは数のぶつかりで、条を付けず欄の番号だけを葉に書く（giin-prolog と同じ書き方）。
+%   2つ以上の組が重なれば全部出す（例：3の欄が異議で、8の欄に日数を入れ、5の欄が「まだ」なら エ と オ）。
+組み合わせなし(C, a, ['異議を理由にする再議は、議決について行う。選挙を再議にするのは、権限を超える・法令や会議規則に反するときだけ', W], ['176条1項']) :-
+    欄(議決, C, 選挙), 欄(理由, C, 異議),
+    二つ選んだ(議決, 理由, C, W).
+組み合わせなし(C, i, ['なお経費を削る・減らす議決は、経費を削る・減らす議決を再議に付した後に起きる', W], ['177条1項']) :-
+    欄(議決, C, G), \+ 経費の議決(G), 欄(再議後, C, なお削る),
+    二つ選んだ(議決, 再議後, C, W).
+組み合わせなし(C, u, ['長が理由を示して再議に付さなければ、再議・再選挙は起きない（経費を削る・減らす議決を除く）', W], ['176条1項', '176条4項']) :-
+    欄(理由, C, 示していない), 欄(議決, C, G), \+ 経費の議決(G), 欄(再議後, C, K), K \== まだ,
+    二つ選んだ(理由, 再議後, C, W).
+組み合わせなし(C, e, ['審査の申立ては、権限を超える・法令や会議規則に反するとして再議に付した後に行う', W1, W2], ['176条5項']) :-
+    数(申立日数, C, _), 欄(理由, C, R), R \== 違反,
+    入れた(申立日数, C, W1), 選んだ(理由, C, W2).
+組み合わせなし(C, o, ['審査の申立ては、再議・再選挙のあとの議決・選挙について行う', W1, W2], ['176条5項']) :-
+    数(申立日数, C, _), 欄(再議後, C, まだ),
+    入れた(申立日数, C, W1), 選んだ(再議後, C, W2).
+組み合わせなし(C, ka, ['裁定は、審査の申立てがあったときに出る', W1, W2], ['176条6項']) :-
+    欄(裁定, C, K), K \== 出ていない, 空(申立日数, C),
+    選んだ(裁定, C, W1), 空けた(申立日数, C, W2).
+組み合わせなし(C, ki, ['裁判所への訴えは、裁定に不服があるときに起こす', W1, W2], ['176条7項']) :-
+    数(出訴日数, C, _), 欄(裁定, C, 出ていない),
+    入れた(出訴日数, C, W1), 選んだ(裁定, C, W2).
+組み合わせなし(C, ku, ['議長の通知は、長の不信任の議決をしたときに出る', W1, W2], ['178条1項前段']) :-
+    欄(不信任, C, していない), 数(通知日数, C, _),
+    選んだ(不信任, C, W1), 入れた(通知日数, C, W2).
+組み合わせなし(C, ke, ['賛成した議員の数は、出席した議員の数を超えない', W], []) :-
+    欄(再議後, C, K), K \== まだ,
+    数(再議出席, C, N), 数(再議賛成, C, A), A > N,
+    format(atom(W), '7の欄に~w人、6の欄に~w人と入れた', [A, N]).
+組み合わせなし(C, ko, ['出席した議員の数は、議員数を超えない', W], []) :-
+    欄(不信任, C, F), F \== していない,
+    数(議員数, C, G), 数(出席, C, N), N > G,
+    format(atom(W), '14の欄に~w人、13の欄に~w人と入れた', [N, G]).
+組み合わせなし(C, sa, ['賛成した議員の数は、出席した議員の数を超えない', W], []) :-
+    欄(不信任, C, F), F \== していない,
+    数(出席, C, N), 数(賛成, C, A), A > N,
+    format(atom(W), '15の欄に~w人、14の欄に~w人と入れた', [A, N]).
+
+二つ選んだ(N1, N2, C, W) :-
+    欄の番号(N1, I1), 欄(N1, C, V1), 葉の語(I1, V1, W1),
+    欄の番号(N2, I2), 欄(N2, C, V2), 葉の語(I2, V2, W2),
+    format(atom(W), '~wの欄で~wを選び、~wの欄で~wを選んだ', [I1, W1, I2, W2]).
+
+%% ---- 木の葉に出す欄の値の言葉（画面の選択肢と同じ語）----
+% 葉の語(欄の番号, 値, 選択肢の語)
+葉の語(1, 市町村長, '市町村長').
+葉の語(1, 知事, '都道府県知事').
+葉の語(2, 条例, '条例を作る・変える・なくす議決').
+葉の語(2, 予算, '予算の議決（下の2つの経費は削っていない）').
+葉の語(2, 義務経費, '予算から、法令で負担する経費など自治体の義務の経費を削る・減らす議決').
+葉の語(2, 災害経費, '予算から、災害の応急・復旧の施設や感染症予防の経費を削る・減らす議決').
+葉の語(2, それ以外, '条例・予算でない議決').
+葉の語(2, 選挙, '議会がした選挙').
+葉の語(3, 示していない, '示していない').
+葉の語(3, 異議, '議決に異議がある').
+葉の語(3, 違反, '議決・選挙が議会の権限を超える、または法令・会議規則に反する').
+葉の語(5, まだ, '再議・再選挙はまだ').
+葉の語(5, 同じ, '前と同じ議決・選挙をした').
+葉の語(5, なお削る, '中身を変えたが、なお経費を削る・減らす議決をした').
+葉の語(5, 違う, '前と違う議決・選挙をした').
+葉の語(9, 出ていない, '出ていない').
+葉の語(9, 取り消す, '議決・選挙を取り消す裁定が出た').
+葉の語(9, 取り消さない, '取り消さない裁定が出た').
+葉の語(11, 裁定, '裁定を取り消すこと').
+葉の語(11, 議決, '議会の議決・選挙を取り消すこと').
+葉の語(12, していない, 'していない').
+葉の語(12, した, 'した').
+葉の語(12, 再び, '解散のあと初めて招集された議会で、再びした').
+葉の語(16, していない, '解散していない').
+葉の語(16, した, '解散した').
+葉の語(18, 議決, '議会が議決すべき事件').
+葉の語(18, 決定, '議会が決定すべき事件').
+葉の語(19, 開ける, '開ける').
+葉の語(19, 不成立, '議員が足りず、議会が成立していない').
+葉の語(19, 開けない, '定数の半数に届かず、議長が出席を促しても会議を開けない').
+葉の語(19, 議決しない, '議会が議決しない').
+葉の語(19, 緊急, '緊急で議会を招集する時間が無いのが明らかだと、長が判断した').
+葉の語(20, 条例, '条例を作る・変える・なくすもの').
+葉の語(20, 予算, '予算').
+葉の語(20, 副知事, '副知事・副市町村長を選ぶことへの同意').
+葉の語(20, 総合区長, '指定都市の総合区長を選ぶことへの同意').
+葉の語(20, それ以外, 'それ以外').
+葉の語(21, していない, '長が処分してよい事項として、議会が議決で指定していない').
+葉の語(21, している, '指定している').
+葉の語(22, まだ, 'まだ処分していない').
+葉の語(22, 未報告, '処分し、まだ報告していない').
+葉の語(22, 承認, '報告し、承認された').
+葉の語(22, 否決, '報告したが、承認を求める議案が否決された').
+
+% 数の欄の単位
+数の単位(4, '日'). 数の単位(6, '人'). 数の単位(7, '人'). 数の単位(8, '日'). 数の単位(10, '日').
+数の単位(13, '人'). 数の単位(14, '人'). 数の単位(15, '人'). 数の単位(17, '日').
+
+% 入力の葉：「Nの欄で、◯◯を選んだ」。欄の名前から番号と値を引く
+選んだ(Name, C, W) :-
+    欄の番号(Name, N), 欄(Name, C, V), 葉の語(N, V, VW),
+    format(atom(W), '~wの欄で、~wを選んだ', [N, VW]).
+
+% 数の欄の葉：「Nの欄に、◯人（◯日）と入れた」
+入れた(Name, C, W) :-
+    欄の番号(Name, N), 数(Name, C, X), 数の単位(N, U),
+    format(atom(W), '~wの欄に、~w~wと入れた', [N, X, U]).
+
+% 空の数の欄の葉：「Nの欄を空けた」
+空けた(Name, C, W) :-
+    欄の番号(Name, N), 空(Name, C),
+    format(atom(W), '~wの欄を空けた', [N]).
+
+% 数の欄の葉（入れたか空けたか）
+数の葉(Name, C, W) :- ( 入れた(Name, C, W) -> true ; 空けた(Name, C, W) ).
+
+%% ---- 理由の語をつなぐ ----
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---- 木の部品 ----
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+原文規定(Art, X) :- 原文(Art, W), 規定(Art, W, X).
+% 成り立つ文（起きた事実・条文の読み）
+文(X, t(ok, X, '', [])).
+約束(X, t(ok, X, '@約束事', [])).
+% 葉の行：木の行 t(...) はそのまま、文はそのまま1行（schema の「書き方のきまり」）
+葉の行(t(K, X, A, Cs), t(K, X, A, Cs)) :- !.
+葉の行(W, X) :- 文(W, X).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（地方自治法の条文にないもの）
+%
+%   ① 176条1項「異議があるとき」・176条4項「違反すると認めるとき」・179条1項「長において…明らかであると認めるとき」は、
+%      どれも長の認識が要件。3の欄で「長が示した理由」を、19の欄で「長が判断した」を事実として聞き、議決が本当に違法か・
+%      本当に緊急かは聞かない。180条1項の「軽易な事項」は、議会が指定するときに見るものと読み、21の欄で議会が指定したかだけを聞く（決め3）。
+%      ①は about の約束事①にだけ置き、木には出さない（2026-11-25 案A。前は「…判定しない。本人の入力をそのまま受けている」の行を、
+%      ほぼ全部の段の木に付けていた。A5）。
+%   ② 日数の数え方（初日を含むか）は条文に無いので、入れた日数をそのまま比べる（前のまま）。日数を比べた段の木にだけ出す。
+%   ③ 「当たりません」は、その条に当たらないと言うだけで、反対の結論を言うものではない（前の「場面ではありません」）。
+%      「当たりません」の段の木にだけ出す。
+
+日数の約束(X) :-
+    約束('日数は、入れた数のまま比べている（初日を含むかは条文に無い）', X).
+
+当たらないの約束(X) :-
+    約束('「当たりません」は、その条に当たらないと言うだけで、反対の結論を言うものではない', X).
+</script>
+<script type="text/prolog" data-name="rules_a_genbun.pl">% rules/a_genbun.pl — 判定に使う条文の原文（law/chiji.xml の本則の第176条〜第180条のまま）
+%
+%   原文(条, 文)。test/page_test.mjs が XML を別に読み、全行が一字一句一致するかを確かめる。
+%   本文・ただし書は XML の Sentence Function="main"・"proviso"、前段・後段は Sentence Num="1"・"2" の1文ずつ。
+%   号のある項（'177条1項'）は項の文だけ。号は号の条に分ける。
+
+原文('176条1項', '普通地方公共団体の議会の議決について異議があるときは、当該普通地方公共団体の長は、この法律に特別の定めがあるものを除くほか、その議決の日（条例の制定若しくは改廃又は予算に関する議決については、その送付を受けた日）から十日以内に理由を示してこれを再議に付することができる。').
+原文('176条2項', '前項の規定による議会の議決が再議に付された議決と同じ議決であるときは、その議決は、確定する。').
+原文('176条3項', '前項の規定による議決のうち条例の制定若しくは改廃又は予算に関するものについては、出席議員の三分の二以上の者の同意がなければならない。').
+原文('176条4項', '普通地方公共団体の議会の議決又は選挙がその権限を超え又は法令若しくは会議規則に違反すると認めるときは、当該普通地方公共団体の長は、理由を示してこれを再議に付し又は再選挙を行わせなければならない。').
+原文('176条5項', '前項の規定による議会の議決又は選挙がなおその権限を超え又は法令若しくは会議規則に違反すると認めるときは、都道府県知事にあつては総務大臣、市町村長にあつては都道府県知事に対し、当該議決又は選挙があつた日から二十一日以内に、審査を申し立てることができる。').
+原文('176条6項', '前項の規定による申立てがあつた場合において、総務大臣又は都道府県知事は、審査の結果、議会の議決又は選挙がその権限を超え又は法令若しくは会議規則に違反すると認めるときは、当該議決又は選挙を取り消す旨の裁定をすることができる。').
+原文('176条7項', '前項の裁定に不服があるときは、普通地方公共団体の議会又は長は、裁定のあつた日から六十日以内に、裁判所に出訴することができる。').
+原文('176条8項', '前項の訴えのうち第四項の規定による議会の議決又は選挙の取消しを求めるものは、当該議会を被告として提起しなければならない。').
+
+原文('177条1項', '普通地方公共団体の議会において次に掲げる経費を削除し又は減額する議決をしたときは、その経費及びこれに伴う収入について、当該普通地方公共団体の長は、理由を示してこれを再議に付さなければならない。').
+原文('177条1項1号', '法令により負担する経費、法律の規定に基づき当該行政庁の職権により命ずる経費その他の普通地方公共団体の義務に属する経費').
+原文('177条1項2号', '非常の災害による応急若しくは復旧の施設のために必要な経費又は感染症予防のために必要な経費').
+原文('177条2項', '前項第一号の場合において、議会の議決がなお同号に掲げる経費を削除し又は減額したときは、当該普通地方公共団体の長は、その経費及びこれに伴う収入を予算に計上してその経費を支出することができる。').
+原文('177条3項', '第一項第二号の場合において、議会の議決がなお同号に掲げる経費を削除し又は減額したときは、当該普通地方公共団体の長は、その議決を不信任の議決とみなすことができる。').
+
+原文('178条1項前段', '普通地方公共団体の議会において、当該普通地方公共団体の長の不信任の議決をしたときは、直ちに議長からその旨を当該普通地方公共団体の長に通知しなければならない。').
+原文('178条1項後段', 'この場合においては、普通地方公共団体の長は、その通知を受けた日から十日以内に議会を解散することができる。').
+原文('178条2項', '議会において当該普通地方公共団体の長の不信任の議決をした場合において、前項の期間内に議会を解散しないとき、又はその解散後初めて招集された議会において再び不信任の議決があり、議長から当該普通地方公共団体の長に対しその旨の通知があつたときは、普通地方公共団体の長は、同項の期間が経過した日又は議長から通知があつた日においてその職を失う。').
+原文('178条3項', '前二項の規定による不信任の議決については、議員数の三分の二以上の者が出席し、第一項の場合においてはその四分の三以上の者の、前項の場合においてはその過半数の者の同意がなければならない。').
+
+原文('179条1項本文', '普通地方公共団体の議会が成立しないとき、第百十三条ただし書の場合においてなお会議を開くことができないとき、普通地方公共団体の長において議会の議決すべき事件について特に緊急を要するため議会を招集する時間的余裕がないことが明らかであると認めるとき、又は議会において議決すべき事件を議決しないときは、当該普通地方公共団体の長は、その議決すべき事件を処分することができる。').
+原文('179条1項ただし書', 'ただし、第百六十二条の規定による副知事又は副市町村長の選任の同意及び第二百五十二条の二十の二第四項の規定による第二百五十二条の十九第一項に規定する指定都市の総合区長の選任の同意については、この限りでない。').
+原文('179条2項', '議会の決定すべき事件に関しては、前項の例による。').
+原文('179条3項', '前二項の規定による処置については、普通地方公共団体の長は、次の会議においてこれを議会に報告し、その承認を求めなければならない。').
+原文('179条4項', '前項の場合において、条例の制定若しくは改廃又は予算に関する処置について承認を求める議案が否決されたときは、普通地方公共団体の長は、速やかに、当該処置に関して必要と認める措置を講ずるとともに、その旨を議会に報告しなければならない。').
+
+原文('180条1項', '普通地方公共団体の議会の権限に属する軽易な事項で、その議決により特に指定したものは、普通地方公共団体の長において、これを専決処分にすることができる。').
+原文('180条2項', '前項の規定により専決処分をしたときは、普通地方公共団体の長は、これを議会に報告しなければならない。').
+</script>
+<script type="text/prolog" data-name="rules_b_saigi.pl">% rules/b_saigi.pl — 議会の議決と、長の再議：176条1項〜8項・177条の段
+%
+%   段は10：saigi1（176条1項）・kakutei（176条2項・3項）・saigi4（176条4項）・shinsa（176条5項）・saitei（176条6項）・
+%   shuso（176条7項）・hikoku（176条8項）・saigi177（177条1項）・shishutsu（177条2項）・minashi（177条3項）。2026-11-25 案A。
+%   前は入口「再議」の中で「認識」（異議 | 違反 | 一号 | 二号）を選ばせ、選んだ認識の条だけを出していた（C4・C5）。
+%   今は2・3・5の欄から、当たる段を全部出す。2の欄が経費の2つで3の欄が異議なら、176条1項と177条1項の段を両方出す
+%   （決め1。177条が176条1項の「特別の定め」に当たるかの語は条文に無い。about の (5)）。
+%   9の欄（裁定）は3択で、取り消す裁定・取り消さない裁定のどちらでも176条7項の段を出す（決め2。about の (9)）。
+%   段の文は本題だけにし、「入力」「ので」と指示語（その・これを・当該・同項・前項）を外した（REVIEW_RULES A1・A2・A6）。
+%   前の「判定していません（…のときの定めのため）」の段・「審査の結果の中身は読みません」・178条へつながない案内の段は about へ移した（A5）。
+
+再議の段(C, L) :-
+    異議の段(C, L1), 確定の段(C, L2), 違反の段(C, L3), 審査の段(C, L4), 裁定の段(C, L5),
+    出訴の段(C, L6), 被告の段(C, L7), 経費の段(C, L8), 経費の後の段(C, L9),
+    append([L1, L2, L3, L4, L5, L6, L7, L8, L9], L).
+
+% 議決か選挙か（段の文の語）
+議決か選挙(C, '選挙') :- 欄(議決, C, 選挙), !.
+議決か選挙(_, '議決').
+
+%% ---- 176条1項（10日以内に再議に付せる）----
+異議の段(C, [s(saigi1, '議決に異議があるときの再議', S)]) :- 欄(理由, C, 異議), !, 異議の答え(C, S).
+異議の段(_, []).
+
+異議の答え(C, 段(過ぎた, '再議に付せる10日の期限を過ぎています。', ['176条1項'], [R, W1, W2, W3, Y])) :-
+    数(再議日数, C, D), D > 10, !,
+    原文規定('176条1項', R), 選んだ(議決, C, W1), 選んだ(理由, C, W2), 入れた(再議日数, C, W3), 日数の約束(Y).
+異議の答え(C, 段(できる, '長は、理由を示して議決を再議に付せます。', ['176条1項'], [R, W1, W2, W3, Y])) :-
+    数(再議日数, C, _), !,
+    原文規定('176条1項', R), 選んだ(議決, C, W1), 選んだ(理由, C, W2), 入れた(再議日数, C, W3), 日数の約束(Y).
+% 4の欄が空（まだ付していない）：期限だけを書く。起算は条例・予算の議決なら送付を受けた日（案A「数字の欄が空のとき」）
+異議の答え(C, 段(できる, M, ['176条1項'], [R, W1, W2, W3])) :-
+    欄(議決, C, G), ( 条例予算の議決(G) -> K = '送付を受けた日' ; K = '議決の日' ),
+    format(atom(M), '長は、~wから10日以内に、理由を示して議決を再議に付せます。', [K]),
+    原文規定('176条1項', R), 選んだ(議決, C, W1), 選んだ(理由, C, W2), 空けた(再議日数, C, W3).
+
+%% ---- 176条2項・3項（再議のあとの議決が確定するか）----
+% 異議の再議で、期限を過ぎておらず、再議のあとの議会が何かをしたとき。
+% 条例・予算の議決（経費を削る・減らす議決を含む）は、6・7の欄が両方入っているときだけ出す（3分の2を数えられないため。案A）
+確定の段(C, [s(kakutei, '再議のあとの議決が確定するか', S)]) :-
+    欄(理由, C, 異議), \+ ( 数(再議日数, C, D), D > 10 ),
+    欄(再議後, C, K), K \== まだ,
+    確定の答え(C, K, S), !.
+確定の段(_, []).
+
+確定の答え(C, 同じ, 段(確定, '再議のあとの議決は確定します。', ['176条2項'], [R, W1, W2])) :-
+    欄(議決, C, G), \+ 条例予算の議決(G), !,
+    原文規定('176条2項', R), 選んだ(議決, C, W1), 選んだ(再議後, C, W2).
+% 条例・予算の議決：出席した議員の3分の2以上の賛成（割合は掛けて比べ、要る人数は切り上げる）
+確定の答え(C, 同じ, 段(St, M, As, [R2, R3, W1, W2, W3, W4])) :-
+    数(再議出席, C, N), 数(再議賛成, C, A), !,
+    P is (2 * N + 2) // 3,
+    ( 3 * A >= 2 * N -> St = 確定, M = '再議のあとの議決は確定します。', As = ['176条2項', '176条3項']
+    ; St = 確定しない, As = ['176条3項'],
+      format(atom(M), '再議のあとの議決は確定しません。出席した議員~w人の3分の2の~w人以上の賛成が要ります。', [N, P]) ),
+    原文規定('176条2項', R2), 原文規定('176条3項', R3),
+    選んだ(議決, C, W1), 選んだ(再議後, C, W2), 入れた(再議出席, C, W3), 入れた(再議賛成, C, W4).
+% 前と違う議決（経費をなお削る議決も、前と同じ議決ではない）：176条2項に当たらない（about の (6)）
+確定の答え(C, K, 段(当たらない, '再議のあとの議決が前と違うときは、176条2項の確定に当たりません。', ['176条2項'], [R, W, Z])) :-
+    memberchk(K, [違う, なお削る]),
+    原文規定('176条2項', R), 選んだ(再議後, C, W), 当たらないの約束(Z).
+
+%% ---- 176条4項（再議・再選挙をさせなければならない）----
+違反の段(C, [s(saigi4, '議決・選挙が権限を超える、または法令・会議規則に反するときの再議', S)]) :- 欄(理由, C, 違反), !, 違反の答え(C, S).
+違反の段(_, []).
+
+違反の答え(C, 段(しなければならない, M, ['176条4項'], [R, W1, W2])) :-
+    ( 欄(議決, C, 選挙) -> M = '長は、理由を示して再選挙を行わせなければなりません。'
+    ; M = '長は、理由を示して議決を再議に付さなければなりません。' ),
+    原文規定('176条4項', R), 選んだ(議決, C, W1), 選んだ(理由, C, W2).
+
+%% ---- 176条5項（21日以内に審査を申し立てられる）----
+% 違反の再議で、再議・再選挙のあとの議会が何かをしたとき。8の欄が空なら申し立てていない（期限だけを書く）
+審査の段(C, [s(shinsa, '審査の申立て', S)]) :-
+    欄(理由, C, 違反), 欄(再議後, C, K), K \== まだ, !,
+    審査の答え(C, S).
+審査の段(_, []).
+
+申立先(市町村長, '市町村長', '都道府県知事').
+申立先(知事, '都道府県知事', '総務大臣').
+
+審査の起点(C, '再選挙のあった日') :- 欄(議決, C, 選挙), !.
+審査の起点(_, '再議のあとの議決のあった日').
+
+審査の答え(C, 段(過ぎた, '審査を申し立てる21日の期限を過ぎています。', ['176条5項'], [R, W1, W2, W3, Y])) :-
+    数(申立日数, C, D), D > 21, !,
+    原文規定('176条5項', R), 選んだ(理由, C, W1), 選んだ(再議後, C, W2), 入れた(申立日数, C, W3), 日数の約束(Y).
+審査の答え(C, 段(できる, M, ['176条5項'], [R, W0, W1, W2, W3, Y])) :-
+    数(申立日数, C, _), !,
+    欄(長, C, Ch), 申立先(Ch, A, B),
+    format(atom(M), '~wは、~wに審査を申し立てられます。', [A, B]),
+    原文規定('176条5項', R), 選んだ(長, C, W0), 選んだ(理由, C, W1), 選んだ(再議後, C, W2), 入れた(申立日数, C, W3), 日数の約束(Y).
+審査の答え(C, 段(できる, M, ['176条5項'], [R, W0, W1, W2, W3])) :-
+    欄(長, C, Ch), 申立先(Ch, A, B), 審査の起点(C, K),
+    format(atom(M), '~wは、~wから21日以内に、~wに審査を申し立てられます。', [A, K, B]),
+    原文規定('176条5項', R), 選んだ(長, C, W0), 選んだ(理由, C, W1), 選んだ(再議後, C, W2), 空けた(申立日数, C, W3).
+
+% 21日以内に審査を申し立てた（176条6項〜8項の段の前提）
+申立内(C) :-
+    欄(理由, C, 違反), 欄(再議後, C, K), K \== まだ,
+    数(申立日数, C, D), D =< 21.
+
+%% ---- 176条6項（取り消す裁定ができる）----
+% 裁定がまだ出ていないとき。裁定が出たら176条7項の段へ進む
+裁定の段(C, [s(saitei, '総務大臣・都道府県知事の裁定', S)]) :-
+    申立内(C), 欄(裁定, C, 出ていない), !,
+    裁定の答え(C, S).
+裁定の段(_, []).
+
+裁定の答え(C, 段(できる, M, ['176条6項'], [R, W1, W2])) :-
+    欄(長, C, Ch), 申立先(Ch, _, B), 議決か選挙(C, X),
+    format(atom(M), '~wは、審査の結果、~wを取り消す裁定ができます。', [B, X]),
+    原文規定('176条6項', R), 入れた(申立日数, C, W1), 選んだ(裁定, C, W2).
+
+%% ---- 176条7項（60日以内に訴えを起こせる）----
+% 取り消す裁定・取り消さない裁定のどちらでも（決め2）。10の欄が空なら起こしていない（期限だけを書く）
+出訴の段(C, [s(shuso, '裁判所への訴え', S)]) :-
+    申立内(C), 欄(裁定, C, K), K \== 出ていない, !,
+    出訴の答え(C, S).
+出訴の段(_, []).
+
+出訴の答え(C, 段(過ぎた, '訴えを起こす60日の期限を過ぎています。', ['176条7項'], [R, W1, W2, Y])) :-
+    数(出訴日数, C, D), D > 60, !,
+    原文規定('176条7項', R), 選んだ(裁定, C, W1), 入れた(出訴日数, C, W2), 日数の約束(Y).
+出訴の答え(C, 段(できる, '議会または長は、裁判所に訴えを起こせます。', ['176条7項'], [R, W1, W2, Y])) :-
+    数(出訴日数, C, _), !,
+    原文規定('176条7項', R), 選んだ(裁定, C, W1), 入れた(出訴日数, C, W2), 日数の約束(Y).
+出訴の答え(C, 段(できる, '議会または長は、裁定のあった日から60日以内に、裁判所に訴えを起こせます。', ['176条7項'], [R, W1, W2])) :-
+    原文規定('176条7項', R), 選んだ(裁定, C, W1), 空けた(出訴日数, C, W2).
+
+%% ---- 176条8項（議決・選挙の取消しを求める訴えの被告）----
+% 60日以内に訴えを起こしたとき
+被告の段(C, [s(hikoku, '訴えの被告', S)]) :-
+    申立内(C), 欄(裁定, C, K), K \== 出ていない,
+    数(出訴日数, C, D), D =< 60, !,
+    被告の答え(C, S).
+被告の段(_, []).
+
+被告の答え(C, 段(しなければならない, M, ['176条8項'], [R, W1, W2])) :-
+    欄(訴え, C, 議決), !,
+    議決か選挙(C, X),
+    format(atom(M), '~wの取消しを求める訴えは、議会を被告にします。', [X]),
+    原文規定('176条8項', R), 選んだ(理由, C, W1), 選んだ(訴え, C, W2).
+被告の答え(C, 段(当たらない, '裁定の取消しを求める訴えは、議会を被告にする訴えに当たりません。', ['176条8項'], [R, W, Z])) :-
+    原文規定('176条8項', R), 選んだ(訴え, C, W), 当たらないの約束(Z).
+
+%% ---- 177条1項（経費を削る・減らす議決は再議に付さなければならない）----
+経費の段(C, [s(saigi177, '経費を削る・減らす議決の再議', S)]) :-
+    欄(議決, C, G), 経費の議決(G), !,
+    経費の答え(C, G, S).
+経費の段(_, []).
+
+経費の号(義務経費, '177条1項1号').
+経費の号(災害経費, '177条1項2号').
+
+経費の答え(C, G, 段(しなければならない, '長は、理由を示して、削られた・減らされた経費と、経費に伴う収入を再議に付さなければなりません。', [A], [R1, R2, W])) :-
+    経費の号(G, A),
+    原文規定('177条1項', R1), 原文規定(A, R2), 選んだ(議決, C, W).
+
+%% ---- 177条2項・3項（再議のあとも、なお経費を削る・減らしたとき）----
+% 5の欄が「前と同じ」「なお経費を削る・減らす」なら当たる。「前と違う」は経費を削っていない議決と読む（about の (14)）
+経費の後の段(C, [s(Id, T, S)]) :-
+    欄(議決, C, G), 経費の議決(G), 欄(再議後, C, K), K \== まだ, !,
+    経費の後(G, Id, T),
+    経費の後の答え(C, G, K, S).
+経費の後の段(_, []).
+
+経費の後(義務経費, shishutsu, '削られた経費の支出').
+経費の後(災害経費, minashi, '不信任の議決とみなすこと').
+
+経費の後の答え(C, 義務経費, K, 段(できる, '長は、削られた・減らされた経費と、経費に伴う収入を予算に入れて、経費を支出できます。', ['177条2項'], [R, W1, W2])) :-
+    K \== 違う, !,
+    原文規定('177条2項', R), 選んだ(議決, C, W1), 選んだ(再議後, C, W2).
+経費の後の答え(C, 災害経費, K, 段(できる, '長は、経費を削った・減らした議決を、不信任の議決とみなせます。', ['177条3項'], [R, W1, W2])) :-
+    K \== 違う, !,
+    原文規定('177条3項', R), 選んだ(議決, C, W1), 選んだ(再議後, C, W2).
+経費の後の答え(C, 義務経費, 違う, 段(当たらない, '再議のあとの議決が経費を削っていないときは、177条2項の支出に当たりません。', ['177条2項'], [R, W, Z])) :- !,
+    原文規定('177条2項', R), 選んだ(再議後, C, W), 当たらないの約束(Z).
+経費の後の答え(C, 災害経費, 違う, 段(当たらない, '再議のあとの議決が経費を削っていないときは、177条3項のみなしに当たりません。', ['177条3項'], [R, W, Z])) :-
+    原文規定('177条3項', R), 選んだ(再議後, C, W), 当たらないの約束(Z).
+</script>
+<script type="text/prolog" data-name="rules_c_fushinnin.pl">% rules/c_fushinnin.pl — 長の不信任の議決：178条の段
+%
+%   段は4：seiritsu（178条3項）・tsuchi（178条1項前段）・kaisan（178条1項後段）・shitsu（178条2項）。2026-11-25 案A。
+%   前は入口「不信任」の中で「回」（初回 | 再度）を選ばせ、成り立たない入力では残りの段を「判定していません」で出していた（A5）。
+%   今は12の欄が「していない」以外で、13〜15の欄が使えるとき（議員数は1人以上）に出す。13〜15のどれかが空なら不信任の段を出さない（案A）。
+%   178条3項の「その四分の三以上」「その過半数」の「その」は出席した者と読み（about の (15)）、割合は掛けて比べ、要る人数は切り上げる。
+%   通知から10日を過ぎたら、解散していても期間内に解散しなかったと読み、職を失うと出す（about の (16)）。
+%   12の欄が「再び」なら、解散は聞かず、議長から通知があった日に職を失うと出す（178条2項。about の (18)）。
+%   前の「十日以内に解散しない」の欄と再度の通知の欄は消し、17の欄の日数と空で見る（案A）。
+
+不信任の段(C, L) :-
+    欄(不信任, C, F), F \== していない,
+    不信任の数(C, G, N, A), !,
+    成否の段(C, F, G, N, A, L1),
+    ( 成り立つ(F, G, N, A) -> 成立の後の段(C, F, L2) ; L2 = [] ),
+    append(L1, L2, L).
+不信任の段(_, []).
+
+不信任の数(C, G, N, A) :-
+    数(議員数, C, G), G >= 1,
+    数(出席, C, N), 数(賛成, C, A).
+
+% 178条3項：議員数の3分の2以上の出席と、出席した議員の4分の3以上（再び：過半数）の同意
+成り立つ(F, G, N, A) :- 3 * N >= 2 * G, 同意が足りる(F, N, A).
+同意が足りる(した, N, A) :- 4 * A >= 3 * N.
+同意が足りる(再び, N, A) :- 2 * A > N.
+
+% 要る同意の数（4分の3は切り上げ、過半数は半分を超える最小の数）
+同意の数(した, N, Q, '4分の3') :- Q is (3 * N + 3) // 4.
+同意の数(再び, N, Q, '過半数') :- Q is N // 2 + 1.
+
+%% ---- 178条3項 ----
+成否の段(C, F, G, N, A, [s(seiritsu, '不信任の議決が成り立つか', 段(St, M, ['178条3項'], [R, W1, W2, W3, W4]))]) :-
+    ( 成り立つ(F, G, N, A) -> St = 成り立つ, M = '不信任の議決が成り立ちます。'
+    ; St = 成り立たない,
+      P is (2 * G + 2) // 3, 同意の数(F, N, Q, Wq),
+      format(atom(M), '不信任の議決は成り立ちません。議員~w人の3分の2の~w人以上の出席と、出席した議員の~wの~w人以上の同意が要ります。', [G, P, Wq, Q]) ),
+    原文規定('178条3項', R), 選んだ(不信任, C, W1), 入れた(議員数, C, W2), 入れた(出席, C, W3), 入れた(賛成, C, W4).
+
+%% ---- 成り立った後 ----
+成立の後の段(C, した, L) :-
+    通知の段(C, L1), 解散の段(C, L2), 失職の段(C, L3),
+    append([L1, L2, L3], L).
+成立の後の段(C, 再び, L) :-
+    通知の段(C, L1), 再びの失職の段(C, L2),
+    append(L1, L2, L).
+
+%% ---- 178条1項前段 ----
+通知の段(C, [s(tsuchi, '議長の通知', 段(しなければならない, '議長は、すぐに長へ不信任の議決を知らせなければなりません。', ['178条1項前段'], [R, W]))]) :-
+    原文規定('178条1項前段', R), 選んだ(不信任, C, W).
+
+%% ---- 178条1項後段 ----
+% 17の欄が空なら、通知はまだ（期限だけを書く）。解散した・していないのどちらでも、10日以内なら「解散できます」（案A「組の番号」）
+解散の段(C, [s(kaisan, '議会の解散', S)]) :- 解散の答え(C, S).
+
+解散の答え(C, 段(過ぎた, '議会を解散できる10日の期限を過ぎています。', ['178条1項後段'], [R, W1, W2, Y])) :-
+    数(通知日数, C, D), D > 10, !,
+    原文規定('178条1項後段', R), 選んだ(解散, C, W1), 入れた(通知日数, C, W2), 日数の約束(Y).
+解散の答え(C, 段(できる, '長は、議会を解散できます。', ['178条1項後段'], [R, W1, W2, Y])) :-
+    数(通知日数, C, _), !,
+    原文規定('178条1項後段', R), 選んだ(解散, C, W1), 入れた(通知日数, C, W2), 日数の約束(Y).
+解散の答え(C, 段(できる, '長は、通知を受けた日から10日以内に議会を解散できます。', ['178条1項後段'], [R, W1, W2])) :-
+    原文規定('178条1項後段', R), 選んだ(解散, C, W1), 空けた(通知日数, C, W2).
+
+%% ---- 178条2項（初めての不信任の議決）----
+% 通知から10日を過ぎたときだけ（10日以内は、まだ期間内）
+失職の段(C, [s(shitsu, '長が職を失うか', 段(職を失う, '長は、通知を受けた日から10日が過ぎた日に職を失います。', ['178条2項'], [R, W1, W2, Y]))]) :-
+    数(通知日数, C, D), D > 10, !,
+    原文規定('178条2項', R), 選んだ(解散, C, W1), 入れた(通知日数, C, W2), 日数の約束(Y).
+失職の段(_, []).
+
+%% ---- 178条2項（解散のあと初めて招集された議会での、再びの不信任の議決）----
+再びの失職の段(C, [s(shitsu, '長が職を失うか', 段(職を失う, '長は、議長から通知があった日に職を失います。', ['178条2項'], [R, W]))]) :-
+    原文規定('178条2項', R), 選んだ(不信任, C, W).
+</script>
+<script type="text/prolog" data-name="rules_d_senketsu.pl">% rules/d_senketsu.pl — 長が議会に代わってする処分：179条・180条の段
+%
+%   段は5：shobun（179条1項・2項）・hokoku（179条3項）・sochi（179条4項）・sen180（180条1項）・hokoku180（180条2項）。2026-11-25 案A。
+%   前は入口「専決」の中で「条」（百七十九 | 百八十）を選ばせ、選んだ条だけを出していた（C4・C5）。
+%   今は19〜22の欄から、179条と180条の段を両方当てる（19の欄で4つの場面のどれかを選び、21の欄で指定しているなら両方出る。about の (25)）。
+%   179条1項の4つの場面は19の欄で聞き、「緊急」は長が判断したことを事実として聞く（決め4）。
+%   180条1項の「軽易な事項」は聞かず、21の欄で議会が指定したかだけを聞く（決め3。about の (26)）。
+%   180条2項は報告だけで、承認とは出さない（決め5。about の (24)）。
+%   19の欄が「開ける」・21の欄が「指定していない」で処分したときは、179条1項の場面でないので「処分できません」と出す（案A）。
+%   179条1項が指す第113条ただし書・第162条・第252条の20の2 の中身は読まない（about の載せなかったもの）。
+
+専決の段(C, L) :-
+    処分の段(C, L1), 報告の段(C, L2), 措置の段(C, L3), 指定の段(C, L4), 指定の報告の段(C, L5),
+    append([L1, L2, L3, L4, L5], L).
+
+% 179条1項ただし書の同意（20の欄）
+ただし書の同意(副知事, '副知事・副市町村長を選ぶことへの同意は、長が議会に代わって処分できません。').
+ただし書の同意(総合区長, '指定都市の総合区長を選ぶことへの同意は、長が議会に代わって処分できません。').
+
+% 議決すべき事件は179条1項本文、決定すべき事件は179条2項（「前項の例による」）
+処分の条(議決, '179条1項本文', []).
+処分の条(決定, '179条2項', ['179条1項本文']).
+
+%% ---- 179条1項・2項 ----
+処分の段(C, [s(shobun, '長が議会に代わってする処分', S)]) :-
+    欄(議会, C, B), B \== 開ける, !,
+    処分の答え(C, S).
+処分の段(C, [s(shobun, '長が議会に代わってする処分', 段(できない, '議会を開けるときは、長は議会に代わって事件を処分できません。', ['179条1項本文'], [R, W1, W2, W3]))]) :-
+    欄(議会, C, 開ける), 欄(指定, C, していない), 欄(処分, C, P), P \== まだ, !,
+    原文規定('179条1項本文', R), 選んだ(議会, C, W1), 選んだ(指定, C, W2), 選んだ(処分, C, W3).
+処分の段(_, []).
+
+処分の答え(C, 段(できない, M, ['179条1項ただし書'], [R, W1, W2])) :-
+    欄(中身, C, K), ただし書の同意(K, M), !,
+    原文規定('179条1項ただし書', R), 選んだ(議会, C, W1), 選んだ(中身, C, W2).
+処分の答え(C, 段(できる, '長は、議会に代わって事件を処分できます。', [A], Ls)) :-
+    欄(事件, C, J), 処分の条(J, A, Bs),
+    maplist(原文規定, [A | Bs], Rs),
+    選んだ(事件, C, W1), 選んだ(議会, C, W2),
+    append(Rs, [W1, W2], Ls).
+
+% 179条で処分できる（179条3項・4項の段の前提）
+処分できる(C) :-
+    欄(議会, C, B), B \== 開ける,
+    欄(中身, C, K), \+ ただし書の同意(K, _).
+
+%% ---- 179条3項 ----
+報告の段(C, [s(hokoku, '処分の報告と承認', 段(しなければならない, '長は、次の会議で議会に報告し、承認を求めなければなりません。', ['179条3項'], [R, W]))]) :-
+    処分できる(C), 欄(処分, C, P), P \== まだ, !,
+    原文規定('179条3項', R), 選んだ(処分, C, W).
+報告の段(_, []).
+
+%% ---- 179条4項 ----
+% 承認を求める議案が否決されたとき。条例・予算の処分なら措置と報告、それ以外は当たらない（承認されなかった処分の効力は about の (22)）
+措置の段(C, [s(sochi, '承認されなかったときの措置', S)]) :-
+    処分できる(C), 欄(処分, C, 否決), !,
+    措置の答え(C, S).
+措置の段(_, []).
+
+措置の答え(C, 段(しなければならない, '長は、すぐに必要と認める措置をとり、議会に報告しなければなりません。', ['179条4項'], [R, W1, W2])) :-
+    欄(中身, C, K), memberchk(K, [条例, 予算]), !,
+    原文規定('179条4項', R), 選んだ(中身, C, W1), 選んだ(処分, C, W2).
+措置の答え(C, 段(当たらない, '条例・予算でない処分は、承認議案が否決されても、179条4項の措置に当たりません。', ['179条4項'], [R, W1, W2, Z])) :-
+    原文規定('179条4項', R), 選んだ(中身, C, W1), 選んだ(処分, C, W2), 当たらないの約束(Z).
+
+%% ---- 180条1項 ----
+指定の段(C, [s(sen180, '議会が指定した事項の専決処分', 段(できる, '長は、議会が指定した事項を専決処分にできます。', ['180条1項'], [R, W]))]) :-
+    欄(指定, C, している), !,
+    原文規定('180条1項', R), 選んだ(指定, C, W).
+指定の段(_, []).
+
+%% ---- 180条2項 ----
+指定の報告の段(C, [s(hokoku180, '専決処分の報告', 段(しなければならない, '長は、専決処分を議会に報告しなければなりません。', ['180条2項'], [R, W1, W2]))]) :-
+    欄(指定, C, している), 欄(処分, C, P), P \== まだ, !,
+    原文規定('180条2項', R), 選んだ(指定, C, W1), 選んだ(処分, C, W2).
+指定の報告の段(_, []).
+</script>
+<script type="text/prolog" data-name="rules_e_hantei.pl">% rules/e_hantei.pl — 段を束ねて見出し・根拠条文・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 箱の条, 葉のリスト)　結論ごとの段 = s(画面のid, 見出し, 段)
+%     段は19：saigi1・kakutei・saigi4・shinsa・saitei・shuso・hikoku・saigi177・shishutsu・minashi（b_saigi）、
+%     seiritsu・tsuchi・kaisan・shitsu（c_fushinnin）、shobun・hokoku・sochi・sen180・hokoku180（d_senketsu）
+%   形は giin-prolog の g_hantei.pl と同じ（2026-11-25 案A）。
+%   前は 入口の段/3 が入口1つの段だけを返し、見出し/2 が全部の段の答えを1段落につないでいた（A7）。
+%   組の番号は無く、止まった段がある/1 が7つの状態だけを見て、ほかを黙って ok にしていた（職を失う も ok の印だった）。
+%   木は全部を「次のすべてが成り立つ」の下にぶら下げた1本で、ほぼ全部の段にアプリの約束事①を付けていた（B5・A5）。
+%   今は段ごとに状態を持ち、状態を全部名前で書き、知らない状態は throw で止める（agents/dog/rules.md:96。決め「あわせて」）。
+%   段の文には、画面の上で指す先の無い指示語（その・これを・当該・同項・前項 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+%   どの段も出ない（3つの小見出しのどれでも何も起きていない、または数字の欄が使えない）ときは judge が失敗し、画面は「判定できませんでした」を出す。
+
+%% ---- judge ----
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    Steps \== [],
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 成り立たない組があれば、その組だけを段にする（REVIEW_RULES C3。ほかの段は出さない）。
+% 組は findall で全部集め、組ごとに1段にする（id は mujun_a・mujun_i・…・mujun_sa。REVIEW_RULES 末尾「AI同士で決めた書き方」1・2）。
+% 1つの入力で2つ以上の組が重なることがある（例：エ と オ）。重なれば全部出す。
+% 無ければ3つの小見出しの段を同じ入力で当てる。並びは 当たった答えを先に（止まる答えを先に）。
+% 同じ述語を別のファイルに分けて書くと後の読み込みで消えるので、まとめはここに1つだけ置く
+全部の段(C, Steps) :-
+    findall(s(Id, 'この組み合わせはありません', 段(組み合わせなし, 'この組み合わせはありません。', As, Ws)),
+            ( 組み合わせなし(C, K, Ws, As), atom_concat(mujun_, K, Id) ), Steps),
+    Steps \== [], !.
+全部の段(C, Steps) :-
+    再議の段(C, L1),
+    不信任の段(C, L2),
+    専決の段(C, L3),
+    append([L1, L2, L3], L0),
+    当たった答えを先に(L0, Steps).
+
+%% ---- 並べ方 ----
+% 並びは ①止まる答え ②当たった答え ④「当たりません」の文（この本に ③答えを支える文 は無い）
+% ①②が無いときは「当たりません」が聞いた答えなので、そのまま出す（giin-prolog と同じ並べ方）
+% 組の番号 は番号を空のまま呼んで後で比べる。番号を束ねて呼ぶと頭に合わず、最後の throw の節に落ちて止まる（sorin-prolog 2026-11-22 22:50 run_cases。giin と同じ）
+当たった答えを先に([], []) :- !.
+当たった答えを先に(L0, L) :-
+    ( member(s(_, _, 段(St0, _, _, _)), L0), 組の番号(St0, N0), N0 =< 2 -> Order = [1, 2, 3, 4] ; Order = [4, 3] ),
+    findall(S, ( member(N, Order), member(S, L0), S = s(_, _, 段(St, _, _, _)), 組の番号(St, M), M =:= N ), L).
+
+% 組の番号(状態, 1=止まる答え | 2=当たった答え | 4=当たりません)。
+% 状態は全部名前で書き、知らない状態は止める（agents/dog/rules.md:96。giin-prolog g_hantei.pl:59–67 を写し、状態は案の「組の番号」）
+% 前の 場面外・判定しない・案内・定め は段を出さなくした（A5）ので消した。あった は9の欄の事実で次の段に進むだけ、
+% しない（十日以内に解散しない）は欄ごと消し、解散した（期限内）は できる に入れた。出席不足・同意不足 は 成り立たない に、
+% 失う は 職を失う に、義務・必要・措置・議会（被告）は しなければならない に、場面でない は 当たらない に名前を変えた
+組の番号(組み合わせなし, 1) :- !.     % 176条〜178条の組と数のぶつかり（案A「この組み合わせはありません」）
+組の番号(できない, 1) :- !.           % 179条1項ただし書・議会を開けるときの処分
+組の番号(過ぎた, 1) :- !.             % 10日・21日・60日・10日（解散）の期限を過ぎた
+組の番号(確定しない, 1) :- !.         % 176条3項の3分の2に足りない
+組の番号(成り立たない, 1) :- !.       % 178条3項の出席・同意に足りない
+組の番号(職を失う, 1) :- !.           % 178条2項
+組の番号(できる, 2) :- !.             % 再議に付せる・申し立てられる・裁定ができる・訴えを起こせる・支出できる・みなせる・解散できる・処分できる・専決処分にできる
+組の番号(しなければならない, 2) :- !. % 176条4項・8項・177条1項・178条1項前段・179条3項・4項・180条2項
+組の番号(確定, 2) :- !.               % 176条2項・3項
+組の番号(成り立つ, 2) :- !.           % 178条3項
+組の番号(当たらない, 4) :- !.         % 176条2項・8項・177条2項・3項・179条4項に当たらない
+組の番号(St, _) :- throw(知らない状態(St)).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、段の文だけを出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」を付けない）。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(_, Steps, Ws) :-
+    findall(W, ( member(s(_, _, S), Steps), 問いの答え(S, W) ), Ws).
+
+% 答えの文に箱の条を（）で付ける。条の無い段（数のぶつかり）は付けない（「（）」を画面に出さない）
+問いの答え(S, W) :-
+    S = 段(_, _, As, _),
+    答え(S, W0),
+    ( As == [] -> W = W0 ; 条の表記(As, A), format(atom(W), '~w（~w）', [W0, A]) ).
+
+% 節の文：答えの文（条を付けない）
+節の文(_, S, W) :- 答え(S, W).
+
+% 答え(段, 答えの文)：段の文の末尾の「。」を外す。
+答え(段(_, M, _, _), W) :-
+    ( atom_concat(M0, '。', M) -> W = M0 ; W = M ).
+
+%% ---- 根拠条文 ----
+% 段の順に並べ、重複は1つに
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As, _), Ss), member(A, As) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5。結論をつないだ行と「次のすべてが成り立つ」の根は置かない）。
+% 並びは結論の箱と同じ。一番上の行は結論の箱の文で、その下に葉（規定の行・起きた事実・約束事）を置く。
+木(_, Steps, Trees) :-
+    findall(T, ( member(s(_, _, S), Steps), 段の木(S, T) ), Trees).
+
+段の木(S, t(K, W, '', Cs)) :-
+    S = 段(St, _, _, Fs),
+    問いの答え(S, W),
+    maplist(葉の行, Fs, Kids),
+    すべて(W, '', Kids, t(_, W, _, Cs)),
+    印(St, K).
+
+% 止まった段（組の番号の1番と、当たらない）は info、そのほか（2番）は ok（木ごとに、その段で決める。giin-prolog と同じ）
+% 状態は1つに決まっていて、入っているかを見るだけなので memberchk（REVIEW_RULES 末尾「AI同士で決めた書き方」1）
+印(St, K) :- 組の番号(St, _), ( memberchk(St, [組み合わせなし, できない, 過ぎた, 確定しない, 成り立たない, 職を失う, 当たらない]) -> K = info ; K = ok ).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は giin-prolog の web.pl と同じ（2026-11-25 案A）。
+%   前は result・explain の2つで、explain は木1本を平らにしていた。
+%   今は木を結論ごとに1本にし（B5）、「この組み合わせはありません」も段の1つにした（rules/e_hantei.pl の 全部の段）。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+</script>
+<script type="application/json" id="law">{"176":{"t":"第百七十六条","c":"","p":[{"n":"1","s":"普通地方公共団体の議会の議決について異議があるときは、当該普通地方公共団体の長は、この法律に特別の定めがあるものを除くほか、その議決の日（条例の制定若しくは改廃又は予算に関する議決については、その送付を受けた日）から十日以内に理由を示してこれを再議に付することができる。","i":[]},{"n":"2","s":"前項の規定による議会の議決が再議に付された議決と同じ議決であるときは、その議決は、確定する。","i":[]},{"n":"3","s":"前項の規定による議決のうち条例の制定若しくは改廃又は予算に関するものについては、出席議員の三分の二以上の者の同意がなければならない。","i":[]},{"n":"4","s":"普通地方公共団体の議会の議決又は選挙がその権限を超え又は法令若しくは会議規則に違反すると認めるときは、当該普通地方公共団体の長は、理由を示してこれを再議に付し又は再選挙を行わせなければならない。","i":[]},{"n":"5","s":"前項の規定による議会の議決又は選挙がなおその権限を超え又は法令若しくは会議規則に違反すると認めるときは、都道府県知事にあつては総務大臣、市町村長にあつては都道府県知事に対し、当該議決又は選挙があつた日から二十一日以内に、審査を申し立てることができる。","i":[]},{"n":"6","s":"前項の規定による申立てがあつた場合において、総務大臣又は都道府県知事は、審査の結果、議会の議決又は選挙がその権限を超え又は法令若しくは会議規則に違反すると認めるときは、当該議決又は選挙を取り消す旨の裁定をすることができる。","i":[]},{"n":"7","s":"前項の裁定に不服があるときは、普通地方公共団体の議会又は長は、裁定のあつた日から六十日以内に、裁判所に出訴することができる。","i":[]},{"n":"8","s":"前項の訴えのうち第四項の規定による議会の議決又は選挙の取消しを求めるものは、当該議会を被告として提起しなければならない。","i":[]}]},"177":{"t":"第百七十七条","c":"","p":[{"n":"1","s":"普通地方公共団体の議会において次に掲げる経費を削除し又は減額する議決をしたときは、その経費及びこれに伴う収入について、当該普通地方公共団体の長は、理由を示してこれを再議に付さなければならない。","i":[{"n":"1","t":"一","s":"法令により負担する経費、法律の規定に基づき当該行政庁の職権により命ずる経費その他の普通地方公共団体の義務に属する経費","sub":[]},{"n":"2","t":"二","s":"非常の災害による応急若しくは復旧の施設のために必要な経費又は感染症予防のために必要な経費","sub":[]}]},{"n":"2","s":"前項第一号の場合において、議会の議決がなお同号に掲げる経費を削除し又は減額したときは、当該普通地方公共団体の長は、その経費及びこれに伴う収入を予算に計上してその経費を支出することができる。","i":[]},{"n":"3","s":"第一項第二号の場合において、議会の議決がなお同号に掲げる経費を削除し又は減額したときは、当該普通地方公共団体の長は、その議決を不信任の議決とみなすことができる。","i":[]}]},"178":{"t":"第百七十八条","c":"","p":[{"n":"1","s":"普通地方公共団体の議会において、当該普通地方公共団体の長の不信任の議決をしたときは、直ちに議長からその旨を当該普通地方公共団体の長に通知しなければならない。この場合においては、普通地方公共団体の長は、その通知を受けた日から十日以内に議会を解散することができる。","i":[]},{"n":"2","s":"議会において当該普通地方公共団体の長の不信任の議決をした場合において、前項の期間内に議会を解散しないとき、又はその解散後初めて招集された議会において再び不信任の議決があり、議長から当該普通地方公共団体の長に対しその旨の通知があつたときは、普通地方公共団体の長は、同項の期間が経過した日又は議長から通知があつた日においてその職を失う。","i":[]},{"n":"3","s":"前二項の規定による不信任の議決については、議員数の三分の二以上の者が出席し、第一項の場合においてはその四分の三以上の者の、前項の場合においてはその過半数の者の同意がなければならない。","i":[]}]},"179":{"t":"第百七十九条","c":"","p":[{"n":"1","s":"普通地方公共団体の議会が成立しないとき、第百十三条ただし書の場合においてなお会議を開くことができないとき、普通地方公共団体の長において議会の議決すべき事件について特に緊急を要するため議会を招集する時間的余裕がないことが明らかであると認めるとき、又は議会において議決すべき事件を議決しないときは、当該普通地方公共団体の長は、その議決すべき事件を処分することができる。ただし、第百六十二条の規定による副知事又は副市町村長の選任の同意及び第二百五十二条の二十の二第四項の規定による第二百五十二条の十九第一項に規定する指定都市の総合区長の選任の同意については、この限りでない。","i":[]},{"n":"2","s":"議会の決定すべき事件に関しては、前項の例による。","i":[]},{"n":"3","s":"前二項の規定による処置については、普通地方公共団体の長は、次の会議においてこれを議会に報告し、その承認を求めなければならない。","i":[]},{"n":"4","s":"前項の場合において、条例の制定若しくは改廃又は予算に関する処置について承認を求める議案が否決されたときは、普通地方公共団体の長は、速やかに、当該処置に関して必要と認める措置を講ずるとともに、その旨を議会に報告しなければならない。","i":[]}]},"180":{"t":"第百八十条","c":"","p":[{"n":"1","s":"普通地方公共団体の議会の権限に属する軽易な事項で、その議決により特に指定したものは、普通地方公共団体の長において、これを専決処分にすることができる。","i":[]},{"n":"2","s":"前項の規定により専決処分をしたときは、普通地方公共団体の長は、これを議会に報告しなければならない。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"第一編　総則","a":[{"k":"1","t":"第一条","c":"","u":0},{"k":"1_2","t":"第一条の二","c":"","u":0},{"k":"1_3","t":"第一条の三","c":"","u":0},{"k":"2","t":"第二条","c":"","u":0},{"k":"3","t":"第三条","c":"","u":0},{"k":"4","t":"第四条","c":"","u":0},{"k":"4_2","t":"第四条の二","c":"","u":0}]},{"t":"第二編　普通地方公共団体 第一章　通則","a":[{"k":"5","t":"第五条","c":"","u":0},{"k":"6","t":"第六条","c":"","u":0},{"k":"6_2","t":"第六条の二","c":"","u":0},{"k":"7","t":"第七条","c":"","u":0},{"k":"7_2","t":"第七条の二","c":"","u":0},{"k":"8","t":"第八条","c":"","u":0},{"k":"8_2","t":"第八条の二","c":"","u":0},{"k":"9","t":"第九条","c":"","u":0},{"k":"9_2","t":"第九条の二","c":"","u":0},{"k":"9_3","t":"第九条の三","c":"","u":0},{"k":"9_4","t":"第九条の四","c":"","u":0},{"k":"9_5","t":"第九条の五","c":"","u":0}]},{"t":"第二編　普通地方公共団体 第二章　住民","a":[{"k":"10","t":"第十条","c":"","u":0},{"k":"11","t":"第十一条","c":"","u":0},{"k":"12","t":"第十二条","c":"","u":0},{"k":"13","t":"第十三条","c":"","u":0},{"k":"13_2","t":"第十三条の二","c":"","u":0}]},{"t":"第二編　普通地方公共団体 第三章　条例及び規則","a":[{"k":"14","t":"第十四条","c":"","u":0},{"k":"15","t":"第十五条","c":"","u":0},{"k":"16","t":"第十六条","c":"","u":0}]},{"t":"第二編　普通地方公共団体 第四章　選挙","a":[{"k":"17","t":"第十七条","c":"","u":0},{"k":"18","t":"第十八条","c":"","u":0},{"k":"19","t":"第十九条","c":"","u":0},{"k":"20:73","t":"第二十条乃至第七十三条","c":"","u":2}]},{"t":"第二編　普通地方公共団体 第五章　直接請求","a":[{"k":"74","t":"第七十四条","c":"","u":0},{"k":"74_2","t":"第七十四条の二","c":"","u":0},{"k":"74_3","t":"第七十四条の三","c":"","u":0},{"k":"74_4","t":"第七十四条の四","c":"","u":0},{"k":"75","t":"第七十五条","c":"","u":0},{"k":"76","t":"第七十六条","c":"","u":0},{"k":"77","t":"第七十七条","c":"","u":0},{"k":"78","t":"第七十八条","c":"","u":0},{"k":"79","t":"第七十九条","c":"","u":0},{"k":"80","t":"第八十条","c":"","u":0},{"k":"81","t":"第八十一条","c":"","u":0},{"k":"82","t":"第八十二条","c":"","u":0},{"k":"83","t":"第八十三条","c":"","u":0},{"k":"84","t":"第八十四条","c":"","u":0},{"k":"85","t":"第八十五条","c":"","u":0},{"k":"86","t":"第八十六条","c":"","u":0},{"k":"87","t":"第八十七条","c":"","u":0},{"k":"88","t":"第八十八条","c":"","u":0}]},{"t":"第二編　普通地方公共団体 第六章　議会","a":[{"k":"89","t":"第八十九条","c":"","u":0},{"k":"90","t":"第九十条","c":"","u":0},{"k":"91","t":"第九十一条","c":"","u":0},{"k":"92","t":"第九十二条","c":"","u":0},{"k":"92_2","t":"第九十二条の二","c":"","u":0},{"k":"93","t":"第九十三条","c":"","u":0},{"k":"94","t":"第九十四条","c":"","u":0},{"k":"95","t":"第九十五条","c":"","u":0},{"k":"96","t":"第九十六条","c":"","u":0},{"k":"97","t":"第九十七条","c":"","u":0},{"k":"98","t":"第九十八条","c":"","u":0},{"k":"99","t":"第九十九条","c":"","u":0},{"k":"100","t":"第百条","c":"","u":0},{"k":"100_2","t":"第百条の二","c":"","u":0},{"k":"101","t":"第百一条","c":"","u":0},{"k":"102","t":"第百二条","c":"","u":0},{"k":"102_2","t":"第百二条の二","c":"","u":0},{"k":"103","t":"第百三条","c":"","u":0},{"k":"104","t":"第百四条","c":"","u":0},{"k":"105","t":"第百五条","c":"","u":0},{"k":"105_2","t":"第百五条の二","c":"","u":0},{"k":"106","t":"第百六条","c":"","u":0},{"k":"107","t":"第百七条","c":"","u":0},{"k":"108","t":"第百八条","c":"","u":0},{"k":"109","t":"第百九条","c":"","u":0},{"k":"110:111","t":"第百十条及び第百十一条","c":"","u":2},{"k":"112","t":"第百十二条","c":"","u":0},{"k":"113","t":"第百十三条","c":"","u":0},{"k":"114","t":"第百十四条","c":"","u":0},{"k":"115","t":"第百十五条","c":"","u":0},{"k":"115_2","t":"第百十五条の二","c":"","u":0},{"k":"115_3","t":"第百十五条の三","c":"","u":0},{"k":"116","t":"第百十六条","c":"","u":0},{"k":"117","t":"第百十七条","c":"","u":0},{"k":"118","t":"第百十八条","c":"","u":0},{"k":"119","t":"第百十九条","c":"","u":0},{"k":"120","t":"第百二十条","c":"","u":0},{"k":"121","t":"第百二十一条","c":"","u":0},{"k":"122","t":"第百二十二条","c":"","u":0},{"k":"123","t":"第百二十三条","c":"","u":0},{"k":"124","t":"第百二十四条","c":"","u":0},{"k":"125","t":"第百二十五条","c":"","u":0},{"k":"126","t":"第百二十六条","c":"","u":0},{"k":"127","t":"第百二十七条","c":"","u":0},{"k":"128","t":"第百二十八条","c":"","u":0},{"k":"129","t":"第百二十九条","c":"","u":0},{"k":"130","t":"第百三十条","c":"","u":0},{"k":"131","t":"第百三十一条","c":"","u":0},{"k":"132","t":"第百三十二条","c":"","u":0},{"k":"133","t":"第百三十三条","c":"","u":0},{"k":"134","t":"第百三十四条","c":"","u":0},{"k":"135","t":"第百三十五条","c":"","u":0},{"k":"136","t":"第百三十六条","c":"","u":0},{"k":"137","t":"第百三十七条","c":"","u":0},{"k":"138","t":"第百三十八条","c":"","u":0},{"k":"138_2","t":"第百三十八条の二","c":"","u":0}]},{"t":"第二編　普通地方公共団体 第七章　執行機関","a":[{"k":"138_2_2","t":"第百三十八条の二の二","c":"","u":0},{"k":"138_3","t":"第百三十八条の三","c":"","u":0},{"k":"138_4","t":"第百三十八条の四","c":"","u":0},{"k":"139","t":"第百三十九条","c":"","u":0},{"k":"140","t":"第百四十条","c":"","u":0},{"k":"141","t":"第百四十一条","c":"","u":0},{"k":"142","t":"第百四十二条","c":"","u":0},{"k":"143","t":"第百四十三条","c":"","u":0},{"k":"144","t":"第百四十四条","c":"","u":0},{"k":"145","t":"第百四十五条","c":"","u":0},{"k":"146","t":"第百四十六条","c":"","u":2},{"k":"147","t":"第百四十七条","c":"","u":0},{"k":"148","t":"第百四十八条","c":"","u":0},{"k":"149","t":"第百四十九条","c":"","u":0},{"k":"150","t":"第百五十条","c":"","u":0},{"k":"151","t":"第百五十一条","c":"","u":2},{"k":"152","t":"第百五十二条","c":"","u":0},{"k":"153","t":"第百五十三条","c":"","u":0},{"k":"154","t":"第百五十四条","c":"","u":0},{"k":"154_2","t":"第百五十四条の二","c":"","u":0},{"k":"155","t":"第百五十五条","c":"","u":0},{"k":"156","t":"第百五十六条","c":"","u":0},{"k":"157","t":"第百五十七条","c":"","u":0},{"k":"158","t":"第百五十八条","c":"","u":0},{"k":"159","t":"第百五十九条","c":"","u":0},{"k":"160","t":"第百六十条","c":"","u":0},{"k":"161","t":"第百六十一条","c":"","u":0},{"k":"162","t":"第百六十二条","c":"","u":0},{"k":"163","t":"第百六十三条","c":"","u":0},{"k":"164","t":"第百六十四条","c":"","u":0},{"k":"165","t":"第百六十五条","c":"","u":0},{"k":"166","t":"第百六十六条","c":"","u":0},{"k":"167","t":"第百六十七条","c":"","u":0},{"k":"168","t":"第百六十八条","c":"","u":0},{"k":"169","t":"第百六十九条","c":"","u":0},{"k":"170","t":"第百七十条","c":"","u":0},{"k":"171","t":"第百七十一条","c":"","u":0},{"k":"172","t":"第百七十二条","c":"","u":0},{"k":"173","t":"第百七十三条","c":"","u":2},{"k":"174","t":"第百七十四条","c":"","u":0},{"k":"175","t":"第百七十五条","c":"","u":0},{"k":"176","t":"第百七十六条","c":"","u":1},{"k":"177","t":"第百七十七条","c":"","u":1},{"k":"178","t":"第百七十八条","c":"","u":1},{"k":"179","t":"第百七十九条","c":"","u":1},{"k":"180","t":"第百八十条","c":"","u":1},{"k":"180_2","t":"第百八十条の二","c":"","u":0},{"k":"180_3","t":"第百八十条の三","c":"","u":0},{"k":"180_4","t":"第百八十条の四","c":"","u":0},{"k":"180_5","t":"第百八十条の五","c":"","u":0},{"k":"180_6","t":"第百八十条の六","c":"","u":0},{"k":"180_7","t":"第百八十条の七","c":"","u":0},{"k":"180_8","t":"第百八十条の八","c":"","u":0},{"k":"180_9","t":"第百八十条の九","c":"","u":0},{"k":"181","t":"第百八十一条","c":"","u":0},{"k":"182","t":"第百八十二条","c":"","u":0},{"k":"183","t":"第百八十三条","c":"","u":0},{"k":"184","t":"第百八十四条","c":"","u":0},{"k":"184_2","t":"第百八十四条の二","c":"","u":0},{"k":"185","t":"第百八十五条","c":"","u":0},{"k":"185_2","t":"第百八十五条の二","c":"","u":0},{"k":"186","t":"第百八十六条","c":"","u":0},{"k":"187","t":"第百八十七条","c":"","u":0},{"k":"188","t":"第百八十八条","c":"","u":0},{"k":"189","t":"第百八十九条","c":"","u":0},{"k":"190","t":"第百九十条","c":"","u":0},{"k":"191","t":"第百九十一条","c":"","u":0},{"k":"192","t":"第百九十二条","c":"","u":0},{"k":"193","t":"第百九十三条","c":"","u":0},{"k":"194","t":"第百九十四条","c":"","u":0},{"k":"195","t":"第百九十五条","c":"","u":0},{"k":"196","t":"第百九十六条","c":"","u":0},{"k":"197","t":"第百九十七条","c":"","u":0},{"k":"197_2","t":"第百九十七条の二","c":"","u":0},{"k":"198","t":"第百九十八条","c":"","u":0},{"k":"198_2","t":"第百九十八条の二","c":"","u":0},{"k":"198_3","t":"第百九十八条の三","c":"","u":0},{"k":"198_4","t":"第百九十八条の四","c":"","u":0},{"k":"199","t":"第百九十九条","c":"","u":0},{"k":"199_2","t":"第百九十九条の二","c":"","u":0},{"k":"199_3","t":"第百九十九条の三","c":"","u":0},{"k":"200","t":"第二百条","c":"","u":0},{"k":"200_2","t":"第二百条の二","c":"","u":0},{"k":"201","t":"第二百一条","c":"","u":0},{"k":"202","t":"第二百二条","c":"","u":0},{"k":"202_2","t":"第二百二条の二","c":"","u":0},{"k":"202_3","t":"第二百二条の三","c":"","u":0},{"k":"202_4","t":"第二百二条の四","c":"（地域自治区の設置）","u":0},{"k":"202_5","t":"第二百二条の五","c":"（地域協議会の設置及び構成員）","u":0},{"k":"202_6","t":"第二百二条の六","c":"（地域協議会の会長及び副会長）","u":0},{"k":"202_7","t":"第二百二条の七","c":"（地域協議会の権限）","u":0},{"k":"202_8","t":"第二百二条の八","c":"（地域協議会の組織及び運営）","u":0},{"k":"202_9","t":"第二百二条の九","c":"（政令への委任）","u":0}]},{"t":"第二編　普通地方公共団体 第八章　給与その他の給付","a":[{"k":"203","t":"第二百三条","c":"","u":0},{"k":"203_2","t":"第二百三条の二","c":"","u":0},{"k":"204","t":"第二百四条","c":"","u":0},{"k":"204_2","t":"第二百四条の二","c":"","u":0},{"k":"205","t":"第二百五条","c":"","u":0},{"k":"206","t":"第二百六条","c":"","u":0},{"k":"207","t":"第二百七条","c":"","u":0}]},{"t":"第二編　普通地方公共団体 第九章　財務","a":[{"k":"208","t":"第二百八条","c":"（会計年度及びその独立の原則）","u":0},{"k":"209","t":"第二百九条","c":"（会計の区分）","u":0},{"k":"210","t":"第二百十条","c":"（総計予算主義の原則）","u":0},{"k":"211","t":"第二百十一条","c":"（予算の調製及び議決）","u":0},{"k":"212","t":"第二百十二条","c":"（継続費）","u":0},{"k":"213","t":"第二百十三条","c":"（繰越明許費）","u":0},{"k":"214","t":"第二百十四条","c":"（債務負担行為）","u":0},{"k":"215","t":"第二百十五条","c":"（予算の内容）","u":0},{"k":"216","t":"第二百十六条","c":"（歳入歳出予算の区分）","u":0},{"k":"217","t":"第二百十七条","c":"（予備費）","u":0},{"k":"218","t":"第二百十八条","c":"（補正予算、暫定予算等）","u":0},{"k":"219","t":"第二百十九条","c":"（予算の送付及び公表）","u":0},{"k":"220","t":"第二百二十条","c":"（予算の執行及び事故繰越し）","u":0},{"k":"221","t":"第二百二十一条","c":"（予算の執行に関する長の調査権等）","u":0},{"k":"222","t":"第二百二十二条","c":"（予算を伴う条例、規則等についての制限）","u":0},{"k":"223","t":"第二百二十三条","c":"（地方税）","u":0},{"k":"224","t":"第二百二十四条","c":"（分担金）","u":0},{"k":"225","t":"第二百二十五条","c":"（使用料）","u":0},{"k":"226","t":"第二百二十六条","c":"（旧慣使用の使用料及び加入金）","u":0},{"k":"227","t":"第二百二十七条","c":"（手数料）","u":0},{"k":"228","t":"第二百二十八条","c":"（分担金等に関する規制及び罰則）","u":0},{"k":"229","t":"第二百二十九条","c":"（分担金等の徴収に関する処分についての審査請求）","u":0},{"k":"230","t":"第二百三十条","c":"（地方債）","u":0},{"k":"231","t":"第二百三十一条","c":"（歳入の収入の方法）","u":0},{"k":"231_2","t":"第二百三十一条の二","c":"（証紙による収入の方法等）","u":0},{"k":"231_2_2","t":"第二百三十一条の二の二","c":"（指定納付受託者に対する納付の委託）","u":0},{"k":"231_2_3","t":"第二百三十一条の二の三","c":"（指定納付受託者）","u":0},{"k":"231_2_4","t":"第二百三十一条の二の四","c":"（納付事務の委託）","u":0},{"k":"231_2_5","t":"第二百三十一条の二の五","c":"（指定納付受託者の納付）","u":0},{"k":"231_2_6","t":"第二百三十一条の二の六","c":"（指定納付受託者の帳簿保存等の義務）","u":0},{"k":"231_2_7","t":"第二百三十一条の二の七","c":"（指定納付受託者の指定の取消し）","u":0},{"k":"231_3","t":"第二百三十一条の三","c":"（督促、滞納処分等）","u":0},{"k":"231_4","t":"第二百三十一条の四","c":"（指定納付受託者等からの歳入等の徴収等）","u":0},{"k":"232","t":"第二百三十二条","c":"（経費の支弁等）","u":0},{"k":"232_2","t":"第二百三十二条の二","c":"（寄附又は補助）","u":0},{"k":"232_3","t":"第二百三十二条の三","c":"（支出負担行為）","u":0},{"k":"232_4","t":"第二百三十二条の四","c":"（支出の方法）","u":0},{"k":"232_5","t":"第二百三十二条の五","c":"","u":0},{"k":"232_6","t":"第二百三十二条の六","c":"（小切手の振出し及び公金振替書の交付）","u":0},{"k":"233","t":"第二百三十三条","c":"（決算）","u":0},{"k":"233_2","t":"第二百三十三条の二","c":"（歳計剰余金の処分）","u":0},{"k":"234","t":"第二百三十四条","c":"（契約の締結）","u":0},{"k":"234_2","t":"第二百三十四条の二","c":"（契約の履行の確保）","u":0},{"k":"234_3","t":"第二百三十四条の三","c":"（長期継続契約）","u":0},{"k":"235","t":"第二百三十五条","c":"（金融機関の指定）","u":0},{"k":"235_2","t":"第二百三十五条の二","c":"（現金出納の検査及び公金の収納等の監査）","u":0},{"k":"235_3","t":"第二百三十五条の三","c":"（一時借入金）","u":0},{"k":"235_4","t":"第二百三十五条の四","c":"（現金及び有価証券の保管）","u":0},{"k":"235_5","t":"第二百三十五条の五","c":"（出納の閉鎖）","u":0},{"k":"236","t":"第二百三十六条","c":"（金銭債権の消滅時効）","u":0},{"k":"237","t":"第二百三十七条","c":"（財産の管理及び処分）","u":0},{"k":"238","t":"第二百三十八条","c":"（公有財産の範囲及び分類）","u":0},{"k":"238_2","t":"第二百三十八条の二","c":"（公有財産に関する長の総合調整権）","u":0},{"k":"238_3","t":"第二百三十八条の三","c":"（職員の行為の制限）","u":0},{"k":"238_4","t":"第二百三十八条の四","c":"（行政財産の管理及び処分）","u":0},{"k":"238_5","t":"第二百三十八条の五","c":"（普通財産の管理及び処分）","u":0},{"k":"238_6","t":"第二百三十八条の六","c":"（旧慣による公有財産の使用）","u":0},{"k":"238_7","t":"第二百三十八条の七","c":"（行政財産を使用する権利に関する処分についての審査請求）","u":0},{"k":"239","t":"第二百三十九条","c":"（物品）","u":0},{"k":"240","t":"第二百四十条","c":"（債権）","u":0},{"k":"241","t":"第二百四十一条","c":"（基金）","u":0},{"k":"242","t":"第二百四十二条","c":"（住民監査請求）","u":0},{"k":"242_2","t":"第二百四十二条の二","c":"（住民訴訟）","u":0},{"k":"242_3","t":"第二百四十二条の三","c":"（訴訟の提起）","u":0},{"k":"243","t":"第二百四十三条","c":"（私人の公金取扱いの制限）","u":0},{"k":"243_2","t":"第二百四十三条の二","c":"（指定公金事務取扱者）","u":0},{"k":"243_2_2","t":"第二百四十三条の二の二","c":"（指定公金事務取扱者の帳簿保存等の義務）","u":0},{"k":"243_2_3","t":"第二百四十三条の二の三","c":"（指定公金事務取扱者の指定の取消し）","u":0},{"k":"243_2_4","t":"第二百四十三条の二の四","c":"（公金の徴収の委託）","u":0},{"k":"243_2_5","t":"第二百四十三条の二の五","c":"（公金の収納の委託）","u":0},{"k":"243_2_6","t":"第二百四十三条の二の六","c":"（公金の支出の委託）","u":0},{"k":"243_2_7","t":"第二百四十三条の二の七","c":"（特定歳入等の収納）","u":0},{"k":"243_2_8","t":"第二百四十三条の二の八","c":"（普通地方公共団体の長等の損害賠償責任の一部免責）","u":0},{"k":"243_2_9","t":"第二百四十三条の二の九","c":"（職員の賠償責任）","u":0},{"k":"243_3","t":"第二百四十三条の三","c":"（財政状況の公表等）","u":0},{"k":"243_4","t":"第二百四十三条の四","c":"（普通地方公共団体の財政の運営に関する事項等）","u":0},{"k":"243_5","t":"第二百四十三条の五","c":"（政令への委任）","u":0}]},{"t":"第二編　普通地方公共団体 第十章　公の施設","a":[{"k":"244","t":"第二百四十四条","c":"（公の施設）","u":0},{"k":"244_2","t":"第二百四十四条の二","c":"（公の施設の設置、管理及び廃止）","u":0},{"k":"244_3","t":"第二百四十四条の三","c":"（公の施設の区域外設置及び他の団体の公の施設の利用）","u":0},{"k":"244_4","t":"第二百四十四条の四","c":"（公の施設を利用する権利に関する処分についての審査請求）","u":0}]},{"t":"第二編　普通地方公共団体 第十一章　情報システム","a":[{"k":"244_5","t":"第二百四十四条の五","c":"（情報システムの利用に係る基本原則）","u":0},{"k":"244_6","t":"第二百四十四条の六","c":"（サイバーセキュリティを確保するための方針等）","u":0}]},{"t":"第二編　普通地方公共団体 第十二章　国と普通地方公共団体との関係及び普通地方公共団体相互間の関係","a":[{"k":"245","t":"第二百四十五条","c":"（関与の意義）","u":0},{"k":"245_2","t":"第二百四十五条の二","c":"（関与の法定主義）","u":0},{"k":"245_3","t":"第二百四十五条の三","c":"（関与の基本原則）","u":0},{"k":"245_4","t":"第二百四十五条の四","c":"（技術的な助言及び勧告並びに資料の提出の要求）","u":0},{"k":"245_5","t":"第二百四十五条の五","c":"（是正の要求）","u":0},{"k":"245_6","t":"第二百四十五条の六","c":"（是正の勧告）","u":0},{"k":"245_7","t":"第二百四十五条の七","c":"（是正の指示）","u":0},{"k":"245_8","t":"第二百四十五条の八","c":"（代執行等）","u":0},{"k":"245_9","t":"第二百四十五条の九","c":"（処理基準）","u":0},{"k":"246","t":"第二百四十六条","c":"（普通地方公共団体に対する国又は都道府県の関与の手続の適用）","u":0},{"k":"247","t":"第二百四十七条","c":"（助言等の方式等）","u":0},{"k":"248","t":"第二百四十八条","c":"（資料の提出の要求等の方式）","u":0},{"k":"249","t":"第二百四十九条","c":"（是正の要求等の方式）","u":0},{"k":"250","t":"第二百五十条","c":"（協議の方式）","u":0},{"k":"250_2","t":"第二百五十条の二","c":"（許認可等の基準）","u":0},{"k":"250_3","t":"第二百五十条の三","c":"（許認可等の標準処理期間）","u":0},{"k":"250_4","t":"第二百五十条の四","c":"（許認可等の取消し等の方式）","u":0},{"k":"250_5","t":"第二百五十条の五","c":"（届出）","u":0},{"k":"250_6","t":"第二百五十条の六","c":"（国の行政機関が自治事務と同一の事務を自らの権限に属する事務として処理する場合の方式）","u":0},{"k":"250_7","t":"第二百五十条の七","c":"（設置及び権限）","u":0},{"k":"250_8","t":"第二百五十条の八","c":"（組織）","u":0},{"k":"250_9","t":"第二百五十条の九","c":"（委員）","u":0},{"k":"250_10","t":"第二百五十条の十","c":"（委員長）","u":0},{"k":"250_11","t":"第二百五十条の十一","c":"（会議）","u":0},{"k":"250_12","t":"第二百五十条の十二","c":"（政令への委任）","u":0},{"k":"250_13","t":"第二百五十条の十三","c":"（国の関与に関する審査の申出）","u":0},{"k":"250_14","t":"第二百五十条の十四","c":"（審査及び勧告）","u":0},{"k":"250_15","t":"第二百五十条の十五","c":"（関係行政機関の参加）","u":0},{"k":"250_16","t":"第二百五十条の十六","c":"（証拠調べ）","u":0},{"k":"250_17","t":"第二百五十条の十七","c":"（国の関与に関する審査の申出の取下げ）","u":0},{"k":"250_18","t":"第二百五十条の十八","c":"（国の行政庁の措置等）","u":0},{"k":"250_19","t":"第二百五十条の十九","c":"（調停）","u":0},{"k":"250_20","t":"第二百五十条の二十","c":"（政令への委任）","u":0},{"k":"251","t":"第二百五十一条","c":"（自治紛争処理委員）","u":0},{"k":"251_2","t":"第二百五十一条の二","c":"（調停）","u":0},{"k":"251_3","t":"第二百五十一条の三","c":"（審査及び勧告）","u":0},{"k":"251_3_2","t":"第二百五十一条の三の二","c":"（処理方策の提示）","u":0},{"k":"251_4","t":"第二百五十一条の四","c":"（政令への委任）","u":0},{"k":"251_5","t":"第二百五十一条の五","c":"（国の関与に関する訴えの提起）","u":0},{"k":"251_6","t":"第二百五十一条の六","c":"（都道府県の関与に関する訴えの提起）","u":0},{"k":"251_7","t":"第二百五十一条の七","c":"（普通地方公共団体の不作為に関する国の訴えの提起）","u":0},{"k":"252","t":"第二百五十二条","c":"（市町村の不作為に関する都道府県の訴えの提起）","u":0},{"k":"252_2","t":"第二百五十二条の二","c":"（連携協約）","u":0},{"k":"252_2_2","t":"第二百五十二条の二の二","c":"（協議会の設置）","u":0},{"k":"252_3","t":"第二百五十二条の三","c":"（協議会の組織）","u":0},{"k":"252_4","t":"第二百五十二条の四","c":"（協議会の規約）","u":0},{"k":"252_5","t":"第二百五十二条の五","c":"（協議会の事務の管理及び執行の効力）","u":0},{"k":"252_6","t":"第二百五十二条の六","c":"（協議会の組織の変更及び廃止）","u":0},{"k":"252_6_2","t":"第二百五十二条の六の二","c":"（脱退による協議会の組織の変更及び廃止の特例）","u":0},{"k":"252_7","t":"第二百五十二条の七","c":"（機関等の共同設置）","u":0},{"k":"252_7_2","t":"第二百五十二条の七の二","c":"（脱退による機関等の共同設置の変更及び廃止の特例）","u":0},{"k":"252_8","t":"第二百五十二条の八","c":"（機関の共同設置に関する規約）","u":0},{"k":"252_9","t":"第二百五十二条の九","c":"（共同設置する機関の委員等の選任及び身分取扱い）","u":0},{"k":"252_10","t":"第二百五十二条の十","c":"（共同設置する機関の委員等の解職請求）","u":0},{"k":"252_11","t":"第二百五十二条の十一","c":"（共同設置する機関の補助職員等）","u":0},{"k":"252_12","t":"第二百五十二条の十二","c":"（共同設置する機関に対する法令の適用）","u":0},{"k":"252_13","t":"第二百五十二条の十三","c":"（議会事務局等の共同設置に関する準用規定）","u":0},{"k":"252_14","t":"第二百五十二条の十四","c":"（事務の委託）","u":0},{"k":"252_15","t":"第二百五十二条の十五","c":"（事務の委託の規約）","u":0},{"k":"252_16","t":"第二百五十二条の十六","c":"（事務の委託の効果）","u":0},{"k":"252_16_2","t":"第二百五十二条の十六の二","c":"（事務の代替執行）","u":0},{"k":"252_16_3","t":"第二百五十二条の十六の三","c":"（事務の代替執行の規約）","u":0},{"k":"252_16_4","t":"第二百五十二条の十六の四","c":"（代替執行事務の管理及び執行の効力）","u":0},{"k":"252_17","t":"第二百五十二条の十七","c":"（職員の派遣）","u":0},{"k":"252_17_2","t":"第二百五十二条の十七の二","c":"（条例による事務処理の特例）","u":0},{"k":"252_17_3","t":"第二百五十二条の十七の三","c":"（条例による事務処理の特例の効果）","u":0},{"k":"252_17_4","t":"第二百五十二条の十七の四","c":"（是正の要求等の特則）","u":0},{"k":"252_17_5","t":"第二百五十二条の十七の五","c":"（組織及び運営の合理化に係る助言及び勧告並びに資料の提出の要求）","u":0},{"k":"252_17_6","t":"第二百五十二条の十七の六","c":"（財務に係る実地検査）","u":0},{"k":"252_17_7","t":"第二百五十二条の十七の七","c":"（市町村に関する調査）","u":0},{"k":"252_17_8","t":"第二百五十二条の十七の八","c":"（長の臨時代理者）","u":0},{"k":"252_17_9","t":"第二百五十二条の十七の九","c":"（臨時選挙管理委員）","u":0},{"k":"252_17_10","t":"第二百五十二条の十七の十","c":"（臨時選挙管理委員の給与）","u":0},{"k":"252_18","t":"第二百五十二条の十八","c":"（在職期間の通算）","u":0},{"k":"252_18_2","t":"第二百五十二条の十八の二","c":"","u":0}]},{"t":"第二編　普通地方公共団体 第十三章　大都市等に関する特例","a":[{"k":"252_19","t":"第二百五十二条の十九","c":"（指定都市の権能）","u":0},{"k":"252_20","t":"第二百五十二条の二十","c":"（区の設置）","u":0},{"k":"252_20_2","t":"第二百五十二条の二十の二","c":"（総合区の設置）","u":0},{"k":"252_21","t":"第二百五十二条の二十一","c":"（政令への委任）","u":0},{"k":"252_21_2","t":"第二百五十二条の二十一の二","c":"（指定都市都道府県調整会議）","u":0},{"k":"252_21_3","t":"第二百五十二条の二十一の三","c":"（指定都市と包括都道府県の間の協議に係る勧告）","u":0},{"k":"252_21_4","t":"第二百五十二条の二十一の四","c":"（指定都市都道府県勧告調整委員）","u":0},{"k":"252_21_5","t":"第二百五十二条の二十一の五","c":"（政令への委任）","u":0},{"k":"252_22","t":"第二百五十二条の二十二","c":"（中核市の権能）","u":0},{"k":"252_23","t":"第二百五十二条の二十三","c":"","u":2},{"k":"252_24","t":"第二百五十二条の二十四","c":"（中核市の指定に係る手続）","u":0},{"k":"252_25","t":"第二百五十二条の二十五","c":"（政令への委任）","u":0},{"k":"252_26","t":"第二百五十二条の二十六","c":"（指定都市の指定があつた場合の取扱い）","u":0},{"k":"252_26_2","t":"第二百五十二条の二十六の二","c":"（中核市の指定に係る手続の特例）","u":0}]},{"t":"第二編　普通地方公共団体 第十四章　国民の安全に重大な影響を及ぼす事態における国と普通地方公共団体との関係等の特例","a":[{"k":"252_26_3","t":"第二百五十二条の二十六の三","c":"（資料及び意見の提出の要求）","u":0},{"k":"252_26_4","t":"第二百五十二条の二十六の四","c":"（事務処理の調整の指示）","u":0},{"k":"252_26_5","t":"第二百五十二条の二十六の五","c":"（生命等の保護の措置に関する指示）","u":0},{"k":"252_26_6","t":"第二百五十二条の二十六の六","c":"（普通地方公共団体相互間の応援の要求）","u":0},{"k":"252_26_7","t":"第二百五十二条の二十六の七","c":"（都道府県による応援の要求及び指示）","u":0},{"k":"252_26_8","t":"第二百五十二条の二十六の八","c":"（国による応援の要求及び指示等）","u":0},{"k":"252_26_9","t":"第二百五十二条の二十六の九","c":"（職員の派遣のあつせん）","u":0},{"k":"252_26_10","t":"第二百五十二条の二十六の十","c":"（職員の派遣義務）","u":0}]},{"t":"第二編　普通地方公共団体 第十五章　外部監査契約に基づく監査","a":[{"k":"252_27","t":"第二百五十二条の二十七","c":"（外部監査契約）","u":0},{"k":"252_28","t":"第二百五十二条の二十八","c":"（外部監査契約を締結できる者）","u":0},{"k":"252_29","t":"第二百五十二条の二十九","c":"（特定の事件についての監査の制限）","u":0},{"k":"252_30","t":"第二百五十二条の三十","c":"（監査の実施に伴う外部監査人と監査委員相互間の配慮）","u":0},{"k":"252_31","t":"第二百五十二条の三十一","c":"（監査の実施に伴う外部監査人の義務）","u":0},{"k":"252_32","t":"第二百五十二条の三十二","c":"（外部監査人の監査の事務の補助）","u":0},{"k":"252_33","t":"第二百五十二条の三十三","c":"（外部監査人の監査への協力）","u":0},{"k":"252_34","t":"第二百五十二条の三十四","c":"（議会による説明の要求又は意見の陳述）","u":0},{"k":"252_35","t":"第二百五十二条の三十五","c":"（外部監査契約の解除）","u":0},{"k":"252_36","t":"第二百五十二条の三十六","c":"（包括外部監査契約の締結）","u":0},{"k":"252_37","t":"第二百五十二条の三十七","c":"（包括外部監査人の監査）","u":0},{"k":"252_38","t":"第二百五十二条の三十八","c":"","u":0},{"k":"252_39","t":"第二百五十二条の三十九","c":"（第七十五条の規定による監査の特例）","u":0},{"k":"252_40","t":"第二百五十二条の四十","c":"（第九十八条第二項の規定による監査の特例）","u":0},{"k":"252_41","t":"第二百五十二条の四十一","c":"（第百九十九条第六項の規定による監査の特例）","u":0},{"k":"252_42","t":"第二百五十二条の四十二","c":"（第百九十九条第七項の規定による監査の特例）","u":0},{"k":"252_43","t":"第二百五十二条の四十三","c":"（住民監査請求等の特例）","u":0},{"k":"252_44","t":"第二百五十二条の四十四","c":"（個別外部監査契約の解除）","u":0},{"k":"252_45","t":"第二百五十二条の四十五","c":"（一部事務組合等に関する特例）","u":0},{"k":"252_46","t":"第二百五十二条の四十六","c":"（政令への委任）","u":0}]},{"t":"第二編　普通地方公共団体 第十六章　補則","a":[{"k":"253","t":"第二百五十三条","c":"","u":0},{"k":"254","t":"第二百五十四条","c":"","u":0},{"k":"255","t":"第二百五十五条","c":"","u":0},{"k":"255_2","t":"第二百五十五条の二","c":"","u":0},{"k":"255_3","t":"第二百五十五条の三","c":"","u":0},{"k":"255_4","t":"第二百五十五条の四","c":"","u":0},{"k":"255_5","t":"第二百五十五条の五","c":"","u":0},{"k":"256","t":"第二百五十六条","c":"","u":0},{"k":"257","t":"第二百五十七条","c":"","u":0},{"k":"258","t":"第二百五十八条","c":"","u":0},{"k":"259","t":"第二百五十九条","c":"","u":0},{"k":"260","t":"第二百六十条","c":"","u":0},{"k":"260_2","t":"第二百六十条の二","c":"","u":0},{"k":"260_3","t":"第二百六十条の三","c":"","u":0},{"k":"260_4","t":"第二百六十条の四","c":"","u":0},{"k":"260_5","t":"第二百六十条の五","c":"","u":0},{"k":"260_6","t":"第二百六十条の六","c":"","u":0},{"k":"260_7","t":"第二百六十条の七","c":"","u":0},{"k":"260_8","t":"第二百六十条の八","c":"","u":0},{"k":"260_9","t":"第二百六十条の九","c":"","u":0},{"k":"260_10","t":"第二百六十条の十","c":"","u":0},{"k":"260_11","t":"第二百六十条の十一","c":"","u":0},{"k":"260_12","t":"第二百六十条の十二","c":"","u":0},{"k":"260_13","t":"第二百六十条の十三","c":"","u":0},{"k":"260_14","t":"第二百六十条の十四","c":"","u":0},{"k":"260_15","t":"第二百六十条の十五","c":"","u":0},{"k":"260_16","t":"第二百六十条の十六","c":"","u":0},{"k":"260_17","t":"第二百六十条の十七","c":"","u":0},{"k":"260_18","t":"第二百六十条の十八","c":"","u":0},{"k":"260_19","t":"第二百六十条の十九","c":"","u":0},{"k":"260_19_2","t":"第二百六十条の十九の二","c":"","u":0},{"k":"260_20","t":"第二百六十条の二十","c":"","u":0},{"k":"260_21","t":"第二百六十条の二十一","c":"","u":0},{"k":"260_22","t":"第二百六十条の二十二","c":"","u":0},{"k":"260_23","t":"第二百六十条の二十三","c":"","u":0},{"k":"260_24","t":"第二百六十条の二十四","c":"","u":0},{"k":"260_25","t":"第二百六十条の二十五","c":"","u":0},{"k":"260_26","t":"第二百六十条の二十六","c":"","u":0},{"k":"260_27","t":"第二百六十条の二十七","c":"","u":0},{"k":"260_28","t":"第二百六十条の二十八","c":"","u":0},{"k":"260_29","t":"第二百六十条の二十九","c":"","u":0},{"k":"260_30","t":"第二百六十条の三十","c":"","u":0},{"k":"260_31","t":"第二百六十条の三十一","c":"","u":0},{"k":"260_32","t":"第二百六十条の三十二","c":"","u":0},{"k":"260_33","t":"第二百六十条の三十三","c":"","u":0},{"k":"260_34","t":"第二百六十条の三十四","c":"","u":0},{"k":"260_35","t":"第二百六十条の三十五","c":"","u":0},{"k":"260_36","t":"第二百六十条の三十六","c":"","u":0},{"k":"260_37","t":"第二百六十条の三十七","c":"","u":0},{"k":"260_38","t":"第二百六十条の三十八","c":"","u":0},{"k":"260_39","t":"第二百六十条の三十九","c":"","u":0},{"k":"260_40","t":"第二百六十条の四十","c":"","u":0},{"k":"260_41","t":"第二百六十条の四十一","c":"","u":0},{"k":"260_42","t":"第二百六十条の四十二","c":"","u":0},{"k":"260_43","t":"第二百六十条の四十三","c":"","u":0},{"k":"260_44","t":"第二百六十条の四十四","c":"","u":0},{"k":"260_45","t":"第二百六十条の四十五","c":"","u":0},{"k":"260_46","t":"第二百六十条の四十六","c":"","u":0},{"k":"260_47","t":"第二百六十条の四十七","c":"","u":0},{"k":"260_48","t":"第二百六十条の四十八","c":"","u":0},{"k":"260_49","t":"第二百六十条の四十九","c":"","u":0},{"k":"261","t":"第二百六十一条","c":"","u":0},{"k":"262","t":"第二百六十二条","c":"","u":0},{"k":"263","t":"第二百六十三条","c":"","u":0},{"k":"263_2","t":"第二百六十三条の二","c":"","u":0},{"k":"263_3","t":"第二百六十三条の三","c":"","u":0}]},{"t":"第三編　特別地方公共団体 第一章　削除","a":[{"k":"264:280","t":"第二百六十四条乃至第二百八十条","c":"","u":2}]},{"t":"第三編　特別地方公共団体 第二章　特別区","a":[{"k":"281","t":"第二百八十一条","c":"（特別区）","u":0},{"k":"281_2","t":"第二百八十一条の二","c":"（都と特別区との役割分担の原則）","u":0},{"k":"281_3","t":"第二百八十一条の三","c":"（特別区の廃置分合又は境界変更）","u":0},{"k":"281_4","t":"第二百八十一条の四","c":"","u":0},{"k":"281_5","t":"第二百八十一条の五","c":"","u":0},{"k":"281_6","t":"第二百八十一条の六","c":"（都と特別区及び特別区相互の間の調整）","u":0},{"k":"282","t":"第二百八十二条","c":"（特別区財政調整交付金）","u":0},{"k":"282_2","t":"第二百八十二条の二","c":"（都区協議会）","u":0},{"k":"283","t":"第二百八十三条","c":"（市に関する規定の適用）","u":0}]},{"t":"第三編　特別地方公共団体 第三章　地方公共団体の組合","a":[{"k":"284","t":"第二百八十四条","c":"（組合の種類及び設置）","u":0},{"k":"285","t":"第二百八十五条","c":"","u":0},{"k":"285_2","t":"第二百八十五条の二","c":"（設置の勧告等）","u":0},{"k":"286","t":"第二百八十六条","c":"（組織、事務及び規約の変更）","u":0},{"k":"286_2","t":"第二百八十六条の二","c":"（脱退による組織、事務及び規約の変更の特例）","u":0},{"k":"287","t":"第二百八十七条","c":"（規約等）","u":0},{"k":"287_2","t":"第二百八十七条の二","c":"（特例一部事務組合）","u":0},{"k":"287_3","t":"第二百八十七条の三","c":"（議決方法の特例及び理事会の設置）","u":0},{"k":"287_4","t":"第二百八十七条の四","c":"（議決事件の通知）","u":0},{"k":"288","t":"第二百八十八条","c":"（解散）","u":0},{"k":"289","t":"第二百八十九条","c":"（財産処分）","u":0},{"k":"290","t":"第二百九十条","c":"（議会の議決を要する協議）","u":0},{"k":"291","t":"第二百九十一条","c":"（経費分賦に関する異議）","u":0},{"k":"291_2","t":"第二百九十一条の二","c":"（広域連合による事務の処理等）","u":0},{"k":"291_3","t":"第二百九十一条の三","c":"（組織、事務及び規約の変更）","u":0},{"k":"291_4","t":"第二百九十一条の四","c":"（規約等）","u":0},{"k":"291_5","t":"第二百九十一条の五","c":"（議会の議員及び長の選挙）","u":0},{"k":"291_6","t":"第二百九十一条の六","c":"（直接請求）","u":0},{"k":"291_7","t":"第二百九十一条の七","c":"（広域計画）","u":0},{"k":"291_8","t":"第二百九十一条の八","c":"（協議会）","u":0},{"k":"291_9","t":"第二百九十一条の九","c":"（広域連合の分賦金）","u":0},{"k":"291_10","t":"第二百九十一条の十","c":"（解散）","u":0},{"k":"291_11","t":"第二百九十一条の十一","c":"（議会の議決を要する協議）","u":0},{"k":"291_12","t":"第二百九十一条の十二","c":"（経費分賦等に関する異議）","u":0},{"k":"291_13","t":"第二百九十一条の十三","c":"（一部事務組合に関する規定の準用）","u":0},{"k":"292","t":"第二百九十二条","c":"（普通地方公共団体に関する規定の準用）","u":0},{"k":"293","t":"第二百九十三条","c":"（数都道府県にわたる組合に関する特例）","u":0},{"k":"293_2","t":"第二百九十三条の二","c":"（政令への委任）","u":0}]},{"t":"第三編　特別地方公共団体 第四章　財産区","a":[{"k":"294","t":"第二百九十四条","c":"","u":0},{"k":"295","t":"第二百九十五条","c":"","u":0},{"k":"296","t":"第二百九十六条","c":"","u":0},{"k":"296_2","t":"第二百九十六条の二","c":"","u":0},{"k":"296_3","t":"第二百九十六条の三","c":"","u":0},{"k":"296_4","t":"第二百九十六条の四","c":"","u":0},{"k":"296_5","t":"第二百九十六条の五","c":"","u":0},{"k":"296_6","t":"第二百九十六条の六","c":"","u":0},{"k":"297","t":"第二百九十七条","c":"","u":0}]},{"t":"第四編　補則","a":[{"k":"298","t":"第二百九十八条","c":"（事務の区分）","u":0},{"k":"299","t":"第二百九十九条","c":"","u":0}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  // '176条1項' '177条1項1号' '178条1項後段' '179条1項ただし書' のような形。複数条が「・」で区切られることもある → 最初の条だけ見る
+  const first = String(a).split("・")[0];
+  const m = first.match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(?:第?(\d+)号((?:の\d+)*))?([イロハニホ])?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[4] ? m[4] + (m[5] || "").replace(/の/g, "_") : null, sub: m[6] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para);
+  // 号まで指定があれば、項の本文とその号だけ出す
+  if (r.item) ps = ps.filter(p => p.i.some(it => it.n === r.item));
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const list = r.item ? p.i.filter(it => it.n === r.item) : p.i;
+    const its = list.map(it => `<p class="it">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => r.sub && x.startsWith(r.sub + " ") ? `<br><span class="hit">　${esc(x)}</span>` : `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなく、このアプリの決め事（収録範囲・仕組みのページに一覧）。</p>`;
+// 凡例は最初の木の上に1回だけ出す（legend＝false で外す。giin-prolog と同じ。2026-11-25 案Aで木を結論ごとにしたため）
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+
+// ---------- ここから別ページ（about.html）だけの処理 ----------
+if (location.protocol === "file:") $("back").href = "gikai.html";
+function openHash(){ const d = location.hash && document.getElementById(location.hash.slice(1)); if (d && d.tagName === "DETAILS") d.open = true; }
+openHash(); window.addEventListener("hashchange", openHash);
+
+async function bootAbout(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    // 全条文の地図（本則は大きいので、原文を出すのは使っている条だけ）
+    let C = []; try{ C = JSON.parse(document.getElementById("cover-data").textContent); }catch(e){}
+    const cover = $("cover");
+    C.forEach(ch => {
+      const div = document.createElement("div"); div.className = "cover-ch";
+      div.innerHTML = `<h4>${esc(ch.t)} <span>${ch.a.length}条</span></h4><div class="cells"></div>`;
+      const cells = div.querySelector(".cells");
+      ch.a.forEach(a => {
+        const btn = document.createElement("button"); btn.type = "button";
+        btn.className = `cell u${a.u}`; btn.title = `${a.t}${a.c}`;
+        btn.addEventListener("click", () => {
+          const old = document.getElementById("cover-pick"); if (old) old.remove();
+          const pk = document.createElement("div"); pk.id = "cover-pick";
+          pk.innerHTML = a.u === 1 ? lawHTML(a.k.includes("_") ? a.k.replace("_", "条の").replace(/_/g, "の") : a.k + "条") : `<p class="hint" style="margin-top:6px">${esc(a.t)}${esc(a.c)}${a.u === 2 ? "（削除）" : "（このアプリでは使用しない条）"}</p>`;
+          div.appendChild(pk);
+        });
+        cells.appendChild(btn);
+      });
+      cover.appendChild(div);
+    });
+    const used = C.flatMap(c => c.a).filter(a => a.u === 1).length;
+    const total = C.flatMap(c => c.a).filter(a => a.u !== 2).length;
+    cover.insertAdjacentHTML("afterbegin", `<p class="cover-total">使っている条：${used} / ${total} 条</p>`);
+    // ソース表示
+    const src = $("src");
+    files.forEach(f => {
+      const det = document.createElement("details"); det.className = "srcfile";
+      det.innerHTML = `<summary>${esc(f.dataset.name.replace(/_/g, "/"))}</summary><pre>${esc(f.textContent)}</pre>`;
+      src.appendChild(det);
+    });
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+  }
+}
+
+// 直接クエリ実行
+$("run").addEventListener("click", () => {
+  if (!pl){ $("out").textContent = "まだ読み込み中です。"; return; }
+  const q = $("q").value.trim().replace(/\.$/, "");
+  try{
+    const it = pl.prolog.query(q); const out = [];
+    for (let i = 0; i < 20; i++){
+      const r = it.next();
+      if (!r) break;
+      if (r.error){ out.push("エラー：" + r.message); break; }
+      // 最後の解は done:true に値が付いて返る。done で先に抜けると、その解を捨てて「解なし」に見える
+      if (r.value && r.value.$tag === "bindings"){
+        const { $tag, ...vars } = r.value;
+        out.push(Object.keys(vars).length ? JSON.stringify(vars, null, 2) : "true");
+      }
+      if (r.done) break;
+    }
+    $("out").textContent = out.length ? out.join("\n---\n") : "（解なし）";
+  } catch(e){ $("out").textContent = "エラー：" + e.message; }
+});
+
+if (typeof SWIPL === "function") bootAbout();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; }
+</script>
