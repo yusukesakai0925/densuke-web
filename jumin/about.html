@@ -1,0 +1,977 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="「住民監査請求・住民訴訟を逆から引く」の収録範囲、全条文の地図、アプリの約束事、Prologのソース全部。">
+<title>収録範囲・仕組み｜住民監査請求・住民訴訟を逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+/* 欄の上の小見出し（誰の何について・監査請求・住民訴訟）。選ばせる欄ではないので番号を数えない（chokusetsu-prolog と同じ。2026-11-24 案A） */
+.slots .slot-h{margin:0;padding:8px 10px 4px;border-bottom:2px solid var(--line);border-right:2px solid var(--line);background:var(--paper)}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.flow{margin:0;padding-left:1.2em}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border:1px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+</style>
+
+<div class="wrap about">
+  <header class="mast sub">
+    <p class="backlink"><a href="./" id="back">← 判定ページに戻る</a></p>
+    <h1>収録範囲・仕組み</h1>
+    <p class="lead">「住民監査請求・住民訴訟を逆から引く」で、どの条文をどこまでルールにしたか、アプリが決めたこと、プログラムの中身です。</p>
+  </header>
+
+  <div class="appendix">
+  <details class="box" id="scope-box" open>
+    <summary>収録範囲と、入っていないもの</summary>
+    <div class="scope" id="scope">
+      <p><b>地方自治法の本則のうち、第242条（住民監査請求）と第242条の2（住民訴訟）をルールにしています。</b></p>
+      <p>収録しているのは「住民監査請求ができるか・どこへ出すか」「住民訴訟をいつまでに起こせるか」「差止めの制限・他の住民の住民訴訟・弁護士の報酬に当たるか」と、請求や訴えの後の流れです。</p>
+      <p id="scope-kakunin">入っていないもの：請求や訴えが認められるか（「法律に反するか」「やり方がまずいか」「遅れたわけがあるか」「公共の福祉を大きく損なうおそれがあるか」は監査委員や裁判所が決める評価で、このアプリは本人がそう考えているかを入力にするだけです。下の約束事①）、期間の満了日の日付（約束事②）、判例。処分そのものを争う話は<a href="../fufuku/">行政不服審査法のページ</a>、<a href="../gyosos/">行政事件訴訟法のページ</a>です。詳しくは<a href="#notes-box">載せなかったもの</a>をご覧ください。</p>
+      <p id="scope-ran">判定ページは10個の欄をいつも全部出し、選んだ値によって欄を出したり消したり、欄の名前を変えたりしません。入力に関わらない欄は、判定で見ないだけです。</p>
+      <ul id="ran-list" style="font-size:.86rem;line-height:1.75;padding-left:1.2em;margin:0">
+        <li>5の欄（行いがあった日から）：3の欄が「税・使用料などを取り立てていない」「土地や建物などの管理をしていない」（怠る事実）のときは見ません（約束事③）</li>
+        <li>7の欄（裁判で求めること）：6の欄が「まだ監査を求めていない」で、7の欄も「まだ決めていない」なら、住民訴訟の答えを出しません</li>
+        <li>8の欄（差止めのおそれ）：7の欄が「その行いをやめさせる」のときだけ見ます（242条の2第6項）</li>
+        <li>8〜10の欄：住民訴訟を起こせる入力（6の欄が通知の後の4つのどれか）のときだけ見ます。10の欄が判決の後なら、「30日以内に起こせます」の答えは出しません</li>
+      </ul>
+      <p id="scope-nashi">「この組み合わせはありません」と出すのは4つの組です。ア：3の欄が怠る事実で、7の欄が「やめさせる」「取り消す・無効だと確かめる」（242条の2第1項1号・2号は「当該行為」の差止め・取消し）、イ：3の欄が行いで、7の欄が「怠っていることが法律に反すると確かめる」（242条の2第1項3号は「当該怠る事実」の違法確認）、ウ：6の欄が「まだ監査を求めていない」「通知を待っている」で、10の欄が判決の後（242条の2第1項・第2項。住民訴訟は監査の通知の後に起こす）、エ：5の欄が「まだ行われていない」で、7の欄が「取り消す・無効だと確かめる」。エは条文に直接の定めが無く、下のアプリの約束事④です。2つ以上の組が重なるときは全部出します。</p>
+    </div>
+  </details>
+
+  <details class="box" id="cover-box">
+    <summary>地方自治法のどこまでをルールにしたか（全条文の地図）</summary>
+    <p class="hint" style="margin-top:6px">本則の全条文を1マスずつ並べました。<span class="cell u1"></span> はプログラムのルールの中で使っている条、<span class="cell u0"></span> は使っていない条です。マスを押すと原文が出ます。</p>
+    <div id="cover"></div>
+  </details>
+
+  <details class="box" id="yaku-box">
+    <summary>アプリの約束事（地方自治法の条文にないもの）</summary>
+    <p class="hint" style="margin-top:6px">判定のためにこのアプリが決めたことで、条文そのものではありません。論理の木では <span class="yk">アプリの約束事</span> の印が付きます。</p>
+    <ul class="hint" id="yaku-list" style="margin:8px 0 0;padding-left:1.2em">
+      <li>①「法律に反するか」「やり方がまずいか」「遅れたわけがあるか」「公共の福祉を大きく損なうおそれがあるか」は監査委員や裁判所が決める評価なので、このアプリは当たるかを判定しない。判定ページで「（あなたの考え）」と付けた欄に、本人がそう考えているかを入れてもらう</li>
+      <li>②満了日の日付は出さない。242条と242条の2に期間の最終日を数える定めが無いので、条文の期間（1年・60日・30日）だけを出す</li>
+      <li>③242条2項の語は「当該行為」だけなので、怠る事実（税・使用料などを取り立てていない、土地や建物などの管理をしていない）には2項の期間を当てはめない。自治体の案内には、怠っていることが続いている間は期間の制限が無いが、怠っていることが終わった場合や、行いから生じた怠りの場合は期間の制限がある、という書き方のものがあり、この約束事が案内と合うのは怠っていることが続いている間だけ</li>
+      <li>④まだ行われていない決定を「取り消す・無効だと確かめる」組は「この組み合わせはありません」と出す（242条の2第1項2号の「行政処分たる当該行為の取消し又は無効確認」から、まだ無い決定は取り消せないと読んだ）</li>
+      <li>⑤民法の条文の中身（242条の2第9項が準用する153条2項）と、行政事件訴訟法の条文の中身（第11項が適用する43条）は出さない</li>
+    </ul>
+  </details>
+
+  <details class="box" id="notes-box">
+    <summary>載せなかったものと、条文だけで決まらなかった点</summary>
+    <div class="scope">
+      <p><b>載せなかったもの（理由）：</b></p>
+      <ul style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>附則：施行や経過の定めで、242条と242条の2の判定の話ではないため</li>
+        <li>判例の基準：242条と242条の2の条文に無いため</li>
+        <li>第243条の2以降の賠償の命令の中身：242条の2の外の定めのため。1項4号ただし書の語は原文のまま出す</li>
+        <li>民法第153条第2項の中身：242条の2は準用しているだけで、文言がここに無いため</li>
+        <li>行政事件訴訟法第43条の中身：242条の2は適用があるとしているだけで、文言がここに無いため</li>
+        <li>直接請求：同じ地方自治法の別の制度で、<a href="../chokusetsu/">直接請求のページ</a>にあるため</li>
+      </ul>
+      <p><b>条文だけで決まらなかった点：</b></p>
+      <ul id="kimaranai" style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>（a）242条2項の「当該行為のあつた日又は終わつた日」が「怠る事実」にも掛かるか → 語は「当該行為」だけなので掛けない（約束事③）。自治体の案内には、怠っていることが続いている間は期間の制限が無く、終わった場合や行いから生じた場合は制限がある、という書き方のものがある。このアプリの読みが案内と合うのは、怠っていることが続いている間だけ</li>
+        <li>（b）242条の2第1項の場面と第2項の4号の組 → 6の欄の値1つで1対1に組にする。語の違いは下の（c）（d）。自治体の案内には、請求が却下されて監査が行われなかったことへの不服も「監査の結果に不服がある」に含める、という書き方のものがある（<a href="https://www.city.chiba.jp/kansa/gyoseikansa/jukan_qa.html">住民監査請求Q&amp;A</a> の Q21 は、「監査委員の監査の結果又は勧告に不服がある場合」の下に「（請求が却下され監査が実施されなかったことに不服がある場合も含みます。）」と書いている。条文の語は「監査の結果」だけ）</li>
+        <li>（c）242条の2第1項は「同条第六項の期間内に行わないとき」、第2項3号は「請求をした日から六十日を経過しても」。242条6項の語は「請求があつた日」 → 同じ場面と読む</li>
+        <li>（d）242条の2第1項は「同条第九項の規定による措置」、第2項2号・4号は「監査委員の勧告を受けた…措置」 → 同じ措置と読む</li>
+        <li>（e）242条の2第1項の「違法な行為又は怠る事実」の「違法な」が「怠る事実」にも掛かるか → 掛けて読み、4の欄が「やり方がまずい」だけなら住民訴訟で争えないとする。第1項3号の語が「違法確認」であることを手がかりにしたが、条文だけでは決まらない。自治体の案内にも、不当な行いや怠りは住民訴訟の対象にならない、という書き方のものがある</li>
+        <li>（f）242条1項の「相当の確実さをもつて予測される場合」の2項の期間 → あつた日も終わつた日もまだ無いので、2項本文で止めない。まだ無い決定は取り消せないので、「取り消す・無効だと確かめる」との組はありません（約束事④）</li>
+        <li>（g）242条3項〜11項は「請求があつた」ときの定め → 判定ではないので結論の箱に入れず、「その後どうなるか」の節に出す。監査請求ができる入力と、求めて通知を待っている入力でだけ出す</li>
+        <li>（h）242条の2第1項の「前条第一項の規定による請求をした場合」 → 242条1項の語がそろい、242条2項で止まらない請求をした場合と読む。そのため、1項の語が欠ける入力や、1年を過ぎ遅れたわけも無い入力では、住民訴訟も「対象になりません」と出す。第4項・第6項・第12項は「第一項の規定による訴訟」の定めなので、住民訴訟を起こせる入力でだけ出す。第5項・第7項〜第11項は「その後どうなるか」の節に出す（第7項〜第9項は4号の訴訟の定めなので、7の欄が「職員や相手方にお金を払わせる」のときだけ）。判決の後（10の欄）は「30日以内に起こせます」を出さず、負けたときも第12項の「当たりません」を出す。第4項に当たるとき（9の欄で「同じ求めで、裁判が続いている」）は、住民訴訟を起こせる旨と第6項・第12項は出さない</li>
+        <li>（i）242条と242条の2の語は「普通地方公共団体」 → 画面では「自治体」と書き、どの団体に当たるかは242条と242条の2だけで読まない</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="box" id="src-box">
+    <summary>プログラムの中身（Prologのソース全部）</summary>
+    <p class="hint" style="margin-top:6px">このページで動いているPrologのプログラムそのものです。ファイルを開くと全文が出ます。</p>
+    <div id="src"></div>
+  </details>
+
+  <details class="box" id="core-box">
+    <summary>仕組みを見る（上級者向け）</summary>
+    <p class="hint" style="margin-top:6px">Prologに直接聞く（最初の20件まで）：</p>
+    <textarea id="q" spellcheck="false">heads(ctx(はい, 長, 公金の支出, 違法, 一年以内, 結果不服, 差止め, ない, 同一, 判決前), L).</textarea>
+    <button type="button" class="btn" id="run">実行</button>
+    <pre id="out"></pre>
+  </details>
+  </div>
+
+  <p class="foot techline"><span>地方自治法 第242条・第242条の2／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot">e-Gov法令検索の地方自治法（昭和二十二年法律第六十七号）の本則の原文をルールにしたものです。判例・法律の解釈・役所の運用は含みません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 住民監査請求・住民訴訟Prolog 共通の型・欄の読み出し・成り立たない組・木の部品
+%
+% ctx(住民, 相手, 財務, 違法不当, 期間, 経過, 求め, 危害, 別訴, 結果)
+%   欄は起きた事実を聞く10個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-24 案A。
+%   案は ../jumin_form_plan_answer_1124.md の案A、決めは ../jumin_form_plan_decision_1124.md）。
+%   前は ctx(入口, 住民, 詳細) で、入口「どちらの話か」（監査 | 訴訟）を先に選ばせ、詳細は 監査(6個) か 訴訟(8個) だった。
+%   画面が欄を出し消しして、隠れた欄を 関係なし で渡していた（期間の欄OK・請求の欄OK・訴訟の欄OK が 関係なし の位置を決め打ちしていた）。
+%   今は使わない欄を判定で見ないだけにした。監査の「違法か不当か」と訴訟の「違法か」を4の欄1つにし（決め2・C1）、
+%   正当な理由を5の欄の値に、報酬を10の欄の値に入れた。監査を求めたか・その後どうなったか（前の 請求・監査請求・場面）を6の欄1つにした。
+%   引数の順は画面の欄の番号（1〜10）と同じ。画面では3つの小見出し（誰の何について／監査請求／住民訴訟）の下に並べる。
+%    1 住民     : はい | いいえ（その自治体の住民か。242条1項・242条の2第1項）
+%    2 相手     : 長 | 委員会 | 委員 | 職員 | それ以外（242条1項）
+%    3 財務     : 公金の支出 | 財産 | 契約 | 債務 | 賦課徴収 | 財産管理 | それ以外（242条1項。賦課徴収・財産管理が「怠る事実」）
+%    4 違法不当 : 違法 | 不当 | どちらでもない（242条1項は違法・不当、242条の2第1項は違法だけ）
+%    5 期間     : 一年以内 | 予測 | 理由あり | 一年経過（242条1項かっこ書き・2項。理由あり＝1年を過ぎ・遅れたのにわけがある）
+%    6 経過     : まだ | 待ち | 行わない | 結果不服 | 措置不服 | 講じない | 不服なし
+%                 まだ＝監査を求めていない（242条1項）、待ち＝求めて60日たっておらず通知を待っている（242条6項）、
+%                 行わない・結果不服・措置不服・講じない＝242条の2第2項3号・1号・2号・4号、不服なし＝通知の中身に不服は無い
+%    7 求め     : 未定 | 差止め | 取消し | 違法確認 | 損害賠償等（242条の2第1項1号〜4号。未定＝まだ決めていない）
+%    8 危害     : ない | ある（242条の2第6項）
+%    9 別訴     : なし | 同一 | 別（他の住民の住民訴訟。242条の2第4項）
+%   10 結果     : 判決前 | 勝訴報酬 | 勝訴 | 敗訴（勝訴報酬＝勝って弁護士に報酬を払う。242条の2第12項）
+%
+%   関係のない欄（怠る事実の5、監査を求めていないときの8〜10、差止め以外の8）は、組み合わせなしにせず見ないだけ（chokusetsu-prolog と同じ）。
+%   欄どうしで成り立たない組はこのファイルの 組み合わせなし/4 が返す（REVIEW_RULES C3。案のア〜エ）。
+%
+% 書き方のきまり：
+%   ・条番号は '242条1項' '242条の2第2項1号' '242条2項ただし書' のような原子。
+%   ・段は 段(状態, 文, 箱の条, 葉のリスト)。結論ごとの段は s(画面のid, 見出し, 段)。段の文は、末尾の「。」を外して結論の箱にも出す。
+%     段の文は本題だけを書き、入力の言い直しは葉に置く（REVIEW_RULES A2。葉は論理の木にだけ出る）。
+%     葉は文（原子）か、木の行 t(...) そのもの（規定・約束の行。schema の 葉の行）。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | and | or | info
+%   ・アプリの約束事の行は 条 を '@約束事' にする。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか。組の成り立ちは 組み合わせなし/4 で見る）----
+ctx_valid(C) :-
+    functor(C, ctx, 10),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )).
+
+欄の値(1, [はい, いいえ]).
+欄の値(2, [長, 委員会, 委員, 職員, それ以外]).
+欄の値(3, [公金の支出, 財産, 契約, 債務, 賦課徴収, 財産管理, それ以外]).
+欄の値(4, [違法, 不当, どちらでもない]).
+欄の値(5, [一年以内, 予測, 理由あり, 一年経過]).
+欄の値(6, [まだ, 待ち, 行わない, 結果不服, 措置不服, 講じない, 不服なし]).
+欄の値(7, [未定, 差止め, 取消し, 違法確認, 損害賠償等]).
+欄の値(8, [ない, ある]).
+欄の値(9, [なし, 同一, 別]).
+欄の値(10, [判決前, 勝訴報酬, 勝訴, 敗訴]).
+
+%% ---- 欄の読み出し（番号は画面の欄の番号）----
+欄の番号(住民, 1).
+欄の番号(相手, 2).
+欄の番号(財務, 3).
+欄の番号(違法不当, 4).
+欄の番号(期間, 5).
+欄の番号(経過, 6).
+欄の番号(求め, 7).
+欄の番号(危害, 8).
+欄の番号(別訴, 9).
+欄の番号(結果, 10).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+%% ---- 値のまとまり ----
+怠る事実か(賦課徴収).
+怠る事実か(財産管理).
+行いか(Za) :- memberchk(Za, [公金の支出, 財産, 契約, 債務]).
+% 監査の通知の後の4つ（242条の2第1項の「不服があるとき」「行わないとき」「講じないとき」）
+不服の経過(Ke) :- memberchk(Ke, [行わない, 結果不服, 措置不服, 講じない]).
+判決後(Ka) :- memberchk(Ka, [勝訴報酬, 勝訴, 敗訴]).
+
+%% ---- 語がそろうか（242条1項）・2項で止まるか ----
+% 1項の語：住民が、長・委員会・委員・職員の、財務の行い・怠る事実を、違法か不当と認める
+監査の語がそろう(C) :-
+    欄(住民, C, はい), 欄(相手, C, Ai), Ai \== それ以外,
+    欄(財務, C, Za), Za \== それ以外, 欄(違法不当, C, Iw), Iw \== どちらでもない.
+% 2項本文で止まる：行い（怠る事実でない）で、1年を過ぎ、遅れたわけは特に無い。怠る事実には2項を当てはめない（約束事③）
+期間で止まる(C) :- 欄(財務, C, Za), \+ 怠る事実か(Za), 欄(期間, C, 一年経過).
+% 監査請求ができる形（1項の語がそろい、2項で止まらない）。住民訴訟の「前条第一項の規定による請求をした場合」もこの形で読む（決め3。about の (h)）
+請求できる形(C) :- 監査の語がそろう(C), \+ 期間で止まる(C).
+
+%% ---- 成り立たない組（組み合わせなし/4。REVIEW_RULES C3。案のア〜エ）----
+% 組み合わせなし(C, 記号, 葉のリスト, 箱の条)。rules/d_hantei.pl の 全部の段 が findall で全部集める（REVIEW_RULES 末尾「AI同士で決めた書き方」1・2）。
+%   ア 3の欄が怠る事実で、7の欄がやめさせる・取り消す。根拠は242条の2第1項1号・2号（「当該行為の…差止め」「当該行為の取消し」）
+%   イ 3の欄が行いで、7の欄が怠っていることの違法確認。根拠は242条の2第1項3号（「当該怠る事実の違法確認」）
+%   ウ 6の欄がまだ監査を求めていない・通知を待っているで、10の欄が判決の後。根拠は242条の2第1項・第2項（訴えは監査の通知の後）
+%   エ 5の欄がまだ行われていないで、7の欄が取り消す。約束事④（決め4。条文の語「当該行為の取消し」から、まだ無い決定は取り消せないと読んだ）
+%   見ないだけの欄（怠る事実の5の欄など）は組み合わせなしにしない。エも怠る事実では5の欄を見ないので当てない。
+組み合わせなし(C, a, ['やめさせる・取り消すのは行いで、怠っていることには使わない', W], [Art]) :-
+    欄(財務, C, Za), 怠る事実か(Za),
+    欄(求め, C, Go), memberchk(Go, [差止め, 取消し]), 求めの号(Go, Art, GW),
+    財務の葉の語(Za, ZW),
+    format(atom(W), '3の欄で~wを選び、7の欄で~wを選んだ', [ZW, GW]).
+組み合わせなし(C, i, ['法律に反すると確かめるのは怠っていることで、行いには使わない', W], ['242条の2第1項3号']) :-
+    欄(財務, C, Za), 行いか(Za), 欄(求め, C, 違法確認),
+    財務の葉の語(Za, ZW),
+    format(atom(W), '3の欄で~wを選び、7の欄で怠っていることが法律に反すると確かめるを選んだ', [ZW]).
+組み合わせなし(C, u, ['住民訴訟は、監査を求めて通知があった後（通知が無ければ60日を過ぎた後）に起こすので、まだ判決は無い', W], ['242条の2第1項', '242条の2第2項']) :-
+    欄(経過, C, Ke), memberchk(Ke, [まだ, 待ち]),
+    欄(結果, C, Ka), 判決後(Ka),
+    経過の葉の語(Ke, KW), 結果の葉の語(Ka, AW),
+    format(atom(W), '6の欄で~wを選び、10の欄で~wを選んだ', [KW, AW]).
+組み合わせなし(C, e, [R, '5の欄でまだ行われていないを選び、7の欄で役所の決定を取り消す・無効だと確かめるを選んだ', Y], []) :-
+    欄(財務, C, Za), \+ 怠る事実か(Za),
+    欄(期間, C, 予測), 欄(求め, C, 取消し),
+    原文規定('242条の2第1項2号', R),
+    取消しの約束(Y).
+
+%% ---- 木の葉に出す欄の値の言葉（画面の選択肢と同じ語）----
+% 求めの号(7の欄の値, 号, 選択肢の語)。未定 は号が無い
+求めの号(差止め, '242条の2第1項1号', 'その行いをやめさせる').
+求めの号(取消し, '242条の2第1項2号', '役所の決定を取り消す・無効だと確かめる').
+求めの号(違法確認, '242条の2第1項3号', '怠っていることが法律に反すると確かめる').
+求めの号(損害賠償等, '242条の2第1項4号', '職員や相手方にお金を払わせるよう求める').
+
+財務の葉の語(公金の支出, 'お金を払った・払う').
+財務の葉の語(財産, '土地や建物などを買った・使った・売った').
+財務の葉の語(契約, '契約を結んだ・契約どおりに行った').
+財務の葉の語(債務, '借金などの義務を負った').
+財務の葉の語(賦課徴収, '税・使用料などを取り立てていない').
+財務の葉の語(財産管理, '土地や建物などの管理をしていない').
+財務の葉の語(それ以外, 'お金や財産のことではない').
+
+経過の葉の語(まだ, 'まだ監査を求めていない').
+経過の葉の語(待ち, '求めて、まだ60日たっておらず、通知を待っている').
+経過の葉の語(行わない, '求めて、60日を過ぎても監査・勧告の通知が無い').
+経過の葉の語(結果不服, '監査の結果か勧告の通知があり、中身に不服がある').
+経過の葉の語(措置不服, '勧告を受けた側が手を打ったと通知があり、中身に不服がある').
+経過の葉の語(講じない, '勧告で示された期間を過ぎても、勧告を受けた側が手を打たない').
+経過の葉の語(不服なし, '通知の中身に不服は無い').
+
+結果の葉の語(勝訴報酬, '勝った・弁護士に報酬を払う').
+結果の葉の語(勝訴, '勝った・弁護士に報酬は払わない').
+結果の葉の語(敗訴, '負けた').
+
+%% ---- 理由の語をつなぐ ----
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---- 木の部品 ----
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+原文規定(Art, X) :- 原文(Art, W), 規定(Art, W, X).
+% 成り立つ文（起きた事実・条文の読み）
+文(X, t(ok, X, '', [])).
+約束(X, t(ok, X, '@約束事', [])).
+% 葉の行：木の行 t(...) はそのまま、文はそのまま1行（schema の「書き方のきまり」）
+葉の行(t(K, X, A, Cs), t(K, X, A, Cs)) :- !.
+葉の行(W, X) :- 文(W, X).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — このアプリの約束事（地方自治法の条文にないもの）
+%
+%   ① 「法律に反するか」「やり方がまずいか」「遅れたわけがあるか」「公共の福祉を大きく損なうおそれがあるか」は
+%      監査委員や裁判所が決める評価なので、本人がそう考えているか（画面の「（あなたの考え）」の欄）を入力にする。
+%      評価を判定しないという断りは about の約束事①に置く（2026-11-24 案A。前は結果の下の NOTE_HANTEI と、欄の説明・段の文の「判定しません」に出していた。A5）。
+%   ② 満了日の日付は出さない。条文の期間だけを出す（前は結果の下の NOTE_MANRYO。about の約束事②へ移した）。
+%   ③ 2項の期間は、条文の語が「当該行為」だけなので、怠る事実には当てはめない。
+%      自治体の案内には「怠っていることが続いている間は期間の制限が無いが、終わった場合や行いから生じた場合は制限がある」という書き方がある。
+%      この約束事が案内と合うのは、怠っていることが続いている間だけ（決め7。about の約束事③と (a)）。
+%   ④ まだ行われていない決定を「取り消す・無効だと確かめる」組は「この組み合わせはありません」とする（案のエ。決め4。
+%      条文の語「行政処分たる当該行為の取消し又は無効確認」から、まだ無い決定は取り消せないと読んだ）。
+%   前の ④民法の約束・⑤行訴法の約束（242条の2第9項・第11項の段に付けていた）は、その段を「その後の流れ」の節に移したので木に出ない（about の約束事⑤に残す）。
+
+評価の約束(X) :-
+    約束('「法律に反するか」「やり方がまずいか」「遅れたわけがあるか」「公共の福祉を大きく損なうおそれがあるか」は、本人がそう考えているか（あなたの考え）を入力にしている', X).
+
+満了日の約束(X) :-
+    約束('242条と242条の2に期間の最終日を数える定めが無いので、満了日の日付は出さず、条文の期間だけを出している', X).
+
+怠る事実の約束(X) :-
+    約束('2項の語は「当該行為」だけなので、怠る事実には2項の期間を当てはめていない（怠っていることが続いている間の読み）', X).
+
+取消しの約束(X) :-
+    約束('まだ行われていない決定を取り消す・無効だと確かめる組は、このアプリでは「この組み合わせはありません」とする', X).
+</script>
+<script type="text/prolog" data-name="rules_a_genbun.pl">% rules/a_genbun.pl — 判定に使う条文の原文（law/chiji.xml の本則の第242条・第242条の2 のまま。旧仮名も原文のまま）
+%
+%   原文(条, 文)。test/page_test.mjs が XML を別に読み、全行が一字一句一致するかを確かめる。
+%   242条の2第2項の号は、XML の2つの列を全角の空白でつないでいる（build.py の text と同じ）。
+
+原文('242条1項', '普通地方公共団体の住民は、当該普通地方公共団体の長若しくは委員会若しくは委員又は当該普通地方公共団体の職員について、違法若しくは不当な公金の支出、財産の取得、管理若しくは処分、契約の締結若しくは履行若しくは債務その他の義務の負担がある（当該行為がなされることが相当の確実さをもつて予測される場合を含む。）と認めるとき、又は違法若しくは不当に公金の賦課若しくは徴収若しくは財産の管理を怠る事実（以下「怠る事実」という。）があると認めるときは、これらを証する書面を添え、監査委員に対し、監査を求め、当該行為を防止し、若しくは是正し、若しくは当該怠る事実を改め、又は当該行為若しくは怠る事実によつて当該普通地方公共団体の被つた損害を補塡するために必要な措置を講ずべきことを請求することができる。').
+原文('242条2項', '前項の規定による請求は、当該行為のあつた日又は終わつた日から一年を経過したときは、これをすることができない。ただし、正当な理由があるときは、この限りでない。').
+原文('242条3項', '第一項の規定による請求があつたときは、監査委員は、直ちに当該請求の要旨を当該普通地方公共団体の議会及び長に通知しなければならない。').
+原文('242条4項', '第一項の規定による請求があつた場合において、当該行為が違法であると思料するに足りる相当な理由があり、当該行為により当該普通地方公共団体に生ずる回復の困難な損害を避けるため緊急の必要があり、かつ、当該行為を停止することによつて人の生命又は身体に対する重大な危害の発生の防止その他公共の福祉を著しく阻害するおそれがないと認めるときは、監査委員は、当該普通地方公共団体の長その他の執行機関又は職員に対し、理由を付して次項の手続が終了するまでの間当該行為を停止すべきことを勧告することができる。この場合において、監査委員は、当該勧告の内容を第一項の規定による請求人（以下この条において「請求人」という。）に通知するとともに、これを公表しなければならない。').
+原文('242条5項', '第一項の規定による請求があつた場合には、監査委員は、監査を行い、当該請求に理由がないと認めるときは、理由を付してその旨を書面により請求人に通知するとともに、これを公表し、当該請求に理由があると認めるときは、当該普通地方公共団体の議会、長その他の執行機関又は職員に対し期間を示して必要な措置を講ずべきことを勧告するとともに、当該勧告の内容を請求人に通知し、かつ、これを公表しなければならない。').
+原文('242条6項', '前項の規定による監査委員の監査及び勧告は、第一項の規定による請求があつた日から六十日以内に行わなければならない。').
+原文('242条7項', '監査委員は、第五項の規定による監査を行うに当たつては、請求人に証拠の提出及び陳述の機会を与えなければならない。').
+原文('242条8項', '監査委員は、前項の規定による陳述の聴取を行う場合又は関係のある当該普通地方公共団体の長その他の執行機関若しくは職員の陳述の聴取を行う場合において、必要があると認めるときは、関係のある当該普通地方公共団体の長その他の執行機関若しくは職員又は請求人を立ち会わせることができる。').
+原文('242条9項', '第五項の規定による監査委員の勧告があつたときは、当該勧告を受けた議会、長その他の執行機関又は職員は、当該勧告に示された期間内に必要な措置を講ずるとともに、その旨を監査委員に通知しなければならない。この場合において、監査委員は、当該通知に係る事項を請求人に通知するとともに、これを公表しなければならない。').
+原文('242条10項', '普通地方公共団体の議会は、第一項の規定による請求があつた後に、当該請求に係る行為又は怠る事実に関する損害賠償又は不当利得返還の請求権その他の権利の放棄に関する議決をしようとするときは、あらかじめ監査委員の意見を聴かなければならない。').
+原文('242条11項', '第四項の規定による勧告、第五項の規定による監査及び勧告並びに前項の規定による意見についての決定は、監査委員の合議によるものとする。').
+
+原文('242条の2第1項', '普通地方公共団体の住民は、前条第一項の規定による請求をした場合において、同条第五項の規定による監査委員の監査の結果若しくは勧告若しくは同条第九項の規定による普通地方公共団体の議会、長その他の執行機関若しくは職員の措置に不服があるとき、又は監査委員が同条第五項の規定による監査若しくは勧告を同条第六項の期間内に行わないとき、若しくは議会、長その他の執行機関若しくは職員が同条第九項の規定による措置を講じないときは、裁判所に対し、同条第一項の請求に係る違法な行為又は怠る事実につき、訴えをもつて次に掲げる請求をすることができる。').
+原文('242条の2第1項1号', '当該執行機関又は職員に対する当該行為の全部又は一部の差止めの請求').
+原文('242条の2第1項2号', '行政処分たる当該行為の取消し又は無効確認の請求').
+原文('242条の2第1項3号', '当該執行機関又は職員に対する当該怠る事実の違法確認の請求').
+原文('242条の2第1項4号', '当該職員又は当該行為若しくは怠る事実に係る相手方に損害賠償又は不当利得返還の請求をすることを当該普通地方公共団体の執行機関又は職員に対して求める請求。ただし、当該職員又は当該行為若しくは怠る事実に係る相手方が第二百四十三条の二の九第三項の規定による賠償の命令の対象となる者である場合には、当該賠償の命令をすることを求める請求').
+原文('242条の2第2項1号', '監査委員の監査の結果又は勧告に不服がある場合　当該監査の結果又は当該勧告の内容の通知があつた日から三十日以内').
+原文('242条の2第2項2号', '監査委員の勧告を受けた議会、長その他の執行機関又は職員の措置に不服がある場合　当該措置に係る監査委員の通知があつた日から三十日以内').
+原文('242条の2第2項3号', '監査委員が請求をした日から六十日を経過しても監査又は勧告を行わない場合　当該六十日を経過した日から三十日以内').
+原文('242条の2第2項4号', '監査委員の勧告を受けた議会、長その他の執行機関又は職員が措置を講じない場合　当該勧告に示された期間を経過した日から三十日以内').
+原文('242条の2第3項', '前項の期間は、不変期間とする。').
+原文('242条の2第4項', '第一項の規定による訴訟が係属しているときは、当該普通地方公共団体の他の住民は、別訴をもつて同一の請求をすることができない。').
+原文('242条の2第5項', '第一項の規定による訴訟は、当該普通地方公共団体の事務所の所在地を管轄する地方裁判所の管轄に専属する。').
+原文('242条の2第6項', '第一項第一号の規定による請求に基づく差止めは、当該行為を差し止めることによつて人の生命又は身体に対する重大な危害の発生の防止その他公共の福祉を著しく阻害するおそれがあるときは、することができない。').
+原文('242条の2第7項', '第一項第四号の規定による訴訟が提起された場合には、当該職員又は当該行為若しくは怠る事実の相手方に対して、当該普通地方公共団体の執行機関又は職員は、遅滞なく、その訴訟の告知をしなければならない。').
+原文('242条の2第8項', '前項の訴訟告知があつたときは、第一項第四号の規定による訴訟が終了した日から六月を経過するまでの間は、当該訴訟に係る損害賠償又は不当利得返還の請求権の時効は、完成しない。').
+原文('242条の2第9項', '民法第百五十三条第二項の規定は、前項の規定による時効の完成猶予について準用する。').
+原文('242条の2第10項', '第一項に規定する違法な行為又は怠る事実については、民事保全法（平成元年法律第九十一号）に規定する仮処分をすることができない。').
+原文('242条の2第11項', '第二項から前項までに定めるもののほか、第一項の規定による訴訟については、行政事件訴訟法第四十三条の規定の適用があるものとする。').
+原文('242条の2第12項', '第一項の規定による訴訟を提起した者が勝訴（一部勝訴を含む。）した場合において、弁護士、弁護士法人又は弁護士・外国法事務弁護士共同法人に報酬を支払うべきときは、当該普通地方公共団体に対し、その報酬額の範囲内で相当と認められる額の支払を請求することができる。').
+</script>
+<script type="text/prolog" data-name="rules_b_kansa.pl">% rules/b_kansa.pl — 住民監査請求（242条）の段と、監査の後の流れ
+%
+%   段は1つ：kansa（住民監査請求。状態 対象外・できない・期限・できる）。2026-11-24 案A。
+%   前は入口「監査」で11の段（seikyu・kikan と 3項〜11項の9つ）を番号付きで並べ、語がそろわない入力では「判定していません」の段を色を落として出していた。
+%   今は監査の答えを1つの段にし、3項〜11項は判定ではないので「その後どうなるか」の節に移した（決め5。監査の流れ/1）。
+%   段の文は本題だけにし、「という入力です」「（当たるかは判定しません）」を外した（REVIEW_RULES A1・A2・A5）。条文の語「当該」は名詞にした（A6）。
+%   6の欄が「まだ監査を求めていない」「通知を待っている」のときに出す。ほかの値でも、1項の語が欠けるか2項で止まるときは出す（決め3）。
+
+監査の段(C, [s(kansa, '住民監査請求', S)]) :- 監査の段を出す(C), !, 監査の答え(C, S).
+監査の段(_, []).
+
+監査の段を出す(C) :- 欄(経過, C, Ke), memberchk(Ke, [まだ, 待ち]), !.
+監査の段を出す(C) :- \+ 請求できる形(C).
+
+%% ---- 監査の答え ----
+% 1項の語が欠ける：欠けた語を全部、葉に出す
+監査の答え(C, 段(対象外, '住民監査請求の対象になりません。', ['242条1項'], [R | Ws])) :-
+    \+ 監査の語がそろう(C), !,
+    原文規定('242条1項', R),
+    findall(W, 欠けた語の葉(C, W), Ws).
+% 2項本文で止まる（行いで、1年を過ぎ、遅れたわけは特に無い）
+監査の答え(C, 段(できない, '1年を過ぎた住民監査請求はできません。', ['242条2項'], [R, '5の欄で、1年を過ぎた・遅れたわけは特に無いを選んだ', Y])) :-
+    期間で止まる(C), !,
+    原文規定('242条2項', R), 評価の約束(Y).
+% 求めて、通知を待っている
+監査の答え(C, 段(期限, '監査委員は、請求の日から60日以内に監査と勧告をします。', ['242条6項'], [R, '6の欄で、求めて、まだ60日たっておらず、通知を待っているを選んだ'])) :-
+    欄(経過, C, 待ち), !,
+    原文規定('242条6項', R).
+% まだ監査を求めていない：請求できる
+監査の答え(C, 段(できる, M, [Art], Fs)) :-
+    期間の答え(C, M, Art, Ks),
+    原文規定('242条1項', R),
+    評価の約束(Y),
+    append([[R], Ks, [Y]], Fs).
+
+% 期間の答え(C, 段の文, 箱の条, 期間の葉)
+期間の答え(C, '監査委員に、証拠の書面を添えて住民監査請求ができます。', '242条1項', [W, Y]) :-
+    欄(財務, C, Za), 怠る事実か(Za), !,
+    財務の葉の語(Za, ZW),
+    format(atom(W), '3の欄で、~wを選んだ（怠っていること）', [ZW]),
+    怠る事実の約束(Y).
+期間の答え(C, '監査委員に、証拠の書面を添えて住民監査請求ができます。', '242条1項', [R, '5の欄で、1年たっていないを選んだ']) :-
+    欄(期間, C, 一年以内), !,
+    原文規定('242条2項', R).
+期間の答え(C, '監査委員に、証拠の書面を添えて住民監査請求ができます。', '242条1項', ['5の欄で、まだ行われていないが、行われることがほぼ確実を選んだ（1項は、行われることが相当の確実さで予測される場合を含む）']) :-
+    欄(期間, C, 予測), !.
+期間の答え(C, '1年を過ぎていても、遅れたことに正当な理由があれば、住民監査請求ができます。', '242条2項ただし書', [R, '5の欄で、1年を過ぎた・遅れたのにはわけがあるを選んだ']) :-
+    欄(期間, C, 理由あり),
+    原文規定('242条2項', R).
+
+%% ---- 1項の語が欠けた入力（木の葉。住民訴訟の 対象外 でも使う）----
+欠けた語の葉(C, '1の欄で、住民でないを選んだ') :- 欄(住民, C, いいえ).
+欠けた語の葉(C, '2の欄で、知事・市町村長・区長、委員会、委員、職員のどれでもないを選んだ') :- 欄(相手, C, それ以外).
+欠けた語の葉(C, '3の欄で、お金や財産のことではないを選んだ') :- 欄(財務, C, それ以外).
+欠けた語の葉(C, '4の欄で、法律に反するとも、やり方がまずいとも考えないを選んだ') :- 欄(違法不当, C, どちらでもない).
+
+%% ---- 監査の後の流れ（判定ではない。rules/d_hantei.pl の その後/3 から画面の「その後どうなるか」の節に出す。決め5）----
+% 前の 手続の文/2（3項〜11項の段）を、指示語（当該・その旨・次項・前項）を名詞にして写した（A6）
+監査の流れ([
+    f('監査委員は、すぐに請求の要旨を議会と知事・市町村長・区長に知らせます。', '242条3項'),
+    f('行いが違法だと考える相当な理由があり、取り返しのつかない損害を避ける急ぎの必要があり、止めても人の命や体を守ることなど公共の福祉を大きく損なうおそれが無いときは、監査委員は、監査が終わるまで行いを止めるよう勧告できます。勧告は請求した人に知らせて公表します。', '242条4項'),
+    f('監査委員は監査をします。請求に理由が無ければ、理由を付けて請求した人に書面で知らせて公表します。理由があれば、議会・知事や市町村長・職員などに期間を示して手を打つよう勧告し、勧告を請求した人に知らせて公表します。', '242条5項'),
+    f('監査と勧告は、請求の日から60日以内に行います。', '242条6項'),
+    f('監査委員は、監査のときに、請求した人に証拠を出し意見を述べる機会を与えます。', '242条7項'),
+    f('監査委員は、意見を聴くときに必要があれば、知事・市町村長・職員などや請求した人を立ち会わせることができます。', '242条8項'),
+    f('勧告を受けた側は、示された期間内に手を打ち、監査委員に知らせます。監査委員は、知らせの中身を請求した人に知らせて公表します。', '242条9項'),
+    f('請求の後に、議会が損害賠償などの権利を放棄する議決をするときは、先に監査委員の意見を聴きます。', '242条10項'),
+    f('止める勧告、監査と勧告、権利の放棄についての意見は、監査委員の合議で決めます。', '242条11項')
+]).
+</script>
+<script type="text/prolog" data-name="rules_c_sosho.pl">% rules/c_sosho.pl — 住民訴訟（242条の2）の段と、訴えの後の流れ
+%
+%   段は4つ：sosho（住民訴訟。状態 対象外・できない・まだ・当たらない・できる）・sashi（差止めの制限。6項）・
+%   betsu（他の住民の住民訴訟。4項）・hoshu（弁護士の報酬。12項）。2026-11-24 案A。
+%   前は入口「訴訟」で10の段（teiki・katachi・kigen ほか）を番号付きで並べ、号の4つを全文で並べる段（段形）があった。
+%   今は号を7の欄で聞くので段形は消し、選んだ号は木の葉の規定の行に置いた。5項・7項〜11項は判定ではないので「その後どうなるか」の節に移した（決め5）。
+%   sosho は、6の欄が「まだ監査を求めていない」以外か、7の欄で求めることを選んだときに出す。
+%   監査請求の1項の語が欠ける・2項で止まる入力では sosho も 対象外（決め3。242条の2第1項の「前条第一項の規定による請求をした場合」をそう読む。about の (h)）。
+%   10の欄が判決の後（勝った2つ・負けた）のときは、sosho の できる（30日以内に起こせます）だけ出さない（決め6）。
+%   sashi・betsu・hoshu は「訴えられる」入力（sosho が できる になる入力）でだけ出す（前の (h) と同じ：2項〜12項は1項の訴訟の定め）。
+%   負けたときも hoshu を 当たらない で出す（案では出さないとしていたが、判決の後は できる を出さないので、出さないと箱が空になる組がある）。
+%   9の欄が「同じ求めで、裁判が続いている」で betsu が できない になる入力では、sosho の できる と sashi を出さない（止まる答えは betsu だけ）。
+%   前は3つを並べ、「別に起こすことはできません」と「30日以内に、住民訴訟を起こせます」が箱で逆のことを言っていた（2026-11-24 LLMレビュー 例20。REVIEW_RULES A）。
+
+訴訟の段(C, L) :-
+    訴えの段(C, L1), 差止めの段(C, L2), 別訴の段(C, L3), 報酬の段(C, L4),
+    append([L1, L2, L3, L4], L).
+
+% 住民訴訟の段を出すか
+訴えの段を出す(C) :- 欄(経過, C, Ke), Ke \== まだ, !.
+訴えの段を出す(C) :- 欄(求め, C, Go), Go \== 未定.
+
+% 訴えられる：監査請求ができる形で、法律に反すると考え、監査の通知の後の4つのどれか（sosho が できる になる入力）
+訴えられる(C) :-
+    請求できる形(C), 欄(違法不当, C, 違法),
+    欄(経過, C, Ke), 不服の経過(Ke).
+
+% 別訴で止まる：訴えられる入力で、他の住民が同じ求めで裁判中（242条の2第4項）。sosho の できる・sashi を出さず、betsu だけを出す
+別訴で止まる(C) :- 訴えられる(C), 欄(別訴, C, 同一).
+
+訴えの段(C, []) :- \+ 訴えの段を出す(C), !.
+訴えの段(C, []) :- 訴えられる(C), 欄(結果, C, Ka), 判決後(Ka), !.
+訴えの段(C, []) :- 別訴で止まる(C), !.
+訴えの段(C, [s(sosho, '住民訴訟', S)]) :- 訴えの答え(C, S).
+
+%% ---- 住民訴訟の答え ----
+% 監査請求の1項の語が欠ける・2項で止まる（決め3）
+訴えの答え(C, 段(対象外, '住民訴訟の対象になりません。', ['242条の2第1項'], Fs)) :-
+    \+ 請求できる形(C), !,
+    原文規定('242条の2第1項', R),
+    findall(W, 欠けた語の葉(C, W), Ws0),
+    ( Ws0 == [] -> Ws = ['5の欄で、1年を過ぎた・遅れたわけは特に無いを選んだ（1年を過ぎた住民監査請求はできない。242条2項）'] ; Ws = Ws0 ),
+    append([[R], Ws, ['住民訴訟は、242条1項の語がそろい、242条2項で止まらない住民監査請求をした後に起こせると読んだ']], Fs).
+% 法律には反しないが、やり方がまずいだけ（「違法な行為又は怠る事実」。about の (e)）
+訴えの答え(C, 段(できない, '法律に反しない行いや怠りは、住民訴訟で争えません。', ['242条の2第1項'], [R, '4の欄で、法律には反しないが、やり方がまずいと考えるを選んだ', Y])) :-
+    欄(違法不当, C, 不当), !,
+    規定('242条の2第1項', '裁判所に対し、同条第一項の請求に係る違法な行為又は怠る事実につき、訴えをもつて次に掲げる請求をすることができる', R),
+    評価の約束(Y).
+% まだ監査を求めていない
+訴えの答え(C, 段(まだ, '住民訴訟は、先に住民監査請求をしてから起こします。', ['242条の2第1項'], [R, '6の欄で、まだ監査を求めていないを選んだ'])) :-
+    欄(経過, C, まだ), !,
+    規定('242条の2第1項', '普通地方公共団体の住民は、前条第一項の規定による請求をした場合において', R).
+% 求めて、通知を待っている
+訴えの答え(C, 段(まだ, '住民訴訟は、監査の結果か勧告の通知があった後か、請求から60日を過ぎた後に起こします。', ['242条の2第2項'], [R1, R3, '6の欄で、求めて、まだ60日たっておらず、通知を待っているを選んだ'])) :-
+    欄(経過, C, 待ち), !,
+    原文規定('242条の2第2項1号', R1), 原文規定('242条の2第2項3号', R3).
+% 通知の中身に不服は無い
+訴えの答え(C, 段(当たらない, '通知の中身に不服が無いときは、住民訴訟を起こす場面に当たりません。', ['242条の2第1項'], [R, '6の欄で、通知の中身に不服は無いを選んだ'])) :-
+    欄(経過, C, 不服なし), !,
+    規定('242条の2第1項', '同条第五項の規定による監査委員の監査の結果若しくは勧告若しくは同条第九項の規定による普通地方公共団体の議会、長その他の執行機関若しくは職員の措置に不服があるとき、又は監査委員が同条第五項の規定による監査若しくは勧告を同条第六項の期間内に行わないとき、若しくは議会、長その他の執行機関若しくは職員が同条第九項の規定による措置を講じないとき', R).
+% 監査の通知の後の4つ：30日以内に起こせる（2項1号〜4号。3項の不変期間は葉に置く）
+訴えの答え(C, 段(できる, M, [Art], Fs)) :-
+    欄(経過, C, Ke), 期間の号(Ke, Art, From),
+    format(atom(M), '~wから30日以内に、住民訴訟を起こせます。', [From]),
+    原文規定(Art, R), 原文規定('242条の2第3項', R3),
+    経過の葉の語(Ke, KW), format(atom(W), '6の欄で、~wを選んだ', [KW]),
+    求めの葉(C, Gs),
+    満了日の約束(Y),
+    append([[R, R3, W], Gs, [Y]], Fs).
+
+% 期間の号(6の欄の値, 号, 起点の言葉)。条文の「当該監査の結果又は当該勧告の内容の通知」「当該六十日」は名詞にした（A6）
+期間の号(結果不服, '242条の2第2項1号', '監査の結果か勧告の通知があった日').
+期間の号(措置不服, '242条の2第2項2号', '勧告を受けた側が手を打ったという監査委員の通知があった日').
+期間の号(行わない, '242条の2第2項3号', '請求から60日を過ぎた日').
+期間の号(講じない, '242条の2第2項4号', '勧告で示された期間を過ぎた日').
+
+% 7の欄で選んだ号の規定と事実（まだ決めていないなら葉を足さない）
+求めの葉(C, [R, W]) :-
+    欄(求め, C, Go), 求めの号(Go, Art, GW), !,
+    原文規定(Art, R),
+    format(atom(W), '7の欄で、~wを選んだ', [GW]).
+求めの葉(_, []).
+
+%% ---- 差止めの制限（242条の2第6項）----
+差止めの段(C, [s(sashi, '差止めの制限', S)]) :- 訴えられる(C), \+ 別訴で止まる(C), 欄(求め, C, 差止め), !, 差止めの答え(C, S).
+差止めの段(_, []).
+
+差止めの答え(C, 段(できない, 'やめさせると人の命や体を守れなくなるなど、公共の福祉を大きく損なうおそれがあるときは、差止めは求められません。', ['242条の2第6項'], [R, '8の欄で、あると考えるを選んだ', Y])) :-
+    欄(危害, C, ある), !,
+    原文規定('242条の2第6項', R), 評価の約束(Y).
+差止めの答え(_, 段(当たらない, '差止めの制限には当たりません。', ['242条の2第6項'], [R, '8の欄で、無いと考えるを選んだ', Y])) :-
+    原文規定('242条の2第6項', R), 評価の約束(Y).
+
+%% ---- 他の住民の住民訴訟（242条の2第4項）----
+% 同じ求めで裁判が続いているときだけ出す。起こされていない・別の求めは、条文に答えの無い問いなので段を出さない（B6）
+別訴の段(C, [s(betsu, '他の住民の住民訴訟', 段(できない, '同じ求めの住民訴訟を、別に起こすことはできません。', ['242条の2第4項'], [R, '9の欄で、同じ求めで、裁判が続いているを選んだ']))]) :-
+    別訴で止まる(C), !,
+    原文規定('242条の2第4項', R).
+別訴の段(_, []).
+
+%% ---- 弁護士の報酬（242条の2第12項）----
+% 判決の後だけ出す。まだ判決が出ていないときは段を出さない（B6）
+% 4項で止まるとき（9の欄が同一）は出さない。「別に起こせない」と「自分の訴えの報酬」が並ぶと逆のことを言うため（2026-11-24 LLMレビュー 例20の直しの続き）
+報酬の段(C, [s(hoshu, '弁護士の報酬', S)]) :- 訴えられる(C), \+ 別訴で止まる(C), 欄(結果, C, Ka), 判決後(Ka), !, 報酬の答え(Ka, S).
+報酬の段(_, []).
+
+報酬の答え(勝訴報酬, 段(できる, '弁護士に払う報酬の範囲で、相当な額を自治体に請求できます。', ['242条の2第12項'], [R, '10の欄で、勝った・弁護士に報酬を払うを選んだ'])) :-
+    原文規定('242条の2第12項', R).
+報酬の答え(勝訴, 段(当たらない, '弁護士に報酬を払わないときは、報酬の額を自治体に請求する場面に当たりません。', ['242条の2第12項'], [R, '10の欄で、勝った・弁護士に報酬は払わないを選んだ'])) :-
+    原文規定('242条の2第12項', R).
+報酬の答え(敗訴, 段(当たらない, '負けたときは、弁護士の報酬を自治体に請求する場面に当たりません。', ['242条の2第12項'], [R, '10の欄で、負けたを選んだ'])) :-
+    原文規定('242条の2第12項', R).
+
+%% ---- 訴えの後の流れ（判定ではない。rules/d_hantei.pl の その後/3 から画面の「その後どうなるか」の節に出す。決め5）----
+% 7項〜9項は4号の訴訟の定めなので、7の欄が4号のときだけ出す（前の 段告知 と同じ）
+訴訟の流れ(C, L) :-
+    ( 欄(求め, C, 損害賠償等) ->
+        L4 = [f('職員や相手方にお金を払わせるよう求める住民訴訟が起こされると、自治体の執行機関や職員は、すぐに職員や相手方に訴訟の告知をします。', '242条の2第7項'),
+              f('訴訟の告知があると、損害賠償などの請求権の時効は、訴訟が終わった日から6か月たつまで完成しません。', '242条の2第8項'),
+              f('時効の完成猶予には、民法153条2項を当てはめます。', '242条の2第9項')]
+    ;   L4 = [] ),
+    append([[f('住民訴訟は、自治体の事務所がある所を受け持つ地方裁判所に起こします。', '242条の2第5項')],
+            L4,
+            [f('住民訴訟で争う行いや怠りについては、民事保全法の仮処分はできません。', '242条の2第10項'),
+             f('住民訴訟には、行政事件訴訟法43条も当てはめます。', '242条の2第11項')]], L).
+</script>
+<script type="text/prolog" data-name="rules_d_hantei.pl">% rules/d_hantei.pl — 段を束ねて見出し・根拠条文・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 箱の条, 葉のリスト)　結論ごとの段 = s(画面のid, 見出し, 段)
+%     段は5つ：kansa（住民監査請求）・sosho（住民訴訟）・sashi（差止めの制限）・betsu（他の住民の住民訴訟）・hoshu（弁護士の報酬）
+%   形は chokusetsu-prolog の c_hantei.pl と同じ（2026-11-24 案A）。
+%   前は 見出し/2 が 見出しの順（19行）を member で上から見て、最初に当たった1つを `!` で取っていた（結論が2つ以上でも見出しは1つ）。
+%   見出しの順に足し忘れた状態は 見出し が黙って失敗し、画面は「判定できませんでした」になった。木は全部を「次のすべてが成り立つ」の下にぶら下げた1本だった（B5）。
+%   今は段ごとに状態を持ち、状態を全部名前で書き、知らない状態は throw で止める（agents/dog/rules.md:96。依頼書の決まったこと8）。
+%   段の文には、画面の上で指す先の無い指示語（その・この・同項・当該 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+
+%% ---- judge ----
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 成り立たない組があれば、その組だけを段にする（REVIEW_RULES C3。ほかの段は出さない）。
+% 組は findall で全部集め、組ごとに1段にする（id は mujun_a・mujun_i・mujun_u・mujun_e。REVIEW_RULES 末尾「AI同士で決めた書き方」1・2）。
+% 無ければ監査・訴訟の段を同じ入力で当てる。並びは 当たった答えを先に（止まる答えを先に。案A「段の出し方」）。
+% 同じ述語を別のファイルに分けて書くと後の読み込みで消えるので、まとめはここに1つだけ置く
+全部の段(C, Steps) :-
+    findall(s(Id, 'この組み合わせはありません', 段(組み合わせなし, 'この組み合わせはありません。', As, Ws)),
+            ( 組み合わせなし(C, K, Ws, As), atom_concat(mujun_, K, Id) ), Steps),
+    Steps \== [], !.
+全部の段(C, Steps) :-
+    監査の段(C, L1),
+    訴訟の段(C, L2),
+    append(L1, L2, L0),
+    当たった答えを先に(L0, Steps).
+
+%% ---- その後の流れ（判定ではない。web.pl の flow/2 から画面の「その後どうなるか」の節に出す。決め5）----
+% 監査の流れは監査の段が できる・期限 のとき（期限のときは箱と同じ6項の行を外す）、訴えの流れは住民訴訟の段が できる のとき
+% 段の id は1つに決まる鍵なので memberchk で状態を取り出す（REVIEW_RULES 末尾「AI同士で決めた書き方」1）
+その後(C, Steps, L) :-
+    ( memberchk(s(kansa, _, 段(St1, _, _, _)), Steps), memberchk(St1, [できる, 期限]) ->
+        監査の流れ(L0),
+        ( St1 == 期限 -> findall(F, ( member(F, L0), F \= f(_, '242条6項') ), L1) ; L1 = L0 )
+    ;   L1 = [] ),
+    ( memberchk(s(sosho, _, 段(St2, _, _, _)), Steps), St2 == できる -> 訴訟の流れ(C, L2) ; L2 = [] ),
+    append(L1, L2, L).
+
+%% ---- 並べ方 ----
+% 並びは ①止まる答え ②当たった答え ④「当たりません」の文（この本に ③答えを支える文 は無い）
+% ①②が無いときは「当たりません」が聞いた答えなので、そのまま出す（chokusetsu-prolog・kaisan-prolog と同じ並べ方）
+% 組の番号 は番号を空のまま呼んで後で比べる。番号を束ねて呼ぶと頭に合わず、最後の throw の節に落ちて止まる（sorin-prolog 2026-11-22 22:50 run_cases。chokusetsu-prolog と同じ）
+当たった答えを先に([], []) :- !.
+当たった答えを先に(L0, L) :-
+    ( member(s(_, _, 段(St0, _, _, _)), L0), 組の番号(St0, N0), N0 =< 2 -> Order = [1, 2, 3, 4] ; Order = [4, 3] ),
+    findall(S, ( member(N, Order), member(S, L0), S = s(_, _, 段(St, _, _, _)), 組の番号(St, M), M =:= N ), L).
+
+% 組の番号(状態, 1=止まる答え | 2=当たった答え | 4=当たりません)。
+% 状態は全部名前で書き、知らない状態は止める（agents/dog/rules.md:96。chokusetsu-prolog c_hantei.pl:183–192 を写した）
+組の番号(組み合わせなし, 1) :- !.  % ア 242条の2第1項1号・2号、イ 1項3号、ウ 1項・2項（訴えは監査の通知の後）、エ 約束事④（まだ行われていない決定の取消し）
+組の番号(対象外, 1) :- !.          % 242条1項の語が欠ける（住民でない・誰の・何について・違法不当）。住民訴訟も同じ（242条の2第1項。決め3）
+組の番号(できない, 1) :- !.        % 242条2項本文（1年）、242条の2第1項（不当だけ）、6項（差止めの制限）、4項（同じ求めの別訴）
+組の番号(まだ, 1) :- !.            % 住民訴訟の前に監査請求が要る・通知を待っている（242条の2第1項・第2項）
+組の番号(できる, 2) :- !.          % 監査請求（242条1項・2項ただし書）、住民訴訟の期間（242条の2第2項1号〜4号）、報酬（12項）
+組の番号(期限, 2) :- !.            % 監査と勧告は60日以内（242条6項）
+組の番号(当たらない, 4) :- !.      % 差止めの制限に当たらない（6項）・通知に不服が無い・報酬を払わない・負けた（12項）
+組の番号(St, _) :- throw(知らない状態(St)).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、段の文だけを出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」を付けない）。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(_, Steps, Ws) :-
+    findall(W, ( member(s(_, _, S), Steps), 問いの答え(S, W) ), Ws).
+
+% 答えの文に箱の条を（）で付ける。条の無い段（約束事のエ）は付けない（「（）」を画面に出さない）
+問いの答え(S, W) :-
+    S = 段(_, _, As, _),
+    答え(S, W0),
+    ( As == [] -> W = W0 ; 条の表記(As, A), format(atom(W), '~w（~w）', [W0, A]) ).
+
+% 節の文：答えの文（条を付けない）
+節の文(_, S, W) :- 答え(S, W).
+
+% 答え(段, 答えの文)：段の文の末尾の「。」を外す。
+答え(段(_, M, _, _), W) :-
+    ( atom_concat(M0, '。', M) -> W = M0 ; W = M ).
+
+%% ---- 根拠条文 ----
+% 段の順に並べ、重複は1つに
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As, _), Ss), member(A, As) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5。結論をつないだ行と「次のすべてが成り立つ」の根は置かない）。
+% 並びは結論の箱と同じ。一番上の行は結論の箱の文で、その下に葉（規定の行・起きた事実・約束事）を置く。
+木(_, Steps, Trees) :-
+    findall(T, ( member(s(_, _, S), Steps), 段の木(S, T) ), Trees).
+
+段の木(S, t(K, W, '', Cs)) :-
+    S = 段(St, _, _, Fs),
+    問いの答え(S, W),
+    maplist(葉の行, Fs, Kids),
+    すべて(W, '', Kids, t(_, W, _, Cs)),
+    印(St, K).
+
+% 止まった段（組み合わせなし・対象外・できない・まだ・当たらない）は info、そのほか（できる・期限）は ok（木ごとに、その段で決める。chokusetsu-prolog と同じ）
+% 状態は1つに決まっていて、入っているかを見るだけなので memberchk（REVIEW_RULES 末尾「AI同士で決めた書き方」1）
+印(St, K) :- 組の番号(St, _), ( memberchk(St, [組み合わせなし, 対象外, できない, まだ, 当たらない]) -> K = info ; K = ok ).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は chokusetsu-prolog の web.pl と同じ（2026-11-24 案A）。
+%   前は result・explain の2つで、explain は木1本を平らにしていた。
+%   今は木を結論ごとに1本にし（B5）、「この組み合わせはありません」も段の1つにした（rules/d_hantei.pl の 全部の段）。
+%   この本だけのもの：flow（その後の流れ。監査の後の3項〜11項と、訴えの後の5項・7項〜11項。決め5）。
+%   chokusetsu の input_error（日付が空）・rows（期間の表）は、この本に日付の欄が無いので写していない。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+
+%% ---- その後の流れ（f(文, 条) のリスト）。成り立たない組・止まった答えだけのときは空 ----
+flow(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    その後(C, Steps, L).
+</script>
+<script type="application/json" id="law">{"242":{"t":"第二百四十二条","c":"（住民監査請求）","p":[{"n":"1","s":"普通地方公共団体の住民は、当該普通地方公共団体の長若しくは委員会若しくは委員又は当該普通地方公共団体の職員について、違法若しくは不当な公金の支出、財産の取得、管理若しくは処分、契約の締結若しくは履行若しくは債務その他の義務の負担がある（当該行為がなされることが相当の確実さをもつて予測される場合を含む。）と認めるとき、又は違法若しくは不当に公金の賦課若しくは徴収若しくは財産の管理を怠る事実（以下「怠る事実」という。）があると認めるときは、これらを証する書面を添え、監査委員に対し、監査を求め、当該行為を防止し、若しくは是正し、若しくは当該怠る事実を改め、又は当該行為若しくは怠る事実によつて当該普通地方公共団体の被つた損害を補塡するために必要な措置を講ずべきことを請求することができる。","i":[]},{"n":"2","s":"前項の規定による請求は、当該行為のあつた日又は終わつた日から一年を経過したときは、これをすることができない。ただし、正当な理由があるときは、この限りでない。","i":[]},{"n":"3","s":"第一項の規定による請求があつたときは、監査委員は、直ちに当該請求の要旨を当該普通地方公共団体の議会及び長に通知しなければならない。","i":[]},{"n":"4","s":"第一項の規定による請求があつた場合において、当該行為が違法であると思料するに足りる相当な理由があり、当該行為により当該普通地方公共団体に生ずる回復の困難な損害を避けるため緊急の必要があり、かつ、当該行為を停止することによつて人の生命又は身体に対する重大な危害の発生の防止その他公共の福祉を著しく阻害するおそれがないと認めるときは、監査委員は、当該普通地方公共団体の長その他の執行機関又は職員に対し、理由を付して次項の手続が終了するまでの間当該行為を停止すべきことを勧告することができる。この場合において、監査委員は、当該勧告の内容を第一項の規定による請求人（以下この条において「請求人」という。）に通知するとともに、これを公表しなければならない。","i":[]},{"n":"5","s":"第一項の規定による請求があつた場合には、監査委員は、監査を行い、当該請求に理由がないと認めるときは、理由を付してその旨を書面により請求人に通知するとともに、これを公表し、当該請求に理由があると認めるときは、当該普通地方公共団体の議会、長その他の執行機関又は職員に対し期間を示して必要な措置を講ずべきことを勧告するとともに、当該勧告の内容を請求人に通知し、かつ、これを公表しなければならない。","i":[]},{"n":"6","s":"前項の規定による監査委員の監査及び勧告は、第一項の規定による請求があつた日から六十日以内に行わなければならない。","i":[]},{"n":"7","s":"監査委員は、第五項の規定による監査を行うに当たつては、請求人に証拠の提出及び陳述の機会を与えなければならない。","i":[]},{"n":"8","s":"監査委員は、前項の規定による陳述の聴取を行う場合又は関係のある当該普通地方公共団体の長その他の執行機関若しくは職員の陳述の聴取を行う場合において、必要があると認めるときは、関係のある当該普通地方公共団体の長その他の執行機関若しくは職員又は請求人を立ち会わせることができる。","i":[]},{"n":"9","s":"第五項の規定による監査委員の勧告があつたときは、当該勧告を受けた議会、長その他の執行機関又は職員は、当該勧告に示された期間内に必要な措置を講ずるとともに、その旨を監査委員に通知しなければならない。この場合において、監査委員は、当該通知に係る事項を請求人に通知するとともに、これを公表しなければならない。","i":[]},{"n":"10","s":"普通地方公共団体の議会は、第一項の規定による請求があつた後に、当該請求に係る行為又は怠る事実に関する損害賠償又は不当利得返還の請求権その他の権利の放棄に関する議決をしようとするときは、あらかじめ監査委員の意見を聴かなければならない。","i":[]},{"n":"11","s":"第四項の規定による勧告、第五項の規定による監査及び勧告並びに前項の規定による意見についての決定は、監査委員の合議によるものとする。","i":[]}]},"242_2":{"t":"第二百四十二条の二","c":"（住民訴訟）","p":[{"n":"1","s":"普通地方公共団体の住民は、前条第一項の規定による請求をした場合において、同条第五項の規定による監査委員の監査の結果若しくは勧告若しくは同条第九項の規定による普通地方公共団体の議会、長その他の執行機関若しくは職員の措置に不服があるとき、又は監査委員が同条第五項の規定による監査若しくは勧告を同条第六項の期間内に行わないとき、若しくは議会、長その他の執行機関若しくは職員が同条第九項の規定による措置を講じないときは、裁判所に対し、同条第一項の請求に係る違法な行為又は怠る事実につき、訴えをもつて次に掲げる請求をすることができる。","i":[{"n":"1","t":"一","s":"当該執行機関又は職員に対する当該行為の全部又は一部の差止めの請求","sub":[]},{"n":"2","t":"二","s":"行政処分たる当該行為の取消し又は無効確認の請求","sub":[]},{"n":"3","t":"三","s":"当該執行機関又は職員に対する当該怠る事実の違法確認の請求","sub":[]},{"n":"4","t":"四","s":"当該職員又は当該行為若しくは怠る事実に係る相手方に損害賠償又は不当利得返還の請求をすることを当該普通地方公共団体の執行機関又は職員に対して求める請求。ただし、当該職員又は当該行為若しくは怠る事実に係る相手方が第二百四十三条の二の九第三項の規定による賠償の命令の対象となる者である場合には、当該賠償の命令をすることを求める請求","sub":[]}]},{"n":"2","s":"前項の規定による訴訟は、次の各号に掲げる場合の区分に応じ、当該各号に定める期間内に提起しなければならない。","i":[{"n":"1","t":"一","s":"監査委員の監査の結果又は勧告に不服がある場合　当該監査の結果又は当該勧告の内容の通知があつた日から三十日以内","sub":[]},{"n":"2","t":"二","s":"監査委員の勧告を受けた議会、長その他の執行機関又は職員の措置に不服がある場合　当該措置に係る監査委員の通知があつた日から三十日以内","sub":[]},{"n":"3","t":"三","s":"監査委員が請求をした日から六十日を経過しても監査又は勧告を行わない場合　当該六十日を経過した日から三十日以内","sub":[]},{"n":"4","t":"四","s":"監査委員の勧告を受けた議会、長その他の執行機関又は職員が措置を講じない場合　当該勧告に示された期間を経過した日から三十日以内","sub":[]}]},{"n":"3","s":"前項の期間は、不変期間とする。","i":[]},{"n":"4","s":"第一項の規定による訴訟が係属しているときは、当該普通地方公共団体の他の住民は、別訴をもつて同一の請求をすることができない。","i":[]},{"n":"5","s":"第一項の規定による訴訟は、当該普通地方公共団体の事務所の所在地を管轄する地方裁判所の管轄に専属する。","i":[]},{"n":"6","s":"第一項第一号の規定による請求に基づく差止めは、当該行為を差し止めることによつて人の生命又は身体に対する重大な危害の発生の防止その他公共の福祉を著しく阻害するおそれがあるときは、することができない。","i":[]},{"n":"7","s":"第一項第四号の規定による訴訟が提起された場合には、当該職員又は当該行為若しくは怠る事実の相手方に対して、当該普通地方公共団体の執行機関又は職員は、遅滞なく、その訴訟の告知をしなければならない。","i":[]},{"n":"8","s":"前項の訴訟告知があつたときは、第一項第四号の規定による訴訟が終了した日から六月を経過するまでの間は、当該訴訟に係る損害賠償又は不当利得返還の請求権の時効は、完成しない。","i":[]},{"n":"9","s":"民法第百五十三条第二項の規定は、前項の規定による時効の完成猶予について準用する。","i":[]},{"n":"10","s":"第一項に規定する違法な行為又は怠る事実については、民事保全法（平成元年法律第九十一号）に規定する仮処分をすることができない。","i":[]},{"n":"11","s":"第二項から前項までに定めるもののほか、第一項の規定による訴訟については、行政事件訴訟法第四十三条の規定の適用があるものとする。","i":[]},{"n":"12","s":"第一項の規定による訴訟を提起した者が勝訴（一部勝訴を含む。）した場合において、弁護士、弁護士法人又は弁護士・外国法事務弁護士共同法人に報酬を支払うべきときは、当該普通地方公共団体に対し、その報酬額の範囲内で相当と認められる額の支払を請求することができる。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"第一編　総則","a":[{"k":"1","t":"第一条","c":"","u":0},{"k":"1_2","t":"第一条の二","c":"","u":0},{"k":"1_3","t":"第一条の三","c":"","u":0},{"k":"2","t":"第二条","c":"","u":0},{"k":"3","t":"第三条","c":"","u":0},{"k":"4","t":"第四条","c":"","u":0},{"k":"4_2","t":"第四条の二","c":"","u":0}]},{"t":"第二編　普通地方公共団体 第一章　通則","a":[{"k":"5","t":"第五条","c":"","u":0},{"k":"6","t":"第六条","c":"","u":0},{"k":"6_2","t":"第六条の二","c":"","u":0},{"k":"7","t":"第七条","c":"","u":0},{"k":"7_2","t":"第七条の二","c":"","u":0},{"k":"8","t":"第八条","c":"","u":0},{"k":"8_2","t":"第八条の二","c":"","u":0},{"k":"9","t":"第九条","c":"","u":0},{"k":"9_2","t":"第九条の二","c":"","u":0},{"k":"9_3","t":"第九条の三","c":"","u":0},{"k":"9_4","t":"第九条の四","c":"","u":0},{"k":"9_5","t":"第九条の五","c":"","u":0}]},{"t":"第二編　普通地方公共団体 第二章　住民","a":[{"k":"10","t":"第十条","c":"","u":0},{"k":"11","t":"第十一条","c":"","u":0},{"k":"12","t":"第十二条","c":"","u":0},{"k":"13","t":"第十三条","c":"","u":0},{"k":"13_2","t":"第十三条の二","c":"","u":0}]},{"t":"第二編　普通地方公共団体 第三章　条例及び規則","a":[{"k":"14","t":"第十四条","c":"","u":0},{"k":"15","t":"第十五条","c":"","u":0},{"k":"16","t":"第十六条","c":"","u":0}]},{"t":"第二編　普通地方公共団体 第四章　選挙","a":[{"k":"17","t":"第十七条","c":"","u":0},{"k":"18","t":"第十八条","c":"","u":0},{"k":"19","t":"第十九条","c":"","u":0},{"k":"20:73","t":"第二十条乃至第七十三条","c":"","u":2}]},{"t":"第二編　普通地方公共団体 第五章　直接請求","a":[{"k":"74","t":"第七十四条","c":"","u":0},{"k":"74_2","t":"第七十四条の二","c":"","u":0},{"k":"74_3","t":"第七十四条の三","c":"","u":0},{"k":"74_4","t":"第七十四条の四","c":"","u":0},{"k":"75","t":"第七十五条","c":"","u":0},{"k":"76","t":"第七十六条","c":"","u":0},{"k":"77","t":"第七十七条","c":"","u":0},{"k":"78","t":"第七十八条","c":"","u":0},{"k":"79","t":"第七十九条","c":"","u":0},{"k":"80","t":"第八十条","c":"","u":0},{"k":"81","t":"第八十一条","c":"","u":0},{"k":"82","t":"第八十二条","c":"","u":0},{"k":"83","t":"第八十三条","c":"","u":0},{"k":"84","t":"第八十四条","c":"","u":0},{"k":"85","t":"第八十五条","c":"","u":0},{"k":"86","t":"第八十六条","c":"","u":0},{"k":"87","t":"第八十七条","c":"","u":0},{"k":"88","t":"第八十八条","c":"","u":0}]},{"t":"第二編　普通地方公共団体 第六章　議会","a":[{"k":"89","t":"第八十九条","c":"","u":0},{"k":"90","t":"第九十条","c":"","u":0},{"k":"91","t":"第九十一条","c":"","u":0},{"k":"92","t":"第九十二条","c":"","u":0},{"k":"92_2","t":"第九十二条の二","c":"","u":0},{"k":"93","t":"第九十三条","c":"","u":0},{"k":"94","t":"第九十四条","c":"","u":0},{"k":"95","t":"第九十五条","c":"","u":0},{"k":"96","t":"第九十六条","c":"","u":0},{"k":"97","t":"第九十七条","c":"","u":0},{"k":"98","t":"第九十八条","c":"","u":0},{"k":"99","t":"第九十九条","c":"","u":0},{"k":"100","t":"第百条","c":"","u":0},{"k":"100_2","t":"第百条の二","c":"","u":0},{"k":"101","t":"第百一条","c":"","u":0},{"k":"102","t":"第百二条","c":"","u":0},{"k":"102_2","t":"第百二条の二","c":"","u":0},{"k":"103","t":"第百三条","c":"","u":0},{"k":"104","t":"第百四条","c":"","u":0},{"k":"105","t":"第百五条","c":"","u":0},{"k":"105_2","t":"第百五条の二","c":"","u":0},{"k":"106","t":"第百六条","c":"","u":0},{"k":"107","t":"第百七条","c":"","u":0},{"k":"108","t":"第百八条","c":"","u":0},{"k":"109","t":"第百九条","c":"","u":0},{"k":"110:111","t":"第百十条及び第百十一条","c":"","u":2},{"k":"112","t":"第百十二条","c":"","u":0},{"k":"113","t":"第百十三条","c":"","u":0},{"k":"114","t":"第百十四条","c":"","u":0},{"k":"115","t":"第百十五条","c":"","u":0},{"k":"115_2","t":"第百十五条の二","c":"","u":0},{"k":"115_3","t":"第百十五条の三","c":"","u":0},{"k":"116","t":"第百十六条","c":"","u":0},{"k":"117","t":"第百十七条","c":"","u":0},{"k":"118","t":"第百十八条","c":"","u":0},{"k":"119","t":"第百十九条","c":"","u":0},{"k":"120","t":"第百二十条","c":"","u":0},{"k":"121","t":"第百二十一条","c":"","u":0},{"k":"122","t":"第百二十二条","c":"","u":0},{"k":"123","t":"第百二十三条","c":"","u":0},{"k":"124","t":"第百二十四条","c":"","u":0},{"k":"125","t":"第百二十五条","c":"","u":0},{"k":"126","t":"第百二十六条","c":"","u":0},{"k":"127","t":"第百二十七条","c":"","u":0},{"k":"128","t":"第百二十八条","c":"","u":0},{"k":"129","t":"第百二十九条","c":"","u":0},{"k":"130","t":"第百三十条","c":"","u":0},{"k":"131","t":"第百三十一条","c":"","u":0},{"k":"132","t":"第百三十二条","c":"","u":0},{"k":"133","t":"第百三十三条","c":"","u":0},{"k":"134","t":"第百三十四条","c":"","u":0},{"k":"135","t":"第百三十五条","c":"","u":0},{"k":"136","t":"第百三十六条","c":"","u":0},{"k":"137","t":"第百三十七条","c":"","u":0},{"k":"138","t":"第百三十八条","c":"","u":0},{"k":"138_2","t":"第百三十八条の二","c":"","u":0}]},{"t":"第二編　普通地方公共団体 第七章　執行機関","a":[{"k":"138_2_2","t":"第百三十八条の二の二","c":"","u":0},{"k":"138_3","t":"第百三十八条の三","c":"","u":0},{"k":"138_4","t":"第百三十八条の四","c":"","u":0},{"k":"139","t":"第百三十九条","c":"","u":0},{"k":"140","t":"第百四十条","c":"","u":0},{"k":"141","t":"第百四十一条","c":"","u":0},{"k":"142","t":"第百四十二条","c":"","u":0},{"k":"143","t":"第百四十三条","c":"","u":0},{"k":"144","t":"第百四十四条","c":"","u":0},{"k":"145","t":"第百四十五条","c":"","u":0},{"k":"146","t":"第百四十六条","c":"","u":2},{"k":"147","t":"第百四十七条","c":"","u":0},{"k":"148","t":"第百四十八条","c":"","u":0},{"k":"149","t":"第百四十九条","c":"","u":0},{"k":"150","t":"第百五十条","c":"","u":0},{"k":"151","t":"第百五十一条","c":"","u":2},{"k":"152","t":"第百五十二条","c":"","u":0},{"k":"153","t":"第百五十三条","c":"","u":0},{"k":"154","t":"第百五十四条","c":"","u":0},{"k":"154_2","t":"第百五十四条の二","c":"","u":0},{"k":"155","t":"第百五十五条","c":"","u":0},{"k":"156","t":"第百五十六条","c":"","u":0},{"k":"157","t":"第百五十七条","c":"","u":0},{"k":"158","t":"第百五十八条","c":"","u":0},{"k":"159","t":"第百五十九条","c":"","u":0},{"k":"160","t":"第百六十条","c":"","u":0},{"k":"161","t":"第百六十一条","c":"","u":0},{"k":"162","t":"第百六十二条","c":"","u":0},{"k":"163","t":"第百六十三条","c":"","u":0},{"k":"164","t":"第百六十四条","c":"","u":0},{"k":"165","t":"第百六十五条","c":"","u":0},{"k":"166","t":"第百六十六条","c":"","u":0},{"k":"167","t":"第百六十七条","c":"","u":0},{"k":"168","t":"第百六十八条","c":"","u":0},{"k":"169","t":"第百六十九条","c":"","u":0},{"k":"170","t":"第百七十条","c":"","u":0},{"k":"171","t":"第百七十一条","c":"","u":0},{"k":"172","t":"第百七十二条","c":"","u":0},{"k":"173","t":"第百七十三条","c":"","u":2},{"k":"174","t":"第百七十四条","c":"","u":0},{"k":"175","t":"第百七十五条","c":"","u":0},{"k":"176","t":"第百七十六条","c":"","u":0},{"k":"177","t":"第百七十七条","c":"","u":0},{"k":"178","t":"第百七十八条","c":"","u":0},{"k":"179","t":"第百七十九条","c":"","u":0},{"k":"180","t":"第百八十条","c":"","u":0},{"k":"180_2","t":"第百八十条の二","c":"","u":0},{"k":"180_3","t":"第百八十条の三","c":"","u":0},{"k":"180_4","t":"第百八十条の四","c":"","u":0},{"k":"180_5","t":"第百八十条の五","c":"","u":0},{"k":"180_6","t":"第百八十条の六","c":"","u":0},{"k":"180_7","t":"第百八十条の七","c":"","u":0},{"k":"180_8","t":"第百八十条の八","c":"","u":0},{"k":"180_9","t":"第百八十条の九","c":"","u":0},{"k":"181","t":"第百八十一条","c":"","u":0},{"k":"182","t":"第百八十二条","c":"","u":0},{"k":"183","t":"第百八十三条","c":"","u":0},{"k":"184","t":"第百八十四条","c":"","u":0},{"k":"184_2","t":"第百八十四条の二","c":"","u":0},{"k":"185","t":"第百八十五条","c":"","u":0},{"k":"185_2","t":"第百八十五条の二","c":"","u":0},{"k":"186","t":"第百八十六条","c":"","u":0},{"k":"187","t":"第百八十七条","c":"","u":0},{"k":"188","t":"第百八十八条","c":"","u":0},{"k":"189","t":"第百八十九条","c":"","u":0},{"k":"190","t":"第百九十条","c":"","u":0},{"k":"191","t":"第百九十一条","c":"","u":0},{"k":"192","t":"第百九十二条","c":"","u":0},{"k":"193","t":"第百九十三条","c":"","u":0},{"k":"194","t":"第百九十四条","c":"","u":0},{"k":"195","t":"第百九十五条","c":"","u":0},{"k":"196","t":"第百九十六条","c":"","u":0},{"k":"197","t":"第百九十七条","c":"","u":0},{"k":"197_2","t":"第百九十七条の二","c":"","u":0},{"k":"198","t":"第百九十八条","c":"","u":0},{"k":"198_2","t":"第百九十八条の二","c":"","u":0},{"k":"198_3","t":"第百九十八条の三","c":"","u":0},{"k":"198_4","t":"第百九十八条の四","c":"","u":0},{"k":"199","t":"第百九十九条","c":"","u":0},{"k":"199_2","t":"第百九十九条の二","c":"","u":0},{"k":"199_3","t":"第百九十九条の三","c":"","u":0},{"k":"200","t":"第二百条","c":"","u":0},{"k":"200_2","t":"第二百条の二","c":"","u":0},{"k":"201","t":"第二百一条","c":"","u":0},{"k":"202","t":"第二百二条","c":"","u":0},{"k":"202_2","t":"第二百二条の二","c":"","u":0},{"k":"202_3","t":"第二百二条の三","c":"","u":0},{"k":"202_4","t":"第二百二条の四","c":"（地域自治区の設置）","u":0},{"k":"202_5","t":"第二百二条の五","c":"（地域協議会の設置及び構成員）","u":0},{"k":"202_6","t":"第二百二条の六","c":"（地域協議会の会長及び副会長）","u":0},{"k":"202_7","t":"第二百二条の七","c":"（地域協議会の権限）","u":0},{"k":"202_8","t":"第二百二条の八","c":"（地域協議会の組織及び運営）","u":0},{"k":"202_9","t":"第二百二条の九","c":"（政令への委任）","u":0}]},{"t":"第二編　普通地方公共団体 第八章　給与その他の給付","a":[{"k":"203","t":"第二百三条","c":"","u":0},{"k":"203_2","t":"第二百三条の二","c":"","u":0},{"k":"204","t":"第二百四条","c":"","u":0},{"k":"204_2","t":"第二百四条の二","c":"","u":0},{"k":"205","t":"第二百五条","c":"","u":0},{"k":"206","t":"第二百六条","c":"","u":0},{"k":"207","t":"第二百七条","c":"","u":0}]},{"t":"第二編　普通地方公共団体 第九章　財務","a":[{"k":"208","t":"第二百八条","c":"（会計年度及びその独立の原則）","u":0},{"k":"209","t":"第二百九条","c":"（会計の区分）","u":0},{"k":"210","t":"第二百十条","c":"（総計予算主義の原則）","u":0},{"k":"211","t":"第二百十一条","c":"（予算の調製及び議決）","u":0},{"k":"212","t":"第二百十二条","c":"（継続費）","u":0},{"k":"213","t":"第二百十三条","c":"（繰越明許費）","u":0},{"k":"214","t":"第二百十四条","c":"（債務負担行為）","u":0},{"k":"215","t":"第二百十五条","c":"（予算の内容）","u":0},{"k":"216","t":"第二百十六条","c":"（歳入歳出予算の区分）","u":0},{"k":"217","t":"第二百十七条","c":"（予備費）","u":0},{"k":"218","t":"第二百十八条","c":"（補正予算、暫定予算等）","u":0},{"k":"219","t":"第二百十九条","c":"（予算の送付及び公表）","u":0},{"k":"220","t":"第二百二十条","c":"（予算の執行及び事故繰越し）","u":0},{"k":"221","t":"第二百二十一条","c":"（予算の執行に関する長の調査権等）","u":0},{"k":"222","t":"第二百二十二条","c":"（予算を伴う条例、規則等についての制限）","u":0},{"k":"223","t":"第二百二十三条","c":"（地方税）","u":0},{"k":"224","t":"第二百二十四条","c":"（分担金）","u":0},{"k":"225","t":"第二百二十五条","c":"（使用料）","u":0},{"k":"226","t":"第二百二十六条","c":"（旧慣使用の使用料及び加入金）","u":0},{"k":"227","t":"第二百二十七条","c":"（手数料）","u":0},{"k":"228","t":"第二百二十八条","c":"（分担金等に関する規制及び罰則）","u":0},{"k":"229","t":"第二百二十九条","c":"（分担金等の徴収に関する処分についての審査請求）","u":0},{"k":"230","t":"第二百三十条","c":"（地方債）","u":0},{"k":"231","t":"第二百三十一条","c":"（歳入の収入の方法）","u":0},{"k":"231_2","t":"第二百三十一条の二","c":"（証紙による収入の方法等）","u":0},{"k":"231_2_2","t":"第二百三十一条の二の二","c":"（指定納付受託者に対する納付の委託）","u":0},{"k":"231_2_3","t":"第二百三十一条の二の三","c":"（指定納付受託者）","u":0},{"k":"231_2_4","t":"第二百三十一条の二の四","c":"（納付事務の委託）","u":0},{"k":"231_2_5","t":"第二百三十一条の二の五","c":"（指定納付受託者の納付）","u":0},{"k":"231_2_6","t":"第二百三十一条の二の六","c":"（指定納付受託者の帳簿保存等の義務）","u":0},{"k":"231_2_7","t":"第二百三十一条の二の七","c":"（指定納付受託者の指定の取消し）","u":0},{"k":"231_3","t":"第二百三十一条の三","c":"（督促、滞納処分等）","u":0},{"k":"231_4","t":"第二百三十一条の四","c":"（指定納付受託者等からの歳入等の徴収等）","u":0},{"k":"232","t":"第二百三十二条","c":"（経費の支弁等）","u":0},{"k":"232_2","t":"第二百三十二条の二","c":"（寄附又は補助）","u":0},{"k":"232_3","t":"第二百三十二条の三","c":"（支出負担行為）","u":0},{"k":"232_4","t":"第二百三十二条の四","c":"（支出の方法）","u":0},{"k":"232_5","t":"第二百三十二条の五","c":"","u":0},{"k":"232_6","t":"第二百三十二条の六","c":"（小切手の振出し及び公金振替書の交付）","u":0},{"k":"233","t":"第二百三十三条","c":"（決算）","u":0},{"k":"233_2","t":"第二百三十三条の二","c":"（歳計剰余金の処分）","u":0},{"k":"234","t":"第二百三十四条","c":"（契約の締結）","u":0},{"k":"234_2","t":"第二百三十四条の二","c":"（契約の履行の確保）","u":0},{"k":"234_3","t":"第二百三十四条の三","c":"（長期継続契約）","u":0},{"k":"235","t":"第二百三十五条","c":"（金融機関の指定）","u":0},{"k":"235_2","t":"第二百三十五条の二","c":"（現金出納の検査及び公金の収納等の監査）","u":0},{"k":"235_3","t":"第二百三十五条の三","c":"（一時借入金）","u":0},{"k":"235_4","t":"第二百三十五条の四","c":"（現金及び有価証券の保管）","u":0},{"k":"235_5","t":"第二百三十五条の五","c":"（出納の閉鎖）","u":0},{"k":"236","t":"第二百三十六条","c":"（金銭債権の消滅時効）","u":0},{"k":"237","t":"第二百三十七条","c":"（財産の管理及び処分）","u":0},{"k":"238","t":"第二百三十八条","c":"（公有財産の範囲及び分類）","u":0},{"k":"238_2","t":"第二百三十八条の二","c":"（公有財産に関する長の総合調整権）","u":0},{"k":"238_3","t":"第二百三十八条の三","c":"（職員の行為の制限）","u":0},{"k":"238_4","t":"第二百三十八条の四","c":"（行政財産の管理及び処分）","u":0},{"k":"238_5","t":"第二百三十八条の五","c":"（普通財産の管理及び処分）","u":0},{"k":"238_6","t":"第二百三十八条の六","c":"（旧慣による公有財産の使用）","u":0},{"k":"238_7","t":"第二百三十八条の七","c":"（行政財産を使用する権利に関する処分についての審査請求）","u":0},{"k":"239","t":"第二百三十九条","c":"（物品）","u":0},{"k":"240","t":"第二百四十条","c":"（債権）","u":0},{"k":"241","t":"第二百四十一条","c":"（基金）","u":0},{"k":"242","t":"第二百四十二条","c":"（住民監査請求）","u":1},{"k":"242_2","t":"第二百四十二条の二","c":"（住民訴訟）","u":1},{"k":"242_3","t":"第二百四十二条の三","c":"（訴訟の提起）","u":0},{"k":"243","t":"第二百四十三条","c":"（私人の公金取扱いの制限）","u":0},{"k":"243_2","t":"第二百四十三条の二","c":"（指定公金事務取扱者）","u":0},{"k":"243_2_2","t":"第二百四十三条の二の二","c":"（指定公金事務取扱者の帳簿保存等の義務）","u":0},{"k":"243_2_3","t":"第二百四十三条の二の三","c":"（指定公金事務取扱者の指定の取消し）","u":0},{"k":"243_2_4","t":"第二百四十三条の二の四","c":"（公金の徴収の委託）","u":0},{"k":"243_2_5","t":"第二百四十三条の二の五","c":"（公金の収納の委託）","u":0},{"k":"243_2_6","t":"第二百四十三条の二の六","c":"（公金の支出の委託）","u":0},{"k":"243_2_7","t":"第二百四十三条の二の七","c":"（特定歳入等の収納）","u":0},{"k":"243_2_8","t":"第二百四十三条の二の八","c":"（普通地方公共団体の長等の損害賠償責任の一部免責）","u":0},{"k":"243_2_9","t":"第二百四十三条の二の九","c":"（職員の賠償責任）","u":0},{"k":"243_3","t":"第二百四十三条の三","c":"（財政状況の公表等）","u":0},{"k":"243_4","t":"第二百四十三条の四","c":"（普通地方公共団体の財政の運営に関する事項等）","u":0},{"k":"243_5","t":"第二百四十三条の五","c":"（政令への委任）","u":0}]},{"t":"第二編　普通地方公共団体 第十章　公の施設","a":[{"k":"244","t":"第二百四十四条","c":"（公の施設）","u":0},{"k":"244_2","t":"第二百四十四条の二","c":"（公の施設の設置、管理及び廃止）","u":0},{"k":"244_3","t":"第二百四十四条の三","c":"（公の施設の区域外設置及び他の団体の公の施設の利用）","u":0},{"k":"244_4","t":"第二百四十四条の四","c":"（公の施設を利用する権利に関する処分についての審査請求）","u":0}]},{"t":"第二編　普通地方公共団体 第十一章　情報システム","a":[{"k":"244_5","t":"第二百四十四条の五","c":"（情報システムの利用に係る基本原則）","u":0},{"k":"244_6","t":"第二百四十四条の六","c":"（サイバーセキュリティを確保するための方針等）","u":0}]},{"t":"第二編　普通地方公共団体 第十二章　国と普通地方公共団体との関係及び普通地方公共団体相互間の関係","a":[{"k":"245","t":"第二百四十五条","c":"（関与の意義）","u":0},{"k":"245_2","t":"第二百四十五条の二","c":"（関与の法定主義）","u":0},{"k":"245_3","t":"第二百四十五条の三","c":"（関与の基本原則）","u":0},{"k":"245_4","t":"第二百四十五条の四","c":"（技術的な助言及び勧告並びに資料の提出の要求）","u":0},{"k":"245_5","t":"第二百四十五条の五","c":"（是正の要求）","u":0},{"k":"245_6","t":"第二百四十五条の六","c":"（是正の勧告）","u":0},{"k":"245_7","t":"第二百四十五条の七","c":"（是正の指示）","u":0},{"k":"245_8","t":"第二百四十五条の八","c":"（代執行等）","u":0},{"k":"245_9","t":"第二百四十五条の九","c":"（処理基準）","u":0},{"k":"246","t":"第二百四十六条","c":"（普通地方公共団体に対する国又は都道府県の関与の手続の適用）","u":0},{"k":"247","t":"第二百四十七条","c":"（助言等の方式等）","u":0},{"k":"248","t":"第二百四十八条","c":"（資料の提出の要求等の方式）","u":0},{"k":"249","t":"第二百四十九条","c":"（是正の要求等の方式）","u":0},{"k":"250","t":"第二百五十条","c":"（協議の方式）","u":0},{"k":"250_2","t":"第二百五十条の二","c":"（許認可等の基準）","u":0},{"k":"250_3","t":"第二百五十条の三","c":"（許認可等の標準処理期間）","u":0},{"k":"250_4","t":"第二百五十条の四","c":"（許認可等の取消し等の方式）","u":0},{"k":"250_5","t":"第二百五十条の五","c":"（届出）","u":0},{"k":"250_6","t":"第二百五十条の六","c":"（国の行政機関が自治事務と同一の事務を自らの権限に属する事務として処理する場合の方式）","u":0},{"k":"250_7","t":"第二百五十条の七","c":"（設置及び権限）","u":0},{"k":"250_8","t":"第二百五十条の八","c":"（組織）","u":0},{"k":"250_9","t":"第二百五十条の九","c":"（委員）","u":0},{"k":"250_10","t":"第二百五十条の十","c":"（委員長）","u":0},{"k":"250_11","t":"第二百五十条の十一","c":"（会議）","u":0},{"k":"250_12","t":"第二百五十条の十二","c":"（政令への委任）","u":0},{"k":"250_13","t":"第二百五十条の十三","c":"（国の関与に関する審査の申出）","u":0},{"k":"250_14","t":"第二百五十条の十四","c":"（審査及び勧告）","u":0},{"k":"250_15","t":"第二百五十条の十五","c":"（関係行政機関の参加）","u":0},{"k":"250_16","t":"第二百五十条の十六","c":"（証拠調べ）","u":0},{"k":"250_17","t":"第二百五十条の十七","c":"（国の関与に関する審査の申出の取下げ）","u":0},{"k":"250_18","t":"第二百五十条の十八","c":"（国の行政庁の措置等）","u":0},{"k":"250_19","t":"第二百五十条の十九","c":"（調停）","u":0},{"k":"250_20","t":"第二百五十条の二十","c":"（政令への委任）","u":0},{"k":"251","t":"第二百五十一条","c":"（自治紛争処理委員）","u":0},{"k":"251_2","t":"第二百五十一条の二","c":"（調停）","u":0},{"k":"251_3","t":"第二百五十一条の三","c":"（審査及び勧告）","u":0},{"k":"251_3_2","t":"第二百五十一条の三の二","c":"（処理方策の提示）","u":0},{"k":"251_4","t":"第二百五十一条の四","c":"（政令への委任）","u":0},{"k":"251_5","t":"第二百五十一条の五","c":"（国の関与に関する訴えの提起）","u":0},{"k":"251_6","t":"第二百五十一条の六","c":"（都道府県の関与に関する訴えの提起）","u":0},{"k":"251_7","t":"第二百五十一条の七","c":"（普通地方公共団体の不作為に関する国の訴えの提起）","u":0},{"k":"252","t":"第二百五十二条","c":"（市町村の不作為に関する都道府県の訴えの提起）","u":0},{"k":"252_2","t":"第二百五十二条の二","c":"（連携協約）","u":0},{"k":"252_2_2","t":"第二百五十二条の二の二","c":"（協議会の設置）","u":0},{"k":"252_3","t":"第二百五十二条の三","c":"（協議会の組織）","u":0},{"k":"252_4","t":"第二百五十二条の四","c":"（協議会の規約）","u":0},{"k":"252_5","t":"第二百五十二条の五","c":"（協議会の事務の管理及び執行の効力）","u":0},{"k":"252_6","t":"第二百五十二条の六","c":"（協議会の組織の変更及び廃止）","u":0},{"k":"252_6_2","t":"第二百五十二条の六の二","c":"（脱退による協議会の組織の変更及び廃止の特例）","u":0},{"k":"252_7","t":"第二百五十二条の七","c":"（機関等の共同設置）","u":0},{"k":"252_7_2","t":"第二百五十二条の七の二","c":"（脱退による機関等の共同設置の変更及び廃止の特例）","u":0},{"k":"252_8","t":"第二百五十二条の八","c":"（機関の共同設置に関する規約）","u":0},{"k":"252_9","t":"第二百五十二条の九","c":"（共同設置する機関の委員等の選任及び身分取扱い）","u":0},{"k":"252_10","t":"第二百五十二条の十","c":"（共同設置する機関の委員等の解職請求）","u":0},{"k":"252_11","t":"第二百五十二条の十一","c":"（共同設置する機関の補助職員等）","u":0},{"k":"252_12","t":"第二百五十二条の十二","c":"（共同設置する機関に対する法令の適用）","u":0},{"k":"252_13","t":"第二百五十二条の十三","c":"（議会事務局等の共同設置に関する準用規定）","u":0},{"k":"252_14","t":"第二百五十二条の十四","c":"（事務の委託）","u":0},{"k":"252_15","t":"第二百五十二条の十五","c":"（事務の委託の規約）","u":0},{"k":"252_16","t":"第二百五十二条の十六","c":"（事務の委託の効果）","u":0},{"k":"252_16_2","t":"第二百五十二条の十六の二","c":"（事務の代替執行）","u":0},{"k":"252_16_3","t":"第二百五十二条の十六の三","c":"（事務の代替執行の規約）","u":0},{"k":"252_16_4","t":"第二百五十二条の十六の四","c":"（代替執行事務の管理及び執行の効力）","u":0},{"k":"252_17","t":"第二百五十二条の十七","c":"（職員の派遣）","u":0},{"k":"252_17_2","t":"第二百五十二条の十七の二","c":"（条例による事務処理の特例）","u":0},{"k":"252_17_3","t":"第二百五十二条の十七の三","c":"（条例による事務処理の特例の効果）","u":0},{"k":"252_17_4","t":"第二百五十二条の十七の四","c":"（是正の要求等の特則）","u":0},{"k":"252_17_5","t":"第二百五十二条の十七の五","c":"（組織及び運営の合理化に係る助言及び勧告並びに資料の提出の要求）","u":0},{"k":"252_17_6","t":"第二百五十二条の十七の六","c":"（財務に係る実地検査）","u":0},{"k":"252_17_7","t":"第二百五十二条の十七の七","c":"（市町村に関する調査）","u":0},{"k":"252_17_8","t":"第二百五十二条の十七の八","c":"（長の臨時代理者）","u":0},{"k":"252_17_9","t":"第二百五十二条の十七の九","c":"（臨時選挙管理委員）","u":0},{"k":"252_17_10","t":"第二百五十二条の十七の十","c":"（臨時選挙管理委員の給与）","u":0},{"k":"252_18","t":"第二百五十二条の十八","c":"（在職期間の通算）","u":0},{"k":"252_18_2","t":"第二百五十二条の十八の二","c":"","u":0}]},{"t":"第二編　普通地方公共団体 第十三章　大都市等に関する特例","a":[{"k":"252_19","t":"第二百五十二条の十九","c":"（指定都市の権能）","u":0},{"k":"252_20","t":"第二百五十二条の二十","c":"（区の設置）","u":0},{"k":"252_20_2","t":"第二百五十二条の二十の二","c":"（総合区の設置）","u":0},{"k":"252_21","t":"第二百五十二条の二十一","c":"（政令への委任）","u":0},{"k":"252_21_2","t":"第二百五十二条の二十一の二","c":"（指定都市都道府県調整会議）","u":0},{"k":"252_21_3","t":"第二百五十二条の二十一の三","c":"（指定都市と包括都道府県の間の協議に係る勧告）","u":0},{"k":"252_21_4","t":"第二百五十二条の二十一の四","c":"（指定都市都道府県勧告調整委員）","u":0},{"k":"252_21_5","t":"第二百五十二条の二十一の五","c":"（政令への委任）","u":0},{"k":"252_22","t":"第二百五十二条の二十二","c":"（中核市の権能）","u":0},{"k":"252_23","t":"第二百五十二条の二十三","c":"","u":2},{"k":"252_24","t":"第二百五十二条の二十四","c":"（中核市の指定に係る手続）","u":0},{"k":"252_25","t":"第二百五十二条の二十五","c":"（政令への委任）","u":0},{"k":"252_26","t":"第二百五十二条の二十六","c":"（指定都市の指定があつた場合の取扱い）","u":0},{"k":"252_26_2","t":"第二百五十二条の二十六の二","c":"（中核市の指定に係る手続の特例）","u":0}]},{"t":"第二編　普通地方公共団体 第十四章　国民の安全に重大な影響を及ぼす事態における国と普通地方公共団体との関係等の特例","a":[{"k":"252_26_3","t":"第二百五十二条の二十六の三","c":"（資料及び意見の提出の要求）","u":0},{"k":"252_26_4","t":"第二百五十二条の二十六の四","c":"（事務処理の調整の指示）","u":0},{"k":"252_26_5","t":"第二百五十二条の二十六の五","c":"（生命等の保護の措置に関する指示）","u":0},{"k":"252_26_6","t":"第二百五十二条の二十六の六","c":"（普通地方公共団体相互間の応援の要求）","u":0},{"k":"252_26_7","t":"第二百五十二条の二十六の七","c":"（都道府県による応援の要求及び指示）","u":0},{"k":"252_26_8","t":"第二百五十二条の二十六の八","c":"（国による応援の要求及び指示等）","u":0},{"k":"252_26_9","t":"第二百五十二条の二十六の九","c":"（職員の派遣のあつせん）","u":0},{"k":"252_26_10","t":"第二百五十二条の二十六の十","c":"（職員の派遣義務）","u":0}]},{"t":"第二編　普通地方公共団体 第十五章　外部監査契約に基づく監査","a":[{"k":"252_27","t":"第二百五十二条の二十七","c":"（外部監査契約）","u":0},{"k":"252_28","t":"第二百五十二条の二十八","c":"（外部監査契約を締結できる者）","u":0},{"k":"252_29","t":"第二百五十二条の二十九","c":"（特定の事件についての監査の制限）","u":0},{"k":"252_30","t":"第二百五十二条の三十","c":"（監査の実施に伴う外部監査人と監査委員相互間の配慮）","u":0},{"k":"252_31","t":"第二百五十二条の三十一","c":"（監査の実施に伴う外部監査人の義務）","u":0},{"k":"252_32","t":"第二百五十二条の三十二","c":"（外部監査人の監査の事務の補助）","u":0},{"k":"252_33","t":"第二百五十二条の三十三","c":"（外部監査人の監査への協力）","u":0},{"k":"252_34","t":"第二百五十二条の三十四","c":"（議会による説明の要求又は意見の陳述）","u":0},{"k":"252_35","t":"第二百五十二条の三十五","c":"（外部監査契約の解除）","u":0},{"k":"252_36","t":"第二百五十二条の三十六","c":"（包括外部監査契約の締結）","u":0},{"k":"252_37","t":"第二百五十二条の三十七","c":"（包括外部監査人の監査）","u":0},{"k":"252_38","t":"第二百五十二条の三十八","c":"","u":0},{"k":"252_39","t":"第二百五十二条の三十九","c":"（第七十五条の規定による監査の特例）","u":0},{"k":"252_40","t":"第二百五十二条の四十","c":"（第九十八条第二項の規定による監査の特例）","u":0},{"k":"252_41","t":"第二百五十二条の四十一","c":"（第百九十九条第六項の規定による監査の特例）","u":0},{"k":"252_42","t":"第二百五十二条の四十二","c":"（第百九十九条第七項の規定による監査の特例）","u":0},{"k":"252_43","t":"第二百五十二条の四十三","c":"（住民監査請求等の特例）","u":0},{"k":"252_44","t":"第二百五十二条の四十四","c":"（個別外部監査契約の解除）","u":0},{"k":"252_45","t":"第二百五十二条の四十五","c":"（一部事務組合等に関する特例）","u":0},{"k":"252_46","t":"第二百五十二条の四十六","c":"（政令への委任）","u":0}]},{"t":"第二編　普通地方公共団体 第十六章　補則","a":[{"k":"253","t":"第二百五十三条","c":"","u":0},{"k":"254","t":"第二百五十四条","c":"","u":0},{"k":"255","t":"第二百五十五条","c":"","u":0},{"k":"255_2","t":"第二百五十五条の二","c":"","u":0},{"k":"255_3","t":"第二百五十五条の三","c":"","u":0},{"k":"255_4","t":"第二百五十五条の四","c":"","u":0},{"k":"255_5","t":"第二百五十五条の五","c":"","u":0},{"k":"256","t":"第二百五十六条","c":"","u":0},{"k":"257","t":"第二百五十七条","c":"","u":0},{"k":"258","t":"第二百五十八条","c":"","u":0},{"k":"259","t":"第二百五十九条","c":"","u":0},{"k":"260","t":"第二百六十条","c":"","u":0},{"k":"260_2","t":"第二百六十条の二","c":"","u":0},{"k":"260_3","t":"第二百六十条の三","c":"","u":0},{"k":"260_4","t":"第二百六十条の四","c":"","u":0},{"k":"260_5","t":"第二百六十条の五","c":"","u":0},{"k":"260_6","t":"第二百六十条の六","c":"","u":0},{"k":"260_7","t":"第二百六十条の七","c":"","u":0},{"k":"260_8","t":"第二百六十条の八","c":"","u":0},{"k":"260_9","t":"第二百六十条の九","c":"","u":0},{"k":"260_10","t":"第二百六十条の十","c":"","u":0},{"k":"260_11","t":"第二百六十条の十一","c":"","u":0},{"k":"260_12","t":"第二百六十条の十二","c":"","u":0},{"k":"260_13","t":"第二百六十条の十三","c":"","u":0},{"k":"260_14","t":"第二百六十条の十四","c":"","u":0},{"k":"260_15","t":"第二百六十条の十五","c":"","u":0},{"k":"260_16","t":"第二百六十条の十六","c":"","u":0},{"k":"260_17","t":"第二百六十条の十七","c":"","u":0},{"k":"260_18","t":"第二百六十条の十八","c":"","u":0},{"k":"260_19","t":"第二百六十条の十九","c":"","u":0},{"k":"260_19_2","t":"第二百六十条の十九の二","c":"","u":0},{"k":"260_20","t":"第二百六十条の二十","c":"","u":0},{"k":"260_21","t":"第二百六十条の二十一","c":"","u":0},{"k":"260_22","t":"第二百六十条の二十二","c":"","u":0},{"k":"260_23","t":"第二百六十条の二十三","c":"","u":0},{"k":"260_24","t":"第二百六十条の二十四","c":"","u":0},{"k":"260_25","t":"第二百六十条の二十五","c":"","u":0},{"k":"260_26","t":"第二百六十条の二十六","c":"","u":0},{"k":"260_27","t":"第二百六十条の二十七","c":"","u":0},{"k":"260_28","t":"第二百六十条の二十八","c":"","u":0},{"k":"260_29","t":"第二百六十条の二十九","c":"","u":0},{"k":"260_30","t":"第二百六十条の三十","c":"","u":0},{"k":"260_31","t":"第二百六十条の三十一","c":"","u":0},{"k":"260_32","t":"第二百六十条の三十二","c":"","u":0},{"k":"260_33","t":"第二百六十条の三十三","c":"","u":0},{"k":"260_34","t":"第二百六十条の三十四","c":"","u":0},{"k":"260_35","t":"第二百六十条の三十五","c":"","u":0},{"k":"260_36","t":"第二百六十条の三十六","c":"","u":0},{"k":"260_37","t":"第二百六十条の三十七","c":"","u":0},{"k":"260_38","t":"第二百六十条の三十八","c":"","u":0},{"k":"260_39","t":"第二百六十条の三十九","c":"","u":0},{"k":"260_40","t":"第二百六十条の四十","c":"","u":0},{"k":"260_41","t":"第二百六十条の四十一","c":"","u":0},{"k":"260_42","t":"第二百六十条の四十二","c":"","u":0},{"k":"260_43","t":"第二百六十条の四十三","c":"","u":0},{"k":"260_44","t":"第二百六十条の四十四","c":"","u":0},{"k":"260_45","t":"第二百六十条の四十五","c":"","u":0},{"k":"260_46","t":"第二百六十条の四十六","c":"","u":0},{"k":"260_47","t":"第二百六十条の四十七","c":"","u":0},{"k":"260_48","t":"第二百六十条の四十八","c":"","u":0},{"k":"260_49","t":"第二百六十条の四十九","c":"","u":0},{"k":"261","t":"第二百六十一条","c":"","u":0},{"k":"262","t":"第二百六十二条","c":"","u":0},{"k":"263","t":"第二百六十三条","c":"","u":0},{"k":"263_2","t":"第二百六十三条の二","c":"","u":0},{"k":"263_3","t":"第二百六十三条の三","c":"","u":0}]},{"t":"第三編　特別地方公共団体 第一章　削除","a":[{"k":"264:280","t":"第二百六十四条乃至第二百八十条","c":"","u":2}]},{"t":"第三編　特別地方公共団体 第二章　特別区","a":[{"k":"281","t":"第二百八十一条","c":"（特別区）","u":0},{"k":"281_2","t":"第二百八十一条の二","c":"（都と特別区との役割分担の原則）","u":0},{"k":"281_3","t":"第二百八十一条の三","c":"（特別区の廃置分合又は境界変更）","u":0},{"k":"281_4","t":"第二百八十一条の四","c":"","u":0},{"k":"281_5","t":"第二百八十一条の五","c":"","u":0},{"k":"281_6","t":"第二百八十一条の六","c":"（都と特別区及び特別区相互の間の調整）","u":0},{"k":"282","t":"第二百八十二条","c":"（特別区財政調整交付金）","u":0},{"k":"282_2","t":"第二百八十二条の二","c":"（都区協議会）","u":0},{"k":"283","t":"第二百八十三条","c":"（市に関する規定の適用）","u":0}]},{"t":"第三編　特別地方公共団体 第三章　地方公共団体の組合","a":[{"k":"284","t":"第二百八十四条","c":"（組合の種類及び設置）","u":0},{"k":"285","t":"第二百八十五条","c":"","u":0},{"k":"285_2","t":"第二百八十五条の二","c":"（設置の勧告等）","u":0},{"k":"286","t":"第二百八十六条","c":"（組織、事務及び規約の変更）","u":0},{"k":"286_2","t":"第二百八十六条の二","c":"（脱退による組織、事務及び規約の変更の特例）","u":0},{"k":"287","t":"第二百八十七条","c":"（規約等）","u":0},{"k":"287_2","t":"第二百八十七条の二","c":"（特例一部事務組合）","u":0},{"k":"287_3","t":"第二百八十七条の三","c":"（議決方法の特例及び理事会の設置）","u":0},{"k":"287_4","t":"第二百八十七条の四","c":"（議決事件の通知）","u":0},{"k":"288","t":"第二百八十八条","c":"（解散）","u":0},{"k":"289","t":"第二百八十九条","c":"（財産処分）","u":0},{"k":"290","t":"第二百九十条","c":"（議会の議決を要する協議）","u":0},{"k":"291","t":"第二百九十一条","c":"（経費分賦に関する異議）","u":0},{"k":"291_2","t":"第二百九十一条の二","c":"（広域連合による事務の処理等）","u":0},{"k":"291_3","t":"第二百九十一条の三","c":"（組織、事務及び規約の変更）","u":0},{"k":"291_4","t":"第二百九十一条の四","c":"（規約等）","u":0},{"k":"291_5","t":"第二百九十一条の五","c":"（議会の議員及び長の選挙）","u":0},{"k":"291_6","t":"第二百九十一条の六","c":"（直接請求）","u":0},{"k":"291_7","t":"第二百九十一条の七","c":"（広域計画）","u":0},{"k":"291_8","t":"第二百九十一条の八","c":"（協議会）","u":0},{"k":"291_9","t":"第二百九十一条の九","c":"（広域連合の分賦金）","u":0},{"k":"291_10","t":"第二百九十一条の十","c":"（解散）","u":0},{"k":"291_11","t":"第二百九十一条の十一","c":"（議会の議決を要する協議）","u":0},{"k":"291_12","t":"第二百九十一条の十二","c":"（経費分賦等に関する異議）","u":0},{"k":"291_13","t":"第二百九十一条の十三","c":"（一部事務組合に関する規定の準用）","u":0},{"k":"292","t":"第二百九十二条","c":"（普通地方公共団体に関する規定の準用）","u":0},{"k":"293","t":"第二百九十三条","c":"（数都道府県にわたる組合に関する特例）","u":0},{"k":"293_2","t":"第二百九十三条の二","c":"（政令への委任）","u":0}]},{"t":"第三編　特別地方公共団体 第四章　財産区","a":[{"k":"294","t":"第二百九十四条","c":"","u":0},{"k":"295","t":"第二百九十五条","c":"","u":0},{"k":"296","t":"第二百九十六条","c":"","u":0},{"k":"296_2","t":"第二百九十六条の二","c":"","u":0},{"k":"296_3","t":"第二百九十六条の三","c":"","u":0},{"k":"296_4","t":"第二百九十六条の四","c":"","u":0},{"k":"296_5","t":"第二百九十六条の五","c":"","u":0},{"k":"296_6","t":"第二百九十六条の六","c":"","u":0},{"k":"297","t":"第二百九十七条","c":"","u":0}]},{"t":"第四編　補則","a":[{"k":"298","t":"第二百九十八条","c":"（事務の区分）","u":0},{"k":"299","t":"第二百九十九条","c":"","u":0}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  // '242条2項' '242条の2第1項' '242条の2第2項1号' '242条2項ただし書' のような形。複数条が「・」で区切られることもある → 最初の条だけ見る
+  // 号の枝番は XML では Num="1_2"（5条1号の2）
+  const first = String(a).split("・")[0];
+  const m = first.match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(?:第?(\d+)号((?:の\d+)*))?([イロハニホ])?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[4] ? m[4] + (m[5] || "").replace(/の/g, "_") : null, sub: m[6] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para);
+  // 号まで指定があれば、項の本文とその号だけ出す
+  if (r.item) ps = ps.filter(p => p.i.some(it => it.n === r.item));
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const list = r.item ? p.i.filter(it => it.n === r.item) : p.i;
+    const its = list.map(it => `<p class="it">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => r.sub && x.startsWith(r.sub + " ") ? `<br><span class="hit">　${esc(x)}</span>` : `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなく、このアプリの決め事（収録範囲・仕組みのページに一覧）。</p>`;
+// 凡例は最初の木の上に1回だけ出す（legend＝false で外す。chokusetsu-prolog と同じ。2026-11-24 案Aで木を結論ごとにしたため）
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+
+// ---------- ここから別ページ（about.html）だけの処理 ----------
+if (location.protocol === "file:") $("back").href = "jumin.html";
+function openHash(){ const d = location.hash && document.getElementById(location.hash.slice(1)); if (d && d.tagName === "DETAILS") d.open = true; }
+openHash(); window.addEventListener("hashchange", openHash);
+
+async function bootAbout(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    // 全条文の地図
+    let C = []; try{ C = JSON.parse(document.getElementById("cover-data").textContent); }catch(e){}
+    const cover = $("cover");
+    C.forEach(ch => {
+      const div = document.createElement("div"); div.className = "cover-ch";
+      div.innerHTML = `<h4>${esc(ch.t)} <span>${ch.a.length}条</span></h4><div class="cells"></div>`;
+      const cells = div.querySelector(".cells");
+      ch.a.forEach(a => {
+        const btn = document.createElement("button"); btn.type = "button";
+        btn.className = `cell u${a.u}`; btn.title = `${a.t}${a.c}`;
+        btn.addEventListener("click", () => {
+          const old = document.getElementById("cover-pick"); if (old) old.remove();
+          const pk = document.createElement("div"); pk.id = "cover-pick";
+          pk.innerHTML = a.u === 1 ? lawHTML(a.k.includes("_") ? a.k.replace("_", "条の").replace(/_/g, "の") : a.k + "条") : `<p class="hint" style="margin-top:6px">${esc(a.t)}${esc(a.c)}${a.u === 2 ? "（削除）" : "（このアプリでは使用しない条）"}</p>`;
+          div.appendChild(pk);
+        });
+        cells.appendChild(btn);
+      });
+      cover.appendChild(div);
+    });
+    const used = C.flatMap(c => c.a).filter(a => a.u === 1).length;
+    const total = C.flatMap(c => c.a).filter(a => a.u !== 2).length;
+    cover.insertAdjacentHTML("afterbegin", `<p class="cover-total">使っている条：${used} / ${total} 条</p>`);
+    // ソース表示
+    const src = $("src");
+    files.forEach(f => {
+      const det = document.createElement("details"); det.className = "srcfile";
+      det.innerHTML = `<summary>${esc(f.dataset.name.replace(/_/g, "/"))}</summary><pre>${esc(f.textContent)}</pre>`;
+      src.appendChild(det);
+    });
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+  }
+}
+
+// 直接クエリ実行
+$("run").addEventListener("click", () => {
+  if (!pl){ $("out").textContent = "まだ読み込み中です。"; return; }
+  const q = $("q").value.trim().replace(/\.$/, "");
+  try{
+    const it = pl.prolog.query(q); const out = [];
+    for (let i = 0; i < 20; i++){
+      const r = it.next();
+      if (!r) break;
+      if (r.error){ out.push("エラー：" + r.message); break; }
+      // 最後の解は done:true に値が付いて返る。done で先に抜けると、その解を捨てて「解なし」に見える
+      if (r.value && r.value.$tag === "bindings"){
+        const { $tag, ...vars } = r.value;
+        out.push(Object.keys(vars).length ? JSON.stringify(vars, null, 2) : "true");
+      }
+      if (r.done) break;
+    }
+    $("out").textContent = out.length ? out.join("\n---\n") : "（解なし）";
+  } catch(e){ $("out").textContent = "エラー：" + e.message; }
+});
+
+if (typeof SWIPL === "function") bootAbout();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; }
+</script>
