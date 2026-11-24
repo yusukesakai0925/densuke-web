@@ -1,0 +1,922 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="「製造物責任法を逆から引く」の収録範囲、全条文の地図、アプリの約束事、Prologのソース全部。">
+<title>収録範囲・仕組み｜製造物責任法を逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+/* 欄の上の小見出し（何で、誰に・欠陥と被害・期間）。選ばせる欄ではないので番号を数えない */
+.slots .slot-h{margin:0;padding:8px 10px 4px;border-bottom:2px solid var(--line);border-right:2px solid var(--line);background:var(--paper)}
+.checks{display:grid;gap:6px;margin:4px 10px 8px}
+.checks label{display:flex;gap:8px;align-items:flex-start;font-size:.84rem;font-weight:400;padding:0;letter-spacing:0;line-height:1.5}
+.checks label::before{content:none}
+.checks input{flex:0 0 auto;margin-top:.25em}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.step.off{color:var(--muted)}
+.flow{margin:0;padding-left:1.2em}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+.disclaimer-inline{margin-top:10px;font-size:.78rem;color:var(--muted);border-top:1px solid var(--hair);padding-top:8px;line-height:1.65}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border:1px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+/* 数字の欄（数字を打つので ▼ を出さない）*/
+.field.num::after{display:none}
+.field input{appearance:textfield;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 10px;min-width:0;width:100%}
+.field input:focus-visible{outline:none}
+</style>
+
+<div class="wrap about">
+  <header class="mast sub">
+    <p class="backlink"><a href="./" id="back">← 判定ページに戻る</a></p>
+    <h1>収録範囲・仕組み</h1>
+    <p class="lead">「製造物責任法を逆から引く」で、どの条文をどこまでルールにしたか、アプリが決めたこと、プログラムの中身です。</p>
+  </header>
+
+  <div class="appendix">
+  <details class="box" id="scope-box" open>
+    <summary>収録範囲と、入っていないもの</summary>
+    <div class="scope" id="scope">
+      <p><b>製造物責任法の本則の第1条〜第6条（全部）をルールにしています。</b>判定に使うのは第2条〜第5条で、第1条・第6条は下の地図で原文を読めますが、答えには出しません（下の「載せたが事実を聞かない条」）。</p>
+      <p>起きたことと、あなたの考えを聞く9個の欄から、同じ入力で第2条〜第5条を全部当てます。話を先に選ばせることはせず、欄を出したり消したりもしません。小見出し（何で、誰に・欠陥と被害・期間）は欄の並びの目印です。その話で使わない欄は、判定で見ないだけです（下の「話ごとに見る欄」）。</p>
+      <p id="scope-ban">この XML は2026年11月9日に取得した版で、それ以後の改正と、公布済みで施行前の改正は読んでいません。</p>
+      <p id="scope-hanrei">判例・消費者庁の解説は、判定に使っていません。取れたままの農林水産物について、消費者庁「PL法論点別裁判例」に「未加工農林水産物など自然の状態から収穫された一次産品を製造物の範疇から除外して」という裁判所の判断の文があることを、下の（2）に書いています（11月9日確認。11月24日に PDF を開いて、文が同じことを照らしました）。</p>
+      <p id="scope-minpo">第6条により、製造物の欠陥による賠償の責任には、製造物責任法のほか民法の規定も当たります。過失相殺（被害者の側の落ち度で賠償の額を減らすこと）・損害の額・相手が複数いるときの関係・売った店に民法で請求できるか・製品だけが壊れたときに民法で請求できるかは民法の話で、このページでは判定しません。民法の不法行為は、別のページ「不法行為の責任を逆から引く」にあります。</p>
+      <p id="scope-gyosei">消費生活用製品安全法など、リコール・行政の監督は別の法律で、読んでいません。製造物責任法には、刑罰の定めも行政が監督する定めもありません。</p>
+      <p><b>判定について：</b></p>
+      <ul id="hantei-notes" style="margin:0;padding-left:1.2em">
+        <li id="note-hantei">欠陥（ふつう備えているはずの安全さを欠いていたか）、加工したか、作り手だと思わせる名前か、本当の作り手（実質的な製造業者）と認められる名前かは、このアプリでは判定しません。欄名や選択肢に「（あなたの考え）」とあるものは、本人がそう考えたとして答えます。</li>
+        <li id="note-katachi">ソフトウェア・電気など形の無いものが「動産」に当たるかは、条文が「製造又は加工された動産」とだけ書いていて決まらないので、1の欄の選択肢に入れていません。</li>
+        <li id="note-jobun">条文だけを読んでいます。判例・消費者庁の解説・解説書は載せません。建物に使われた部品や設備が動産として引き渡されたときにどうなるか、設計だけをした会社が製造業者等に当たるかは、条文の文だけでは決まらないので答えません。</li>
+        <li id="note-keika">体の被害でも、2020年4月1日の時点で知った時からの3年がすでに過ぎていた請求権には第5条第2項の5年が当たらず（民法の一部を改正する法律の施行に伴う関係法律の整備等に関する法律 第97条第2項）、このアプリは附則とこの経過措置を読まずに5年で答えるので、2017年3月31日までに損害と相手を知った人には答えが違います。</li>
+        <li id="note-hoka">民法・消費生活用製品安全法など、別の法律は読んでいません。個別のことは法律の専門家に聞いてください。</li>
+        <li id="note-ha">結論の箱には判定だけを書きます。入力した事実（「〜ので」の理由）と、条文の読みは、論理の木の行にだけ置いています。</li>
+      </ul>
+      <p><b>話ごとに見る欄：</b>1〜4の欄で賠償の責任の要件（製造物・製造業者等・欠陥・製品だけでない被害）が1つでも欠ければ、賠償の責任に「当たりません」とだけ答え、5〜9の欄は見ません。欠けた要件が2つ以上あるときは、第2条第1項・第2条第3項・第2条第2項・第3条ただし書の順で最初の1つを結論の箱に、残りを論理の木の行に置きます。第4条第1号・第2号の証明があれば「賠償の責任を負いません」と答え、時効の欄は見ません。</p>
+      <div class="tbl"><table id="ran-table">
+        <thead><tr><th>話</th><th>頭の欄</th><th>そのほかに見る欄</th></tr></thead>
+        <tbody>
+          <tr><td>賠償の責任（第2条第1項・第2項・第3項、第3条、第4条）</td><td>1・2・3・4</td><td>5（1〜4で要件がそろったとき）</td></tr>
+          <tr><td>部品の作り手の免責（第4条第2号）</td><td>5（部品・原材料として指示に従ったが、自分にも過失があった）</td><td>なし</td></tr>
+          <tr><td>時効（第5条）</td><td>賠償の責任を負う組</td><td>6・7・8（4が人の命や体のとき）・9（4が人の命や体で8が「はい」のとき。このとき7は見ない）</td></tr>
+        </tbody>
+      </table></div>
+      <p id="scope-nashi">次の組は、条文の上で成り立たないので「この組み合わせはありません」と答えます。4の欄で人の命や体、8の欄で「はい」、7の欄で10年以内、9の欄で10年を超えたと選んだ（第3条・第5条第1項第2号・第5条第3項。第3条の損害は引き渡したものの欠陥で生じるので、渡してから10年以内なら、被害が出てからも10年以内です）。</p>
+      <p id="jijitsu-nai"><b>載せたが事実を聞かない条：</b>第1条（被害者を守るという目的）と第6条（製造物責任法のほかに民法の規定も当たる）は、答えを変える事実が欄に無いので、欄で聞かず、答えにも出しません。原文は下の地図のマスで開けます。</p>
+      <p>そのほかに入っていないもの：下の<a href="#notes-box">載せなかったもの</a>をご覧ください。</p>
+    </div>
+  </details>
+
+  <details class="box" id="cover-box">
+    <summary>この法律のどこまでをルールにしたか（全条文の地図）</summary>
+    <p class="hint" style="margin-top:6px">本則の全条文を1マスずつ並べました（この法律の本則には章がありません）。<span class="cell u1"></span> はプログラムのルールの中で使っている条、<span class="cell u0"></span> は使っていない条です。マスを押すと原文が出ます。</p>
+    <div id="cover"></div>
+  </details>
+
+  <details class="box" id="go-box">
+    <summary>語の意味</summary>
+    <p class="scope" id="go" style="margin-top:6px">製造物＝製造または加工された動産。動産＝土地や建物でない、動かせる物（このアプリの言い換えで、民法の定めは読んでいません）。欠陥＝製造物が、ふつう備えているはずの安全さ（通常有すべき安全性）を欠いていること。製造物の特性、ふつう考えられる使い方、引き渡した時期などの事情を考えて決まります。製造業者等＝業として製造・加工・輸入した者、自分を製造業者として名前などを付けた者、製造業者と誤認させる名前などを付けた者、実質的な製造業者と認められる名前などを付けた者。業として＝仕事として繰り返し行うこと。氏名等の表示＝製造物に付けた氏名・商号（会社の名前）・商標（商品に付ける名前やマーク）などの表示。引き渡した＝製造業者等が製造物を自分の手元から出して渡したこと。免責＝賠償の責任を負わないこと。知見＝その時に分かっていたこと。過失＝不注意。消滅時効＝決まった期間がたつと請求する権利が消えること。法定代理人＝未成年者の親など、法律で本人の代わりに手続をする人。賠償義務者＝賠償する義務を負う相手。これらは条文の語をこのアプリが言い換えたものです。</p>
+  </details>
+
+  <details class="box" id="yaku-box">
+    <summary>アプリの約束事（この法律の条文にないもの）</summary>
+    <p class="hint" style="margin-top:6px">判定のためにこのアプリが決めたことで、条文そのものではありません。論理の木では <span class="yk">アプリの約束事</span> の印が付きます。</p>
+    <ul class="hint" id="yaku-list" style="margin:8px 0 0;padding-left:1.2em">
+      <li>「当たりません」の答えは、条に当たらないと言うだけで、反対の結論を言うものではない</li>
+    </ul>
+  </details>
+
+  <details class="box" id="notes-box">
+    <summary>載せなかったものと、条文だけで決まらなかった点</summary>
+    <div class="scope">
+      <p><b>載せなかったもの（理由）：</b></p>
+      <ul style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>判例・消費者庁の解説・解説書：条文だけを読むアプリのため。消費者庁「PL法論点別裁判例」の1文は、下の（2）に出所つきで書くだけ</li>
+        <li>「欠陥」「加工」「誤認させるような」「実質的な製造業者」の当てはめ：事情を考えて決まり、条文だけでは決まらないため、欄名・選択肢の「（あなたの考え）」で本人の考えとして受ける</li>
+        <li>ソフトウェア・電気など形の無いもの：「動産」に当たるかが条文の文だけでは決まらないため、1の欄の選択肢に入れない</li>
+        <li>民法での請求（製品だけが壊れたとき・売った店への請求・過失相殺・損害の額・相手が複数いるとき）：第6条で民法が当たりますが、民法は読んでいないため</li>
+        <li>消費生活用製品安全法などのリコール・行政の監督：別の法律で、読んでいないため</li>
+        <li>裁判の手続：別の法律で、読んでいないため</li>
+        <li>附則（施行期日・経過措置）：本則の範囲だけを読むため。第5条第2項の経過措置は、上の「判定について」に書いた</li>
+      </ul>
+      <p><b>条文だけで決まらなかった点（18点）：</b></p>
+      <ul id="kimaranai" style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>（1）第2条第1項の「動産」→ 建物そのものは動産でないと読み、製造物に当たらないと答える。建物に使われた部品や設備が動産として引き渡されたときは答えない</li>
+        <li>（2）取れたままの農林水産物 → 第2条第1項の「製造又は加工された」に入らないと読み、製造物に当たらないと答える。加工したかは1の欄で本人の考えとして受ける。消費者庁「PL法論点別裁判例」に、イシガキダイ料理の食中毒の事件（東京高等裁判所 平成17年1月26日判決）の「裁判所による判断の概要」として「未加工農林水産物など自然の状態から収穫された一次産品を製造物の範疇から除外して」という文がある（11月24日に PDF を開いて照らした）</li>
+        <li>（3）ソフトウェア・電気など形の無いもの → 「動産」に当たるかが条文の文だけでは決まらないので、1の欄の選択肢に入れない（上の「判定について」）</li>
+        <li>（4）第2条第3項 → 売っただけで氏名等の表示をしていない店は、どの号にも当たらないと読む。「販売」は第3号の考慮事情に出てくるだけ</li>
+        <li>（5）「業として」→ 仕事として繰り返し行うことと言い換えた。仕事としてでなく作った個人は第1号に当たらないと答え、第2号・第3号の表示はこの値では聞かない</li>
+        <li>（6）第3条 → 製造業者等の過失を要件にしていないと読む（条文が過失に触れていない、までが原文）。過失を聞く欄は置かず、第4条第2号の過失だけを5の欄の値で聞く</li>
+        <li>（7）第3条ただし書 → 製品だけの損害なら、製造物責任法の責任は無いと答える。民法で請求できるかは答えない（上の「収録範囲」）</li>
+        <li>（8）第3条の「財産を侵害した」→ 4の欄の「製品とは別の物が壊れた」を、他人の財産の侵害として答える</li>
+        <li>（9）第4条の柱書き → 「証明したときは」から、証明していなければ免責されないと答える</li>
+        <li>（10）第4条第2号 → 設計の指示に従ったことと過失が無いことの両方がそろうときだけ免責と読む</li>
+        <li>（11）欠けた要件が2つ以上ある組 → 第2条第1項・第2条第3項・第2条第2項・第3条ただし書の順に見て、最初に欠けたものを結論の箱に、残りを論理の木の行に置く。第4条は「前条の場合において」なので、要件がそろったときだけ見る</li>
+        <li>（12）第5条第1項第1号の「損害及び賠償義務者を知った時」→ 両方を知った時と読み、片方でも知らなければ期間は始まっていないと答える</li>
+        <li>（13）第5条第2項 → 人の命や体の被害なら、知った時からの期間を5年として答える</li>
+        <li>（14）第5条第3項 → 第1項第2号の10年の数え始めだけを動かし、3年・5年は動かさないと読む。人の健康・症状の損害の文なので、4の欄が人の命や体のときだけ8の欄を見る。8の欄が「はい」なら、10年は9の欄（被害が出てから）だけで数え、7の欄は見ない</li>
+        <li>（15）第5条第1項の2つの期間 → どちらかが過ぎていれば、請求権は時効で消えると答える。第3条の賠償の責任を負わない組と、第4条で免責された組には、時効の答えを出さない</li>
+        <li>（16）第6条 → 民法の規定も当たる、と書くまでにし、民法の中身は答えない</li>
+        <li>（17）語の開き方 → 「動産」「業として」「引き渡した」「法定代理人」「通常有すべき安全性」などを平易に開いた文と、欄名・選択肢の言い換え（作り手・手放して渡した・分かっていたこと・時間がたってから症状が出た）は、このアプリの言い換え</li>
+        <li>（18）刑罰・行政の監督 → この法律の本則（第1条〜第6条）に、その定めが無いと書く</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="box" id="src-box">
+    <summary>プログラムの中身（Prologのソース全部）</summary>
+    <p class="hint" style="margin-top:6px">このページで動いているPrologのプログラムそのものです。ファイルを開くと全文が出ます。</p>
+    <div id="src"></div>
+  </details>
+
+  <details class="box" id="core-box">
+    <summary>仕組みを見る（上級者向け）</summary>
+    <p class="hint" style="margin-top:6px">Prologに直接聞く（最初の20件まで）：</p>
+    <textarea id="q" spellcheck="false">result(ctx(動産,製造,欠く,体,していない,三年以内,十年以内,いいえ,十年以内), R).</textarea>
+    <button type="button" class="btn" id="run">実行</button>
+    <pre id="out"></pre>
+  </details>
+  </div>
+
+  <p class="foot techline"><span>製造物責任法 第1条〜第6条／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot">e-Gov法令検索の製造物責任法の本則の原文をルールにしたものです。条文は2026年11月9日に取得した版です。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 製造物責任法（PL法）のProlog 共通の型・欄の読み出し・組み合わせなし・木の部品
+%
+% ctx(物, 相手, 欠陥, 被害, 証明, 知って, 渡して, 潜伏, 出て)
+%   欄は起きた事実と、あなたの考えを聞く9個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-24 案A。
+%   案は ../seizobutsu_form_plan_answer_1124.md の案A、決めは ../seizobutsu_form_plan_decision_1124.md）。
+%   前は ctx(入口, 詳細) で、入口（誰に／責任／時効）を利用者に先に選ばせ、画面が欄を出し消しして、
+%   隠れた欄を 関係なし で渡していた（形OK/2 が 関係なし を除いた並びを見ていた）。今は使わない欄を判定で見ないだけにした。
+%   同じ事実を2回聞かない（C1）：被害の種類は4の欄だけ（前は 責任 の 被害 と 時効 の 被害 の2か所）。
+%   過失の欄（前の 過失。どの値でも答えが変わらなかった）は消した（決め2）。第4条第2号の過失は5の欄の値で聞く。
+%   形の無いもの（ソフトウェア・電気）は1の欄の値から外し、about の「判定について」に置いた（決め3）。
+%   欠陥が分からない（前の 分からない）は値から外し、欠陥は「あなたの考え」で聞く。
+%   引数の順は画面の欄の番号（1〜9）と同じ。同じ入力で第2条〜第5条を全部当てる。
+%   画面では3つの小見出し（何で、誰に／欠陥と被害／期間）の下に並べる。小見出しは欄を出し消ししない。
+%   「あなたの考え」の欄・値は 1の加工・2の誤認と実質・3（前の 評価の約束 の代わり）。
+%    1 物     : 動産 | 建物 | 農林水産物（被害を出した物。動産＝人が作ったり加工したりした、動かせる物。2条1項）
+%    2 相手   : 製造 | 加工 | 輸入 | 表示 | 誤認 | 実質 | 販売 | 業でない（言いたい相手が、1の物についてしたこと。2条3項1号〜3号）
+%               （表示＝自分を作り手として名前などを付けた、誤認＝作り手だと思わせる名前などを付けた、実質＝本当の作り手と認められる名前などを付けた、販売＝売っただけで名前などは付けていない）
+%    3 欠陥   : 欠く | 欠かない（ふつう備えているはずの安全さを欠いていたか。あなたの考え。2条2項・3条）
+%    4 被害   : 体 | 物 | 製品だけ（壊れたり傷ついたりしたもの。3条・5条2項・5条3項）
+%    5 証明   : していない | 知見 | 部品なし | 部品あり（作った会社などが証明したこと。部品なし＝部品で設計の指示に従い過失なし、部品あり＝指示に従ったが過失あり。4条）
+%    6 知って : 三年以内 | 五年以内 | 五年超 | 知らない（損害と賠償する相手の両方を知ってから。五年以内＝3年を超え5年以内。5条1項1号・5条2項）
+%    7 渡して : 十年以内 | 十年超（作った会社などが製品を手放して渡してから。5条1項2号）
+%    8 潜伏   : いいえ | はい（体にたまって健康を害する物質による被害か、時間がたってから症状が出た被害か。5条3項）
+%    9 出て   : 十年以内 | 十年超（被害が出てから。5条3項）
+%
+%   関係のない欄（たとえば1が建物のときの5〜9、4が物のときの8・9）は、組み合わせなしにせず、その欄を使う段を出さない（kaisan-prolog と同じ）。
+%   欄どうしで成り立たない組は 組み合わせなし/4 が返す（REVIEW_RULES C3。案のエ）。
+%
+% 書き方のきまり：
+%   ・条番号は '2条3項1号' '3条' '5条1項' のような原子。号まで書くときは項も書く（項が1つの条は項を書かない）。
+%     ただし書・本文は原文の表の行にせず、文の中に書く（表は項と号まで）。
+%   ・段は 段(状態, 文, 箱の条, 葉のリスト)。結論ごとの段は s(画面のid, 見出し, 段)。段の文は、末尾の「。」を外して結論の箱にも出す。
+%     段の文は本題だけを書き、「〜ので」の前半（入力の言い直し）は葉に置く（REVIEW_RULES A2。葉は論理の木にだけ出る）。
+%     葉は文（原子）か 条(条番号)。条(条番号) は木でその条の原文の行になる（箱の条に無い要件の条を木に出すため。kaisan-prolog に無い形）。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | and | or | info
+%   ・アプリの約束事の行は 条 を '@約束事' にする。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか。組の成り立ちは 組み合わせなし/4 で見る）----
+ctx_valid(C) :-
+    functor(C, ctx, 9),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )).
+
+欄の値(1, [動産, 建物, 農林水産物]).
+欄の値(2, [製造, 加工, 輸入, 表示, 誤認, 実質, 販売, 業でない]).
+欄の値(3, [欠く, 欠かない]).
+欄の値(4, [体, 物, 製品だけ]).
+欄の値(5, [していない, 知見, 部品なし, 部品あり]).
+欄の値(6, [三年以内, 五年以内, 五年超, 知らない]).
+欄の値(7, [十年以内, 十年超]).
+欄の値(8, [いいえ, はい]).
+欄の値(9, [十年以内, 十年超]).
+
+%% ---- 欄の読み出し（番号は画面の欄の番号）----
+欄の番号(物, 1).
+欄の番号(相手, 2).
+欄の番号(欠陥, 3).
+欄の番号(被害, 4).
+欄の番号(証明, 5).
+欄の番号(知って, 6).
+欄の番号(渡して, 7).
+欄の番号(潜伏, 8).
+欄の番号(出て, 9).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+%% ---- 成り立たない組（REVIEW_RULES C3。案のエ。根拠は rules/a_genbun.pl の原文の行で確かめた）----
+% 組み合わせなし(C, 組の記号, 理由の文のリスト, 根拠のリスト)。記号は段の id（mujun_e）に使う。当たる組を全部返す（g_hantei.pl の 全部の段 が findall で集め、組ごとに段を出す。
+% REVIEW_RULES 末尾「AI同士で決めた書き方」1。今はエの1組だけだが、組が増えても2つ目が黙って落ちないように kaisan-prolog と同じ形にした）。
+% ア〜ウは置いていない（kaisan の記号とずらさないため、エから付けた。案の「この組み合わせはありません」になる組）。
+% 既定の値（8=いいえ・9=十年以内）はどの組にも当たらない。エは、既定でない値を2つ（8「はい」・9「10年を超えた」）選んだときだけ出る（kaiko の決め2）。
+% エ：3条「その引き渡したものの欠陥により」、5条1項2号「引き渡した時から十年」、5条3項「その損害が生じた時から起算する」。
+%     損害は引き渡したものの欠陥で生じるので、渡してから10年以内なら、被害が出てからも10年以内
+%     （4が物のときは8・9を見ないだけ。決め・案の「見ないだけにする組」）
+組み合わせなし(C, e, ['第3条の損害は、引き渡したものの欠陥で生じるので、渡してから10年以内なら、被害が出てからも10年以内',
+                     '4の欄で人の命や体、8の欄で「はい」、7の欄で10年以内、9の欄で10年を超えたと選んだ'],
+              ['3条', '5条1項2号', '5条3項']) :-
+    欄(被害, C, 体), 欄(潜伏, C, はい), 欄(渡して, C, 十年以内), 欄(出て, C, 十年超).
+
+%% ---- 理由の語をつなぐ ----
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---- 木の部品 ----
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+原文規定(Art, X) :- 原文(Art, W), 規定(Art, W, X).
+% 成り立つ文（起きた事実・条文の読み）
+文(X, t(ok, X, '', [])).
+約束(X, t(ok, X, '@約束事', [])).
+% 葉の行：条(条番号) はその条の原文の行、文はそのまま1行（schema の「書き方のきまり」）
+葉の行(条(A), X) :- !, 原文規定(A, X).
+葉の行(W, X) :- 文(W, X).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（製造物責任法の条文にないもの）
+%
+%   条に当たらない段（状態 当たらない）にだけ付ける（kaisan-prolog と同じ）。
+%   2026-11-24 案A。「欠陥」「通常有すべき安全性」「実質的な製造業者」「加工」「業として」に当たるか、何年たったかは判定しない、とした 評価の約束 を消した
+%   （欠陥・加工・誤認・実質は欄名・値に「（あなたの考え）」と書いて聞き、業としては「仕事として（繰り返し）」、年数は6・7・9の欄の値で事実として聞くので、
+%   約束事ではなくなった。断り書きは about の「判定について」へ。REVIEW_RULES A5）。
+%   前の 場面外の約束 は、kaisan-prolog の 当たらないの約束 と同じ文なので名前をそろえた。約束の文は指示語（その）を置かずに書いた（A6）。
+
+当たらないの約束(X) :-
+    約束('「当たりません」の答えは、条に当たらないと言うだけで、反対の結論を言うものではない', X).
+</script>
+<script type="text/prolog" data-name="rules_a_genbun.pl">% rules/a_genbun.pl — 判定に使う条文の原文（law/seizobutsu.xml の本則のまま）
+%
+%   原文(条, 文)。test/page_test.mjs が XML を別に読み、全行が一字一句一致するかを確かめる。
+%   号の行（'2条3項1号' '4条1号' '5条1項1号' など）は、項の柱書き（号の前の文）に号の文を続けて書いた。
+%   第3条は Sentence が2つ（本文とただし書き）で、続けて書いた（XML を読んで確かめた）。
+%   本則は第1条〜第6条の6条だけで、章が無い。附則（施行期日など）は入れていない。
+
+原文('1条', 'この法律は、製造物の欠陥により人の生命、身体又は財産に係る被害が生じた場合における製造業者等の損害賠償の責任について定めることにより、被害者の保護を図り、もって国民生活の安定向上と国民経済の健全な発展に寄与することを目的とする。').
+原文('2条1項', 'この法律において「製造物」とは、製造又は加工された動産をいう。').
+原文('2条2項', 'この法律において「欠陥」とは、当該製造物の特性、その通常予見される使用形態、その製造業者等が当該製造物を引き渡した時期その他の当該製造物に係る事情を考慮して、当該製造物が通常有すべき安全性を欠いていることをいう。').
+原文('2条3項', 'この法律において「製造業者等」とは、次のいずれかに該当する者をいう。').
+原文('2条3項1号', 'この法律において「製造業者等」とは、次のいずれかに該当する者をいう。当該製造物を業として製造、加工又は輸入した者（以下単に「製造業者」という。）').
+原文('2条3項2号', 'この法律において「製造業者等」とは、次のいずれかに該当する者をいう。自ら当該製造物の製造業者として当該製造物にその氏名、商号、商標その他の表示（以下「氏名等の表示」という。）をした者又は当該製造物にその製造業者と誤認させるような氏名等の表示をした者').
+原文('2条3項3号', 'この法律において「製造業者等」とは、次のいずれかに該当する者をいう。前号に掲げる者のほか、当該製造物の製造、加工、輸入又は販売に係る形態その他の事情からみて、当該製造物にその実質的な製造業者と認めることができる氏名等の表示をした者').
+原文('3条', '製造業者等は、その製造、加工、輸入又は前条第三項第二号若しくは第三号の氏名等の表示をした製造物であって、その引き渡したものの欠陥により他人の生命、身体又は財産を侵害したときは、これによって生じた損害を賠償する責めに任ずる。ただし、その損害が当該製造物についてのみ生じたときは、この限りでない。').
+原文('4条', '前条の場合において、製造業者等は、次の各号に掲げる事項を証明したときは、同条に規定する賠償の責めに任じない。').
+原文('4条1号', '前条の場合において、製造業者等は、次の各号に掲げる事項を証明したときは、同条に規定する賠償の責めに任じない。当該製造物をその製造業者等が引き渡した時における科学又は技術に関する知見によっては、当該製造物にその欠陥があることを認識することができなかったこと。').
+原文('4条2号', '前条の場合において、製造業者等は、次の各号に掲げる事項を証明したときは、同条に規定する賠償の責めに任じない。当該製造物が他の製造物の部品又は原材料として使用された場合において、その欠陥が専ら当該他の製造物の製造業者が行った設計に関する指示に従ったことにより生じ、かつ、その欠陥が生じたことにつき過失がないこと。').
+原文('5条1項', '第三条に規定する損害賠償の請求権は、次に掲げる場合には、時効によって消滅する。').
+原文('5条1項1号', '第三条に規定する損害賠償の請求権は、次に掲げる場合には、時効によって消滅する。被害者又はその法定代理人が損害及び賠償義務者を知った時から三年間行使しないとき。').
+原文('5条1項2号', '第三条に規定する損害賠償の請求権は、次に掲げる場合には、時効によって消滅する。その製造業者等が当該製造物を引き渡した時から十年を経過したとき。').
+原文('5条2項', '人の生命又は身体を侵害した場合における損害賠償の請求権の消滅時効についての前項第一号の規定の適用については、同号中「三年間」とあるのは、「五年間」とする。').
+原文('5条3項', '第一項第二号の期間は、身体に蓄積した場合に人の健康を害することとなる物質による損害又は一定の潜伏期間が経過した後に症状が現れる損害については、その損害が生じた時から起算する。').
+原文('6条', '製造物の欠陥による製造業者等の損害賠償の責任については、この法律の規定によるほか、民法（明治二十九年法律第八十九号）の規定による。').
+</script>
+<script type="text/prolog" data-name="rules_b_dare.pl">% rules/b_dare.pl — 製造物と製造業者等の要件（第2条第1項・第3項）：1・2の欄
+%
+%   第2条第1項の「製造物」は「製造又は加工された動産」。建物そのものは動産でないと読み、当たらないと答える（about の読み (1)）。
+%   手を加えていない、取れたままの農林水産物は「製造又は加工された」に入らないと読み、当たらないと答える（決め・案の「今の形」4。about の読み (2)）。
+%   加工したかは1の欄の値「人が作ったり加工したりした、動かせる物」の中で、本人の考えとして聞く。
+%   第2条第3項の3つの号のどれにも当たらない「売っただけで名前などは付けていない」は「製造業者等」に当たらないと答える（読み (4)）。
+%   「仕事としてでなく、個人で作った」は第1号の「業として」に当たらないと答える（読み (5)）。
+%   2026-11-24 案A。前の入口「誰に言えるか」の段（誰にの段・物の段・相手の段）をやめ、要件の判定だけを置いた。束ねるのは g_hantei.pl の 責任の段。
+%   要件の答えは 足りる(葉のリスト) か 欠け(k(箱の文, 箱の条, 葉のリスト, 残りの葉))。残りの葉は、ほかの要件が先に欠けたときに木の行に置く文。
+%   前の 判定しない（農林水産物・形の無いもの）は、農林水産物を 当たらない にし、形の無いものを値から外した（決め3）。
+%   前の断り（建物に使われた部品・設備、実質的な製造業者の当てはめ、売った店に民法で請求できるか）は外し、about の「判定について」へ移した（A5）。
+%   「…と入力されたので」は葉に移した（A2）。
+
+%% ---- 第2条第1項 製造物 ----
+物の要件(C, 足りる(['被害を出した物は、人が作ったり加工したりした、動かせる物（加工したかはあなたの考え）', 条('2条1項')])) :-
+    欄(物, C, 動産), !.
+物の要件(C, 欠け(k('建物そのものは、製造物に当たりません。', ['2条1項'],
+                  ['被害を出した物は、建物そのもの', '建物は動かせる物（動産）ではないと読むので、第2条第1項の「製造又は加工された動産」に入らない'],
+                  '建物そのものは、製造物にも当たらない（第2条第1項）'))) :-
+    欄(物, C, 建物), !.
+物の要件(C, 欠け(k('手を加えていない農林水産物は、製造物に当たりません。', ['2条1項'],
+                  ['被害を出した物は、手を加えていない、取れたままの農林水産物', '手を加えていない物は、第2条第1項の「製造又は加工された」に入らない'],
+                  '手を加えていない農林水産物は、製造物にも当たらない（第2条第1項）'))) :-
+    欄(物, C, 農林水産物).
+
+%% ---- 第2条第3項 製造業者等 ----
+% 第1号の3つ（作った・加工した・輸入した）は、箱の条を第3条だけにするので、第2条第3項第1号の原文を葉に置く
+相手の要件(C, 足りる([W, 条('2条3項1号')])) :-
+    欄(相手, C, X), memberchk(X-W, [製造-'言いたい相手は、仕事として（繰り返し）作った',
+                                     加工-'言いたい相手は、仕事として加工した',
+                                     輸入-'言いたい相手は、仕事として輸入した']), !.
+% 第2号・第3号は、箱の条に号を出すので葉に原文を置かない
+相手の要件(C, 足りる(['言いたい相手は、他が作った物に、自分を作り手として名前・会社名・商標などを付けた'])) :- 欄(相手, C, 表示), !.
+相手の要件(C, 足りる(['言いたい相手は、作り手だと思わせるような名前・会社名・商標などを付けた（あなたの考え）'])) :- 欄(相手, C, 誤認), !.
+相手の要件(C, 足りる(['言いたい相手は、作り・輸入・販売の様子などから見て、本当の作り手と認められる名前などを付けた（あなたの考え）'])) :- 欄(相手, C, 実質), !.
+相手の要件(C, 欠け(k('売っただけで名前などを付けていない店は、製造業者等に当たりません。', ['2条3項'],
+                    ['言いたい相手は、売っただけで、名前などは付けていない', '第2条第3項の第1号〜第3号のどれにも当たらない（「販売」の語は、第3号で実質的な製造業者かを見る事情に出てくるだけ）'],
+                    '売っただけで名前などを付けていない店は、製造業者等にも当たらない（第2条第3項）'))) :-
+    欄(相手, C, 販売), !.
+相手の要件(C, 欠け(k('仕事としてでなく個人で作った人は、製造業者に当たりません。', ['2条3項1号'],
+                    ['言いたい相手は、仕事としてでなく、個人で作った', '第2条第3項第1号の「業として」は、仕事として繰り返し行うこと'],
+                    '仕事としてでなく個人で作った人は、製造業者にも当たらない（第2条第3項第1号）'))) :-
+    欄(相手, C, 業でない).
+
+%% ---- 結論の箱の主語と、箱に出す第2条第3項の号 ----
+% 相手の主語(2の欄の値, 主語, 箱の条)。第1号の3つは第3条だけ、第2号・第3号は号も箱に出す（案の「結論の箱の文の例」）
+相手の主語(X, 製造業者, []) :- memberchk(X, [製造, 加工, 輸入]), !.
+相手の主語(表示, '自分を作り手として名前などを付けた者', ['2条3項2号']) :- !.
+相手の主語(誤認, '作り手だと思わせる名前などを付けた者', ['2条3項2号']) :- !.
+相手の主語(実質, '実質的な製造業者と認められる名前を付けた者', ['2条3項3号']).
+</script>
+<script type="text/prolog" data-name="rules_c_sekinin.pl">% rules/c_sekinin.pl — 欠陥・被害・免責の要件（第2条第2項・第3条・第4条）：3〜5の欄
+%
+%   第3条は「欠陥により…侵害したとき」で、製造業者等の過失を要件にしていない（条文は過失に触れていない、までが原文。要件でないと読むのは about の読み (6)）。
+%   第3条ただし書：損害が製造物だけに生じたときは、製造物責任法の責任は無い。
+%   第4条の免責は、製造業者等が証明したときだけ。第2号は、設計の指示に従ったことと過失が無いことの両方がそろうときだけ（読み (10)）。
+%   第4条は「前条の場合において」なので、第3条の要件がそろったときだけ見る（g_hantei.pl の 責任の段）。
+%   2026-11-24 案A。前の入口「責任を負うか」の段（責任の段・欠陥の段・責任の続き・免責の段）をやめ、要件の判定だけを置いた。束ねるのは g_hantei.pl の 責任の段。
+%   要件の答えの形は b_dare.pl と同じ（足りる / 欠け）。免責の要件は 証明なし(葉) | 免責(条, 葉) | 過失あり(葉) を返す。
+%   前の過失の欄と 過失の文 は消した（決め2。どの値でも答えが変わらなかった）。前の 判定しない（欠陥が分からない）は値ごと消した。
+%   前の断り（欠陥の当てはめ、第6条で民法が適用される、民法で請求できるか）は外し、about の「判定について」へ移した（A5）。
+%   「…と入力されたので」は葉に移し（A2）、「その製造物」「この法律」「この段」は名詞にした（A6）。
+
+%% ---- 第2条第2項 欠陥 ----
+欠陥の要件(C, 足りる(['1の物は、ふつう備えているはずの安全さを欠いていた（欠陥。あなたの考え）', 条('2条2項')])) :-
+    欄(欠陥, C, 欠く), !.
+欠陥の要件(C, 欠け(k('欠陥が無い製造物では、製造物責任法の賠償の責任はありません。', ['2条2項', '3条'],
+                    ['1の物は、ふつう備えているはずの安全さを欠いていない（あなたの考え）', '第3条は、引き渡したものの欠陥により他人の命・体・財産を傷つけたときの定め'],
+                    '欠陥が無いので、第3条の賠償の責任にも当たらない（第2条第2項・第3条）'))) :-
+    欄(欠陥, C, 欠かない).
+
+%% ---- 第3条本文・ただし書 被害 ----
+被害の要件(C, 足りる(['欠陥で、他人の命や体を傷つけた'])) :- 欄(被害, C, 体), !.
+被害の要件(C, 足りる(['欠陥で、製品とは別の、他人の物を壊した'])) :- 欄(被害, C, 物), !.
+被害の要件(C, 欠け(k('損害が製造物だけに生じたときは、製造物責任法の賠償の責任はありません。', ['3条'],
+                    ['壊れたり傷ついたりしたのは、製品だけ', '第3条ただし書（損害が製造物だけに生じたときを除く）に当たる'],
+                    '壊れたのは製品だけなので、第3条ただし書にも当たる（第3条）'))) :-
+    欄(被害, C, 製品だけ).
+
+% 結論の箱の、損害の言い方（4の欄が体・物のときだけ呼ぶ）
+被害の句(体, '命や体を傷つけたことによる損害').
+被害の句(物, '他人の物を壊したことによる損害').
+
+%% ---- 第4条 免責 ----
+免責の要件(C, 証明なし(['作った会社などは、第4条第1号・第2号の事情を証明していない', 条('4条')])) :-
+    欄(証明, C, していない), !.
+免責の要件(C, 免責('4条1号', ['作った会社などが、引き渡した時の科学・技術で分かっていたことでは、欠陥に気づけなかったと証明した'])) :-
+    欄(証明, C, 知見), !.
+免責の要件(C, 免責('4条2号', ['作った会社などが、部品・原材料として他社の設計の指示に従ったために欠陥が出て、自分に過失（不注意）は無かったと証明した'])) :-
+    欄(証明, C, 部品なし), !.
+免責の要件(C, 過失あり(['部品・原材料として他社の設計の指示に従ったが、自分にも過失（不注意）があった',
+                       '第4条第2号で免責されるのは、指示に従ったことと過失が無いことの両方がそろい、それを証明したときだけ'])) :-
+    欄(証明, C, 部品あり).
+</script>
+<script type="text/prolog" data-name="rules_d_jiko.pl">% rules/d_jiko.pl — 時効で消えるか（第5条）：6〜9の欄
+%
+%   第5条第1項第1号：損害と賠償義務者の両方を知った時から3年。第2項：人の生命・身体の侵害なら5年。
+%   第5条第1項第2号：引き渡した時から10年。第3項：体にたまる物質・時間がたってから症状が出る損害は、この10年を損害が生じた時から数える。
+%   第3項が動かすのは第1項第2号の10年の数え始めだけで、3年・5年は動かさない（about の読み (14)）。
+%   第3項の損害は人の健康・症状の話なので、8の欄は4が体のときだけ見る（読み (14)）。8が「はい」なら、10年は9の欄だけで数え、7の欄は見ない（案の「時効の欄の数え方」）。
+%   2つの期間のどちらかが過ぎていれば、請求権は時効で消えると答える（読み (15)）。
+%   2026-11-24 案A。前の入口「いつまで言えるか」の3段（まとめ・知った時からの期間・引き渡した時からの10年）を、時効の1段にした（B5）。
+%   2つの期間は、その段の葉にした。g_hantei.pl の 時効の段 から、第3条の賠償の責任を負う組だけで呼ぶ（前提が消えた組・免責された組は呼ばない）。
+%   「両方を知ったとは入力されていない」は葉の文にし（A2）、「この期間」「この10年」は名詞にした（A6）。
+%   期間の答えは r(まだ | 過ぎた, 条のリスト, 葉の文のリスト)。
+
+時効の答え(C, 段(St, M, As, Fs)) :-
+    欄(被害, C, H),
+    知った期間(C, H, R1),
+    十年の期間(C, H, R2),
+    時効のまとめ([R1, R2], H, C, St, M, As, Fs).
+
+% どちらかが過ぎた：過ぎた方の条と葉だけを置く
+時効のまとめ(Rs, _, _, 消える, '損害賠償の請求権は、時効で消えます。', As, Fs) :-
+    findall(A, ( member(r(過ぎた, As0, _), Rs), member(A, As0) ), As), As \== [], !,
+    findall(F, ( member(r(過ぎた, _, Fs0), Rs), member(F, Fs0) ), Fs).
+% どちらも過ぎていない：箱の条は第5条第1項（潜伏なら第3項も）。2つの期間の条は葉に原文で置く
+時効のまとめ(Rs, H, C, 当たる, '損害賠償の請求権は、まだ時効で消えていません。', As, Fs) :-
+    ( 潜伏で数える(C, H) -> As = ['5条1項', '5条3項'] ; As = ['5条1項'] ),
+    findall(F, ( member(r(_, _, Fs0), Rs), member(F, Fs0) ), Ts),
+    findall(条(A), ( member(r(_, As0, _), Rs), member(A, As0), \+ memberchk(A, As) ), Ks),
+    append(Ts, Ks, Fs).
+
+潜伏で数える(C, 体) :- 欄(潜伏, C, はい).
+
+%% ---- 第5条第1項第1号・第2項 ----
+知った期間(C, _, r(まだ, ['5条1項1号'], ['損害と賠償する相手の両方は、まだ知らない', '第5条第1項第1号の期間は、両方を知った時から数えるので、まだ始まっていない'])) :-
+    欄(知って, C, 知らない), !.
+知った期間(C, 物, r(まだ, ['5条1項1号'], ['他人の物を壊した被害で、損害と賠償する相手の両方を知ってから3年以内'])) :-
+    欄(知って, C, 三年以内), !.
+知った期間(_, 物, r(過ぎた, ['5条1項1号'], ['他人の物を壊した被害で、損害と賠償する相手の両方を知ってから3年を超えた'])) :- !.
+知った期間(C, 体, r(過ぎた, ['5条1項1号', '5条2項'], ['命や体を傷つけた被害で、損害と賠償する相手の両方を知ってから5年を超えた', R])) :-
+    欄(知って, C, 五年超), !, 五年の読み(R).
+知った期間(C, 体, r(まだ, ['5条1項1号', '5条2項'], [W, R])) :-
+    欄(知って, C, K), memberchk(K-Y, [三年以内-'3年以内', 五年以内-'3年を超え、5年以内']),
+    format(atom(W), '命や体を傷つけた被害で、損害と賠償する相手の両方を知ってから~w', [Y]),
+    五年の読み(R).
+
+五年の読み('人の命や体を傷つけた被害なので、第5条第2項で、第5条第1項第1号の「三年間」は「五年間」に読み替わる').
+
+%% ---- 第5条第1項第2号・第3項 ----
+% 体にたまる物質・時間がたってから症状が出た被害なら、9の欄（被害が出てから）だけで数える
+十年の期間(C, 体, R) :- 欄(潜伏, C, はい), !, 欄(出て, C, G), 潜伏の十年(G, R).
+十年の期間(C, H, R) :- 欄(渡して, C, T), 渡しての十年(T, H, C, R).
+
+潜伏の十年(十年以内, r(まだ, ['5条1項2号'], [P, '被害が出てから10年以内', Y])) :- !, 潜伏の葉(P, Y).
+潜伏の十年(十年超, r(過ぎた, ['5条1項2号', '5条3項'], [P, '被害が出てから10年を超えた', Y])) :- 潜伏の葉(P, Y).
+
+潜伏の葉('体にたまって健康を害する物質による被害か、時間がたってから症状が出た被害',
+         '第5条第3項で、第5条第1項第2号の10年は、引き渡した時でなく被害が出た時から数える（知った時からの3年・5年は動かない）').
+
+渡しての十年(十年以内, _, _, r(まだ, ['5条1項2号'], ['作った会社などが製品を手放して渡してから10年以内'])) :- !.
+渡しての十年(十年超, 体, _, r(過ぎた, ['5条1項2号'], ['作った会社などが製品を手放して渡してから10年を超えた', '体にたまる物質による被害でも、時間がたってから症状が出た被害でもない'])) :- !.
+渡しての十年(十年超, _, _, r(過ぎた, ['5条1項2号'], ['作った会社などが製品を手放して渡してから10年を超えた'])).
+</script>
+<script type="text/prolog" data-name="rules_g_hantei.pl">% rules/g_hantei.pl — 要件を束ねて段を作り、見出し・根拠条文・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 箱の条, 葉のリスト)　結論ごとの段 = s(画面のid, 見出し, 段)
+%   形は kaisan-prolog の g_hantei.pl と同じ（2026-11-24 案A）。違いは、責任の段で要件（b_dare.pl・c_sekinin.pl）を順に束ねることと、
+%   葉に 条(条番号) を置けること（schema.pl の 葉の行）。
+%   前は入口（誰に／責任／時効）の段だけを出し、どの入口でも補足の段（minpo・go）を後ろに足していた。
+%   見出しは段の答えを全部つないでいた（atomic_list_concat(Ws, '', S)。A7）。木は全部の段を「次のすべてが成り立つ」の下に
+%   ぶら下げた1本で（B5）、全部の段に 評価の約束 を付けていた。
+%   今は状態を全部名前で書き、知らない状態は throw で止める（agents/dog/rules.md:96。決め9。前も throw だった）。
+%   補足の段と 判定しない・足りる・答え・補足 の状態、止まる状態 は消した。
+%   段の文は、末尾の「。」を外して、そのまま結論の箱と番号つきの節に出す。葉（「〜ので」の前半・要件の原文）は論理の木にだけ出す（A2）。
+
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 成り立たない組があれば、その組だけを段にする（REVIEW_RULES C3。ほかの段は出さない）。
+% 組は findall で全部集め、組ごとに1段にする（id は mujun_e。REVIEW_RULES 末尾「AI同士で決めた書き方」1）。
+% 無ければ2つの話（賠償の責任→時効）を同じ入力で当てる（REVIEW_RULES C4・C5）。時効は、第3条の賠償の責任を負う組だけで見る
+% （前提が消えた組・免責された組は請求権が無いので、時効を数える物が無い。案の「2案に共通する直し」）。
+% 並びは話の順で、話の中は 当たった答えを先に で並べる。
+% 同じ述語を別のファイルに分けて書くと後の読み込みで消えるので、まとめはここに1つだけ置く
+全部の段(C, Steps) :-
+    findall(s(Id, 'この組み合わせはありません', 段(組み合わせなし, 'この組み合わせはありません。', As, Ws)),
+            ( 組み合わせなし(C, K, Ws, As), atom_concat(mujun_, K, Id) ), Steps),
+    Steps \== [], !.
+全部の段(C, Steps) :-
+    責任の段(C, L1), 当たった答えを先に(L1, S1),
+    時効の段(C, L1, L2), 当たった答えを先に(L2, S2),
+    append([S1, S2], Steps).
+
+%% ---- 賠償の責任（第2条第1項・第2条第3項・第2条第2項・第3条・第4条）----
+% 要件は 2条1項 → 2条3項 → 2条2項 → 3条ただし書 の順に全部見る（決め5）。
+% 欠けた要件は findall で全部集め、最初の1つを結論の箱に、残りを葉に置く
+% （REVIEW_RULES 末尾「AI同士で決めた書き方」1。最初の1つで止めると、2つ目以降の欠けが黙って木から落ちる）。
+% 欠けが無ければ第4条を見る（「前条の場合において」）。
+責任の段(C, [s(sekinin, '第2条〜第4条 賠償の責任', S) | L]) :-
+    findall(R, ( member(P, [物の要件, 相手の要件, 欠陥の要件, 被害の要件]), call(P, C, R) ), Rs),
+    findall(K, member(欠け(K), Rs), Ks),
+    責任の答え(C, Rs, Ks, S, L).
+
+責任の答え(_, _, [k(M, As, Fs, _) | Ks], 段(当たらない, M, As, Fs1), []) :- !,
+    findall(F, member(k(_, _, _, F), Ks), Rest),
+    append(Fs, Rest, Fs1).
+責任の答え(C, Rs, [], S, L) :-
+    findall(F, ( member(足りる(Fs), Rs), member(F, Fs) ), Ys),
+    免責の要件(C, E),
+    欄(相手, C, X), 相手の主語(X, W, Gs),
+    欄(被害, C, H), 被害の句(H, D),
+    免責の答え(E, W, Gs, D, Ys, S, L).
+
+% 第4条第1号・第2号を証明した：免責（止まる答え）。第3条の要件がそろったことは葉に置く
+免責の答え(免責(A, Fe), W, _, _, Ys, 段(免責, M, [A], Fs), []) :- !,
+    format(atom(M), '~wは、賠償の責任を負いません。', [W]),
+    append([Ys, ['第3条の賠償の責任の要件はそろっている', 条('3条')], Fe], Fs).
+% 部品・過失あり：第3条の責任（当たる）と、第4条第2号に当たらない段の2つ（案の例「部品・過失あり」）
+免責の答え(過失あり(Fe), W, Gs, D, Ys, S, [s(menseki, '第4条第2号 部品の作り手の免責', 段(当たらない, '他社の設計の指示に従っても、自分に過失があった部品の作り手は、賠償の責任を免れません。', ['4条2号'], Fe))]) :- !,
+    当たる段(W, Gs, D, Ys, S).
+免責の答え(証明なし(Fe), W, Gs, D, Ys, S, []) :-
+    append(Ys, Fe, Fs),
+    当たる段(W, Gs, D, Fs, S).
+
+当たる段(W, Gs, D, Fs, 段(当たる, M, As, Fs)) :-
+    format(atom(M), '~wは、~wを賠償する責任を負います。', [W, D]),
+    append(Gs, ['3条'], As).
+
+%% ---- 時効（第5条）----
+% 賠償の責任の段が「当たる」ときだけ（部品・過失ありの menseki 段は当たらないだが、賠償の責任は負うので数える）。
+% sekinin の段は1つだけなので、id で1つに決まる鍵として memberchk（REVIEW_RULES 末尾「AI同士で決めた書き方」1）
+時効の段(C, L1, [s(jiko, '第5条 時効で消えるか', S)]) :-
+    memberchk(s(sekinin, _, 段(当たる, _, _, _)), L1), !,
+    時効の答え(C, S).
+時効の段(_, _, []).
+
+% 話の中の並びは ①止まる答え ②当たった答え ④「当たりません」の文（この本に ③答えを支える文 は無い。keiyaku の 足りる）
+% ①②が無いときは「当たりません」が聞いた答えなので、そのまま出す（kaisan-prolog と同じ並べ方）
+% 組の番号 は番号を空のまま呼んで後で比べる。番号を束ねて呼ぶと頭に合わず、最後の throw の節に落ちて止まる（sorin-prolog 2026-11-22 22:50 run_cases。kaisan-prolog と同じ）
+当たった答えを先に([], []) :- !.
+当たった答えを先に(L0, L) :-
+    ( member(s(_, _, 段(St0, _, _, _)), L0), 組の番号(St0, N0), N0 =< 2 -> Order = [1, 2, 3, 4] ; Order = [4, 3] ),
+    findall(S, ( member(N, Order), member(S, L0), S = s(_, _, 段(St, _, _, _)), 組の番号(St, M), M =:= N ), L).
+
+% 組の番号(状態, 1=止まる答え | 2=当たった答え | 4=当たりません)。
+% 状態は全部名前で書き、知らない状態は止める（agents/dog/rules.md:96。決め9）
+組の番号(組み合わせなし, 1) :- !.  % エ 3条・5条1項2号・5条3項（体 × 潜伏はい × 渡してから10年以内 × 被害が出てから10年超）
+組の番号(免責, 1) :- !.            % 4条1号・4条2号で賠償の責任を負わない
+組の番号(消える, 1) :- !.          % 5条1項1号・5条2項・5条1項2号・5条3項で請求権が時効で消える
+組の番号(当たる, 2) :- !.          % 3条で賠償の責任を負う、5条で時効で消えていない
+組の番号(当たらない, 4) :- !.      % 2条1項（建物・手を加えていない農林水産物）、2条3項（売っただけ・仕事としてでない）、2条2項（欠陥が無い）、3条ただし書（製品だけ）、4条2号（部品・過失あり）
+組の番号(St, _) :- throw(知らない状態(St)).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、段の文だけを出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」を付けない）。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(_, Steps, Ws) :-
+    findall(W, ( member(s(_, _, S), Steps), 問いの答え(S, W) ), Ws).
+
+% 答えの文に箱の条を（）で付ける。条の無い段は付けない（「（）」を画面に出さない）
+問いの答え(S, W) :-
+    S = 段(_, _, As, _),
+    答え(S, W0),
+    ( As == [] -> W = W0 ; 条の表記(As, A), format(atom(W), '~w（~w）', [W0, A]) ).
+
+% 節の文：答えの文（条を付けない）
+節の文(_, S, W) :- 答え(S, W).
+
+% 答え(段, 答えの文)：段の文の末尾の「。」を外す。
+% 段の文には、画面の上で指す先の無い指示語（その・この・同項・当該 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6。rules/*.pl の段の文で守る）
+答え(段(_, M, _, _), W) :-
+    ( atom_concat(M0, '。', M) -> W = M0 ; W = M ).
+
+%% ---- 根拠条文 ----
+% 段の順に並べ、重複は1つに
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As, _), Ss), member(A, As) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5。結論をつないだ行と「次のすべてが成り立つ」の節は置かない）。
+% 並びは結論の箱と同じ。一番上の行は結論の箱の文で、その下に段の条の原文、葉（起きた事実・あなたの考え・条文の読み・要件の条の原文）、約束事を置く。
+木(_, Steps, Trees) :-
+    findall(T, ( member(s(Id, _, S), Steps), 段の木(Id, S, T) ), Trees).
+
+段の木(Id, S, t(K, W, '', Cs)) :-
+    S = 段(St, _, Arts, Fs),
+    問いの答え(S, W),
+    list_to_set(Arts, As),
+    maplist(原文規定, As, Rs),
+    maplist(葉の行, Fs, Ls),
+    段の約束(Id, St, Ys),
+    append([Rs, Ls, Ys], Kids),
+    すべて(W, '', Kids, t(_, W, _, Cs)),
+    印(St, K).
+
+% 止まった段（組み合わせなし・免責・消える・当たらない）は info、そのほかは ok（木ごとに、その段で決める。kaisan-prolog と同じ）
+% 状態は1つに決まっていて、入っているかを見るだけなので memberchk（REVIEW_RULES 末尾「AI同士で決めた書き方」1）
+印(St, K) :- 組の番号(St, _), ( memberchk(St, [組み合わせなし, 免責, 消える, 当たらない]) -> K = info ; K = ok ).
+
+% 葉に置くのは結論を支える規則と事実だけ。断り書き（当てはめは判定しない 等）は about の「判定について」に置く（REVIEW_RULES A5。
+% 前は全部の段に 評価の約束 を付けていた）。「当たりません」の段には 当たらないの約束 を付ける（条文に無いアプリの決めごと。D1）
+段の約束(_, 当たらない, [Y]) :- !, 当たらないの約束(Y).
+段の約束(_, _, []).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は kaisan-prolog の web.pl と同じ（2026-11-24 案A）。
+%   前は result・explain の2つで、explain は木1本を平らにしていた。今は木を結論ごとに1本にした（B5）。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+</script>
+<script type="application/json" id="law">{"1":{"t":"第一条","c":"（目的）","p":[{"n":"1","s":"この法律は、製造物の欠陥により人の生命、身体又は財産に係る被害が生じた場合における製造業者等の損害賠償の責任について定めることにより、被害者の保護を図り、もって国民生活の安定向上と国民経済の健全な発展に寄与することを目的とする。","i":[]}]},"2":{"t":"第二条","c":"（定義）","p":[{"n":"1","s":"この法律において「製造物」とは、製造又は加工された動産をいう。","i":[]},{"n":"2","s":"この法律において「欠陥」とは、当該製造物の特性、その通常予見される使用形態、その製造業者等が当該製造物を引き渡した時期その他の当該製造物に係る事情を考慮して、当該製造物が通常有すべき安全性を欠いていることをいう。","i":[]},{"n":"3","s":"この法律において「製造業者等」とは、次のいずれかに該当する者をいう。","i":[{"n":"1","t":"一","s":"当該製造物を業として製造、加工又は輸入した者（以下単に「製造業者」という。）","sub":[]},{"n":"2","t":"二","s":"自ら当該製造物の製造業者として当該製造物にその氏名、商号、商標その他の表示（以下「氏名等の表示」という。）をした者又は当該製造物にその製造業者と誤認させるような氏名等の表示をした者","sub":[]},{"n":"3","t":"三","s":"前号に掲げる者のほか、当該製造物の製造、加工、輸入又は販売に係る形態その他の事情からみて、当該製造物にその実質的な製造業者と認めることができる氏名等の表示をした者","sub":[]}]}]},"3":{"t":"第三条","c":"（製造物責任）","p":[{"n":"1","s":"製造業者等は、その製造、加工、輸入又は前条第三項第二号若しくは第三号の氏名等の表示をした製造物であって、その引き渡したものの欠陥により他人の生命、身体又は財産を侵害したときは、これによって生じた損害を賠償する責めに任ずる。ただし、その損害が当該製造物についてのみ生じたときは、この限りでない。","i":[]}]},"4":{"t":"第四条","c":"（免責事由）","p":[{"n":"1","s":"前条の場合において、製造業者等は、次の各号に掲げる事項を証明したときは、同条に規定する賠償の責めに任じない。","i":[{"n":"1","t":"一","s":"当該製造物をその製造業者等が引き渡した時における科学又は技術に関する知見によっては、当該製造物にその欠陥があることを認識することができなかったこと。","sub":[]},{"n":"2","t":"二","s":"当該製造物が他の製造物の部品又は原材料として使用された場合において、その欠陥が専ら当該他の製造物の製造業者が行った設計に関する指示に従ったことにより生じ、かつ、その欠陥が生じたことにつき過失がないこと。","sub":[]}]}]},"5":{"t":"第五条","c":"（消滅時効）","p":[{"n":"1","s":"第三条に規定する損害賠償の請求権は、次に掲げる場合には、時効によって消滅する。","i":[{"n":"1","t":"一","s":"被害者又はその法定代理人が損害及び賠償義務者を知った時から三年間行使しないとき。","sub":[]},{"n":"2","t":"二","s":"その製造業者等が当該製造物を引き渡した時から十年を経過したとき。","sub":[]}]},{"n":"2","s":"人の生命又は身体を侵害した場合における損害賠償の請求権の消滅時効についての前項第一号の規定の適用については、同号中「三年間」とあるのは、「五年間」とする。","i":[]},{"n":"3","s":"第一項第二号の期間は、身体に蓄積した場合に人の健康を害することとなる物質による損害又は一定の潜伏期間が経過した後に症状が現れる損害については、その損害が生じた時から起算する。","i":[]}]},"6":{"t":"第六条","c":"（民法の適用）","p":[{"n":"1","s":"製造物の欠陥による製造業者等の損害賠償の責任については、この法律の規定によるほか、民法（明治二十九年法律第八十九号）の規定による。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"本則","a":[{"k":"1","t":"第一条","c":"（目的）","u":1},{"k":"2","t":"第二条","c":"（定義）","u":1},{"k":"3","t":"第三条","c":"（製造物責任）","u":1},{"k":"4","t":"第四条","c":"（免責事由）","u":1},{"k":"5","t":"第五条","c":"（消滅時効）","u":1},{"k":"6","t":"第六条","c":"（民法の適用）","u":1}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+// parseArt・lawHTML はこの本の前の template.html のまま（号のボタンで条の文とその号だけを出すため。tokusho の lawHTML は号を絞らない）
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  // '466条2項' '466条1項本文' '509条第1号' '466条の2第1項' '469条2項第1号' '469条2項ただし書' のような形。複数条が「・」で区切られることもある → 最初の条だけ見る
+  const first = String(a).split("・")[0];
+  const m = first.match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(?:第?(\d+)号((?:の\d+)*))?([イロハニホ])?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[4] ? m[4] + (m[5] || "").replace(/の/g, "_") : null, sub: m[6] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para);
+  // 号まで指定があれば、項の本文とその号だけ出す
+  if (r.item) ps = ps.filter(p => p.i.some(it => it.n === r.item));
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const list = r.item ? p.i.filter(it => it.n === r.item) : p.i;
+    const its = list.map(it => `<p class="it">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => r.sub && x.startsWith(r.sub + " ") ? `<br><span class="hit">　${esc(x)}</span>` : `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなく、このアプリの決め事（収録範囲・仕組みのページに一覧）。</p>`;
+// 凡例は最初の木の上に1回だけ出す（legend＝false で外す。shohi-prolog・gyotetsu-prolog と同じ）
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+
+// ---------- ここから別ページ（about.html）だけの処理 ----------
+if (location.protocol === "file:") $("back").href = "seizobutsu.html";
+function openHash(){ const d = location.hash && document.getElementById(location.hash.slice(1)); if (d && d.tagName === "DETAILS") d.open = true; }
+openHash(); window.addEventListener("hashchange", openHash);
+
+async function bootAbout(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    // 全条文の地図
+    let C = []; try{ C = JSON.parse(document.getElementById("cover-data").textContent); }catch(e){}
+    const cover = $("cover");
+    C.forEach(ch => {
+      const div = document.createElement("div"); div.className = "cover-ch";
+      div.innerHTML = `<h4>${esc(ch.t)} <span>${ch.a.length}条</span></h4><div class="cells"></div>`;
+      const cells = div.querySelector(".cells");
+      ch.a.forEach(a => {
+        const btn = document.createElement("button"); btn.type = "button";
+        btn.className = `cell u${a.u}`; btn.title = `${a.t}${a.c}`;
+        btn.addEventListener("click", () => {
+          const old = document.getElementById("cover-pick"); if (old) old.remove();
+          const pk = document.createElement("div"); pk.id = "cover-pick";
+          pk.innerHTML = a.u === 1 ? lawHTML(a.k.includes("_") ? a.k.replace("_", "条の").replace(/_/g, "の") : a.k + "条") : `<p class="hint" style="margin-top:6px">${esc(a.t)}${esc(a.c)}${a.u === 2 ? "（削除）" : "（このアプリでは使用しない条）"}</p>`;
+          div.appendChild(pk);
+        });
+        cells.appendChild(btn);
+      });
+      cover.appendChild(div);
+    });
+    const used = C.flatMap(c => c.a).filter(a => a.u === 1).length;
+    const total = C.flatMap(c => c.a).filter(a => a.u !== 2).length;
+    cover.insertAdjacentHTML("afterbegin", `<p class="cover-total">使っている条：${used} / ${total} 条</p>`);
+    // ソース表示
+    const src = $("src");
+    files.forEach(f => {
+      const det = document.createElement("details"); det.className = "srcfile";
+      det.innerHTML = `<summary>${esc(f.dataset.name.replace(/_/g, "/"))}</summary><pre>${esc(f.textContent)}</pre>`;
+      src.appendChild(det);
+    });
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+  }
+}
+
+// 直接クエリ実行
+$("run").addEventListener("click", () => {
+  if (!pl){ $("out").textContent = "まだ読み込み中です。"; return; }
+  const q = $("q").value.trim().replace(/\.$/, "");
+  try{
+    const it = pl.prolog.query(q); const out = [];
+    for (let i = 0; i < 20; i++){
+      const r = it.next();
+      if (!r) break;
+      if (r.error){ out.push("エラー：" + r.message); break; }
+      // 最後の解は done:true に値が付いて返る。done で先に抜けると、その解を捨てて「解なし」に見える
+      if (r.value && r.value.$tag === "bindings"){
+        const { $tag, ...vars } = r.value;
+        out.push(Object.keys(vars).length ? JSON.stringify(vars, null, 2) : "true");
+      }
+      if (r.done) break;
+    }
+    $("out").textContent = out.length ? out.join("\n---\n") : "（解なし）";
+  } catch(e){ $("out").textContent = "エラー：" + e.message; }
+});
+
+if (typeof SWIPL === "function") bootAbout();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; }
+</script>
