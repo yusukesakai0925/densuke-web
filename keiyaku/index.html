@@ -1,0 +1,1084 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="解雇や懲戒は無効になるか、期間の途中で解雇された、5年を超えて働いた、更新を断られた、就業規則を不利に変えられたときを、労働契約法の条文から判定します。">
+<title>解雇と労働契約の決まりを逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+/* 欄の上の小見出し（この法律が当たるか・解雇・懲戒・出向・就業規則と労働条件・労働条件の変更・期間のある契約）。選ばせる欄ではないので番号を数えない */
+.slots .slot-h{margin:0;padding:8px 10px 4px;border-bottom:2px solid var(--line);border-right:2px solid var(--line);background:var(--paper)}
+.checks{display:grid;gap:6px;margin:4px 10px 8px}
+.checks label{display:flex;gap:8px;align-items:flex-start;font-size:.84rem;font-weight:400;padding:0;letter-spacing:0;line-height:1.5}
+.checks label::before{content:none}
+.checks input{flex:0 0 auto;margin-top:.25em}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.step.off{color:var(--muted)}
+.flow{margin:0;padding-left:1.2em}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+.disclaimer-inline{margin-top:10px;font-size:.78rem;color:var(--muted);border-top:1px solid var(--hair);padding-top:8px;line-height:1.65}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border-left:2px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <h1>解雇と労働契約の決まりを<span class="ao">逆から引く</span></h1>
+    <div class="judge-plate"><span class="jp-k">判定</span><img src="densuke_icon.svg" width="64" height="64" alt="でんすけのアイコン"><span class="jp-v">でんすけ<small>秘書AI</small></span></div>
+    <p class="lead">解雇や懲戒は無効になるか、期間の途中で解雇された、5年を超えて働いた、更新を断られた、就業規則を不利に変えられたときを、でんすけが労働契約法の条文から判定します。</p>
+    <p class="caution" role="note"><b>注意</b><span>条文をルールにして、論理的にそのまま演算した結果です。労働基準監督署や裁判所の判断とは異なる場合があります。<a class="aboutlink" href="about.html">収録範囲・仕組み →</a></span></p>
+  </header>
+
+  <section class="ask">
+    <div>
+      <p class="sec-h">例から選ぶ</p>
+      <div class="presets" id="presets"></div>
+    </div>
+    <!-- 欄は起きた事実と、あなたの考えを聞く27個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-24 案A。形は kaiko-prolog と同じ）。
+         前の入口「どの話か」（iri）と「何の話か」（pwa・ywa）「いつの話か」（sba）、欄の出し消し（updateSlots）、隠れた欄を 関係なし で渡す shown() をやめた。
+         関係のない欄は Prolog が見ないだけ（about の「話ごとに見る欄」）。並びは schema.pl の ctx の引数の順（1〜27）。
+         小見出しは選ばせる欄ではない（番号を数えない）。欄名・選択肢から条文の写し・号番号・条番号を外した（C2）。
+         同じ事実を2か所で聞いていた船員（sen・psen）と、2つの欄で1つの事実を聞いていた組（priy＋psou ほか7組）を1欄にした（C1） -->
+    <div class="slots" id="slots">
+      <p class="sec-h slot-h full-slot">この法律が当たるか</p>
+      <div class="slot full-slot" id="s-kou"><label for="kou">働いている先</label><span class="field"><select id="kou">
+        <option value="民間">民間の会社など</option><option value="公務員">国や地方公共団体（国家公務員・地方公務員）</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-shin"><label for="shin">雇い主が使っているのは、一緒に住む親族だけか</label><span class="field"><select id="shin">
+        <option value="いいえ">いいえ（ほかの人も使っている）</option><option value="はい">はい</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-sen"><label for="sen">船の乗組員として船員法が当たる人か</label><span class="field"><select id="sen">
+        <option value="いいえ">いいえ</option><option value="はい">はい</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">解雇・懲戒・出向</p>
+      <div class="slot full-slot" id="s-kikan"><label for="kikan">今の労働契約に、期間の決まりがあるか</label><span class="field"><select id="kikan">
+        <option value="有期">ある（1年契約など。有期）</option><option value="無期">ない（定年まで・期間の決まりなし。無期）</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-kkai"><label for="kkai">解雇されたか</label><span class="field"><select id="kkai">
+        <option value="されていない">されていない</option><option value="された">された</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-komo"><label for="komo">解雇の理由と重さ（あなたの考え）</label><span class="field"><select id="komo">
+        <option value="釣り合う">誰が見てもうなずける理由があり、解雇という重さも釣り合っている</option><option value="重すぎる">理由が無いか、解雇は重すぎる</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-kyam"><label for="kyam">期間の途中で解雇するしかない、やむを得ない事情があるか（あなたの考え）</label><span class="field"><select id="kyam">
+        <option value="いいえ">いいえ</option><option value="はい">はい</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-chok"><label for="chok">懲戒処分（けん責・減給・出勤停止・懲戒解雇など）を受けたか</label><span class="field"><select id="chok">
+        <option value="受けていない">受けていない</option><option value="決まりあり">受けた。会社には就業規則などに懲戒できる決まりがある</option><option value="決まりなし">受けた。懲戒できる決まりは無い</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-cmo"><label for="cmo">懲戒の理由と重さ（あなたの考え）</label><span class="field"><select id="cmo">
+        <option value="釣り合う">うなずける理由があり、処分の重さも釣り合っている</option><option value="重すぎる">理由が無いか、処分が重すぎる</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-shuk"><label for="shuk">出向（籍を残したまま別の会社で働くこと）を命じられたか</label><span class="field"><select id="shuk">
+        <option value="命じられていない">命じられていない</option><option value="決まりあり">命じられた。会社には出向を命じられる決まりがある</option><option value="決まりなし">命じられた。命じられる決まりは無い</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-sran"><label for="sran">出向の命令は、必要性や人の選び方から見て行き過ぎか（あなたの考え）</label><span class="field"><select id="sran">
+        <option value="いいえ">行き過ぎではない</option><option value="はい">行き過ぎ（権利の濫用）</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">就業規則と労働条件</p>
+      <div class="slot full-slot" id="s-ski"><label for="ski">職場に就業規則があるか</label><span class="field"><select id="ski">
+        <option value="ある">ある</option><option value="ない">ない</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-sgo"><label for="sgo">就業規則の労働条件は、内容が合理的か（あなたの考え）</label><span class="field"><select id="sgo">
+        <option value="はい">はい</option><option value="いいえ">いいえ</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-sshu"><label for="sshu">契約を結んだとき、就業規則を働く人がいつでも見られるようにしていたか</label><span class="field"><select id="sshu">
+        <option value="はい">はい</option><option value="いいえ">いいえ</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-sbe"><label for="sbe">契約を結ぶとき、就業規則と違う条件を個別に決めたか</label><span class="field"><select id="sbe">
+        <option value="決めていない">決めていない</option><option value="良い">決めた。就業規則と同じか、それより良い条件</option><option value="悪い">決めた。就業規則より悪い条件</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-shan"><label for="shan">就業規則に、法令や労働協約に反する定めがあるか（あなたの考え）</label><span class="field"><select id="shan">
+        <option value="ない">ない</option><option value="ある">ある</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">労働条件の変更</p>
+      <div class="slot full-slot" id="s-hen"><label for="hen">契約の後に、労働条件を変えられたか</label><span class="field"><select id="hen">
+        <option value="変えられていない">変えられていない</option><option value="合意">本人も合意して変えた</option><option value="不利">合意しないまま、就業規則の変更で不利に変えられた</option><option value="不利でない">合意しないまま、就業規則の変更で変えられた（不利ではない）</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-hshu"><label for="hshu">変えた後の就業規則を、働く人が見られるようにしたか</label><span class="field"><select id="hshu">
+        <option value="はい">はい</option><option value="いいえ">いいえ</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-hgou"><label for="hgou">就業規則の変え方は合理的か（不利益の大きさ・必要性・内容・組合との話し合いなどから。あなたの考え）</label><span class="field"><select id="hgou">
+        <option value="はい">はい</option><option value="いいえ">いいえ</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-hfh"><label for="hfh">「就業規則が変わってもこの条件は変えない」と個別に決めた部分があるか</label><span class="field"><select id="hfh">
+        <option value="ない">ない</option><option value="良い">ある。就業規則と同じか、それより良い条件</option><option value="悪い">ある。就業規則より悪い条件</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">期間のある契約（5年・更新）</p>
+      <div class="slot full-slot" id="s-ytsu"><label for="ytsu">同じ雇い主との、期間のある契約を足した長さ（まだ始まっていない契約は足さない）</label><span class="field"><select id="ytsu">
+        <option value="五年未満">5年未満</option><option value="五年">ちょうど5年</option><option value="超える">2つ以上の契約を足して5年を超える</option><option value="一つ">1つの契約だけで5年を超える</option>
+      </select></span><p class="desc">2013年4月1日以降に始まった契約から数える。22の欄の空白で通算に入らなくなる、空白より前の契約は足さない</p></div>
+      <div class="slot full-slot" id="s-ykuu"><label for="ykuu">契約と契約の間に、どちらの契約にも入らない期間（空白）があったか</label><span class="field"><select id="ykuu">
+        <option value="なかった">なかった</option><option value="六月未満">あった。6か月未満で、その前の契約期間は通算1年以上</option><option value="六月以上">あった。6か月以上で、その前の契約期間は通算1年以上</option><option value="半分未満">あった。その前の契約期間が通算1年未満で、空白がその半分に足りない</option><option value="半分以上">あった。その前の契約期間が通算1年未満で、空白がその半分以上</option>
+      </select></span><p class="desc">半分は、その前の契約期間の2分の1。1か月に満たない端数は1か月として数える</p></div>
+      <div class="slot full-slot" id="s-ymou"><label for="ymou">期間の決まりのない契約への切り替え（無期転換）を申し込んだか</label><span class="field"><select id="ymou">
+        <option value="していない">申し込んでいない</option><option value="まで">今の契約が終わる日までに申し込んだ</option><option value="後">今の契約が終わった後に申し込んだ</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-ytom"><label for="ytom">契約の更新を断られたか（雇止め）</label><span class="field"><select id="ytom">
+        <option value="断られていない">断られていない</option><option value="断られた">断られた</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-yjij"><label for="yjij">更新が続くと見てよい事情（あなたの考え）</label><span class="field"><select id="yjij">
+        <option value="無い">どちらも無い</option><option value="一号">何度も更新されてきて、更新しないのは解雇と同じと見られる</option><option value="二号">更新されると期待するのに、もっともな理由がある</option><option value="両方">その両方</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-ykou"><label for="ykou">更新か、新しい契約を申し込んだか</label><span class="field"><select id="ykou">
+        <option value="していない">申し込んでいない</option><option value="まで">契約が終わる日までに更新を申し込んだ</option><option value="遅滞なく">終わった後、すぐに（遅滞なく）申し込んだ</option><option value="遅滞して">終わった後、しばらくしてから申し込んだ</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-ymo"><label for="ymo">断った理由と重さ（あなたの考え）</label><span class="field"><select id="ymo">
+        <option value="釣り合う">うなずける理由があり、断るのも釣り合っている</option><option value="行き過ぎ">理由が無いか、断るのは行き過ぎ</option>
+      </select></span></div>
+    </div>
+    <div class="qline" id="qline"></div>
+  </section>
+
+  <section id="answer" aria-live="polite"><p class="loading">でんすけが条文のルール（Prolog）を読み込んでいます…</p></section>
+
+  <p class="foot techline"><span>労働契約法／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot" id="foot">e-Gov法令検索の労働契約法の本則のうち、第2条・第6条〜第21条の原文をルールにしたものです。労働契約法の条文は2026年11月4日までに取得した版で、それ以後の改正と、公布済みで施行前の改正は読んでいません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 労働契約法のProlog 共通の型・欄の読み出し・組み合わせなし・木の部品
+%
+% ctx(働く先, 親族, 船員, 期間, 解雇, 解雇の重さ, 事由, 懲戒, 懲戒の重さ, 出向, 濫用,
+%     就業規則, 合理, 周知, 個別, 反する, 変更, 変周知, 変合理, 不変,
+%     通算, 空白, 転換, 雇止め, 事情, 更新, 拒絶)
+%   欄は起きた事実と、あなたの考えを聞く27個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-24 案A。
+%   案は ../keiyaku_form_plan_answer_1124.md の案A、決めは ../keiyaku_form_plan_decision_1124.md）。
+%   前は ctx(入口, 詳細) で、入口（処分／就業／有期）と「何の話か」「いつの話か」の欄（話・場面）を利用者に先に選ばせ、
+%   画面が欄を出し消しして、隠れた欄を 関係なし で渡していた（形OK/2 が 関係なし を除いた並びを見ていた）。今は使わない欄を判定で見ないだけにした。
+%   同じ事実を2回聞かない（C1）：船員を1欄にし、2つの欄で1つの事実を聞いていた組（理由＋相当・別合意＋基準・不変＋不変基準・申込＋いつ・
+%   一号＋二号・労合意＋不利益）を1つの欄にした。同一の使用者か（同一）は欄名に入れて消した。
+%   引数の順は画面の欄の番号（1〜27）と同じ。同じ入力で第7条〜第21条を全部当てる。
+%   画面では5つの小見出し（この法律が当たるか／解雇・懲戒・出向／就業規則と労働条件／労働条件の変更／期間のある契約（5年・更新））の下に並べる。小見出しは欄を出し消ししない。
+%   頭の欄（5・8・10・12・16・17・21〜23・24）が「無い」側なら、その話の段を出さない。全部が「無い」側なら nashi の1段だけを出す。
+%   「あなたの考え」の欄は 6・7・9・11・13・16・19・25・27 の9つ。本人の考えのとおりに答える（前の 評価の約束 の代わり）。
+%    1 働く先     : 民間 | 公務員（国や地方公共団体。21条1項）
+%    2 親族       : いいえ | はい（雇い主が使っているのは、一緒に住む親族だけか。21条2項）
+%    3 船員       : いいえ | はい（船の乗組員として船員法が当たる人か。20条）
+%    4 期間       : 有期 | 無期（今の労働契約に期間の決まりがあるか。16条・17条1項・18条・19条）
+%    5 解雇       : されていない | された（16条・17条1項）
+%    6 解雇の重さ : 釣り合う | 重すぎる（解雇の理由と重さ。あなたの考え。16条）
+%    7 事由       : いいえ | はい（期間の途中で解雇するしかない、やむを得ない事情があるか。あなたの考え。17条1項）
+%    8 懲戒       : 受けていない | 決まりあり | 決まりなし（懲戒処分を受けたか。会社に懲戒できる決まりがあるか。15条）
+%    9 懲戒の重さ : 釣り合う | 重すぎる（あなたの考え。15条）
+%   10 出向       : 命じられていない | 決まりあり | 決まりなし（出向を命じられたか。会社に命じられる決まりがあるか。14条）
+%   11 濫用       : いいえ | はい（出向の命令は、必要性や人の選び方から見て行き過ぎか。あなたの考え。14条）
+%   12 就業規則   : ある | ない（7条）
+%   13 合理       : はい | いいえ（就業規則の労働条件は、内容が合理的か。あなたの考え。7条）
+%   14 周知       : はい | いいえ（契約を結んだとき、就業規則を働く人がいつでも見られるようにしていたか。7条）
+%   15 個別       : 決めていない | 良い | 悪い（契約を結ぶとき、就業規則と違う条件を個別に決めたか。良い＝同じかそれより良い。7条ただし書・12条）
+%   16 反する     : ない | ある（就業規則に、法令や労働協約に反する定めがあるか。あなたの考え。13条）
+%   17 変更       : 変えられていない | 合意 | 不利 | 不利でない（契約の後に労働条件を変えられたか。8条・9条・10条）
+%   18 変周知     : はい | いいえ（変えた後の就業規則を、働く人が見られるようにしたか。10条）
+%   19 変合理     : はい | いいえ（就業規則の変え方は合理的か。あなたの考え。10条）
+%   20 不変       : ない | 良い | 悪い（「就業規則が変わってもこの条件は変えない」と個別に決めた部分。10条ただし書・12条）
+%   21 通算       : 五年未満 | 五年 | 超える | 一つ（同じ雇い主との、期間のある契約を足した長さ。超える＝2つ以上を足して5年を超える、一つ＝1つの契約だけで5年を超える。18条1項）
+%   22 空白       : なかった | 六月未満 | 六月以上 | 半分未満 | 半分以上（契約と契約の間の空白。六月は前の契約期間が通算1年以上、半分は1年未満のとき。18条2項）
+%   23 転換       : していない | まで | 後（無期転換を申し込んだか。まで＝今の契約が終わる日までに、後＝終わった後に。18条1項）
+%   24 雇止め     : 断られていない | 断られた（契約の更新を断られたか。19条）
+%   25 事情       : 無い | 一号 | 二号 | 両方（更新が続くと見てよい事情。あなたの考え。一号＝何度も更新されてきて解雇と同じと見られる、二号＝期待にもっともな理由がある。19条1号・2号）
+%   26 更新       : していない | まで | 遅滞なく | 遅滞して（更新か新しい契約を申し込んだか。19条）
+%   27 拒絶       : 釣り合う | 行き過ぎ（断った理由と重さ。あなたの考え。19条）
+%
+%   関係のない欄（たとえば5が「されていない」のときの6・7、4が「有期」のときの6）は、組み合わせなしにせず、その欄を使う段を出さない（kaiko-prolog と同じ）。
+%   欄どうしで成り立たない組は 組み合わせなし/3 が返す（REVIEW_RULES C3。案のア・イ・ウ）。
+%
+% 書き方のきまり：
+%   ・条番号は '19条' '19条1号' '18条1項' のような原子。項が1つの条は項の番号を付けない。
+%     ただし書・本文は原文の表の行にせず、文の中に書く（表は項と号まで）。
+%   ・ルールの中で範囲の外の条を、原子の先頭に条番号を置く形で書かない。書くと build.py が使う条に数える。
+%   ・段は 段(状態, 文, 箱の条, 葉の文のリスト)。結論ごとの段は s(画面のid, 見出し, 段)。段の文は、末尾の「。」を外して結論の箱にも出す。
+%     段の文は本題だけを書き、「〜ので」の前半（入力の言い直し）は葉の文に置く（REVIEW_RULES A2。葉は論理の木にだけ出る）。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | and | or | info
+%   ・アプリの約束事の行は 条 を '@約束事' にする。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか。組の成り立ちは 組み合わせなし/3 で見る）----
+ctx_valid(C) :-
+    functor(C, ctx, 27),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )).
+
+欄の値(1, [民間, 公務員]).
+欄の値(2, [いいえ, はい]).
+欄の値(3, [いいえ, はい]).
+欄の値(4, [有期, 無期]).
+欄の値(5, [されていない, された]).
+欄の値(6, [釣り合う, 重すぎる]).
+欄の値(7, [いいえ, はい]).
+欄の値(8, [受けていない, 決まりあり, 決まりなし]).
+欄の値(9, [釣り合う, 重すぎる]).
+欄の値(10, [命じられていない, 決まりあり, 決まりなし]).
+欄の値(11, [いいえ, はい]).
+欄の値(12, [ある, ない]).
+欄の値(13, [はい, いいえ]).
+欄の値(14, [はい, いいえ]).
+欄の値(15, [決めていない, 良い, 悪い]).
+欄の値(16, [ない, ある]).
+欄の値(17, [変えられていない, 合意, 不利, 不利でない]).
+欄の値(18, [はい, いいえ]).
+欄の値(19, [はい, いいえ]).
+欄の値(20, [ない, 良い, 悪い]).
+欄の値(21, [五年未満, 五年, 超える, 一つ]).
+欄の値(22, [なかった, 六月未満, 六月以上, 半分未満, 半分以上]).
+欄の値(23, [していない, まで, 後]).
+欄の値(24, [断られていない, 断られた]).
+欄の値(25, [無い, 一号, 二号, 両方]).
+欄の値(26, [していない, まで, 遅滞なく, 遅滞して]).
+欄の値(27, [釣り合う, 行き過ぎ]).
+
+%% ---- 欄の読み出し（番号は画面の欄の番号）----
+欄の番号(働く先, 1).
+欄の番号(親族, 2).
+欄の番号(船員, 3).
+欄の番号(期間, 4).
+欄の番号(解雇, 5).
+欄の番号(解雇の重さ, 6).
+欄の番号(事由, 7).
+欄の番号(懲戒, 8).
+欄の番号(懲戒の重さ, 9).
+欄の番号(出向, 10).
+欄の番号(濫用, 11).
+欄の番号(就業規則, 12).
+欄の番号(合理, 13).
+欄の番号(周知, 14).
+欄の番号(個別, 15).
+欄の番号(反する, 16).
+欄の番号(変更, 17).
+欄の番号(変周知, 18).
+欄の番号(変合理, 19).
+欄の番号(不変, 20).
+欄の番号(通算, 21).
+欄の番号(空白, 22).
+欄の番号(転換, 23).
+欄の番号(雇止め, 24).
+欄の番号(事情, 25).
+欄の番号(更新, 26).
+欄の番号(拒絶, 27).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+%% ---- 成り立たない組（REVIEW_RULES C3。案のア・イ・ウ。根拠は rules/a_genbun.pl の原文の行で確かめた）----
+% 組み合わせなし(C, 理由の文のリスト, 根拠のリスト)。上から見て、最初に当たった1つだけを返す。
+% 既定の値（4=有期・12=ある）はどの組にも当たらない。どの組も、既定でない値を2つ選んだときだけ出る（kaiko の決め2）。
+% 第21条（1・2の欄）に当たるときは、ここより先に適用外の段だけを出す（g_hantei.pl の 全部の段）。
+% ア：18条1項「二以上の有期労働契約…の契約期間を通算した期間」「現に締結している有期労働契約の契約期間が満了する日までの間に」。
+%     今の契約に期間の決まりが無いのに、期間のある契約を足して無期転換を申し込む、とは言えない
+組み合わせなし(C, ['第18条第1項は、期間の定めのある労働契約（有期労働契約）を足して、今の有期労働契約が終わる日までに申し込む定め',
+                   '4の欄で今の契約に期間の決まりはないと選び、21〜23の欄で期間のある契約を足す話を選んだ'],
+              ['18条1項']) :-
+    欄(期間, C, 無期),
+    \+ ( 欄(通算, C, 五年未満), 欄(空白, C, なかった), 欄(転換, C, していない) ).
+% イ：19条「有期労働契約であって…契約期間が満了する日までの間に労働者が当該有期労働契約の更新の申込みをした場合」。
+%     期間の決まりの無い契約に、更新は無い
+組み合わせなし(C, ['第19条は、期間の定めのある労働契約（有期労働契約）の更新の定め',
+                   '4の欄で今の契約に期間の決まりはないと選び、24の欄で契約の更新を断られたと選んだ'],
+              ['19条']) :-
+    欄(期間, C, 無期), 欄(雇止め, C, 断られた).
+% ウ1：7条ただし書「就業規則の内容と異なる労働条件を合意していた部分」。就業規則が無いのに、就業規則と違う条件は決められない
+組み合わせなし(C, ['第7条ただし書は、就業規則の内容と異なる労働条件を合意した部分の定め',
+                   '12の欄で就業規則はないと選び、15の欄で就業規則と違う条件を個別に決めたと選んだ'],
+              ['7条']) :-
+    欄(就業規則, C, ない), \+ 欄(個別, C, 決めていない).
+% ウ2：13条「就業規則が法令又は労働協約に反する場合には」。就業規則が無いのに、就業規則の定めが法令に反するとは言えない
+組み合わせなし(C, ['第13条は、就業規則が法令や労働協約に反する場合の定め',
+                   '12の欄で就業規則はないと選び、16の欄で就業規則に法令や労働協約に反する定めがあると選んだ'],
+              ['13条']) :-
+    欄(就業規則, C, ない), 欄(反する, C, ある).
+% ウ3：9条「就業規則を変更することにより」、10条「使用者が就業規則の変更により労働条件を変更する場合」「就業規則の変更によっては変更されない労働条件として合意していた部分」。
+%     就業規則が無いのに、就業規則の変更で変えられた、就業規則が変わっても変えないと決めた、とは言えない
+組み合わせなし(C, ['第9条と第10条は、就業規則の変更で労働条件を変える場合の定め',
+                   '12の欄で就業規則はないと選び、17の欄か20の欄で就業規則の変更の話を選んだ'],
+              ['9条', '10条']) :-
+    欄(就業規則, C, ない),
+    ( member(V, [不利, 不利でない]), 欄(変更, C, V) ; \+ 欄(不変, C, ない) ), !.
+
+%% ---- 理由の語をつなぐ ----
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---- 木の部品 ----
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+原文規定(Art, X) :- 原文(Art, W), 規定(Art, W, X).
+% 成り立つ文（起きた事実・条文の読み）
+文(X, t(ok, X, '', [])).
+約束(X, t(ok, X, '@約束事', [])).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（労働契約法の条文にないもの）
+%
+%   条に当たらない段（状態 当たらない）にだけ付ける（kaiko-prolog と同じ）。
+%   2026-11-24 案A。合理的な理由・社会通念上相当・権利の濫用・やむを得ない事由・合理的な期待・周知・不利益・遅滞なくは判定しない、とした 評価の約束 を消した
+%   （欄名に「（あなたの考え）」と書いて聞き、周知・不利益・遅滞なくは選択肢の事実として聞くので、約束事ではなくなった。
+%   断り書きは about の「判定について」へ。REVIEW_RULES A5。前は g_hantei.pl の 段の約束 で全部の段の木に付けていた）。
+%   約束の文は指示語（その）を置かずに書き直した（A6）。
+
+当たらないの約束(X) :-
+    約束('「当たりません」「適用されません」の答えは、条に当たらないと言うだけで、反対の結論を言うものではない。解雇・懲戒・出向が有効という答えでもない', X).
+</script>
+<script type="text/prolog" data-name="rules_a_genbun.pl">% rules/a_genbun.pl — 判定に使う条文の原文（law/keiyaku.xml の本則のまま）
+%
+%   原文(条, 文)。test/page_test.mjs が XML を別に読み、全行が一字一句一致するかを確かめる。
+%   2文以上ある項は続けて1行にする（build.py の text() と同じ）。項の行に号の文は入れない。
+
+原文('2条1項', 'この法律において「労働者」とは、使用者に使用されて労働し、賃金を支払われる者をいう。').
+原文('2条2項', 'この法律において「使用者」とは、その使用する労働者に対して賃金を支払う者をいう。').
+原文('6条', '労働契約は、労働者が使用者に使用されて労働し、使用者がこれに対して賃金を支払うことについて、労働者及び使用者が合意することによって成立する。').
+原文('7条', '労働者及び使用者が労働契約を締結する場合において、使用者が合理的な労働条件が定められている就業規則を労働者に周知させていた場合には、労働契約の内容は、その就業規則で定める労働条件によるものとする。ただし、労働契約において、労働者及び使用者が就業規則の内容と異なる労働条件を合意していた部分については、第十二条に該当する場合を除き、この限りでない。').
+原文('8条', '労働者及び使用者は、その合意により、労働契約の内容である労働条件を変更することができる。').
+原文('9条', '使用者は、労働者と合意することなく、就業規則を変更することにより、労働者の不利益に労働契約の内容である労働条件を変更することはできない。ただし、次条の場合は、この限りでない。').
+原文('10条', '使用者が就業規則の変更により労働条件を変更する場合において、変更後の就業規則を労働者に周知させ、かつ、就業規則の変更が、労働者の受ける不利益の程度、労働条件の変更の必要性、変更後の就業規則の内容の相当性、労働組合等との交渉の状況その他の就業規則の変更に係る事情に照らして合理的なものであるときは、労働契約の内容である労働条件は、当該変更後の就業規則に定めるところによるものとする。ただし、労働契約において、労働者及び使用者が就業規則の変更によっては変更されない労働条件として合意していた部分については、第十二条に該当する場合を除き、この限りでない。').
+原文('11条', '就業規則の変更の手続に関しては、労働基準法（昭和二十二年法律第四十九号）第八十九条及び第九十条の定めるところによる。').
+原文('12条', '就業規則で定める基準に達しない労働条件を定める労働契約は、その部分については、無効とする。この場合において、無効となった部分は、就業規則で定める基準による。').
+原文('13条', '就業規則が法令又は労働協約に反する場合には、当該反する部分については、第七条、第十条及び前条の規定は、当該法令又は労働協約の適用を受ける労働者との間の労働契約については、適用しない。').
+原文('14条', '使用者が労働者に出向を命ずることができる場合において、当該出向の命令が、その必要性、対象労働者の選定に係る事情その他の事情に照らして、その権利を濫用したものと認められる場合には、当該命令は、無効とする。').
+原文('15条', '使用者が労働者を懲戒することができる場合において、当該懲戒が、当該懲戒に係る労働者の行為の性質及び態様その他の事情に照らして、客観的に合理的な理由を欠き、社会通念上相当であると認められない場合は、その権利を濫用したものとして、当該懲戒は、無効とする。').
+原文('16条', '解雇は、客観的に合理的な理由を欠き、社会通念上相当であると認められない場合は、その権利を濫用したものとして、無効とする。').
+原文('17条1項', '使用者は、期間の定めのある労働契約（以下この章において「有期労働契約」という。）について、やむを得ない事由がある場合でなければ、その契約期間が満了するまでの間において、労働者を解雇することができない。').
+原文('17条2項', '使用者は、有期労働契約について、その有期労働契約により労働者を使用する目的に照らして、必要以上に短い期間を定めることにより、その有期労働契約を反復して更新することのないよう配慮しなければならない。').
+原文('18条1項', '同一の使用者との間で締結された二以上の有期労働契約（契約期間の始期の到来前のものを除く。以下この条において同じ。）の契約期間を通算した期間（次項において「通算契約期間」という。）が五年を超える労働者が、当該使用者に対し、現に締結している有期労働契約の契約期間が満了する日までの間に、当該満了する日の翌日から労務が提供される期間の定めのない労働契約の締結の申込みをしたときは、使用者は当該申込みを承諾したものとみなす。この場合において、当該申込みに係る期間の定めのない労働契約の内容である労働条件は、現に締結している有期労働契約の内容である労働条件（契約期間を除く。）と同一の労働条件（当該労働条件（契約期間を除く。）について別段の定めがある部分を除く。）とする。').
+原文('18条2項', '当該使用者との間で締結された一の有期労働契約の契約期間が満了した日と当該使用者との間で締結されたその次の有期労働契約の契約期間の初日との間にこれらの契約期間のいずれにも含まれない期間（これらの契約期間が連続すると認められるものとして厚生労働省令で定める基準に該当する場合の当該いずれにも含まれない期間を除く。以下この項において「空白期間」という。）があり、当該空白期間が六月（当該空白期間の直前に満了した一の有期労働契約の契約期間（当該一の有期労働契約を含む二以上の有期労働契約の契約期間の間に空白期間がないときは、当該二以上の有期労働契約の契約期間を通算した期間。以下この項において同じ。）が一年に満たない場合にあっては、当該一の有期労働契約の契約期間に二分の一を乗じて得た期間を基礎として厚生労働省令で定める期間）以上であるときは、当該空白期間前に満了した有期労働契約の契約期間は、通算契約期間に算入しない。').
+原文('19条', '有期労働契約であって次の各号のいずれかに該当するものの契約期間が満了する日までの間に労働者が当該有期労働契約の更新の申込みをした場合又は当該契約期間の満了後遅滞なく有期労働契約の締結の申込みをした場合であって、使用者が当該申込みを拒絶することが、客観的に合理的な理由を欠き、社会通念上相当であると認められないときは、使用者は、従前の有期労働契約の内容である労働条件と同一の労働条件で当該申込みを承諾したものとみなす。').
+原文('19条1号', '当該有期労働契約が過去に反復して更新されたことがあるものであって、その契約期間の満了時に当該有期労働契約を更新しないことにより当該有期労働契約を終了させることが、期間の定めのない労働契約を締結している労働者に解雇の意思表示をすることにより当該期間の定めのない労働契約を終了させることと社会通念上同視できると認められること。').
+原文('19条2号', '当該労働者において当該有期労働契約の契約期間の満了時に当該有期労働契約が更新されるものと期待することについて合理的な理由があるものであると認められること。').
+原文('20条1項', '第十二条及び前章の規定は、船員法（昭和二十二年法律第百号）の適用を受ける船員（次項において「船員」という。）に関しては、適用しない。').
+原文('20条2項', '船員に関しては、第七条中「第十二条」とあるのは「船員法（昭和二十二年法律第百号）第百条」と、第十条中「第十二条」とあるのは「船員法第百条」と、第十一条中「労働基準法（昭和二十二年法律第四十九号）第八十九条及び第九十条」とあるのは「船員法第九十七条及び第九十八条」と、第十三条中「前条」とあるのは「船員法第百条」とする。').
+原文('21条1項', 'この法律は、国家公務員及び地方公務員については、適用しない。').
+原文('21条2項', 'この法律は、使用者が同居の親族のみを使用する場合の労働契約については、適用しない。').
+</script>
+<script type="text/prolog" data-name="rules_b_shobun.pl">% rules/b_shobun.pl — 解雇・懲戒・出向（第14条〜第17条第1項）：4〜11の欄
+%
+%   第14条〜第16条に当たらないことは「有効」ではない。文は「無効とされる場合に当たりません」で止める。
+%   2026-11-24 案A。入口の「処分」と「何の話か」（話）をやめ、5（解雇）・8（懲戒）・10（出向）の欄を見て段を並べる。
+%   懲戒解雇（5「された」・8「受けた」）は、第15条と第16条（か第17条第1項）の両方の段を出す（前は話を1つしか選べなかった）。
+%   理由と重さは1欄2値にした（6・9。案の決め2。前の 片方の文 と状態 判定しない は消えた。読みは about の (a)）。
+%   前の案内の段（有期の満了時に更新されない→雇止めの入口へ）は、24の欄が同じページにあるので消した。
+%   前の補足の段（判定しないこと・解雇が有効かどうか・第16条との関係・語の意味）は about の「判定について」「事実を聞かない条」へ移した（A5）。
+%   段の文は本題だけにし、「〜を前提にすると」の前半は葉の文に回した（A2）。指示語（その解雇・その懲戒・その出向）は名詞にした（A6）。
+
+処分の段(C, L) :-
+    解雇の段(C, L1),
+    懲戒の段(C, L2),
+    出向の段(C, L3),
+    append([L1, L2, L3], L).
+
+%% ---- 第16条・第17条第1項 解雇 ----
+解雇の段(C, []) :- 欄(解雇, C, されていない), !.
+解雇の段(C, [s(kaiko, '第16条の解雇の定め', S)]) :- 欄(期間, C, 無期), !, 第16条の答え(C, S).
+解雇の段(C, [s(tochu, '第17条第1項の期間の途中の解雇', S)]) :- 第17条の答え(C, S).
+
+第16条の答え(C, 段(当たる, '解雇は無効になります。', ['16条'], ['期間の決まりのない労働契約で解雇された', '解雇の理由が無いか、解雇は重すぎる（あなたの考え）', '第16条の「客観的に合理的な理由を欠き、社会通念上相当であると認められない場合」に当たる'])) :-
+    欄(解雇の重さ, C, 重すぎる), !.
+第16条の答え(_, 段(当たらない, '解雇は、第16条で無効とされる場合に当たりません。', ['16条'], ['期間の決まりのない労働契約で解雇された', '誰が見てもうなずける理由があり、解雇という重さも釣り合っている（あなたの考え）'])).
+
+% 第20条第1項が外すのは第12条と第4章（第17条〜第19条）。船員には第17条第1項の答えを出さない（about の (x)）
+第17条の答え(C, 段(当たらない, '船員法の適用を受ける船員には、第17条第1項は適用されません。', ['20条1項'], ['期間の決まりのある労働契約（有期労働契約）の期間の途中で解雇された', '船の乗組員として船員法が当たる'])) :-
+    欄(船員, C, はい), !.
+第17条の答え(C, 段(できない, '使用者は、契約期間が満了するまでの間、労働者を解雇することができません。', ['17条1項'], ['期間の決まりのある労働契約（有期労働契約）の期間の途中で解雇された', '期間の途中で解雇するしかない、やむを得ない事情は無い（あなたの考え）'])) :-
+    欄(事由, C, いいえ), !.
+第17条の答え(_, 段(当たらない, '期間の途中の解雇は、第17条第1項の禁止に当たりません。', ['17条1項'], ['期間の決まりのある労働契約（有期労働契約）の期間の途中で解雇された', '期間の途中で解雇するしかない、やむを得ない事情がある（あなたの考え）'])).
+
+%% ---- 第15条 懲戒 ----
+懲戒の段(C, []) :- 欄(懲戒, C, 受けていない), !.
+懲戒の段(C, [s(chokai, '第15条の懲戒の定め', S)]) :- 懲戒の答え(C, S).
+
+懲戒の答え(C, 段(当たらない, '懲戒できる決まりが無いときの懲戒は、第15条に当たりません。', ['15条'], ['懲戒処分を受けたが、会社には就業規則などに懲戒できる決まりが無い', '第15条は、使用者が労働者を懲戒することができる場合の定め'])) :-
+    欄(懲戒, C, 決まりなし), !.
+懲戒の答え(C, 段(当たる, '懲戒は無効になります。', ['15条'], ['懲戒処分を受け、会社には懲戒できる決まりがある', '懲戒の理由が無いか、処分が重すぎる（あなたの考え）', '第15条の「客観的に合理的な理由を欠き、社会通念上相当であると認められない場合」に当たる'])) :-
+    欄(懲戒の重さ, C, 重すぎる), !.
+懲戒の答え(_, 段(当たらない, '懲戒は、第15条で無効とされる場合に当たりません。', ['15条'], ['懲戒処分を受け、会社には懲戒できる決まりがある', 'うなずける理由があり、処分の重さも釣り合っている（あなたの考え）'])).
+
+%% ---- 第14条 出向 ----
+出向の段(C, []) :- 欄(出向, C, 命じられていない), !.
+出向の段(C, [s(shukko, '第14条の出向の定め', S)]) :- 出向の答え(C, S).
+
+出向の答え(C, 段(当たらない, '出向を命じられる決まりが無いときの出向の命令は、第14条に当たりません。', ['14条'], ['出向を命じられたが、会社には出向を命じられる決まりが無い', '第14条は、使用者が労働者に出向を命ずることができる場合の定め'])) :-
+    欄(出向, C, 決まりなし), !.
+出向の答え(C, 段(当たる, '出向の命令は無効になります。', ['14条'], ['出向を命じられ、会社には出向を命じられる決まりがある', '出向の命令は、必要性や人の選び方から見て行き過ぎ（あなたの考え）', '第14条の「権利を濫用したものと認められる場合」に当たる'])) :-
+    欄(濫用, C, はい), !.
+出向の答え(_, 段(当たらない, '出向の命令は、第14条で無効とされる場合に当たりません。', ['14条'], ['出向を命じられ、会社には出向を命じられる決まりがある', '出向の命令は、必要性や人の選び方から見て行き過ぎではない（あなたの考え）'])).
+</script>
+<script type="text/prolog" data-name="rules_c_shugyo.pl">% rules/c_shugyo.pl — 就業規則と労働条件（第7条〜第10条・第12条・第13条）：12〜20の欄
+%
+%   第12条は合理性や周知を条件にしていないので、第7条に当たるかと別に答える（about の (h)）。
+%   船員には第12条が適用されず（第20条第1項）、第7条・第10条・第13条に読み替えがある（第20条第2項）。船員法は読まない。
+%   2026-11-24 案A。入口の「就業」と「いつの話か」（場面）をやめ、12（就業規則）・16（反する定め）・17（変更）の欄を見て段を並べる。
+%   契約を結ぶときの話（7条・12条・13条）と、変えるときの話（8条〜10条）は別の話にした（同じ人に両方が起きる）。
+%   前の 判定しない の2つ（不利益でない変更・船員の第10条ただし書）は、「第9条の禁止には当たりません」と状態 読み替え にした（案の②③）。
+%   前の補足の段（第6条・第10条の事情・第11条・船員の読み替え・判定しないこと・語の意味）は about へ移した（A5）。
+%   第10条の事情は19の欄の欄名の括弧に入れた。第6条・第11条は about の「事実を聞かない条」。
+%   段の文は本題だけにし（「〜ので」「を前提にすると」は葉の文へ。A2）、「その合意」「その就業規則」は名詞にした（A6）。
+
+%% ---- 契約を結ぶとき（12の欄が「ある」とき）----
+就業の段(C, []) :- 欄(就業規則, C, ない), !.
+就業の段(C, L) :-
+    第7条の答え(C, S7),
+    第12条の段(C, L12),
+    第13条の段(C, L13),
+    append([[s(dai7, '第7条 就業規則と契約の内容', S7)], L12, L13], L).
+
+第7条の答え(C, 段(当たらない, '就業規則の労働条件が労働契約の内容になる第7条本文には、当たりません。', ['7条'], Fs)) :-
+    findall(F, 第7条の足りない語(C, F), Fs), Fs \== [], !.
+第7条の答え(C, 段(当たる, '就業規則で定める労働条件が、労働契約の内容になります。', ['7条'], ['就業規則の労働条件は合理的（あなたの考え）', '契約を結んだとき、就業規則を働く人がいつでも見られるようにしていた'])) :-
+    欄(個別, C, 決めていない), !.
+第7条の答え(C, 段(当たる, '個別に決めた部分は、決めた条件によります。ほかの部分は、就業規則で定める労働条件によります。', ['7条'], ['契約を結ぶとき、就業規則と同じか、それより良い条件を個別に決めた', '第7条ただし書の「就業規則の内容と異なる労働条件を合意していた部分」に当たり、第12条に当たる場合ではない'])) :-
+    欄(個別, C, 良い), !.
+第7条の答え(C, 段(読み替え, '船員では、第7条ただし書の「第12条」を船員法第100条と読みます。', ['7条', '20条2項'], ['契約を結ぶとき、就業規則より悪い条件を個別に決めた', '船の乗組員として船員法が当たる'])) :-
+    欄(船員, C, はい), !.
+第7条の答え(_, 段(足りる, '就業規則より悪い条件を個別に決めた部分は、決めた条件によることはできません。', ['7条'], ['契約を結ぶとき、就業規則より悪い条件を個別に決めた', '第7条ただし書の「第十二条に該当する場合を除き」に当たる'])).
+
+第7条の足りない語(C, '就業規則の労働条件は合理的ではない（あなたの考え）') :- 欄(合理, C, いいえ).
+第7条の足りない語(C, '契約を結んだとき、就業規則を働く人が見られるようにしていなかった') :- 欄(周知, C, いいえ).
+
+% 個別に決めた条件が就業規則より悪いときだけ第12条を答える。第7条本文に当たるかとは別（about の (h)）
+第12条の段(C, [s(dai12, '第12条 就業規則の基準に達しない部分', S)]) :-
+    欄(個別, C, 悪い), !,
+    第12条の答え(C, S).
+第12条の段(_, []).
+
+第12条の答え(C, 段(当たらない, '船員法の適用を受ける船員には、第12条は適用されません。', ['20条1項'], ['契約を結ぶとき、就業規則より悪い条件を個別に決めた', '船の乗組員として船員法が当たる'])) :-
+    欄(船員, C, はい), !.
+第12条の答え(_, 段(当たる, '就業規則で定める基準に達しない部分は無効になり、就業規則で定める基準によります。', ['12条'], ['契約を結ぶとき、就業規則より悪い条件を個別に決めた'])).
+
+第13条の段(C, []) :- 欄(反する, C, ない), !.
+第13条の段(C, [s(hansuru, '第13条 法令・労働協約に反する部分', S)]) :- 第13条の答え(C, S).
+
+第13条の答え(C, 段(読み替え, '就業規則のうち法令や労働協約に反する部分には、第7条・第10条・船員法第100条は適用されません。', ['13条', '20条2項'], ['就業規則に、法令や労働協約に反する定めがある（あなたの考え）', '船の乗組員として船員法が当たり、第13条の「前条」は船員法第100条と読む', '適用されないのは、反する法令や労働協約の適用を受ける労働者との労働契約'])) :-
+    欄(船員, C, はい), !.
+第13条の答え(_, 段(当たる, '就業規則のうち法令や労働協約に反する部分には、第7条・第10条・第12条は適用されません。', ['13条'], ['就業規則に、法令や労働協約に反する定めがある（あなたの考え）', '適用されないのは、反する法令や労働協約の適用を受ける労働者との労働契約'])).
+
+%% ---- 労働条件を変えるとき（17の欄が「変えられていない」以外のとき）----
+変更の段(C, []) :- 欄(変更, C, 変えられていない), !.
+変更の段(C, [s(henko, '第8条〜第10条 労働条件の変更', S)]) :- 変更の答え(C, S).
+
+変更の答え(C, 段(当たる, '労働者と使用者は、合意により、労働条件を変更することができます。', ['8条'], ['本人も合意して労働条件を変えた'])) :-
+    欄(変更, C, 合意), !.
+変更の答え(C, 段(当たらない, '労働条件の変更は、第9条の禁止に当たりません。', ['9条'], ['合意しないまま、就業規則の変更で変えられたが、不利ではない', '第9条本文が禁じるのは、労働者の不利益に労働条件を変えること'])) :-
+    欄(変更, C, 不利でない), !.
+変更の答え(C, 段(できない, '使用者は、労働者と合意せずに、就業規則の変更で労働条件を不利に変えることはできません。', ['9条', '10条'], ['合意しないまま、就業規則の変更で不利に変えられた' | Fs])) :-
+    findall(F, 第10条の足りない語(C, F), Fs), Fs \== [], !.
+変更の答え(C, 段(当たる, '労働条件は、変更後の就業規則によります。', ['9条', '10条'], ['合意しないまま、就業規則の変更で不利に変えられた', '変えた後の就業規則を、働く人が見られるようにした', '就業規則の変え方は合理的（あなたの考え）'])) :-
+    欄(不変, C, ない), !.
+変更の答え(C, 段(当たる, '変えないと個別に決めた部分は、就業規則の変更では変わりません。ほかの部分は、変更後の就業規則によります。', ['10条'], ['合意しないまま、就業規則の変更で不利に変えられた', '「就業規則が変わってもこの条件は変えない」と、就業規則と同じか、それより良い条件を個別に決めていた'])) :-
+    欄(不変, C, 良い), !.
+変更の答え(C, 段(読み替え, '船員では、第10条ただし書の「第12条」を船員法第100条と読みます。', ['10条', '20条2項'], ['「就業規則が変わってもこの条件は変えない」と、就業規則より悪い条件を個別に決めていた', '船の乗組員として船員法が当たる'])) :-
+    欄(船員, C, はい), !.
+変更の答え(_, 段(当たる, '変えないと個別に決めた部分のうち、就業規則で定める基準に達しない部分は無効になり、就業規則で定める基準によります。', ['10条', '12条'], ['「就業規則が変わってもこの条件は変えない」と、就業規則より悪い条件を個別に決めていた', '第10条ただし書の「第十二条に該当する場合を除き」に当たる'])).
+
+第10条の足りない語(C, '変えた後の就業規則を、働く人が見られるようにしていない') :- 欄(変周知, C, いいえ).
+第10条の足りない語(C, '就業規則の変え方は合理的ではない（あなたの考え）') :- 欄(変合理, C, いいえ).
+</script>
+<script type="text/prolog" data-name="rules_d_yuki.pl">% rules/d_yuki.pl — 期間のある契約の無期転換と雇止め（第18条・第19条）：21〜27の欄
+%
+%   2026-11-24 案A。入口の「有期」と「何の話か」（話）をやめ、21〜23（無期転換）と24（雇止め）の欄を見て段を並べる。
+%   無期転換を申し込んだのに雇止めされた人は、第18条と第19条の両方の段を出す（前は話を1つしか選べなかった）。
+%   4の欄が「無期」のときは、ここまで来ない（schema.pl の 組み合わせなし のア・イ）。
+%   船員は第18条・第19条の段を「適用されません（20条1項）」にする。第20条第1項が外すのは第12条と第4章（第17条〜第19条）。
+%   前の 同一 の欄は、21の欄名（同じ雇い主との）に入れて消した。
+%   前の 判定しない の3つを消した（案の④⑤⑥）：
+%     ④ 空白の前の契約期間が1年未満 → 22の欄を「半分に足りない／半分以上」に分けた。半分の数え方（1か月に満たない端数は1か月）は省令第2条の値で、欄の説明と about に置く（決め3）
+%     ⑤ 1つの契約だけで5年を超える → 「2つ以上の契約を足した期間の定めで、当たりません」と答える（決め4）
+%     ⑥ 雇止めの理由・相当の片方だけ → 27の欄を1欄2値にして消えた（決め2）
+%   空白が6か月以上（1年未満なら半分以上）のときは、空白より前の契約を21の欄で足さない（21の欄の説明。about の (p)）。
+%   前の補足の段（第17条第2項の配慮・判定しないこと・語の意味）は about へ移した（A5）。
+%   段の文は本題だけにし（A2）、「その申込み」「その更新の申込み」は名詞にした（A6）。
+
+有期の段(C, L) :-
+    第18条の段(C, L1),
+    第19条の段(C, L2),
+    append(L1, L2, L).
+
+%% ---- 第18条 無期転換 ----
+第18条の段(C, []) :- 欄(通算, C, 五年未満), 欄(空白, C, なかった), 欄(転換, C, していない), !.
+第18条の段(C, [s(tsusan, '第18条第1項 無期転換', 段(当たらない, '船員法の適用を受ける船員には、第18条は適用されません。', ['20条1項'], ['船の乗組員として船員法が当たる']))]) :-
+    欄(船員, C, はい), !.
+第18条の段(C, L) :-
+    空白の段(C, Ks),
+    第18条第1項の答え(C, S),
+    append(Ks, [s(tsusan, '第18条第1項 無期転換', S)], L).
+
+空白の段(C, []) :- 欄(空白, C, なかった), !.
+空白の段(C, [s(kuhaku, '第18条第2項 契約と契約の間の空白', S)]) :- 欄(空白, C, G), 空白の答え(G, S).
+
+空白の答え(六月未満, 段(足りる, '空白より前の契約期間も、通算に入ります。', ['18条2項'], ['空白より前の契約期間は通算1年以上で、空白は6か月に足りない', '第18条第2項の「算入しない」に当たらない'])).
+空白の答え(六月以上, 段(当たる, '空白より前の契約期間は、通算に入りません。', ['18条2項'], ['空白より前の契約期間は通算1年以上で、空白は6か月以上'])).
+空白の答え(半分未満, 段(足りる, '空白より前の契約期間も、通算に入ります。', ['18条2項'], ['空白より前の契約期間は通算1年に足りず、空白は契約期間の半分に足りない', '半分は、1か月に満たない端数を1か月として数える（厚生労働省令）', '第18条第2項の「算入しない」に当たらない'])).
+空白の答え(半分以上, 段(当たる, '空白より前の契約期間は、通算に入りません。', ['18条2項'], ['空白より前の契約期間は通算1年に足りず、空白は契約期間の半分以上', '半分は、1か月に満たない端数を1か月として数える（厚生労働省令）'])).
+
+第18条第1項の答え(C, 段(当たらない, '通算した契約期間は、第18条第1項の「5年を超える」に当たりません。', ['18条1項'], [F])) :-
+    欄(通算, C, V), memberchk(V-W, [五年未満-'5年未満', 五年-'ちょうど5年']), !,
+    format(atom(F), '同じ雇い主との、期間のある契約を足した長さは~w', [W]).
+第18条第1項の答え(C, 段(当たらない, '第18条第1項は2つ以上の契約を足した期間の定めで、1つの契約だけの期間には当たりません。', ['18条1項'], ['1つの契約だけで5年を超える', '第18条第1項は「二以上の有期労働契約」の契約期間を通算する'])) :-
+    欄(通算, C, 一つ), !.
+第18条第1項の答え(C, 段(当たらない, '使用者が無期転換の申込みを承諾したとみなされる場合に、当たりません。', ['18条1項'], ['同じ雇い主との、期間のある契約を2つ以上足して5年を超える', '無期転換を申し込んでいない'])) :-
+    欄(転換, C, していない), !.
+第18条第1項の答え(C, 段(当たらない, '使用者が無期転換の申込みを承諾したとみなされる場合に、当たりません。', ['18条1項'], ['同じ雇い主との、期間のある契約を2つ以上足して5年を超える', '今の契約が終わった後に申し込んだ', '第18条第1項は、今の契約が終わる日までの申込みの定め'])) :-
+    欄(転換, C, 後), !.
+第18条第1項の答え(_, 段(当たる, '使用者は、無期転換の申込みを承諾したものとみなされます。今の契約が終わる日の次の日から、期間の定めのない労働契約になり、契約期間のほかの労働条件は今と同じです（別段の定めがある部分を除きます）。', ['18条1項'], ['同じ雇い主との、期間のある契約を2つ以上足して5年を超える', '今の契約が終わる日までに、無期転換を申し込んだ'])).
+
+%% ---- 第19条 雇止め ----
+第19条の段(C, []) :- 欄(雇止め, C, 断られていない), !.
+第19条の段(C, [s(yatoi, '第19条 更新を断られたとき', S)]) :- 雇止めの答え(C, S).
+
+雇止めの答え(C, 段(当たらない, '船員法の適用を受ける船員には、第19条は適用されません。', ['20条1項'], ['契約の更新を断られた', '船の乗組員として船員法が当たる'])) :-
+    欄(船員, C, はい), !.
+雇止めの答え(C, 段(当たらない, T, ['19条'], ['契約の更新を断られた', '何度も更新されてきた事情も、更新を期待するもっともな理由も無い（あなたの考え）'])) :-
+    欄(事情, C, 無い), !, 雇止めの当たらない文(T).
+雇止めの答え(C, 段(当たらない, T, ['19条'], ['契約の更新を断られた', '更新も新しい契約も申し込んでいない'])) :-
+    欄(更新, C, していない), !, 雇止めの当たらない文(T).
+雇止めの答え(C, 段(当たらない, T, ['19条'], ['契約の更新を断られた', '契約が終わった後、しばらくしてから申し込んだ', '第19条は、契約が終わる日までの更新の申込みか、終わった後すぐ（遅滞なく）の申込みの定め'])) :-
+    欄(更新, C, 遅滞して), !, 雇止めの当たらない文(T).
+雇止めの答え(C, 段(当たらない, T, ['19条'], ['契約の更新を断られた', 'うなずける理由があり、断るのも釣り合っている（あなたの考え）'])) :-
+    欄(拒絶, C, 釣り合う), !, 雇止めの当たらない文(T).
+雇止めの答え(C, 段(当たる, T, ['19条' | Gs], ['契約の更新を断られた', F, '断った理由が無いか、断るのは行き過ぎ（あなたの考え）', '第19条の「客観的に合理的な理由を欠き、社会通念上相当であると認められないとき」に当たる' | Ws])) :-
+    号の条(C, Gs, Ws),
+    申込みの語(C, M, F),
+    format(atom(T), '使用者は、~wを、今までと同じ労働条件で承諾したものとみなされます。', [M]).
+
+雇止めの当たらない文('第19条の、使用者が申込みを承諾したとみなされる場合に、当たりません。').
+
+号の条(C, Gs, Ws) :-
+    欄(事情, C, J),
+    findall(G, 号の語(J, G, _), Gs),
+    findall(W, 号の語(J, _, W), Ws).
+
+号の語(J, '19条1号', '何度も更新されてきて、更新しないのは解雇と同じと見られる（あなたの考え）') :- memberchk(J, [一号, 両方]).
+号の語(J, '19条2号', '更新されると期待するのに、もっともな理由がある（あなたの考え）') :- memberchk(J, [二号, 両方]).
+
+申込みの語(C, '更新の申込み', '契約が終わる日までに更新を申し込んだ') :- 欄(更新, C, まで), !.
+申込みの語(_, '新しい契約の申込み', '契約が終わった後、すぐに（遅滞なく）新しい契約を申し込んだ').
+</script>
+<script type="text/prolog" data-name="rules_g_hantei.pl">% rules/g_hantei.pl — 段をまとめ、見出し・根拠条文・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 箱の条, 葉の文のリスト)　結論ごとの段 = s(画面のid, 見出し, 段)
+%   形は kaiko-prolog の g_hantei.pl（話が4つある本）と同じ（2026-11-24 案A）。
+%   前は入口（処分／就業／有期）の段だけを出し、見出しは段の答えを全部つないでいた（atomic_list_concat(Ws, '', S)。A7）。
+%   木は全部の段を「次のすべてが成り立つ」の下にぶら下げた1本で（B5）、全部の段に 評価の約束 を付けていた。
+%   組の番号/2 の最後は受け皿 組の番号(_, 2) で、判定しない・案内 が2番に化けて「…判定しません」「…入口で、雇止めを選ぶと答えが出ます」が結論の箱に出ていた（A1・A5）。
+%   今は状態を全部名前で書き、知らない状態は throw で止める（agents/dog/rules.md:96。決め8）。補足の段と 判定しない・案内 の状態は消した。
+%   段の文は、末尾の「。」を外して、そのまま結論の箱と番号つきの節に出す。葉の文（「〜ので」「を前提にすると」の前半）は論理の木にだけ出す（A2）。
+
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 第21条に当たれば、その段だけを出す（この法律が適用されないので、ほかの条も組み合わせも見ない。前の :15–20 と同じ）。
+% 次に成り立たない組があれば、その組だけを段にする（REVIEW_RULES C3。ほかの段は出さない）。
+% 無ければ4つの話（解雇・懲戒・出向→契約を結ぶときの就業規則→労働条件の変更→期間のある契約）を同じ入力で全部当てる（REVIEW_RULES C4・C5）。
+% 並びは話の順で、話の中は 当たった答えを先に で並べる。
+% どの話も入っていない（5・8・10 が「無い」側、12 が「ない」、17 が「変えられていない」、21〜24 が「無い」側）ときは nashi の1段だけを出す。
+% 同じ述語を別のファイルに分けて書くと後の読み込みで消えるので、まとめはここに1つだけ置く
+全部の段(C, [s(tekiyo, '第21条 この法律の適用', 段(適用外, '国家公務員と地方公務員には、労働契約法は適用されません。', ['21条1項'], ['働いている先は国や地方公共団体（国家公務員・地方公務員）']))]) :-
+    欄(働く先, C, 公務員), !.
+全部の段(C, [s(tekiyo, '第21条 この法律の適用', 段(適用外, '使用者が同居の親族だけを使用する場合の労働契約には、労働契約法は適用されません。', ['21条2項'], ['雇い主が使っているのは、一緒に住む親族だけ']))]) :-
+    欄(親族, C, はい), !.
+全部の段(C, Steps) :- 組み合わせなし(C, Ws, As), !,
+    Steps = [s(mujun, 'この組み合わせはありません', 段(組み合わせなし, 'この組み合わせはありません。', As, Ws))].
+全部の段(C, Steps) :-
+    処分の段(C, L1), 当たった答えを先に(L1, S1),
+    就業の段(C, L2), 当たった答えを先に(L2, S2),
+    変更の段(C, L3), 当たった答えを先に(L3, S3),
+    有期の段(C, L4), 当たった答えを先に(L4, S4),
+    append([S1, S2, S3, S4], Steps0),
+    ( Steps0 == [] -> 何も無い段(Steps) ; Steps = Steps0 ).
+
+何も無い段([s(nashi, '答える条', 段(当たらない, '解雇・懲戒・出向、就業規則、労働条件の変更、期間のある契約のどれも入っていないので、答える条はありません。', [], []))]).
+
+% 話の中の並びは ①止まる答え ②当たった答え ③答えを支える文（止まらないので聞いた答えの後ろ） ④「当たりません」の文
+% ①②が無いときは「当たりません」が聞いた答えなので、③より前に出す（kaiko-prolog と同じ並べ方）
+% 組の番号 は番号を空のまま呼んで後で比べる。番号を束ねて呼ぶと頭に合わず、最後の throw の節に落ちて止まる（sorin-prolog 2026-11-22 22:50 run_cases。kaiko-prolog と同じ）
+当たった答えを先に([], []) :- !.
+当たった答えを先に(L0, L) :-
+    ( member(s(_, _, 段(St0, _, _, _)), L0), 組の番号(St0, N0), N0 =< 2 -> Order = [1, 2, 3, 4] ; Order = [4, 3] ),
+    findall(S, ( member(N, Order), member(S, L0), S = s(_, _, 段(St, _, _, _)), 組の番号(St, M), M =:= N ), L).
+
+% 組の番号(状態, 1=止まる答え | 2=当たった答え | 3=答えを支える文 | 4=当たりません)。
+% 状態は全部名前で書き、知らない状態は止める（agents/dog/rules.md:96。決め8。前の受け皿 組の番号(_, 2) をやめた。kaiko-prolog と同じ）
+組の番号(組み合わせなし, 1) :- !.  % ア 18条1項、イ 19条、ウ 7条／13条／9条・10条
+組の番号(適用外, 1) :- !.          % 21条1項・21条2項
+組の番号(できない, 1) :- !.        % 17条1項の解雇の禁止・9条本文で就業規則の変更で不利に変えられない
+組の番号(当たる, 2) :- !.          % 14条・15条・16条の無効、7条・8条・10条・12条・13条、18条1項・19条のみなす、18条2項の算入しない
+組の番号(読み替え, 2) :- !.        % 20条2項（船員の7条ただし書・10条ただし書・13条）
+組の番号(足りる, 3) :- !.          % 7条ただし書で決めた条件によれない、18条2項の空白で前の契約も通算に入る
+組の番号(当たらない, 4) :- !.      % 14条〜16条・17条1項・18条・19条・7条本文・9条・12条（船員）に当たらない、nashi
+組の番号(St, _) :- throw(知らない状態(St)).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、段の文だけを出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」を付けない）。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(_, Steps, Ws) :-
+    findall(W, ( member(s(_, _, S), Steps), 問いの答え(S, W) ), Ws).
+
+% 答えの文に箱の条を（）で付ける。条の無い段（nashi）は付けない（「（）」を画面に出さない）
+問いの答え(S, W) :-
+    S = 段(_, _, As, _),
+    答え(S, W0),
+    ( As == [] -> W = W0 ; 条の表記(As, A), format(atom(W), '~w（~w）', [W0, A]) ).
+
+% 節の文：答えの文（条を付けない）
+節の文(_, S, W) :- 答え(S, W).
+
+% 答え(段, 答えの文)：段の文の末尾の「。」を外す。
+% 段の文には、画面の上で指す先の無い指示語（その・この・同項・当該 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6。rules/*.pl の段の文で守る）
+答え(段(_, M, _, _), W) :-
+    ( atom_concat(M0, '。', M) -> W = M0 ; W = M ).
+
+%% ---- 根拠条文 ----
+% 段の順に並べ、重複は1つに
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As, _), Ss), member(A, As) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5。結論をつないだ行と「次のすべてが成り立つ」の節は置かない）。
+% 並びは結論の箱と同じ。一番上の行は結論の箱の文で、その下に段の条の原文、葉の文（起きた事実・あなたの考え・条文の読み）、約束事を置く。
+木(_, Steps, Trees) :-
+    findall(T, ( member(s(Id, _, S), Steps), 段の木(Id, S, T) ), Trees).
+
+段の木(Id, S, t(K, W, '', Cs)) :-
+    S = 段(St, _, Arts, Fs),
+    問いの答え(S, W),
+    list_to_set(Arts, As),
+    maplist(原文規定, As, Rs),
+    maplist(文, Fs, Ls),
+    段の約束(Id, St, Ys),
+    append([Rs, Ls, Ys], Kids),
+    すべて(W, '', Kids, t(_, W, _, Cs)),
+    印(St, K).
+
+% 止まった段（組み合わせなし・適用外・できない・当たらない）は info、そのほかは ok（木ごとに、その段で決める。kaiko-prolog と同じ）
+印(St, K) :- 組の番号(St, _), ( memberchk(St, [組み合わせなし, 適用外, できない, 当たらない]) -> K = info ; K = ok ).
+
+% 葉に置くのは結論を支える規則と事実だけ。断り書き（当てはめは判定しない・本人の考えのとおりに答える 等）は about の「判定について」に置く（REVIEW_RULES A5。
+% 前は全部の段に 評価の約束 を付けていた）。「当たりません」の段には 当たらないの約束 を付ける（条文に無いアプリの決めごと。D1）。nashi は条が無いので付けない
+段の約束(nashi, _, []) :- !.
+段の約束(_, 当たらない, [Y]) :- !, 当たらないの約束(Y).
+段の約束(_, _, []).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は kaiko-prolog の web.pl と同じ（2026-11-24 案A）。
+%   前は result・explain の2つで、explain は木1本を平らにしていた。今は木を結論ごとに1本にした（B5）。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+</script>
+<script type="application/json" id="law">{"1":{"t":"第一条","c":"（目的）","p":[{"n":"1","s":"この法律は、労働者及び使用者の自主的な交渉の下で、労働契約が合意により成立し、又は変更されるという合意の原則その他労働契約に関する基本的事項を定めることにより、合理的な労働条件の決定又は変更が円滑に行われるようにすることを通じて、労働者の保護を図りつつ、個別の労働関係の安定に資することを目的とする。","i":[]}]},"2":{"t":"第二条","c":"（定義）","p":[{"n":"1","s":"この法律において「労働者」とは、使用者に使用されて労働し、賃金を支払われる者をいう。","i":[]},{"n":"2","s":"この法律において「使用者」とは、その使用する労働者に対して賃金を支払う者をいう。","i":[]}]},"3":{"t":"第三条","c":"（労働契約の原則）","p":[{"n":"1","s":"労働契約は、労働者及び使用者が対等の立場における合意に基づいて締結し、又は変更すべきものとする。","i":[]},{"n":"2","s":"労働契約は、労働者及び使用者が、就業の実態に応じて、均衡を考慮しつつ締結し、又は変更すべきものとする。","i":[]},{"n":"3","s":"労働契約は、労働者及び使用者が仕事と生活の調和にも配慮しつつ締結し、又は変更すべきものとする。","i":[]},{"n":"4","s":"労働者及び使用者は、労働契約を遵守するとともに、信義に従い誠実に、権利を行使し、及び義務を履行しなければならない。","i":[]},{"n":"5","s":"労働者及び使用者は、労働契約に基づく権利の行使に当たっては、それを濫用することがあってはならない。","i":[]}]},"4":{"t":"第四条","c":"（労働契約の内容の理解の促進）","p":[{"n":"1","s":"使用者は、労働者に提示する労働条件及び労働契約の内容について、労働者の理解を深めるようにするものとする。","i":[]},{"n":"2","s":"労働者及び使用者は、労働契約の内容（期間の定めのある労働契約に関する事項を含む。）について、できる限り書面により確認するものとする。","i":[]}]},"5":{"t":"第五条","c":"（労働者の安全への配慮）","p":[{"n":"1","s":"使用者は、労働契約に伴い、労働者がその生命、身体等の安全を確保しつつ労働することができるよう、必要な配慮をするものとする。","i":[]}]},"6":{"t":"第六条","c":"（労働契約の成立）","p":[{"n":"1","s":"労働契約は、労働者が使用者に使用されて労働し、使用者がこれに対して賃金を支払うことについて、労働者及び使用者が合意することによって成立する。","i":[]}]},"7":{"t":"第七条","c":"","p":[{"n":"1","s":"労働者及び使用者が労働契約を締結する場合において、使用者が合理的な労働条件が定められている就業規則を労働者に周知させていた場合には、労働契約の内容は、その就業規則で定める労働条件によるものとする。ただし、労働契約において、労働者及び使用者が就業規則の内容と異なる労働条件を合意していた部分については、第十二条に該当する場合を除き、この限りでない。","i":[]}]},"8":{"t":"第八条","c":"（労働契約の内容の変更）","p":[{"n":"1","s":"労働者及び使用者は、その合意により、労働契約の内容である労働条件を変更することができる。","i":[]}]},"9":{"t":"第九条","c":"（就業規則による労働契約の内容の変更）","p":[{"n":"1","s":"使用者は、労働者と合意することなく、就業規則を変更することにより、労働者の不利益に労働契約の内容である労働条件を変更することはできない。ただし、次条の場合は、この限りでない。","i":[]}]},"10":{"t":"第十条","c":"","p":[{"n":"1","s":"使用者が就業規則の変更により労働条件を変更する場合において、変更後の就業規則を労働者に周知させ、かつ、就業規則の変更が、労働者の受ける不利益の程度、労働条件の変更の必要性、変更後の就業規則の内容の相当性、労働組合等との交渉の状況その他の就業規則の変更に係る事情に照らして合理的なものであるときは、労働契約の内容である労働条件は、当該変更後の就業規則に定めるところによるものとする。ただし、労働契約において、労働者及び使用者が就業規則の変更によっては変更されない労働条件として合意していた部分については、第十二条に該当する場合を除き、この限りでない。","i":[]}]},"11":{"t":"第十一条","c":"（就業規則の変更に係る手続）","p":[{"n":"1","s":"就業規則の変更の手続に関しては、労働基準法（昭和二十二年法律第四十九号）第八十九条及び第九十条の定めるところによる。","i":[]}]},"12":{"t":"第十二条","c":"（就業規則違反の労働契約）","p":[{"n":"1","s":"就業規則で定める基準に達しない労働条件を定める労働契約は、その部分については、無効とする。この場合において、無効となった部分は、就業規則で定める基準による。","i":[]}]},"13":{"t":"第十三条","c":"（法令及び労働協約と就業規則との関係）","p":[{"n":"1","s":"就業規則が法令又は労働協約に反する場合には、当該反する部分については、第七条、第十条及び前条の規定は、当該法令又は労働協約の適用を受ける労働者との間の労働契約については、適用しない。","i":[]}]},"14":{"t":"第十四条","c":"（出向）","p":[{"n":"1","s":"使用者が労働者に出向を命ずることができる場合において、当該出向の命令が、その必要性、対象労働者の選定に係る事情その他の事情に照らして、その権利を濫用したものと認められる場合には、当該命令は、無効とする。","i":[]}]},"15":{"t":"第十五条","c":"（懲戒）","p":[{"n":"1","s":"使用者が労働者を懲戒することができる場合において、当該懲戒が、当該懲戒に係る労働者の行為の性質及び態様その他の事情に照らして、客観的に合理的な理由を欠き、社会通念上相当であると認められない場合は、その権利を濫用したものとして、当該懲戒は、無効とする。","i":[]}]},"16":{"t":"第十六条","c":"（解雇）","p":[{"n":"1","s":"解雇は、客観的に合理的な理由を欠き、社会通念上相当であると認められない場合は、その権利を濫用したものとして、無効とする。","i":[]}]},"17":{"t":"第十七条","c":"（契約期間中の解雇等）","p":[{"n":"1","s":"使用者は、期間の定めのある労働契約（以下この章において「有期労働契約」という。）について、やむを得ない事由がある場合でなければ、その契約期間が満了するまでの間において、労働者を解雇することができない。","i":[]},{"n":"2","s":"使用者は、有期労働契約について、その有期労働契約により労働者を使用する目的に照らして、必要以上に短い期間を定めることにより、その有期労働契約を反復して更新することのないよう配慮しなければならない。","i":[]}]},"18":{"t":"第十八条","c":"（有期労働契約の期間の定めのない労働契約への転換）","p":[{"n":"1","s":"同一の使用者との間で締結された二以上の有期労働契約（契約期間の始期の到来前のものを除く。以下この条において同じ。）の契約期間を通算した期間（次項において「通算契約期間」という。）が五年を超える労働者が、当該使用者に対し、現に締結している有期労働契約の契約期間が満了する日までの間に、当該満了する日の翌日から労務が提供される期間の定めのない労働契約の締結の申込みをしたときは、使用者は当該申込みを承諾したものとみなす。この場合において、当該申込みに係る期間の定めのない労働契約の内容である労働条件は、現に締結している有期労働契約の内容である労働条件（契約期間を除く。）と同一の労働条件（当該労働条件（契約期間を除く。）について別段の定めがある部分を除く。）とする。","i":[]},{"n":"2","s":"当該使用者との間で締結された一の有期労働契約の契約期間が満了した日と当該使用者との間で締結されたその次の有期労働契約の契約期間の初日との間にこれらの契約期間のいずれにも含まれない期間（これらの契約期間が連続すると認められるものとして厚生労働省令で定める基準に該当する場合の当該いずれにも含まれない期間を除く。以下この項において「空白期間」という。）があり、当該空白期間が六月（当該空白期間の直前に満了した一の有期労働契約の契約期間（当該一の有期労働契約を含む二以上の有期労働契約の契約期間の間に空白期間がないときは、当該二以上の有期労働契約の契約期間を通算した期間。以下この項において同じ。）が一年に満たない場合にあっては、当該一の有期労働契約の契約期間に二分の一を乗じて得た期間を基礎として厚生労働省令で定める期間）以上であるときは、当該空白期間前に満了した有期労働契約の契約期間は、通算契約期間に算入しない。","i":[]}]},"19":{"t":"第十九条","c":"（有期労働契約の更新等）","p":[{"n":"1","s":"有期労働契約であって次の各号のいずれかに該当するものの契約期間が満了する日までの間に労働者が当該有期労働契約の更新の申込みをした場合又は当該契約期間の満了後遅滞なく有期労働契約の締結の申込みをした場合であって、使用者が当該申込みを拒絶することが、客観的に合理的な理由を欠き、社会通念上相当であると認められないときは、使用者は、従前の有期労働契約の内容である労働条件と同一の労働条件で当該申込みを承諾したものとみなす。","i":[{"n":"1","t":"一","s":"当該有期労働契約が過去に反復して更新されたことがあるものであって、その契約期間の満了時に当該有期労働契約を更新しないことにより当該有期労働契約を終了させることが、期間の定めのない労働契約を締結している労働者に解雇の意思表示をすることにより当該期間の定めのない労働契約を終了させることと社会通念上同視できると認められること。","sub":[]},{"n":"2","t":"二","s":"当該労働者において当該有期労働契約の契約期間の満了時に当該有期労働契約が更新されるものと期待することについて合理的な理由があるものであると認められること。","sub":[]}]}]},"20":{"t":"第二十条","c":"（船員に関する特例）","p":[{"n":"1","s":"第十二条及び前章の規定は、船員法（昭和二十二年法律第百号）の適用を受ける船員（次項において「船員」という。）に関しては、適用しない。","i":[]},{"n":"2","s":"船員に関しては、第七条中「第十二条」とあるのは「船員法（昭和二十二年法律第百号）第百条」と、第十条中「第十二条」とあるのは「船員法第百条」と、第十一条中「労働基準法（昭和二十二年法律第四十九号）第八十九条及び第九十条」とあるのは「船員法第九十七条及び第九十八条」と、第十三条中「前条」とあるのは「船員法第百条」とする。","i":[]}]},"21":{"t":"第二十一条","c":"（適用除外）","p":[{"n":"1","s":"この法律は、国家公務員及び地方公務員については、適用しない。","i":[]},{"n":"2","s":"この法律は、使用者が同居の親族のみを使用する場合の労働契約については、適用しない。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"第一章　総則","a":[{"k":"1","t":"第一条","c":"（目的）","u":0},{"k":"2","t":"第二条","c":"（定義）","u":1},{"k":"3","t":"第三条","c":"（労働契約の原則）","u":0},{"k":"4","t":"第四条","c":"（労働契約の内容の理解の促進）","u":0},{"k":"5","t":"第五条","c":"（労働者の安全への配慮）","u":0}]},{"t":"第二章　労働契約の成立及び変更","a":[{"k":"6","t":"第六条","c":"（労働契約の成立）","u":1},{"k":"7","t":"第七条","c":"","u":1},{"k":"8","t":"第八条","c":"（労働契約の内容の変更）","u":1},{"k":"9","t":"第九条","c":"（就業規則による労働契約の内容の変更）","u":1},{"k":"10","t":"第十条","c":"","u":1},{"k":"11","t":"第十一条","c":"（就業規則の変更に係る手続）","u":1},{"k":"12","t":"第十二条","c":"（就業規則違反の労働契約）","u":1},{"k":"13","t":"第十三条","c":"（法令及び労働協約と就業規則との関係）","u":1}]},{"t":"第三章　労働契約の継続及び終了","a":[{"k":"14","t":"第十四条","c":"（出向）","u":1},{"k":"15","t":"第十五条","c":"（懲戒）","u":1},{"k":"16","t":"第十六条","c":"（解雇）","u":1}]},{"t":"第四章　期間の定めのある労働契約","a":[{"k":"17","t":"第十七条","c":"（契約期間中の解雇等）","u":1},{"k":"18","t":"第十八条","c":"（有期労働契約の期間の定めのない労働契約への転換）","u":1},{"k":"19","t":"第十九条","c":"（有期労働契約の更新等）","u":1}]},{"t":"第五章　雑則","a":[{"k":"20","t":"第二十条","c":"（船員に関する特例）","u":1},{"k":"21","t":"第二十一条","c":"（適用除外）","u":1}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+// ==== 共有ここから（別ページでも同じ部品を使う） ====
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+// parseArt・lawHTML はこの本の前の template.html のまま（号のボタンで条の文とその号だけを出すため。tokusho の lawHTML は号を絞らない）
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  // '466条2項' '466条1項本文' '509条第1号' '466条の2第1項' '469条2項第1号' '469条2項ただし書' のような形。複数条が「・」で区切られることもある → 最初の条だけ見る
+  const first = String(a).split("・")[0];
+  const m = first.match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(?:第?(\d+)号((?:の\d+)*))?([イロハニホ])?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[4] ? m[4] + (m[5] || "").replace(/の/g, "_") : null, sub: m[6] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para);
+  // 号まで指定があれば、項の本文とその号だけ出す
+  if (r.item) ps = ps.filter(p => p.i.some(it => it.n === r.item));
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const list = r.item ? p.i.filter(it => it.n === r.item) : p.i;
+    const its = list.map(it => `<p class="it">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => r.sub && x.startsWith(r.sub + " ") ? `<br><span class="hit">　${esc(x)}</span>` : `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなく、このアプリの決め事（収録範囲・仕組みのページに一覧）。</p>`;
+// 凡例は最初の木の上に1回だけ出す（legend＝false で外す。shohi-prolog・gyotetsu-prolog と同じ）
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+// ==== 共有ここまで ====
+
+async function boot(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const need = ["result/2", "explain/2", "heads/2", "answers/2"].filter(p => !once(`current_predicate(${p})`));
+    if (need.length) throw new Error(`Prologの読み込みが不完全です（${need.join("・")} がありません）。${errBuf.slice(-3).join(" ")}`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    renderPresets();
+    ask();
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+    $("answer").innerHTML = `<p class="loading err">エラー：${esc(e.message)}</p>`;
+  }
+}
+
+// ---- 入力 → ctx の文字 ----
+// 欄はいつも全部出し、出し消しをしない（REVIEW_RULES C5。形は kaiko-prolog と同じ）。
+// 並びは schema.pl の ctx の引数の順（1〜27）。前の SLOTS・updateSlots・shown（隠れた欄を 関係なし で渡す）と、
+// 懲戒・出向で同じ欄の欄名を書き換えていた所（l-pba）はやめた
+const IDS = ["kou","shin","sen","kikan","kkai","komo","kyam","chok","cmo","shuk","sran","ski","sgo","sshu","sbe","shan","hen","hshu","hgou","hfh","ytsu","ykuu","ymou","ytom","yjij","ykou","ymo"];
+function buildCtx(){
+  return `ctx(${IDS.map(id => atom($(id).value)).join(",")})`;
+}
+
+// ---- 判定と表示 ----
+const HEAD = `<div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div>`;
+const lawBtn = a => a === "@約束事" ? `<span class="yk">アプリの約束事</span>` : (a ? `<button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : "");
+const artsHTML = as => as.map(String).map(lawBtn).join(" ");
+// 断り書き（当てはめは判定しない・条文だけを読む・別の法律と船員法と省令は読まない・有効という答えではない）は
+// about.html の「判定について」「載せなかったもの」に置く（REVIEW_RULES A1・A5。2026-11-24 結果の下の注意3つ（NOTE_HANTEI・NOTE_JOBUN・NOTE_HOKA）と、
+// 頭の注意の2文、欄の説明の「判定はしません」を移した）。頭の注意は見本の1文だけ（A3）。左だけ色の線の .tokurei は消した（E1。決め8）
+
+// 段(状態, 文, 箱の条, 葉の文) を1段ぶんの行にする。文は答え（answers/2。段の文から末尾の「。」を外したもの）
+function stepHTML(id, title, s, ans){
+  const [st, , as] = T(s).args;
+  return `<p class="sec">${esc(title)}</p><p class="step" id="${id}" data-st="${esc(st)}">${esc(ans)}。 ${artsHTML(as)}</p>`;
+}
+
+function ask(){
+  const c = buildCtx();
+  $("qline").textContent = `?- result(${c}, R).`;
+  if (!pl) return;
+  try{
+    // 木は結論1つにつき1本（REVIEW_RULES B5）。凡例は最初の木の上に1回だけ
+    const lr = once(`explain(${c}, Lines)`);
+    const trees = lr ? lr.Lines.map(ls => ls.map(T).map(t => t.args)) : [];
+    const r = once(`result(${c}, r(Head,Steps,Arts))`);
+    if (!r){
+      $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">判定できませんでした</div></div><p class="hint">入力を確かめてください。</p></div>`;
+      return;
+    }
+    const ar = once(`answers(${c}, L)`);
+    const ans = Object.fromEntries((ar ? ar.L : []).map(T).map(t => t.args));
+    const steps = r.Steps.map(T).map(t => t.args).filter(([id]) => ans[id] !== undefined);
+    // 答えが2つ以上なら箇条書き、1つなら1文のまま（REVIEW_RULES A7）。並びは話の順（解雇・懲戒・出向→就業規則→労働条件の変更→期間のある契約）
+    const hr = once(`heads(${c}, L)`);
+    const hs = hr ? hr.L.map(String) : [];
+    const big = hs.length > 1 ? `<ul>${hs.map(h => `<li>${esc(h)}</li>`).join("")}</ul>` : esc(r.Head);
+    $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">${big}</div></div>
+      ${steps.map(([id, title, s], i) => stepHTML("st-" + id, `${i + 1}　${title}`, s, ans[id])).join("")}
+      <p class="sec">根拠条文</p><p class="arts" id="arts">${r.Arts.length ? artsHTML(r.Arts) : "当てはまる条文はありません。"}</p>
+      ${trees.length ? `<p class="sec">なぜそうなるか（論理の木）</p>${trees.map((ls, i) => treeHTML(ls, i === 0)).join("")}` : ""}</div>`;
+  } catch(e){ $("answer").innerHTML = `<p class="hint">エラー：${esc(e.message)}</p>`; }
+}
+
+// ---- 例（名前は起きた事実の言葉で書く。条文の文を写さず、指示語で始めない（REVIEW_RULES C2・C4））----
+function presetList(){
+  // 欄の値は DEFAULTS から変えるものだけ書く。2026-11-24 27欄で組み直した（前の例51個は 入口 の欄を使い、名前は条文の語だった）。
+  // 懲戒解雇の例と、無期転換を申し込んだのに雇止めされた例を足した（前は話を1つしか選べず入れられなかった）
+  const M = {kikan:"無期",kkai:"された"}, U = {kkai:"された"}, F = {hen:"不利"}, T = {ytsu:"超える",ymou:"まで"}, Y = {ytom:"断られた"};
+  return [
+    ["市役所の職員として働いている", {kou:"公務員"}],
+    ["家族だけで営む店で、一緒に住む親に雇われている", {shin:"はい"}],
+    ["期間の決まりのない正社員が、理由もなく解雇された", {...M,komo:"重すぎる"}],
+    ["期間の決まりのない正社員が、無断欠勤が続いて解雇された（理由と重さは釣り合うと考える）", M],
+    ["1年契約の途中で、やむを得ない事情もなく解雇された", U],
+    ["1年契約の途中で、会社の火事で事業が続けられなくなり解雇された", {...U,kyam:"はい"}],
+    ["6か月契約の船員が、契約の途中で解雇された", {...U,sen:"はい"}],
+    ["正社員が、軽いミスで懲戒解雇された", {...M,komo:"重すぎる",chok:"決まりあり",cmo:"重すぎる"}],
+    ["遅刻を1回しただけで、出勤停止1か月の処分を受けた", {chok:"決まりあり",cmo:"重すぎる"}],
+    ["就業規則に懲戒の決まりが無いのに、減給された", {chok:"決まりなし"}],
+    ["親の介護があるのに、必要性の薄い遠くの会社への出向を命じられた", {shuk:"決まりあり",sran:"はい"}],
+    ["出向の決まりが無いのに、別の会社への出向を命じられた", {shuk:"決まりなし"}],
+    ["入社のとき、就業規則を見せてもらえなかった", {sshu:"いいえ"}],
+    ["入社のとき、就業規則より低い給料を個別に約束させられた", {sbe:"悪い"}],
+    ["入社のとき、就業規則より高い給料を個別に約束した", {sbe:"良い"}],
+    ["船員として、就業規則より低い給料を個別に約束させられた", {sen:"はい",sbe:"悪い"}],
+    ["就業規則に、法律より短い休憩時間が書いてある", {shan:"ある"}],
+    ["本人も合意して、勤務時間を変えた", {hen:"合意"}],
+    ["就業規則を変えて、合意なしに給料を下げられた（変えた就業規則は見られる）", F],
+    ["就業規則を変えて給料を下げられたが、変えた就業規則を見せてもらえない", {...F,hshu:"いいえ"}],
+    ["就業規則を変えて給料を下げられたが、下げる必要も無かった", {...F,hgou:"いいえ"}],
+    ["給料は下げないと個別に約束していたのに、就業規則を変えて下げられた", {...F,hfh:"良い"}],
+    ["就業規則を変えて、合意なしに休日が増えた", {hen:"不利でない"}],
+    ["1年契約を5回更新して6年目に入り、契約が終わる前に無期転換を申し込んだ", T],
+    ["1年契約を4回更新して、ちょうど5年働いたところで無期転換を申し込んだ", {ytsu:"五年",ymou:"まで"}],
+    ["6年の契約1つだけで働き、無期転換を申し込んだ", {ytsu:"一つ",ymou:"まで"}],
+    ["契約を足して5年を超えたが、契約が終わった後に無期転換を申し込んだ", {ytsu:"超える",ymou:"後"}],
+    ["2年契約の後に8か月の空白があり、空白の後の契約だけで5年を超えて申し込んだ", {...T,ykuu:"六月以上"}],
+    ["3か月契約の後に1か月の空白があり、契約を足して5年を超えて申し込んだ", {...T,ykuu:"半分未満"}],
+    ["3か月契約の後に2か月の空白があり、空白の後の契約だけで5年を超えて申し込んだ", {...T,ykuu:"半分以上"}],
+    ["何度も更新されてきたのに理由もなく更新を断られ、終わる日までに更新を申し込んだ", {...Y,yjij:"一号",ykou:"まで",ymo:"行き過ぎ"}],
+    ["次も更新すると言われていたのに更新を断られ、終わった後すぐに申し込んだ", {...Y,yjij:"二号",ykou:"遅滞なく",ymo:"行き過ぎ"}],
+    ["初めての契約で、更新を断られた（更新の約束も無い）", Y],
+    ["何度も更新されてきたが更新を断られ、申し込まなかった", {...Y,yjij:"一号"}],
+    ["無期転換を申し込んだのに、更新を断られた", {...T,...Y,yjij:"両方",ykou:"まで",ymo:"行き過ぎ"}],
+    ["船員として1年契約を5回更新して6年目に入り、無期転換を申し込んだ", {...T,sen:"はい"}],
+  ];
+}
+// 例に書いていない欄は既定に戻す（前の例の値を残すと、名前と違う入力になるため）
+// 既定は 4 が「ある（有期）」、12 が「ある」（1つ動かすだけで「この組み合わせはありません」にならないように。案の「既定は〜」・kaiko の決め2）。
+// 既定のままで第7条の答えが1つ付く（決め6）
+const DEFAULTS = {kou:"民間",shin:"いいえ",sen:"いいえ",kikan:"有期",kkai:"されていない",komo:"釣り合う",kyam:"いいえ",chok:"受けていない",cmo:"釣り合う",shuk:"命じられていない",sran:"いいえ",ski:"ある",sgo:"はい",sshu:"はい",sbe:"決めていない",shan:"ない",hen:"変えられていない",hshu:"はい",hgou:"はい",hfh:"ない",ytsu:"五年未満",ykuu:"なかった",ymou:"していない",ytom:"断られていない",yjij:"無い",ykou:"していない",ymo:"釣り合う"};
+function setDefaults(p){
+  for (const [id, v] of Object.entries(DEFAULTS)) $(id).value = p[id] !== undefined ? p[id] : v;
+}
+function applyPreset(p){
+  setDefaults(p);
+  ask();
+}
+function renderPresets(){
+  $("presets").innerHTML = presetList().map((p, i) => `<button type="button" data-preset="${i}">${esc(p[0])}</button>`).join("");
+}
+
+// 初期表示（既定の値）
+setDefaults({});
+
+document.addEventListener("change", e => { if (e.target.closest("#slots")) ask(); });
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.preset !== undefined){ applyPreset(presetList()[+b.dataset.preset][1]); $("answer").scrollIntoView?.(); }
+  else if (b.dataset.art && pl){
+    const host = b.closest(".tr") || b.closest("li") || b.parentElement, nx = host.nextElementSibling;
+    if (nx && nx.classList.contains("lawtext") && nx.dataset.for === b.dataset.art) nx.remove();
+    else { host.insertAdjacentHTML("afterend", lawHTML(b.dataset.art)); host.nextElementSibling.dataset.for = b.dataset.art; }
+  }
+});
+
+if (typeof SWIPL === "function") boot();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; $("answer").innerHTML = `<p class="loading err">Prolog（swipl-wasm）を読み込めませんでした。ページを再読み込みしてください。</p>`; }
+</script>
