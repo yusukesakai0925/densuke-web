@@ -1,0 +1,971 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="命令に従わないと役所が自分で片付けて費用を請求できるのか、いきなり来られるのか、来た人に身分を見せてと言えるのか、費用はいくらで払わないとどうなるのかを、行政代執行法の条文から判定します。">
+<title>行政代執行法を逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+/* 欄の上の小見出し（命じられたこと／戒告と代執行令書／現場／費用）。選ばせる欄ではないので番号を数えない（gikai-prolog と同じ。2026-11-25 案A）。
+   前の .step.off（判定していない段の色）・.flow・NOTE_* の枠（tokurei）・.disclaimer-inline・.lawtext .hit の青い左の影（E1）・pre の左線は、gikai の style に揃えて外した */
+.slots .slot-h{margin:0;padding:8px 10px 4px;border-bottom:2px solid var(--line);border-right:2px solid var(--line);background:var(--paper)}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border:1px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+/* 数字の欄（数字を打つので ▼ を出さない。この本に数字の欄は無いが、gikai と style を揃えて残す）*/
+.field.num::after{display:none}
+.field input{appearance:textfield;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 10px;min-width:0;width:100%}
+.field input:focus-visible{outline:none}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <h1>行政代執行法を<span class="ao">逆から引く</span></h1>
+    <div class="judge-plate"><span class="jp-k">判定</span><img src="densuke_icon.svg" width="64" height="64" alt="でんすけのアイコン"><span class="jp-v">でんすけ<small>秘書AI</small></span></div>
+    <p class="lead">役所から命じられたことを済ませていないときに、役所が代わりに行って費用を取れるか、戒告と代執行令書が要るか、現場に来た人が証票を見せるか、費用をどう取られるかを、でんすけが行政代執行法の条文で判定します。</p>
+    <p class="caution" role="note"><b>注意</b><span>条文をルールにして、論理的にそのまま演算した結果です。役所や裁判所の判断とは異なる場合があります。<a class="aboutlink" href="about.html">収録範囲・仕組み →</a></span></p>
+  </header>
+
+  <section class="ask">
+    <div>
+      <p class="sec-h">例から選ぶ</p>
+      <div class="presets" id="presets"></div>
+    </div>
+    <!-- 欄は起きた事実を聞く16個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-25 案A。形は gikai-prolog と同じ）。
+         前の入口「どの話か」（iri）・別の法律（bet。第1条は about の収録範囲へ。決め4）・聞きたいこと（kik）と、
+         欄の出し消し（SLOTS・updateSlots）、隠れた欄を 関係なし で渡す shown・buildCtx をやめた。
+         関係のない欄は Prolog が見ないだけ（2条が成り立たないときの6〜16、9〜11の欄がそろったときの6〜8、
+         6の欄が「文書で受けた」でないときの7・8、12の欄が「執行責任者」でないときの13、14の欄が「文書」でないときの15、
+         15の欄が「払った」でないときの16）。並びは schema.pl の ctx の引数の順（1〜16）。小見出しは選ばせる欄ではない（番号を数えない）。
+         期限（kki）と期限までに履行したか（kri）は7の欄と3の欄に、命令（mei）は14の欄にまとめた（C1）。
+         1の欄から「法律の委任に基づかない条例」を外した（決め1。about の載せなかったもの）。
+         欄名・選択肢から条文の写し（「他人が代わってできる行為か」「著しく公益に反すると認められるか」「相当の履行期限」など）を外した（C2）。
+         欄の説明の断り（当てはめは判定しません 7つ）と、結果の下の NOTE_HANTEI・NOTE_JOBUN・NOTE_HOKA、下の帯の「含みません」は about へ移した（A5） -->
+    <div class="slots" id="slots">
+      <p class="sec-h slot-h full-slot">命じられたこと</p>
+      <div class="slot full-slot" id="s-konkyo"><label for="konkyo">命じられたことを決めたもの</label><span class="field"><select id="konkyo">
+        <option value="法律直接">法律そのもの</option><option value="委任直接">法律の委任を受けた政令・省令・規則・条例そのもの</option><option value="法律命令">法律に基づいて役所が出した命令</option><option value="委任命令">法律の委任を受けた政令・省令・規則・条例に基づいて役所が出した命令</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-koui"><label for="koui">命じられたこと（あなたの考え）</label><span class="field"><select id="koui">
+        <option value="代われる">本人でない人（業者など）が代わりにできること</option><option value="本人だけ">本人しかできないこと・何かをしないこと</option>
+      </select></span></div>
+      <div class="slot" id="s-sumi"><label for="sumi">命じられたことを済ませたか</label><span class="field"><select id="sumi">
+        <option value="まだ">まだ済ませていない</option><option value="済ませた">済ませた</option>
+      </select></span></div>
+      <div class="slot" id="s-konnan"><label for="konnan">代執行のほかのやり方（罰則・指導など）で済ませさせるのは（あなたの考え）</label><span class="field"><select id="konnan">
+        <option value="難しい">難しい</option><option value="難しくない">難しくない</option>
+      </select></span><p class="desc">代執行＝役所が義務者（命じられた人）に代わって行うこと</p></div>
+      <div class="slot full-slot" id="s-koeki"><label for="koeki">済ませないまま放っておくことを、役所は</label><span class="field"><select id="koeki">
+        <option value="認めた">みんなの利益（公益）に大きく反すると認めた</option><option value="認めていない">認めていない</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">戒告と代執行令書</p>
+      <div class="slot full-slot" id="s-kaikoku"><label for="kaikoku">戒告（期限までに済ませなければ代執行をするという予告）</label><span class="field"><select id="kaikoku">
+        <option value="受けていない">受けていない</option><option value="文書">文書で受けた</option><option value="口頭">口頭だけで受けた</option>
+      </select></span></div>
+      <div class="slot" id="s-kigen"><label for="kigen">戒告に書かれた期限</label><span class="field"><select id="kigen">
+        <option value="過ぎた">書いてあり、もう過ぎた</option><option value="期限前">書いてあり、まだ来ていない</option><option value="書いていない">書いていない</option>
+      </select></span></div>
+      <div class="slot" id="s-reisho"><label for="reisho">代執行令書（代執行の時期・執行責任者の氏名・費用の見積額を知らせる文書）</label><span class="field"><select id="reisho">
+        <option value="受けていない">受けていない</option><option value="受けた">受けた</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-hijo"><label for="hijo">今は非常の時か、危険が迫っているか（あなたの考え）</label><span class="field"><select id="hijo">
+        <option value="いいえ">いいえ</option><option value="はい">はい</option>
+      </select></span></div>
+      <div class="slot" id="s-kinkyu"><label for="kinkyu">すぐに実施しなければならない差し迫った必要（あなたの考え）</label><span class="field"><select id="kinkyu">
+        <option value="ある">ある</option><option value="ない">ない</option>
+      </select></span></div>
+      <div class="slot" id="s-hima"><label for="hima">戒告と代執行令書の手続をとる時間（あなたの考え）</label><span class="field"><select id="hima">
+        <option value="ない">ない</option><option value="ある">ある</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">現場</p>
+      <div class="slot full-slot" id="s-kita"><label for="kita">現場に来た人</label><span class="field"><select id="kita">
+        <option value="来ていない">まだ誰も来ていない</option><option value="執行責任者">執行責任者（現場の責任者）</option><option value="他の人">執行責任者でない人</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-shohyo"><label for="shohyo">来た人に、証票（本人であることを示す証明）を見せるよう求めたか</label><span class="field"><select id="shohyo">
+        <option value="求めていない">求めていない</option><option value="求めた">求めた</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">費用</p>
+      <div class="slot full-slot" id="s-hiyo"><label for="hiyo">代執行と費用の命令</label><span class="field"><select id="hiyo">
+        <option value="未了">代執行はまだ終わっていない</option><option value="命令前">終わったが、費用の命令はまだ</option><option value="文書">額と納期日を書いた文書で命じられた</option><option value="口頭">口頭だけ、または額か納期日が書いていない</option>
+      </select></span><p class="desc">納期日＝費用を納める期日</p></div>
+      <div class="slot" id="s-harai"><label for="harai">納期日までに費用を払ったか</label><span class="field"><select id="harai">
+        <option value="払っていない">払っていない</option><option value="払った">払った</option>
+      </select></span></div>
+      <div class="slot" id="s-shozoku"><label for="shozoku">代執行の事務の費用を出すのは（事務費の所属）</label><span class="field"><select id="shozoku">
+        <option value="国">国</option><option value="地方公共団体">地方公共団体</option>
+      </select></span></div>
+    </div>
+    <div class="qline" id="qline"></div>
+  </section>
+
+  <section id="answer" aria-live="polite"><p class="loading">でんすけが条文のルール（Prolog）を読み込んでいます…</p></section>
+
+  <p class="foot techline"><span>行政代執行法 第1条〜第6条／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot" id="foot">e-Gov法令検索の行政代執行法（昭和二十三年法律第四十三号）の本則の原文から、第2条〜第6条をルールにしたものです。条文は2026年11月4日に取得した版で、それ以後の改正と、公布済みで施行前の改正は読んでいません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 行政代執行法のProlog 共通の型・欄の読み出し・成り立たない組・木の部品
+%
+% ctx(根拠, 行為, 済み, 困難, 公益, 戒告, 期限, 令書, 非常, 緊急, 暇, 来た人, 証票, 費用, 払った, 所属)
+%   欄は起きた事実を聞く16個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-25 案A。
+%   案は ../daishikko_form_plan_answer_1125.md の案A、決めは ../daishikko_form_plan_decision_1125.md）。形は gikai-prolog と同じ。
+%   前は ctx(入口, 詳細) で、入口（できるか | 手続 | 費用）を先に選ばせ、費用の中でも「聞く」（額 | 命じ方 | 払わない | 順位 | 行き先）を選ばせていた。
+%   画面が欄を出し消しして、隠れた欄を 関係なし で渡していた（形OK/2 が欄の並びを入口ごとに直書きしていた）。
+%   今は使わない欄を判定で見ないだけにした。別の法律（別法。第1条）の欄は消し、第1条は about の収録範囲へ移した（決め4）。
+%   期限（相当の履行期限）と期限までに履行したか（履行）は7の欄に、命令は14の欄にまとめた（案A「1つにまとめる欄」）。
+%   引数の順は画面の欄の番号（1〜16）と同じ。画面では4つの小見出し（命じられたこと／戒告と代執行令書／現場／費用）の下に並べる。
+%    1 根拠     : 法律直接 | 委任直接 | 法律命令 | 委任命令（命じられたことを決めたもの。法律の委任を受けていない条例は選択肢に置かない。決め1）
+%    2 行為     : 代われる | 本人だけ（本人でない人が代わりにできること | 本人しかできないこと・何かをしないこと。あなたの考え）
+%    3 済み     : まだ | 済ませた（命じられたことを済ませたか）
+%    4 困難     : 難しい | 難しくない（代執行のほかのやり方で済ませさせるのは。あなたの考え。決め3）
+%    5 公益     : 認めた | 認めていない（済ませないまま放っておくことが公益に大きく反すると、役所が認めたか。決め3）
+%    6 戒告     : 受けていない | 文書 | 口頭
+%    7 期限     : 過ぎた | 期限前 | 書いていない（戒告に書かれた期限）
+%    8 令書     : 受けていない | 受けた（代執行令書）
+%    9 非常     : いいえ | はい（今は非常の時か、危険が迫っているか。あなたの考え）
+%   10 緊急     : ある | ない（すぐに実施しなければならない差し迫った必要。あなたの考え）
+%   11 暇       : ない | ある（戒告と代執行令書の手続をとる時間。あなたの考え）
+%   12 来た人   : 来ていない | 執行責任者 | 他の人（現場に来た人）
+%   13 証票     : 求めていない | 求めた（来た人に、証票を見せるよう求めたか）
+%   14 費用     : 未了 | 命令前 | 文書 | 口頭（代執行と費用の命令：まだ終わっていない | 終わったが、費用の命令はまだ |
+%                 額と納期日を書いた文書で命じられた | 口頭だけ、または額か納期日が書いていない）
+%   15 払った   : 払っていない | 払った（納期日までに費用を払ったか）
+%   16 所属     : 国 | 地方公共団体（代執行の事務の費用を出すのは）
+%
+%   関係のない欄（2条が成り立たないときの6〜16、9〜11の欄がそろったときの6〜8、6の欄が「文書で受けた」でないときの7・8、
+%   12の欄が「執行責任者」でないときの13、14の欄が「文書」でないときの15、15の欄が「払った」でないときの16 など）は、
+%   組み合わせなしにせず見ないだけ（gikai-prolog と同じ）。欄どうしで成り立たない組はこのファイルの 組み合わせなし/4 が返す（REVIEW_RULES C3）。
+%
+% 書き方のきまり：
+%   ・条番号は '2条' '3条1項' のような原子。この法律に号は無い。
+%   ・ルールの中で範囲の外の条を、原子の先頭に条番号を置く形で書かない。書くと build.py が使う条に数え、画面に中身が埋まる。
+%   ・段は 段(状態, 文, 箱の条, 葉のリスト)。結論ごとの段は s(画面のid, 見出し, 段)。段の文は、末尾の「。」を外して結論の箱にも出す。
+%     段の文は本題だけを書き、入力の言い直しは葉に置く（REVIEW_RULES A2。葉は論理の木にだけ出る）。
+%     葉は文（原子）か、木の行 t(...) そのもの（規定・約束の行。schema の 葉の行）。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | and | or | info
+%   ・アプリの約束事の行は 条 を '@約束事' にする。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか。組の成り立ちは 組み合わせなし/4 で見る）----
+ctx_valid(C) :-
+    functor(C, ctx, 16),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )).
+
+欄の値(1, [法律直接, 委任直接, 法律命令, 委任命令]).
+欄の値(2, [代われる, 本人だけ]).
+欄の値(3, [まだ, 済ませた]).
+欄の値(4, [難しい, 難しくない]).
+欄の値(5, [認めた, 認めていない]).
+欄の値(6, [受けていない, 文書, 口頭]).
+欄の値(7, [過ぎた, 期限前, 書いていない]).
+欄の値(8, [受けていない, 受けた]).
+欄の値(9, [いいえ, はい]).
+欄の値(10, [ある, ない]).
+欄の値(11, [ない, ある]).
+欄の値(12, [来ていない, 執行責任者, 他の人]).
+欄の値(13, [求めていない, 求めた]).
+欄の値(14, [未了, 命令前, 文書, 口頭]).
+欄の値(15, [払っていない, 払った]).
+欄の値(16, [国, 地方公共団体]).
+
+%% ---- 欄の読み出し（番号は画面の欄の番号）----
+欄の番号(根拠, 1).
+欄の番号(行為, 2).
+欄の番号(済み, 3).
+欄の番号(困難, 4).
+欄の番号(公益, 5).
+欄の番号(戒告, 6).
+欄の番号(期限, 7).
+欄の番号(令書, 8).
+欄の番号(非常, 9).
+欄の番号(緊急, 10).
+欄の番号(暇, 11).
+欄の番号(来た人, 12).
+欄の番号(証票, 13).
+欄の番号(費用, 14).
+欄の番号(払った, 15).
+欄の番号(所属, 16).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+%% ---- 成り立たない組（組み合わせなし/4。REVIEW_RULES C3。案A「この組み合わせはありません」）----
+% 組み合わせなし(C, 記号, 葉のリスト, 箱の条)。rules/g_hantei.pl の 全部の段 が findall で全部集める（REVIEW_RULES 末尾「AI同士で決めた書き方」1・2）。
+%   ア 12の欄が「まだ誰も来ていない」で、13の欄が「求めた」。根拠は4条（証票を見せるよう求める相手は、現場に来た執行責任者）
+% この本は条が時間の順に続くだけで、欄どうしがぶつかる組はこの1つだけ（案A）。法に沿わない手順（戒告を受けずに令書が来た・
+% 期限前に令書が来た）は起きうる事実なので、ありませんにせず段の答えで出す。
+組み合わせなし(C, a, ['証票を見せるよう求める相手は、代執行の現場に来た執行責任者', W], ['4条']) :-
+    欄(来た人, C, 来ていない), 欄(証票, C, 求めた),
+    二つ選んだ(来た人, 証票, C, W).
+
+二つ選んだ(N1, N2, C, W) :-
+    欄の番号(N1, I1), 欄(N1, C, V1), 葉の語(I1, V1, W1),
+    欄の番号(N2, I2), 欄(N2, C, V2), 葉の語(I2, V2, W2),
+    format(atom(W), '~wの欄で~wを選び、~wの欄で~wを選んだ', [I1, W1, I2, W2]).
+
+%% ---- 木の葉に出す欄の値の言葉（画面の選択肢と同じ語）----
+% 葉の語(欄の番号, 値, 選択肢の語)
+葉の語(1, 法律直接, '法律そのもの').
+葉の語(1, 委任直接, '法律の委任を受けた政令・省令・規則・条例そのもの').
+葉の語(1, 法律命令, '法律に基づいて役所が出した命令').
+葉の語(1, 委任命令, '法律の委任を受けた政令・省令・規則・条例に基づいて役所が出した命令').
+葉の語(2, 代われる, '本人でない人（業者など）が代わりにできること').
+葉の語(2, 本人だけ, '本人しかできないこと・何かをしないこと').
+葉の語(3, まだ, 'まだ済ませていない').
+葉の語(3, 済ませた, '済ませた').
+葉の語(4, 難しい, '難しい').
+葉の語(4, 難しくない, '難しくない').
+葉の語(5, 認めた, 'みんなの利益（公益）に大きく反すると認めた').
+葉の語(5, 認めていない, '認めていない').
+葉の語(6, 受けていない, '受けていない').
+葉の語(6, 文書, '文書で受けた').
+葉の語(6, 口頭, '口頭だけで受けた').
+葉の語(7, 過ぎた, '書いてあり、もう過ぎた').
+葉の語(7, 期限前, '書いてあり、まだ来ていない').
+葉の語(7, 書いていない, '書いていない').
+葉の語(8, 受けていない, '受けていない').
+葉の語(8, 受けた, '受けた').
+葉の語(9, いいえ, 'いいえ').
+葉の語(9, はい, 'はい').
+葉の語(10, ある, 'ある').
+葉の語(10, ない, 'ない').
+葉の語(11, ない, 'ない').
+葉の語(11, ある, 'ある').
+葉の語(12, 来ていない, 'まだ誰も来ていない').
+葉の語(12, 執行責任者, '執行責任者（現場の責任者）').
+葉の語(12, 他の人, '執行責任者でない人').
+葉の語(13, 求めていない, '求めていない').
+葉の語(13, 求めた, '求めた').
+葉の語(14, 未了, '代執行はまだ終わっていない').
+葉の語(14, 命令前, '終わったが、費用の命令はまだ').
+葉の語(14, 文書, '額と納期日を書いた文書で命じられた').
+葉の語(14, 口頭, '口頭だけ、または額か納期日が書いていない').
+葉の語(15, 払っていない, '払っていない').
+葉の語(15, 払った, '払った').
+葉の語(16, 国, '国').
+葉の語(16, 地方公共団体, '地方公共団体').
+
+% 入力の葉：「Nの欄で、◯◯を選んだ」。欄の名前から番号と値を引く
+選んだ(Name, C, W) :-
+    欄の番号(Name, N), 欄(Name, C, V), 葉の語(N, V, VW),
+    format(atom(W), '~wの欄で、~wを選んだ', [N, VW]).
+
+%% ---- 理由の語をつなぐ ----
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---- 木の部品 ----
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+原文規定(Art, X) :- 原文(Art, W), 規定(Art, W, X).
+% 成り立つ文（起きた事実・条文の読み）
+文(X, t(ok, X, '', [])).
+約束(X, t(ok, X, '@約束事', [])).
+% 葉の行：木の行 t(...) はそのまま、文はそのまま1行（schema の「書き方のきまり」）
+葉の行(t(K, X, A, Cs), t(K, X, A, Cs)) :- !.
+葉の行(W, X) :- 文(W, X).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+% 前は子が1つでも「次のすべてが成り立つ」の節を作っていた（前の :100）
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（行政代執行法の条文にないもの）
+%
+%   ① 2条「他人が代つてなすことのできる行為」「他の手段によつてその履行を確保することが困難」と、
+%      3条3項「非常の場合又は危険切迫の場合」「緊急の必要」「手続をとる暇がない」は、条文に中身が書いていない。
+%      2・4・9・10・11の欄で「（あなたの考え）」として聞き、当てはめはしない。
+%      2条「著しく公益に反すると認められるとき」は役所の認定が要件なので、5の欄で役所が認めたかを事実として聞く（決め3）。
+%      3条1項「相当の履行期限」は「相当」かを聞かず、7の欄で期限が書いてあるか・過ぎたかだけを聞く。
+%      ①は about の約束事①にだけ置き、木には出さない（2026-11-25 案A。前は「…判定しない。本人がそう考えたとして答えている」の行を、
+%      全部の段の木に付けていた（前の g_hantei.pl:88–89）。A5）。
+%   ② 「当たりません」は、その条に当たらないと言うだけで、反対の結論を言うものではない（前のまま）。
+%      「当たりません」の段の木にだけ出す。
+
+当たらないの約束(X) :-
+    約束('「当たりません」は、その条に当たらないと言うだけで、反対の結論を言うものではない', X).
+</script>
+<script type="text/prolog" data-name="rules_a_genbun.pl">% rules/a_genbun.pl — 判定に使う条文の原文（law/daishikko.xml の本則のまま）
+%
+%   原文(条, 文)。test/page_test.mjs が XML を別に読み、全行が一字一句一致するかを確かめる。
+%   本則の全6条で、項の中の Sentence はどれも1つ。号と Column は無い（XML を読んで確かめた）。
+%   「代つて」「基く」「なさしめ」「もつて」「暇」は原文の字のまま。
+%   1条は段・木・根拠条文では使わず、about の収録範囲に置いた（2026-11-25 案A・決め4。gyosos-prolog の a_genbun.pl と同じ扱い）。
+%   原文の表には残し、全条文の地図で使っている条のマスに出す。
+
+原文('1条', '行政上の義務の履行確保に関しては、別に法律で定めるものを除いては、この法律の定めるところによる。').
+原文('2条', '法律（法律の委任に基く命令、規則及び条例を含む。以下同じ。）により直接に命ぜられ、又は法律に基き行政庁により命ぜられた行為（他人が代つてなすことのできる行為に限る。）について義務者がこれを履行しない場合、他の手段によつてその履行を確保することが困難であり、且つその不履行を放置することが著しく公益に反すると認められるときは、当該行政庁は、自ら義務者のなすべき行為をなし、又は第三者をしてこれをなさしめ、その費用を義務者から徴収することができる。').
+原文('3条1項', '前条の規定による処分（代執行）をなすには、相当の履行期限を定め、その期限までに履行がなされないときは、代執行をなすべき旨を、予め文書で戒告しなければならない。').
+原文('3条2項', '義務者が、前項の戒告を受けて、指定の期限までにその義務を履行しないときは、当該行政庁は、代執行令書をもつて、代執行をなすべき時期、代執行のために派遣する執行責任者の氏名及び代執行に要する費用の概算による見積額を義務者に通知する。').
+原文('3条3項', '非常の場合又は危険切迫の場合において、当該行為の急速な実施について緊急の必要があり、前二項に規定する手続をとる暇がないときは、その手続を経ないで代執行をすることができる。').
+原文('4条', '代執行のために現場に派遣される執行責任者は、その者が執行責任者たる本人であることを示すべき証票を携帯し、要求があるときは、何時でもこれを呈示しなければならない。').
+原文('5条', '代執行に要した費用の徴収については、実際に要した費用の額及びその納期日を定め、義務者に対し、文書をもつてその納付を命じなければならない。').
+原文('6条1項', '代執行に要した費用は、国税滞納処分の例により、これを徴収することができる。').
+原文('6条2項', '代執行に要した費用については、行政庁は、国税及び地方税に次ぐ順位の先取特権を有する。').
+原文('6条3項', '代執行に要した費用を徴収したときは、その徴収金は、事務費の所属に従い、国庫又は地方公共団体の経済の収入となる。').
+</script>
+<script type="text/prolog" data-name="rules_b_dekiru.pl">% rules/b_dekiru.pl — 役所が代わりに行って費用を取れるか：2条の段
+%
+%   段は1：dai2。2026-11-25 案A。
+%   2条は、他人が代わってできる行為について、履行しない・他の手段で確保するのが困難・放置が著しく公益に反すると認められる、
+%   の3つが揃ったときだけ。1〜5の欄から当てる。
+%   前は入口「できるか」の中で、欠けた条件を欄の順に1つだけ見て止め（前の読み (6)）、法律の委任に基づかない条例は 判定しない で止めていた。
+%   今は欠けた条件を全部葉に並べる（決め2）。法律の委任を受けていない条例は1の欄の選択肢から外し、about の載せなかったものへ移した（決め1）。
+%   段の文の「〜ので」（入力の言い直し）と、根拠の語（前の 根拠の語/2）は葉へ移した（A2）。
+%   「条文は「できる」で、必ずやるとは書いていません」と、語の意味の補足の段（前の できるかの語/1）は about へ移した（A5）。
+%   4の欄（困難）は「あなたの考え」、5の欄（公益）は役所が認めたかを事実として聞く（決め3。「認められる」は「且つ」の後ろの文に付いている）。
+
+できるかの段(C, [s(dai2, '役所が代わりに行って費用を取れるか', S)]) :-
+    原文規定('2条', R),
+    findall(W, ( 二条の条件(K, V), \+ 欄(K, C, V), 選んだ(K, C, W) ), Ws),
+    ( Ws == [] ->
+        findall(W, ( member(K, [根拠, 行為, 済み, 困難, 公益]), 選んだ(K, C, W) ), Ws1),
+        S = 段(できる, '役所は、自分で行うか第三者にさせて、費用を義務者から取ることができます。', ['2条'], [R | Ws1])
+    ; S = 段(できない, '役所は、代わりに行って費用を取ることはできません。', ['2条'], [R | Ws]) ).
+
+% 2条が成り立つための欄の値（欄の順。1の欄はどの値でも2条の「法律…により直接に命ぜられ、又は法律に基き行政庁により命ぜられた行為」に入る）
+二条の条件(行為, 代われる).
+二条の条件(済み, まだ).
+二条の条件(困難, 難しい).
+二条の条件(公益, 認めた).
+
+% 2条が成り立つ（3条〜6条の段の前提。決め2）
+二条が成り立つ(C) :- forall(二条の条件(K, V), 欄(K, C, V)).
+</script>
+<script type="text/prolog" data-name="rules_c_tetsuzuki.pl">% rules/c_tetsuzuki.pl — 戒告と代執行令書・現場：3条・4条の段
+%
+%   段は6：kinkyu・habu（3条3項）・kaikoku（3条1項）・reisho（3条2項）・sumi（3条1項と2項）・shohyo（4条）。2026-11-25 案A。
+%   前は入口「手続」の中で、9〜11 → 戒告 → 期限 → 履行 → 令書 の順に欄を出し消しして、出ている欄だけで段を選んでいた（C4・C5）。
+%   今は6〜13の欄から3条と4条の段を同じ入力で当てる。2条が成り立たないときは呼ばない（rules/g_hantei.pl の 全部の段。決め2）。
+%   3条3項は9〜11の欄（どれも「あなたの考え」）が3つともそろったときだけ。そろえば6〜8の欄は見ない。
+%   9の欄が「はい」で10・11の欄の片方が欠けるときだけ、3条3項の「当たりません」も出す（案A）。
+%   3条1項は6・7の欄、3条2項は7・8の欄から。期限までに済ませたか（前の 履行 の欄）は3の欄と同じ事実なので消した（C1）。
+%   戒告を受けずに・口頭だけで・期限前に代執行令書が来たときも、起きうる事実なので「この組み合わせはありません」にせず段の答えで出す（案A）。
+%   4条は12の欄が「まだ誰も来ていない」でないときだけ。前の 現場 の状態（4条を一番上に置いた）は しなければならない・当たらない に分けた。
+%   段の文の断り（戒告を欠いた代執行の効果・通知がない点の効果・「相当」かどうか・呈示しなかったときの効果は判定しません）と、
+%   語の意味の補足の段（前の 手続の語/1）は about へ移した（A5）。段の文の「〜ので」は葉へ移した（A2）。
+
+手続の段(C, L) :-
+    緊急の段(C, L1, See),
+    ( See == はい -> 戒告と令書の段(C, L2) ; L2 = [] ),
+    append(L1, L2, L).
+
+緊急が揃う(C) :- 欄(非常, C, はい), 欄(緊急, C, ある), 欄(暇, C, ない).
+
+%% ---- 3条3項 ----
+% 緊急の段(C, 段のリスト, 6〜8の欄を見るか)
+緊急の段(C, [s(kinkyu, '戒告と代執行令書を省けるか', 段(できる, '役所は、戒告と代執行令書の手続を経ないで代執行をすることができます。', ['3条3項'], [R, W1, W2, W3])),
+             s(habu, '省けるもの', 段(できる, '省けるのは戒告と代執行令書の手続だけです。', ['3条3項'], [R]))], いいえ) :-
+    緊急が揃う(C), !,
+    原文規定('3条3項', R), 選んだ(非常, C, W1), 選んだ(緊急, C, W2), 選んだ(暇, C, W3).
+緊急の段(C, [s(kinkyu, '戒告と代執行令書を省けるか', 段(当たらない, '戒告と代執行令書の手続は省けません。', ['3条3項'], [R, W1 | Ws]))], はい) :-
+    欄(非常, C, はい), !,
+    原文規定('3条3項', R), 選んだ(非常, C, W1),
+    findall(W, ( member(K-V, [緊急-ある, 暇-ない]), \+ 欄(K, C, V), 選んだ(K, C, W) ), Ws0),
+    当たらないの約束(Z), append(Ws0, [Z], Ws).
+緊急の段(_, [], はい).
+
+%% ---- 3条1項・2項 ----
+戒告と令書の段(C, [s(kaikoku, '戒告', 段(要る, M, ['3条1項'], [R, W]))]) :-
+    欄(戒告, C, K), 戒告が無い(K, M), !,
+    原文規定('3条1項', R), 選んだ(戒告, C, W).
+戒告と令書の段(C, [s(kaikoku, '戒告', 段(要る, '戒告には履行期限を決めなければなりません。', ['3条1項'], [R, W1, W2]))]) :-
+    欄(期限, C, 書いていない), !,
+    原文規定('3条1項', R), 選んだ(戒告, C, W1), 選んだ(期限, C, W2).
+戒告と令書の段(C, [S]) :-
+    欄(期限, C, G), 欄(令書, C, Y),
+    令書の答え(G, Y, Id, T, St, M, As),
+    maplist(原文規定, As, Rs),
+    令書の葉(G, Y, C, Ws),
+    append(Rs, Ws, Ls),
+    S = s(Id, T, 段(St, M, As, Ls)).
+
+戒告が無い(受けていない, '代執行の前に、役所は、履行期限を決めて文書で戒告しなければなりません。').
+戒告が無い(口頭, '戒告は文書でしなければなりません。').
+
+% 令書の答え(期限, 令書, id, 見出し, 状態, 文, 箱の条)。6の欄は文書・7の欄に期限が書いてあるとき
+令書の答え(過ぎた, 受けた, sumi, '戒告と代執行令書', 足りる, '戒告と代執行令書の手続は済んでいます。', ['3条1項', '3条2項']).
+令書の答え(過ぎた, 受けていない, reisho, '代執行令書', 要る, '役所は、代執行令書で、代執行の時期・執行責任者の氏名・費用の概算の見積額を義務者に通知します。', ['3条2項']).
+令書の答え(期限前, 受けた, reisho, '代執行令書', 当たらない, '代執行令書で通知するのは、戒告の期限までに済ませなかったときです。', ['3条2項']).
+令書の答え(期限前, 受けていない, kaikoku, '戒告', 足りる, '文書の戒告は済んでいます。', ['3条1項']).
+
+% 葉：戒告・期限・令書の欄の値（期限前×令書を受けていない は令書の欄を葉にしない）。当たらない段には約束事②
+令書の葉(期限前, 受けていない, C, [W1, W2]) :- !, 選んだ(戒告, C, W1), 選んだ(期限, C, W2).
+令書の葉(期限前, 受けた, C, [W1, W2, W3, Z]) :- !, 選んだ(戒告, C, W1), 選んだ(期限, C, W2), 選んだ(令書, C, W3), 当たらないの約束(Z).
+令書の葉(_, _, C, [W1, W2, W3]) :- 選んだ(戒告, C, W1), 選んだ(期限, C, W2), 選んだ(令書, C, W3).
+
+%% ---- 4条 ----
+現場の段(C, []) :- 欄(来た人, C, 来ていない), !.
+現場の段(C, [s(shohyo, '来た人の証票', 段(当たらない, '証票を持ち、見せる決まりは、執行責任者についての決まりです。', ['4条'], [R, W, Z]))]) :-
+    欄(来た人, C, 他の人), !,
+    原文規定('4条', R), 選んだ(来た人, C, W), 当たらないの約束(Z).
+現場の段(C, [s(shohyo, '来た人の証票', 段(しなければならない, M, ['4条'], [R, W1, W2]))]) :-
+    欄(証票, C, Y), 証票の答え(Y, M),
+    原文規定('4条', R), 選んだ(来た人, C, W1), 選んだ(証票, C, W2).
+
+証票の答え(求めた, '執行責任者は、求められたら、いつでも証票を見せなければなりません。').
+証票の答え(求めていない, '執行責任者は、証票を持っていなければなりません。').
+</script>
+<script type="text/prolog" data-name="rules_d_hiyo.pl">% rules/d_hiyo.pl — 費用：5条・6条の段
+%
+%   段は5：nofu（5条）・gaku（5条・3条2項）・choshu（6条1項）・juni（6条2項）・ikisaki（6条3項）。2026-11-25 案A。
+%   前は入口「費用」の中で「聞く」（額 | 命じ方 | 払わない | 順位 | 行き先）を選ばせ、選んだ1つの段だけを出していた（C4）。
+%   段の id は全部 hiyo で、同じ id が並ぶと test/cases.pl の 段を探す が2件目を黙って落とす形だった（決め「あわせて」）。
+%   今は14〜16の欄から5条・6条の段を同じ入力で当て、id を段ごとに分けた。2条が成り立たないときは呼ばない（決め2）。
+%   14の欄が「代執行はまだ終わっていない」なら出さない（費用の徴収は代執行の終了後。埼玉県の手引 17頁。案の6）。
+%   15の欄は14の欄が「文書」のときだけ、16の欄は15の欄が「払った」のときだけ見る。
+%   6条1項は条文どおり「国税滞納処分の例」で答える（決め5。地方公共団体の費用についての解説は about の収録範囲）。
+%   段の文の断り（額が高すぎるときの争い方・命令の効果・抵当権との先後は判定しません）と、
+%   語の意味の補足の段（前の 費用の語/1）は about へ移した（A5）。段の文の「〜ので」は葉へ移した（A2）。
+
+費用の段(C, []) :- 欄(費用, C, 未了), !.
+費用の段(C, L) :-
+    欄(費用, C, H),
+    命令の答え(H, St, M),
+    原文規定('5条', R5), 原文規定('3条2項', R32), 選んだ(費用, C, W),
+    L1 = [s(nofu, '費用の納付の命令', 段(St, M, ['5条'], [R5, W])),
+          s(gaku, '請求される額', 段(額, '請求される額は、代執行に実際に要した費用の額で、代執行令書の見積額ではありません。', ['5条', '3条2項'], [R5, R32, W]))],
+    ( H == 文書 -> 払いの段(C, L2) ; L2 = [] ),
+    append(L1, L2, L).
+
+命令の答え(命令前, しなければならない, '役所は、実際に要した費用の額と納期日を決め、文書で納付を命じなければなりません。').
+命令の答え(文書, 足りる, '費用の納付の命令は、額と納期日を書いた文書で命じる形になっています。').
+命令の答え(口頭, 要る, '費用の納付は、額と納期日を書いた文書で命じなければなりません。').
+
+%% ---- 6条 ----
+払いの段(C, [s(choshu, '払わないとき', 段(できる, '役所は、国税滞納処分の例で費用を取り立てられます。', ['6条1項'], [R1, W1, W2])),
+             s(juni, '費用の順位', 段(持つ, '役所は、費用について、国税と地方税に次ぐ順位の先取特権を持ちます。', ['6条2項'], [R2, W2]))]) :-
+    欄(払った, C, 払っていない), !,
+    原文規定('6条1項', R1), 原文規定('6条2項', R2), 選んだ(費用, C, W1), 選んだ(払った, C, W2).
+払いの段(C, [s(ikisaki, '集めた費用の行き先', 段(収入になる, M, ['6条3項'], [R, W1, W2]))]) :-
+    欄(所属, C, P), 行き先の答え(P, M),
+    原文規定('6条3項', R), 選んだ(払った, C, W1), 選んだ(所属, C, W2).
+
+行き先の答え(国, '集めた費用は、国庫の収入になります。').
+行き先の答え(地方公共団体, '集めた費用は、事務費を出した地方公共団体の収入になります。').
+</script>
+<script type="text/prolog" data-name="rules_g_hantei.pl">% rules/g_hantei.pl — 段を束ねて見出し・根拠条文・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 箱の条, 葉のリスト)　結論ごとの段 = s(画面のid, 見出し, 段)
+%     段は15：dai2（b_dekiru）、kinkyu・habu・kaikoku・reisho・sumi・shohyo（c_tetsuzuki）、nofu・gaku・choshu・juni・ikisaki（d_hiyo）
+%   形は gikai-prolog の e_hantei.pl と同じ（2026-11-25 案A）。
+%   前は 入口の段/3 が入口1つの段だけを返し、第1条の段（別法が ある なら 判定しない で止まる・ない なら 補足）を全部の入口に足していた。
+%   見出し/2 は全部の段の答えを1段落につなぎ（A7）、組の番号は 現場0・止まる1・足りる3・当たらない4・ほかは受け皿の2で、
+%   答え の10か所が黙って2番に落ちていた。木は全部を「次のすべてが成り立つ」の下にぶら下げた1本で、全部の段にアプリの約束事①を付けていた（B5・A5）。
+%   今は段ごとに状態を持ち、状態を全部名前で書き、知らない状態は throw で止める（agents/dog/rules.md:96。決め「あわせて」）。
+%   第1条の段は消した（about の収録範囲へ。決め4）。補足の段（語の意味と、判定しないこと）も消し、語は欄の名前と説明へ、断りは about へ移した（A5）。
+%   段の文には、画面の上で指す先の無い指示語（その・これを・当該・同項・前項 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+%   どの入力でも2条の段が出るので、「判定できませんでした」になるのは ctx の値が欄の選択肢に無いときだけ。
+
+%% ---- judge ----
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    Steps \== [],
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 成り立たない組があれば、その組だけを段にする（REVIEW_RULES C3。ほかの段は出さない）。
+% 組は findall で全部集め、組ごとに1段にする（id は mujun_a。REVIEW_RULES 末尾「AI同士で決めた書き方」1・2）。
+% 無ければ2条の段を当て、2条が成り立つときだけ3条〜6条の段を同じ入力で当てる（決め2。3条1項・4条・5条は2条の代執行を前提にした条）。
+% 並びは 当たった答えを先に（止まる答えを先に）。
+% 同じ述語を別のファイルに分けて書くと後の読み込みで消えるので、まとめはここに1つだけ置く
+全部の段(C, Steps) :-
+    findall(s(Id, 'この組み合わせはありません', 段(組み合わせなし, 'この組み合わせはありません。', As, Ws)),
+            ( 組み合わせなし(C, K, Ws, As), atom_concat(mujun_, K, Id) ), Steps),
+    Steps \== [], !.
+全部の段(C, Steps) :-
+    できるかの段(C, L1),
+    ( 二条が成り立つ(C) ->
+        手続の段(C, L2),
+        現場の段(C, L3),
+        費用の段(C, L4)
+    ; L2 = [], L3 = [], L4 = [] ),
+    append([L1, L2, L3, L4], L0),
+    当たった答えを先に(L0, Steps).
+
+%% ---- 並べ方 ----
+% 並びは ①止まる答え ②当たった答え ④「当たりません」の文（この本に ③答えを支える文 は無い）
+% ①②が無いときは「当たりません」が聞いた答えなので、そのまま出す（gikai-prolog と同じ並べ方）
+% 組の番号 は番号を空のまま呼んで後で比べる。番号を束ねて呼ぶと頭に合わず、最後の throw の節に落ちて止まる（sorin-prolog 2026-11-22 22:50 run_cases。gikai と同じ）
+当たった答えを先に([], []) :- !.
+当たった答えを先に(L0, L) :-
+    ( member(s(_, _, 段(St0, _, _, _)), L0), 組の番号(St0, N0), N0 =< 2 -> Order = [1, 2, 3, 4] ; Order = [4, 3] ),
+    findall(S, ( member(N, Order), member(S, L0), S = s(_, _, 段(St, _, _, _)), 組の番号(St, M), M =:= N ), L).
+
+% 組の番号(状態, 1=止まる答え | 2=当たった答え | 4=当たりません)。
+% 状態は全部名前で書き、知らない状態は止める（agents/dog/rules.md:96。gikai-prolog e_hantei.pl:55–66 を写し、状態は案の「組の番号」）
+% 前の 判定しない（1条・委任なしの条例）は段を出さなくした（A5・決め1・決め4）ので消した。現場（4条を一番上に置いていた。前の読み (18)）は
+% しなければならない・当たらない に分け、時間の順に並べる。答え（受け皿の2番に落ちていた10か所）は できる・足りる・持つ・収入になる・額 に分けた。
+% 足りる は前の3番から2番に移した（3番は使わない）。補足 は段ごと消した
+組の番号(組み合わせなし, 1) :- !.     % 4条（まだ誰も来ていない×証票を求めた。案A「この組み合わせはありません」）
+組の番号(できない, 1) :- !.           % 2条（成り立たない）
+組の番号(要る, 1) :- !.               % 3条1項（戒告を受けていない・口頭だけ・期限が書いていない）・3条2項（令書を受けていない）・5条（命令の形でない）
+組の番号(できる, 2) :- !.             % 2条・3条3項（省ける・省けるのは手続だけ）・6条1項
+組の番号(しなければならない, 2) :- !. % 4条（持つ・見せる）・5条（命令はまだ）
+組の番号(足りる, 2) :- !.             % 3条1項（戒告は済んでいる）・3条1項と2項（手続は済んでいる）・5条（命令の形になっている）
+組の番号(持つ, 2) :- !.               % 6条2項
+組の番号(収入になる, 2) :- !.         % 6条3項
+組の番号(額, 2) :- !.                 % 5条・3条2項（実際に要した額）
+組の番号(当たらない, 4) :- !.         % 3条3項（省けない）・3条2項（期限前の令書）・4条（執行責任者でない人）
+組の番号(St, _) :- throw(知らない状態(St)).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、段の文だけを出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」を付けない）。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(_, Steps, Ws) :-
+    findall(W, ( member(s(_, _, S), Steps), 問いの答え(S, W) ), Ws).
+
+% 答えの文に箱の条を（）で付ける。条の無い段は付けない（「（）」を画面に出さない。この本の段はどれも条がある）
+問いの答え(S, W) :-
+    S = 段(_, _, As, _),
+    答え(S, W0),
+    ( As == [] -> W = W0 ; 条の表記(As, A), format(atom(W), '~w（~w）', [W0, A]) ).
+
+% 節の文：答えの文（条を付けない）
+節の文(_, S, W) :- 答え(S, W).
+
+% 答え(段, 答えの文)：段の文の末尾の「。」を外す。
+答え(段(_, M, _, _), W) :-
+    ( atom_concat(M0, '。', M) -> W = M0 ; W = M ).
+
+%% ---- 根拠条文 ----
+% 段の順に並べ、重複は1つに
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As, _), Ss), member(A, As) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5。結論をつないだ行と「次のすべてが成り立つ」の根は置かない）。
+% 並びは結論の箱と同じ。一番上の行は結論の箱の文で、その下に葉（規定の行・起きた事実・約束事）を置く。
+木(_, Steps, Trees) :-
+    findall(T, ( member(s(_, _, S), Steps), 段の木(S, T) ), Trees).
+
+段の木(S, t(K, W, '', Cs)) :-
+    S = 段(St, _, _, Fs),
+    問いの答え(S, W),
+    maplist(葉の行, Fs, Kids),
+    すべて(W, '', Kids, t(_, W, _, Cs)),
+    印(St, K).
+
+% 止まった段（組の番号の1番と、当たらない）は info、そのほか（2番）は ok（木ごとに、その段で決める。gikai-prolog と同じ）
+% 状態は1つに決まっていて、入っているかを見るだけなので memberchk（REVIEW_RULES 末尾「AI同士で決めた書き方」1）
+印(St, K) :- 組の番号(St, _), ( memberchk(St, [組み合わせなし, できない, 要る, 当たらない]) -> K = info ; K = ok ).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は gikai-prolog の web.pl と同じ（2026-11-25 案A）。
+%   前は result・explain の2つで、explain は木1本を平らにしていた。
+%   今は木を結論ごとに1本にし（B5）、「この組み合わせはありません」も段の1つにした（rules/g_hantei.pl の 全部の段）。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+</script>
+<script type="application/json" id="law">{"1":{"t":"第一条","c":"","p":[{"n":"1","s":"行政上の義務の履行確保に関しては、別に法律で定めるものを除いては、この法律の定めるところによる。","i":[]}]},"2":{"t":"第二条","c":"","p":[{"n":"1","s":"法律（法律の委任に基く命令、規則及び条例を含む。以下同じ。）により直接に命ぜられ、又は法律に基き行政庁により命ぜられた行為（他人が代つてなすことのできる行為に限る。）について義務者がこれを履行しない場合、他の手段によつてその履行を確保することが困難であり、且つその不履行を放置することが著しく公益に反すると認められるときは、当該行政庁は、自ら義務者のなすべき行為をなし、又は第三者をしてこれをなさしめ、その費用を義務者から徴収することができる。","i":[]}]},"3":{"t":"第三条","c":"","p":[{"n":"1","s":"前条の規定による処分（代執行）をなすには、相当の履行期限を定め、その期限までに履行がなされないときは、代執行をなすべき旨を、予め文書で戒告しなければならない。","i":[]},{"n":"2","s":"義務者が、前項の戒告を受けて、指定の期限までにその義務を履行しないときは、当該行政庁は、代執行令書をもつて、代執行をなすべき時期、代執行のために派遣する執行責任者の氏名及び代執行に要する費用の概算による見積額を義務者に通知する。","i":[]},{"n":"3","s":"非常の場合又は危険切迫の場合において、当該行為の急速な実施について緊急の必要があり、前二項に規定する手続をとる暇がないときは、その手続を経ないで代執行をすることができる。","i":[]}]},"4":{"t":"第四条","c":"","p":[{"n":"1","s":"代執行のために現場に派遣される執行責任者は、その者が執行責任者たる本人であることを示すべき証票を携帯し、要求があるときは、何時でもこれを呈示しなければならない。","i":[]}]},"5":{"t":"第五条","c":"","p":[{"n":"1","s":"代執行に要した費用の徴収については、実際に要した費用の額及びその納期日を定め、義務者に対し、文書をもつてその納付を命じなければならない。","i":[]}]},"6":{"t":"第六条","c":"","p":[{"n":"1","s":"代執行に要した費用は、国税滞納処分の例により、これを徴収することができる。","i":[]},{"n":"2","s":"代執行に要した費用については、行政庁は、国税及び地方税に次ぐ順位の先取特権を有する。","i":[]},{"n":"3","s":"代執行に要した費用を徴収したときは、その徴収金は、事務費の所属に従い、国庫又は地方公共団体の経済の収入となる。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"本則","a":[{"k":"1","t":"第一条","c":"","u":1},{"k":"2","t":"第二条","c":"","u":1},{"k":"3","t":"第三条","c":"","u":1},{"k":"4","t":"第四条","c":"","u":1},{"k":"5","t":"第五条","c":"","u":1},{"k":"6","t":"第六条","c":"","u":1}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+// ==== 共有ここから（別ページでも同じ部品を使う） ====
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  // '2条' '3条1項' のような形（この法律に号は無い）。複数条が「・」で区切られることもある → 最初の条だけ見る
+  const first = String(a).split("・")[0];
+  const m = first.match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(?:第?(\d+)号((?:の\d+)*))?([イロハニホ])?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[4] ? m[4] + (m[5] || "").replace(/の/g, "_") : null, sub: m[6] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para);
+  // 号まで指定があれば、項の本文とその号だけ出す
+  if (r.item) ps = ps.filter(p => p.i.some(it => it.n === r.item));
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const list = r.item ? p.i.filter(it => it.n === r.item) : p.i;
+    const its = list.map(it => `<p class="it">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => r.sub && x.startsWith(r.sub + " ") ? `<br><span class="hit">　${esc(x)}</span>` : `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなく、このアプリの決め事（収録範囲・仕組みのページに一覧）。</p>`;
+// 凡例は最初の木の上に1回だけ出す（legend＝false で外す。gikai-prolog と同じ。2026-11-25 案Aで木を結論ごとにしたため）
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+// ==== 共有ここまで ====
+
+async function boot(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const need = ["result/2", "explain/2", "heads/2", "answers/2"].filter(p => !once(`current_predicate(${p})`));
+    if (need.length) throw new Error(`Prologの読み込みが不完全です（${need.join("・")} がありません）。${errBuf.slice(-3).join(" ")}`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    renderPresets();
+    ask();
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+    $("answer").innerHTML = `<p class="loading err">エラー：${esc(e.message)}</p>`;
+  }
+}
+
+// ---- 入力 → ctx の文字 ----
+// 欄はいつも全部出し、出し消しをしない（REVIEW_RULES C5。形は gikai-prolog と同じ。2026-11-25 案A）。
+// 並びは schema.pl の ctx の引数の順（1〜16）。前の SLOTS・updateSlots（入口ごとの欄の出し消し）と、
+// 隠れた欄を 関係なし で渡す shown・buildCtx はやめた（JS と Prolog の2か所に同じ見方を持っていた）。関係のない欄は Prolog が見ないだけ。
+// この本に数字の欄は無い（全部 select）
+const IDS = ["konkyo","koui","sumi","konnan","koeki","kaikoku","kigen","reisho","hijo","kinkyu","hima","kita","shohyo","hiyo","harai","shozoku"];
+function buildCtx(){
+  return `ctx(${IDS.map(id => atom($(id).value)).join(",")})`;
+}
+
+// ---- 判定と表示 ----
+const HEAD = `<div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div>`;
+const lawBtn = a => a === "@約束事" ? `<span class="yk">アプリの約束事</span>` : (a ? `<button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : "");
+const artsHTML = as => as.map(String).map(lawBtn).join(" ");
+// 断り書き（当てはめは判定しない・条文だけを読む・判例と個別の法律は読まない・取得した版）は
+// about.html の範囲の節と約束事に置く（REVIEW_RULES A1・A5。2026-11-25 結果の下の NOTE_HANTEI・NOTE_JOBUN・NOTE_HOKA と
+// 段の「このページでは判定しません」、補足の段、下の帯の「含みません」を移した）。頭の注意は見本の1文だけ（A3）。
+
+// 段(状態, 文, 箱の条, 葉) を1段ぶんの行にする。文は答え（answers/2。段の文から末尾の「。」を外したもの）
+function stepHTML(id, title, s, ans){
+  const [st, , as] = T(s).args;
+  return `<p class="sec">${esc(title)}</p><p class="step" id="${id}" data-st="${esc(st)}">${esc(ans)}。 ${artsHTML(as)}</p>`;
+}
+
+function ask(){
+  const c = buildCtx();
+  $("qline").textContent = `?- result(${c}, R).`;
+  if (!pl) return;
+  try{
+    // 木は結論1つにつき1本（REVIEW_RULES B5）。凡例は最初の木の上に1回だけ
+    const lr = once(`explain(${c}, Lines)`);
+    const trees = lr ? lr.Lines.map(ls => ls.map(T).map(t => t.args)) : [];
+    const r = once(`result(${c}, r(Head,Steps,Arts))`);
+    if (!r){
+      // どの入力でも2条の段が出るので、ここに来るのは欄の値が選択肢に無いときだけ（rules/g_hantei.pl の judge）
+      $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">判定できませんでした</div></div><p class="hint">起きた出来事を欄で選んでください。</p></div>`;
+      return;
+    }
+    const ar = once(`answers(${c}, L)`);
+    const ans = Object.fromEntries((ar ? ar.L : []).map(T).map(t => t.args));
+    const steps = r.Steps.map(T).map(t => t.args).filter(([id]) => ans[id] !== undefined);
+    // 答えが2つ以上なら箇条書き、1つなら1文のまま（REVIEW_RULES A7）。並びは止まる答えが先
+    const hr = once(`heads(${c}, L)`);
+    const hs = hr ? hr.L.map(String) : [];
+    const big = hs.length > 1 ? `<ul>${hs.map(h => `<li>${esc(h)}</li>`).join("")}</ul>` : esc(r.Head);
+    $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">${big}</div></div>
+      ${steps.map(([id, title, s], i) => stepHTML("st-" + id, `${i + 1}　${title}`, s, ans[id])).join("")}
+      <p class="sec">根拠条文</p><p class="arts" id="arts">${r.Arts.length ? artsHTML(r.Arts) : "当てはまる条文はありません。"}</p>
+      ${trees.length ? `<p class="sec">なぜそうなるか（論理の木）</p>${trees.map((ls, i) => treeHTML(ls, i === 0)).join("")}` : ""}</div>`;
+  } catch(e){ $("answer").innerHTML = `<p class="hint">エラー：${esc(e.message)}</p>`; }
+}
+
+// ---- 例（名前は起きた事実の言葉で書く。条文の文を写さず、指示語で始めない（REVIEW_RULES C2・C4））----
+function presetList(){
+  // 欄の値は DEFAULTS から変えるものだけ書く。2026-11-25 16欄で組み直した（前の例32個は入口 iri・別の法律 bet・聞きたいこと kik つきで、
+  // 「緊急の3つがそろう」「他の税との順位」「できるか：別の法律に定めがある」のような条と論点の名前・欄の値の並びの名前だった）。
+  // 2条が成り立つ／それぞれの要件が欠ける・戒告を受けていない／口頭だけ／期限が書いていない・期限前に令書が来た・
+  // 3条3項の3つがそろう／1つ欠ける・執行責任者が来て証票を求めた／執行責任者でない人が来た・費用を文書で命じられた／口頭だけ・
+  // 払っていない・払った（国／地方公共団体）を入れた（依頼書の「例は新しい欄の値で組み直す」）
+  const H = {hiyo:"文書"};
+  return [
+    ["空き家の撤去を命じられたまま放置し、文書の戒告と代執行令書を受けた", {}],
+    ["法律の委任を受けた条例で決められた片付けを、まだ済ませていない", {konkyo:"委任直接"}],
+    ["法律に基づいて役所が出した除却命令に、まだ従っていない", {konkyo:"法律命令"}],
+    ["法律の委任を受けた条例に基づいて役所が出した命令に従わず、文書の戒告と代執行令書を受けた", {konkyo:"委任命令"}],
+    ["命じられたのが、本人しかできないことだった", {koui:"本人だけ"}],
+    ["命じられた撤去を、もう済ませた", {sumi:"済ませた"}],
+    ["罰則や指導で済ませさせるのは難しくないと考える", {konnan:"難しくない"}],
+    ["放っておくことが公益に大きく反するとは、役所が認めていない", {koeki:"認めていない"}],
+    ["罰則で済ませさせるのも難しくなく、公益に反すると役所も認めていない", {konnan:"難しくない",koeki:"認めていない"}],
+    ["戒告を受けないまま、代執行令書が届いた", {kaikoku:"受けていない"}],
+    ["戒告を口頭で言われただけ", {kaikoku:"口頭"}],
+    ["文書の戒告に、期限が書いていなかった", {kigen:"書いていない"}],
+    ["戒告の期限が来る前に、代執行令書が届いた", {kigen:"期限前"}],
+    ["文書の戒告を受け、期限はまだ来ていない", {kigen:"期限前",reisho:"受けていない"}],
+    ["戒告の期限が過ぎたが、代執行令書はまだ届いていない", {reisho:"受けていない"}],
+    ["崖崩れの危険が迫り、すぐ実施する必要があり、戒告の時間も無い", {hijo:"はい"}],
+    ["危険が迫っているが、戒告と代執行令書の手続をとる時間はある", {hijo:"はい",hima:"ある"}],
+    ["危険が迫っているが、すぐに実施する差し迫った必要は無い", {hijo:"はい",kinkyu:"ない"}],
+    ["現場に来た執行責任者に、証票を見せるよう求めた", {kita:"執行責任者",shohyo:"求めた"}],
+    ["執行責任者が現場に来たが、まだ証票を求めていない", {kita:"執行責任者"}],
+    ["執行責任者でない作業員に、証票を見せるよう求めた", {kita:"他の人",shohyo:"求めた"}],
+    ["代執行が終わったが、費用の命令はまだ来ていない", {hiyo:"命令前"}],
+    ["代執行のあと、額と納期日を書いた文書で費用を命じられ、まだ払っていない", {...H}],
+    ["代執行の費用を、口頭で払うよう言われただけ", {hiyo:"口頭"}],
+    ["国が事務費を出した代執行の費用を、納期日までに払った", {...H,harai:"払った",shozoku:"国"}],
+    ["市が事務費を出した代執行の費用を、納期日までに払った", {...H,harai:"払った"}],
+  ];
+}
+// 例に書いていない欄は既定に戻す（前の例の値を残すと、名前と違う入力になるため。gikai-prolog と同じ）
+// 既定のままで「役所は、自分で行うか第三者にさせて、費用を義務者から取ることができます」と「戒告と代執行令書の手続は済んでいます」の
+// 答えが2つ付く（案A「全組合せの数」の既定）
+const DEFAULTS = {konkyo:"法律直接",koui:"代われる",sumi:"まだ",konnan:"難しい",koeki:"認めた",kaikoku:"文書",kigen:"過ぎた",reisho:"受けた",hijo:"いいえ",kinkyu:"ある",hima:"ない",kita:"来ていない",shohyo:"求めていない",hiyo:"未了",harai:"払っていない",shozoku:"地方公共団体"};
+function setDefaults(p){
+  for (const [id, v] of Object.entries(DEFAULTS)) $(id).value = p[id] !== undefined ? String(p[id]) : v;
+}
+function applyPreset(p){
+  setDefaults(p);
+  ask();
+}
+function renderPresets(){
+  $("presets").innerHTML = presetList().map((p, i) => `<button type="button" data-preset="${i}">${esc(p[0])}</button>`).join("");
+}
+
+// 初期表示（既定の値）
+setDefaults({});
+
+document.addEventListener("change", e => { if (e.target.closest("#slots")) ask(); });
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.preset !== undefined){ applyPreset(presetList()[+b.dataset.preset][1]); $("answer").scrollIntoView?.(); }
+  else if (b.dataset.art && pl){
+    const host = b.closest(".tr") || b.closest("li") || b.parentElement, nx = host.nextElementSibling;
+    if (nx && nx.classList.contains("lawtext") && nx.dataset.for === b.dataset.art) nx.remove();
+    else { host.insertAdjacentHTML("afterend", lawHTML(b.dataset.art)); host.nextElementSibling.dataset.for = b.dataset.art; }
+  }
+});
+
+if (typeof SWIPL === "function") boot();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; $("answer").innerHTML = `<p class="loading err">Prolog（swipl-wasm）を読み込めませんでした。ページを再読み込みしてください。</p>`; }
+</script>
