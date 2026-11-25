@@ -1,0 +1,1001 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="就職のときに身元保証人になったら、保証はいつまで続くか、会社は保証人に知らせる義務があるか、保証人はやめられるか、いくら払うかを、身元保証ニ関スル法律の条文から判定します。">
+<title>身元保証法を逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+/* 欄の上の小見出し（契約／更新／雇われている間に起きたこと／損害）。選ばせる欄ではないので番号を数えない
+   （akiya-prolog と同じ。2026-11-26 案A）。前の .step.off（判定していない段の色）・.flow・NOTE_* の枠（tokurei）・.disclaimer-inline・
+   pre の左線は、akiya の style に揃えて外した */
+.slots .slot-h{margin:0;padding:8px 10px 4px;border-bottom:2px solid var(--line);border-right:2px solid var(--line);background:var(--paper)}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border:1px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+/* 数字の欄（数字を打つので ▼ を出さない）*/
+.field.num::after{display:none}
+.field input{appearance:textfield;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 10px;min-width:0;width:100%}
+.field input:focus-visible{outline:none}
+/* 原文と言い換えを横に並べる（狭い画面では縦に）。強調は枠全体で、左の縦線は使わない */
+.pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 14px;align-items:start;margin-top:6px}
+@media (max-width:640px){.pair{grid-template-columns:minmax(0,1fr)}}
+.heii{font-size:.9rem;line-height:1.8;border:1px solid var(--hair);background:var(--paper);padding:10px 12px;margin:4px 0 6px}
+.heii b{display:block;font-size:.78rem;color:var(--muted);font-weight:700}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <h1>身元保証法を<span class="ao">逆から引く</span></h1>
+    <div class="judge-plate"><span class="jp-k">判定</span><img src="densuke_icon.svg" width="64" height="64" alt="でんすけのアイコン"><span class="jp-v">でんすけ<small>秘書AI</small></span></div>
+    <p class="lead">就職のときに身元保証人になったら、保証がいつまで続くか、会社が保証人に知らせなければならないか、保証人がやめられるか、損害をどう払うかを、でんすけが身元保証ニ関スル法律（身元保証法）の条文で判定します。</p>
+    <p class="caution" role="note"><b>注意</b><span>条文をルールにして、論理的にそのまま演算した結果です。裁判所の判断とは異なる場合があります。<a class="aboutlink" href="about.html">収録範囲・仕組み →</a></span></p>
+  </header>
+
+  <section class="ask">
+    <div>
+      <p class="sec-h">例から選ぶ</p>
+      <div class="presets" id="presets"></div>
+    </div>
+    <!-- 欄は起きた事実を聞く10個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-26 案A。形は akiya-prolog と同じ）。
+         前の入口「どの話か」（iri。選択肢に「（第1条・第2条・第6条）」のような条番号を付けていた）と、欄の出し消し（SLOTS・updateSlots）、
+         隠れた欄を 関係なし で渡す shown・buildCtx をやめた。関係のない欄は Prolog が見ないだけ（schema.pl の ctx のコメント）。
+         並びは schema.pl の ctx の引数の順（1〜10）。小見出しは選ばせる欄ではない（番号を数えない）。
+         期間を決めたか（sad）と年数（nen）は2の欄に、起きたこと（oki。第3条の写しの4択）は6と7の欄に分けた（C1・C2）。
+         1の欄（約束の中身）と9の欄（損害が出たか）を足した（決め6）。3の欄の見習いと7の欄の重くなるかは「（あなたの考え）」（決め4）。
+         欄の説明の断り（月・日は聞きません・当てはめは判定しません）と、結果の下の NOTE_HANTEI・NOTE_JOBUN・NOTE_HOKA、下の帯の「含みません」、
+         頭の注意の2文目・3文目（当てる道具ではありません・額を計算しません）は about へ移した（A3・A5） -->
+    <div class="slots" id="slots">
+      <p class="sec-h slot-h full-slot">契約</p>
+      <div class="slot full-slot" id="s-yakusoku"><label for="yakusoku">保証人が約束したこと</label><span class="field"><select id="yakusoku">
+        <option value="損害">本人の行いで会社が受けた損害を払う（呼び名が「身元保証」「身元引受」「保証」など何でも）</option>
+        <option value="引取り">本人の身柄を引き取るだけで、損害は払わない</option>
+      </select></span><p class="desc">本人＝雇われている人（被用者）。会社＝雇っている会社や人（使用者）</p></div>
+      <div class="slot" id="s-kikan"><label for="kikan">契約で決めた保証の期間（年。決めていなければ空）</label><span class="field num"><input id="kikan" type="number" min="1" max="99" step="1" inputmode="numeric"></span><p class="desc">1〜99年の整数</p></div>
+      <div class="slot" id="s-minarai"><label for="minarai">本人の雇われ方</label><span class="field"><select id="minarai">
+        <option value="いいえ">見習いではない</option>
+        <option value="はい">商店や工場などで、仕事を覚える見習いとして雇われた（あなたの考え）</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">更新</p>
+      <div class="slot full-slot" id="s-koshin"><label for="koshin">期間が終わるときの更新</label><span class="field"><select id="koshin">
+        <option value="していない">していない</option>
+        <option value="決め直した">保証人と会社が、続けると決め直した</option>
+        <option value="自動">契約に「期間が終わったら自動で更新する」と書いてあるだけで、決め直してはいない</option>
+      </select></span><p class="desc">更新＝期間が終わるときに、契約を続けると決め直すこと</p></div>
+      <div class="slot full-slot" id="s-knen"><label for="knen">更新した後の期間（年）</label><span class="field num"><input id="knen" type="number" min="1" max="99" step="1" inputmode="numeric"></span><p class="desc">1〜99年の整数</p></div>
+
+      <p class="sec-h slot-h full-slot">雇われている間に起きたこと</p>
+      <div class="slot full-slot" id="s-shigoto"><label for="shigoto">本人の仕事ぶり</label><span class="field"><select id="shigoto">
+        <option value="なし">問題は無い</option>
+        <option value="知った">仕事に向かないことか不誠実なこと（使い込み・無断欠勤が続く など）があり、保証人が責任を負うおそれがあると会社が知った</option>
+        <option value="知らない">同じことがあるが、会社はまだ知らない</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-henko"><label for="henko">会社が本人の仕事の中身か勤め先の場所を</label><span class="field"><select id="henko">
+        <option value="していない">変えていない</option>
+        <option value="重く">変え、保証人の責任が重くなるか、保証人が本人を見守るのが難しくなった（あなたの考え）</option>
+        <option value="同じ">変えたが、責任も見守りやすさも変わらない（あなたの考え）</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-shirikata"><label for="shirikata">保証人は6・7のことを</label><span class="field"><select id="shirikata">
+        <option value="通知">会社からの知らせで知った</option>
+        <option value="自分">知らせは無いが、自分で知った</option>
+        <option value="知らない">まだ知らない</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">損害</p>
+      <div class="slot" id="s-songai"><label for="songai">本人の行いで、会社に損害が</label><span class="field"><select id="songai">
+        <option value="出ていない">出ていない</option>
+        <option value="出た">出た</option>
+      </select></span></div>
+      <div class="slot" id="s-tokuyaku"><label for="tokuyaku">保証人が払う額についての特約</label><span class="field"><select id="tokuyaku">
+        <option value="なし">無い</option>
+        <option value="全額">「損害は全額保証人が払う」と書いてある</option>
+      </select></span><p class="desc">特約＝契約の中で特に決めた約束</p></div>
+    </div>
+    <div class="qline" id="qline"></div>
+  </section>
+
+  <section id="answer" aria-live="polite"><p class="loading">でんすけが条文のルール（Prolog）を読み込んでいます…</p></section>
+
+  <p class="foot techline"><span>身元保証ニ関スル法律／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot" id="foot">e-Gov法令検索の身元保証ニ関スル法律（昭和八年法律第四十二号）の本則の原文から、第1条〜第6条をルールにしたものです。条文は2026年11月10日に取得した版で、それ以後の改正と、公布済みで施行前の改正は読んでいません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 身元保証ニ関スル法律のProlog 共通の型・欄の読み出し・成り立たない組・木の部品
+%
+% ctx(約束, 期間, 見習, 更新, 更新年数, 仕事ぶり, 変更, 知り方, 損害, 特約)
+%   欄は起きた事実を聞く10個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-26 案A。
+%   案は ../mimoto_form_plan_answer_1126.md の案A、決めは ../mimoto_form_plan_decision_1126.md）。形は akiya-prolog と同じ。
+%   前は ctx(入口, 詳細) で、入口（期間 | 通知 | 賠償）を先に選ばせ、画面が欄を出し消しして、隠れた欄を 関係なし で渡していた
+%   （形OK/2 が欄の並びを入口ごとに直書きしていた）。今は使わない欄を判定で見ないだけにした。
+%   期間を決めたか（sad）と年数（nen）は2の欄に、起きたこと（oki）は6と7の欄に分けた（案A「まとめる欄・分ける欄」・C1）。
+%   1の欄（約束の中身。第1条の定義）と9の欄（損害が出たか。第5条の段を出す）を足した（決め6）。
+%   引数の順は画面の欄の番号（1〜10）と同じ。画面では4つの小見出し（契約／更新／雇われている間に起きたこと／損害）の下に並べる。
+%    1 約束     : 損害 | 引取り（保証人が約束したこと：本人の行いで会社が受けた損害を払う | 本人の身柄を引き取るだけで、損害は払わない）
+%    2 期間     : 空 | 1〜99の整数（契約で決めた保証の期間。年。決めていなければ空）
+%    3 見習     : いいえ | はい（本人の雇われ方：見習いではない | 商店や工場などで、仕事を覚える見習いとして雇われた。あなたの考え）
+%    4 更新     : していない | 決め直した | 自動（期間が終わるときの更新：していない | 保証人と会社が、続けると決め直した |
+%                 契約に「期間が終わったら自動で更新する」と書いてあるだけで、決め直してはいない）
+%    5 更新年数 : 空 | 1〜99の整数（更新した後の期間。年）
+%    6 仕事ぶり : なし | 知った | 知らない（本人の仕事ぶり：問題は無い | 仕事に向かないことか不誠実なことがあり、保証人が責任を負う
+%                 おそれがあると会社が知った | 同じことがあるが、会社はまだ知らない）
+%    7 変更     : していない | 重く | 同じ（会社が本人の仕事の中身か勤め先の場所を：変えていない | 変え、保証人の責任が重くなるか、
+%                 保証人が本人を見守るのが難しくなった（あなたの考え） | 変えたが、責任も見守りやすさも変わらない（あなたの考え））
+%    8 知り方   : 通知 | 自分 | 知らない（保証人は6・7のことを：会社からの知らせで知った | 知らせは無いが、自分で知った | まだ知らない）
+%    9 損害     : 出ていない | 出た（本人の行いで、会社に損害が）
+%   10 特約     : なし | 全額（保証人が払う額についての特約：無い | 「損害は全額保証人が払う」と書いてある）
+%
+%   関係のない欄（1の欄が「引き取るだけ」のときの2〜10、4の欄が「していない」か「自動」のときの5、
+%   6の欄が「問題は無い」で7の欄が「変えていない」か「変えたが変わらない」のときの8）は、組み合わせなしにせず見ないだけ（akiya-prolog と同じ）。
+%   6の欄が「会社はまだ知らない」のときの8の欄は見る（4条の答えが変わる）ので、上と違い 組み合わせなし/4 のイに当たる。
+%   5の欄が空で4の欄が「決め直した」のときは judge が失敗し、画面は「判定できませんでした」になる（risoku-prolog の空の数の欄と同じ）。
+%   欄どうしで成り立たない組はこのファイルの 組み合わせなし/4 が返す（REVIEW_RULES C3）。
+%
+% 書き方のきまり：
+%   ・条番号は '1条' '2条1項' '3条1号' のような原子。号まで書くときは項も書く（項が1つの条は項を書かない）。
+%   ・段は 段(状態, 文, 箱の条, 葉のリスト)。結論ごとの段は s(画面のid, 見出し, 段)。段の文は、末尾の「。」を外して結論の箱にも出す。
+%     段の文は本題だけを書き、入力の言い直しは葉に置く（REVIEW_RULES A2。葉は論理の木にだけ出る）。
+%     葉は文（原子）か、木の行 t(...) そのもの（規定・約束の行。schema の 葉の行）。
+%     前は 段(状態, 文, 条のリスト) の3つで、木は条の原文と約束事①②だけだった（入力の葉が無かった）。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | and | or | info
+%   ・アプリの約束事の行は 条 を '@約束事' にする。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか・数の欄が範囲か。組の成り立ちは 組み合わせなし/4 で見る）----
+ctx_valid(C) :-
+    functor(C, ctx, 10),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )),
+    forall(数の欄(N, P), ( arg(N, C, V), call(P, V) )).
+
+欄の値(1, [損害, 引取り]).
+欄の値(3, [いいえ, はい]).
+欄の値(4, [していない, 決め直した, 自動]).
+欄の値(6, [なし, 知った, 知らない]).
+欄の値(7, [していない, 重く, 同じ]).
+欄の値(8, [通知, 自分, 知らない]).
+欄の値(9, [出ていない, 出た]).
+欄の値(10, [なし, 全額]).
+
+% 数の欄（年。1〜99の整数か空）。前の 年の値/1（1〜99）を残し、空を足した（risoku-prolog の 円の値か空 と同じ形）
+数の欄(2, 年の値か空).
+数の欄(5, 年の値か空).
+
+年の値(X) :- integer(X), X >= 1, X =< 99.
+年の値か空(空) :- !.
+年の値か空(X) :- 年の値(X).
+
+%% ---- 欄の読み出し（番号は画面の欄の番号）----
+欄の番号(約束, 1).
+欄の番号(期間, 2).
+欄の番号(見習, 3).
+欄の番号(更新, 4).
+欄の番号(更新年数, 5).
+欄の番号(仕事ぶり, 6).
+欄の番号(変更, 7).
+欄の番号(知り方, 8).
+欄の番号(損害, 9).
+欄の番号(特約, 10).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+%% ---- 成り立たない組（組み合わせなし/4。REVIEW_RULES C3。案A「この組み合わせはありません」）----
+% 組み合わせなし(C, 記号, 葉のリスト, 箱の条)。rules/g_hantei.pl の 全部の段 が findall で全部集める（REVIEW_RULES 末尾「AI同士で決めた書き方」1・2）。
+%   組は ア・イ の2つ。両方に当たれば2段を出す。
+%   ア 1の欄が「引き取るだけ（損害は払わない）」で、10の欄が「損害は全額保証人が払う」。根拠は1条
+%      （「全額払う」と書いたなら損害を払う約束をしていて、損害を払うと約束した契約は、呼び名が何でも身元保証契約）
+%   イ 6の欄が「会社はまだ知らない」、7の欄が「変えていない」か「変えたが変わらない」で、8の欄が「会社からの知らせで知った」。
+%      根拠は3条1号・3条2号（会社が知らせるのは、第1号の事実を「知リタルトキ」と、第2号の変更をしたとき。
+%      会社が知らない事実を会社が知らせることはできない。7の欄が「重く」なら会社は自分で変えたことを知らせられるので、ありませんにしない）。
+%      2026-11-26 決め9（../mimoto_form_plan_decision_1126.md 末尾の追記）。前半ではありませんにせず、4条の できる を出していた。
+%      1の欄は見ない（ア と同じく、欄の事実どうしが成り立たない組のため）
+% 期間を決めていないのに自動で更新すると書いた組（2の欄が空×4の欄が「自動」）と、引き取るだけで損害が出た組（1×9）は、
+% 起きうる事実なので、ありませんにせず段の答えで出す（案A）。
+組み合わせなし(C, a, ['「損害は全額保証人が払う」と書いたなら、損害を払う約束をしている。損害を払うと約束した契約は、呼び名が何でも身元保証契約', W], ['1条']) :-
+    欄(約束, C, 引取り), 欄(特約, C, 全額),
+    二つ選んだ(約束, 特約, C, W).
+組み合わせなし(C, i, ['会社が保証人へ知らせるのは、第3条第1号の事実を会社が知ったときと、第3条第2号の、責任を重くするか監督を難しくする変更をしたとき。会社がまだ知らない事実を、会社が知らせることはできない', W], ['3条1号', '3条2号']) :-
+    欄(仕事ぶり, C, 知らない), 欄(変更, C, V7), V7 \== 重く, 欄(知り方, C, 通知),
+    三つ選んだ(仕事ぶり, 変更, 知り方, C, W).
+
+二つ選んだ(N1, N2, C, W) :-
+    欄の番号(N1, I1), 欄(N1, C, V1), 葉の語(I1, V1, W1),
+    欄の番号(N2, I2), 欄(N2, C, V2), 葉の語(I2, V2, W2),
+    format(atom(W), '~wの欄で~wを選び、~wの欄で~wを選んだ', [I1, W1, I2, W2]).
+% 二つ選んだ/4 と同じ書き方で3つの欄（イ）
+三つ選んだ(N1, N2, N3, C, W) :-
+    欄の番号(N1, I1), 欄(N1, C, V1), 葉の語(I1, V1, W1),
+    欄の番号(N2, I2), 欄(N2, C, V2), 葉の語(I2, V2, W2),
+    欄の番号(N3, I3), 欄(N3, C, V3), 葉の語(I3, V3, W3),
+    format(atom(W), '~wの欄で~wを選び、~wの欄で~wを選び、~wの欄で~wを選んだ', [I1, W1, I2, W2, I3, W3]).
+
+%% ---- 木の葉に出す欄の値の言葉（画面の選択肢と同じ語）----
+% 葉の語(欄の番号, 値, 選択肢の語)。数の欄（2・5）は 入れた/3 で書く
+葉の語(1, 損害, '本人の行いで会社が受けた損害を払う').
+葉の語(1, 引取り, '本人の身柄を引き取るだけで、損害は払わない').
+葉の語(3, いいえ, '見習いではない').
+葉の語(3, はい, '商店や工場などで、仕事を覚える見習いとして雇われた').
+葉の語(4, していない, 'していない').
+葉の語(4, 決め直した, '保証人と会社が、続けると決め直した').
+葉の語(4, 自動, '契約に「期間が終わったら自動で更新する」と書いてあるだけで、決め直してはいない').
+葉の語(6, なし, '問題は無い').
+葉の語(6, 知った, '仕事に向かないことか不誠実なことがあり、保証人が責任を負うおそれがあると会社が知った').
+葉の語(6, 知らない, '同じことがあるが、会社はまだ知らない').
+葉の語(7, していない, '変えていない').
+葉の語(7, 重く, '変え、保証人の責任が重くなるか、保証人が本人を見守るのが難しくなった').
+葉の語(7, 同じ, '変えたが、責任も見守りやすさも変わらない').
+葉の語(8, 通知, '会社からの知らせで知った').
+葉の語(8, 自分, '知らせは無いが、自分で知った').
+葉の語(8, 知らない, 'まだ知らない').
+葉の語(9, 出ていない, '出ていない').
+葉の語(9, 出た, '出た').
+葉の語(10, なし, '無い').
+葉の語(10, 全額, '「損害は全額保証人が払う」と書いてある').
+
+% 入力の葉：「Nの欄で、◯◯を選んだ」。欄の名前から番号と値を引く
+選んだ(Name, C, W) :-
+    欄の番号(Name, N), 欄(Name, C, V), 葉の語(N, V, VW),
+    format(atom(W), '~wの欄で、~wを選んだ', [N, VW]).
+
+% 数の欄の葉：「Nの欄に、◯年と入れた」「Nの欄を空にした」
+入れた(Name, C, W) :-
+    欄の番号(Name, N), 欄(Name, C, V),
+    ( V == 空 -> format(atom(W), '~wの欄を空にした（期間を決めていない）', [N])
+    ; format(atom(W), '~wの欄に、~d年と入れた', [N, V]) ).
+
+%% ---- 理由の語をつなぐ ----
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---- 木の部品 ----
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+原文規定(Art, X) :- 原文(Art, W), 規定(Art, W, X).
+% 成り立つ文（起きた事実・条文の読み）
+文(X, t(ok, X, '', [])).
+約束(X, t(ok, X, '@約束事', [])).
+% 葉の行：木の行 t(...) はそのまま、文はそのまま1行（schema の「書き方のきまり」）
+葉の行(t(K, X, A, Cs), t(K, X, A, Cs)) :- !.
+葉の行(W, X) :- 文(W, X).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+% 前は子が1つでも「次のすべてが成り立つ」の節を作っていた（前の :83。akiya-prolog schema.pl の すべて/4 を写した）
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（身元保証ニ関スル法律の条文にないもの）
+%
+%   ① 商工業見習者・仕事に向かない・不誠実・責任が重くなる・監督が難しくなるの当てはめは、3・6・7の欄で聞き、
+%      3・7の欄は「（あなたの考え）」として選んでもらう（決め4）。about の約束事①にだけ書き、木には出さない
+%      （前は「…判定しない。本人がそう考えたとして答えている」の行 評価の約束 を全部の段の木に付けていた（前の g_hantei.pl:85）。A5。
+%      akiya-prolog の kihon.pl と同じ扱い）。
+%   ② 期間は年の整数（1〜99年）で聞き、月・日は聞かない。2条1項・2条2項の段（2の欄か5の欄の年数を使う段）の木にだけ出す。
+%      前の 計算の約束「月・日の数え方は判定しない」から「判定しない」の語を外し、名前を 年の約束 にした（A5。2026-11-26 案A）。
+%   ③ 「当たりません」は、その条に当たらないと言うだけで、反対の結論を言うものではない（akiya-prolog の 当たらないの約束 を写した）。
+%      「当たりません」の段の木にだけ出す。
+
+年の約束(X) :-
+    約束('期間は年の整数（1〜99年）で聞き、月・日は聞かない', X).
+
+当たらないの約束(X) :-
+    約束('「当たりません」は、その条に当たらないと言うだけで、反対の結論を言うものではない', X).
+</script>
+<script type="text/prolog" data-name="rules_a_genbun.pl">% rules/a_genbun.pl — 判定に使う条文の原文（law/mimoto.xml の本則のまま）と、その平易な言い換え
+%
+%   原文(条, 文)。test/page_test.mjs が XML を別に読み、全行が一字一句一致するかを確かめる。
+%   号の行（'3条1号' '3条2号'）は、項の柱書き（号の前の文）に号の文を続けて書いた。
+%   第1条・第2条第2項は、本文と但シ書が1つの Sentence に入っている（XML を読んで確かめた）。なので本文とただし書きを分けず1行にした。
+%   本則は第1条〜第6条の6か条で、章は無い。附則は入れていない。
+%
+%   言い換え(条, 文)。画面で原文の横に並べる、このアプリの言い換え。原文は直さない。
+%   原文の行と同じ条を全部持つ（page_test が数を揃えて確かめる）。
+%   2026-11-26 案A：2条2項の言い換えの「ただし、その期間は」を「ただし、更新した後の期間は」にした（指示語を名詞に。A6・案の7）。
+%   2026-11-26 後半：3条1号・3条2号の「…あって、そのために」「…を変え、そのために」から「そのために」を外した（指示語。A6）。因果は「〜のために」「〜たことで」で残した（でんすけ）。
+%   原文の「之ガ為」（それが原因で）の因果は、「…があり、…おそれがあると知ったとき」「…を変え、…重くなるとき」の並びで残る。
+
+原文('1条', '引受、保証其ノ他名称ノ如何ヲ問ハズ期間ヲ定メズシテ被用者ノ行為ニ因リ使用者ノ受ケタル損害ヲ賠償スルコトヲ約スル身元保証契約ハ其ノ成立ノ日ヨリ三年間其ノ効力ヲ有ス但シ商工業見習者ノ身元保証契約ニ付テハ之ヲ五年トス').
+原文('2条1項', '身元保証契約ノ期間ハ五年ヲ超ユルコトヲ得ズ若シ之ヨリ長キ期間ヲ定メタルトキハ其ノ期間ハ之ヲ五年ニ短縮ス').
+原文('2条2項', '身元保証契約ハ之ヲ更新スルコトヲ得但シ其ノ期間ハ更新ノ時ヨリ五年ヲ超ユルコトヲ得ズ').
+原文('3条', '使用者ハ左ノ場合ニ於テハ遅滞ナク身元保証人ニ通知スベシ').
+原文('3条1号', '使用者ハ左ノ場合ニ於テハ遅滞ナク身元保証人ニ通知スベシ被用者ニ業務上不適任又ハ不誠実ナル事跡アリテ之ガ為身元保証人ノ責任ヲ惹起スル虞アルコトヲ知リタルトキ').
+原文('3条2号', '使用者ハ左ノ場合ニ於テハ遅滞ナク身元保証人ニ通知スベシ被用者ノ任務又ハ任地ヲ変更シ之ガ為身元保証人ノ責任ヲ加重シ又ハ其ノ監督ヲ困難ナラシムルトキ').
+原文('4条', '身元保証人前条ノ通知ヲ受ケタルトキハ将来ニ向テ契約ノ解除ヲ為スコトヲ得身元保証人自ラ前条第一号及第二号ノ事実アリタルコトヲ知リタルトキ亦同ジ').
+原文('5条', '裁判所ハ身元保証人ノ損害賠償ノ責任及其ノ金額ヲ定ムルニ付被用者ノ監督ニ関スル使用者ノ過失ノ有無、身元保証人ガ身元保証ヲ為スニ至リタル事由及之ヲ為スニ当リ用ヰタル注意ノ程度、被用者ノ任務又ハ身上ノ変化其ノ他一切ノ事情ヲ斟酌ス').
+原文('6条', '本法ノ規定ニ反スル特約ニシテ身元保証人ニ不利益ナルモノハ総テ之ヲ無効トス').
+
+言い換え('1条', '呼び名が「引受」「保証」など何であっても、期間を決めずに、雇われている本人（被用者）の行いで雇っている会社など（使用者）が受けた損害を払うと約束した身元保証契約は、契約が成り立った日から3年間、効き目があります。ただし、商工業見習者の身元保証契約は5年です。').
+言い換え('2条1項', '身元保証契約の期間は、5年を超えられません。それより長い期間を決めたときは、期間は5年に縮みます。').
+言い換え('2条2項', '身元保証契約は更新できます。ただし、更新した後の期間は、更新の時から5年を超えられません。').
+言い換え('3条', '雇っている会社など（使用者）は、次の場合には、遅れずに身元保証人へ知らせなければなりません。').
+言い換え('3条1号', '雇っている会社など（使用者）は、次の場合には、遅れずに身元保証人へ知らせなければなりません。第1号：本人の仕事に向かないところか不誠実な行いのために、保証人の責任が生じるおそれがあると知ったとき。').
+言い換え('3条2号', '雇っている会社など（使用者）は、次の場合には、遅れずに身元保証人へ知らせなければなりません。第2号：本人の仕事の中身か勤め先の場所を変えたことで、保証人の責任が重くなるか、保証人が本人を監督するのが難しくなるとき。').
+言い換え('4条', '身元保証人は、第3条の知らせを受けたときは、これから先に向けて契約をやめる（解除する）ことができます。身元保証人が自分で第3条第1号・第2号の事実があったと知ったときも同じです。').
+言い換え('5条', '裁判所は、身元保証人が損害を払う責任があるか、いくら払うかを決めるときに、本人の監督について会社などに落ち度（過失）があったか、身元保証人が保証人になったいきさつと、そのときに払った注意の程度、本人の仕事や身の上の変化、そのほかの一切の事情を考え合わせます（斟酌します）。').
+言い換え('6条', 'この法律の定めに反する特約で、身元保証人に不利なものは、すべて無効です。').
+</script>
+<script type="text/prolog" data-name="rules_b_kikan.pl">% rules/b_kikan.pl — 契約と期間・更新（第1条・第2条）
+%
+%   段は3：keiyaku（1条。身元保証契約に当たらない）・kikan（1条・2条1項）・koshin（2条2項）。2026-11-26 案A。
+%   前は入口「期間」の中で、期間を決めたか → 年数 → 見習 → 更新 → 更新年数の順に欄を出し消しして、期間の段だけを出していた（C4・C5）。
+%   今は1〜5の欄から同じ入力で当てる。
+%   第1条：損害を払うと約束した契約は、呼び名が何でも身元保証契約。1の欄が「引き取るだけ」なら、身元保証契約に当たらない段だけを出す
+%           （第2条〜第6条は、どれも身元保証契約の条。g_hantei.pl の 全部の段）。
+%           期間を決めていない契約は、成立の日から3年。商工業見習者は5年（ただし書）。
+%   第2条第1項：期間を決めた契約は最長5年。5年より長く決めたら5年に縮む（契約は無効にならない）。見習いの例外は無い（NOTES の読み (3)）。
+%           5年より長い期間のとき、前は第6条の段（足りる）も出していたが、出さない（決め「契約の期間が6年以上のとき、第6条の段を出さない」。
+%           第2条第1項が効果を自分で決めていて、第6条で「無効」と並べると「契約は無効になりません」と食い違って読める）。
+%   第2条第2項：更新はできる。更新の時から5年を超えられない。6年以上と決め直したとき、前は「5年に縮むと読みます」と言い切っていたが、
+%           条文の文だけを答える（決め「更新した後の期間が6年以上のとき」。第2条第2項に短縮の文が無い）。状態は できる（縮む にしない）。
+%           自動で更新すると書いてあるだけのとき（4の欄）は、前は補足の段 jido で「判定しません」だったが、条文の文だけを答える（決め2）。
+%           「自動更新はできない」という解説の読みは about に出典つきで置く。
+%   段の文の「ので」「このページでは…と読みます」（前の :26・:28・:32・:33・:43・:45・:51・:53）は外し、入力は葉に置いた（A2・A5）。
+
+%% ---- 1条（身元保証契約に当たらない）----
+約束の段(C, [s(keiyaku, '身元保証契約か', 段(当たらない, '身元保証契約に当たりません。', ['1条'], [R, W, Z]))]) :-
+    欄(約束, C, 引取り), !,
+    原文規定('1条', R), 選んだ(約束, C, W), 当たらないの約束(Z).
+約束の段(_, []).
+
+身元保証契約(C) :- 欄(約束, C, 損害).
+
+%% ---- 1条・2条1項（保証が続く期間）----
+期間の段(C, [s(kikan, '保証が続く期間', 段(St, M, [A], Fs))]) :-
+    欄(期間, C, N), 欄(見習, C, X),
+    期間の答え(N, X, St, M, A),
+    期間の葉(N, X, A, C, Fs).
+
+期間の答え(空, いいえ, 続く, '保証は、契約が成り立った日から3年間続きます。', '1条') :- !.
+期間の答え(空, はい, 続く, '保証は、契約が成り立った日から5年間続きます。', '1条') :- !.
+期間の答え(N, _, 続く, M, '2条1項') :-
+    N =< 5, !,
+    format(atom(M), '保証は、契約で決めた期間の~d年間続きます。', [N]).
+期間の答え(_, _, 縮む, '保証の期間は5年に縮みます。契約は無効になりません。', '2条1項').
+
+% 葉：条の原文・1の欄・2の欄（・3の欄）。期間を決めたときの見習いは、第1条ただし書の5年が当たらないことを葉に書く（前の 見習の一言/2）
+期間の葉(空, X, A, C, [R, W1, W2 | L]) :- !,
+    原文規定(A, R), 選んだ(約束, C, W1), 入れた(期間, C, W2),
+    ( X == はい -> 選んだ(見習, C, W3), L = [W3] ; L = [] ).
+期間の葉(N, X, A, C, [R, W1, W2 | L]) :-
+    原文規定(A, R), 選んだ(約束, C, W1), 入れた(期間, C, W2),
+    ( N > 5 -> L0 = ['5年より長い期間を決めた'] ; L0 = [] ),
+    ( X == はい -> 選んだ(見習, C, W3), L1 = [W3, '期間を決めたときの上限は第2条第1項の5年で、第2条に見習いの例外は無い。第1条ただし書の5年は、期間を決めていないときの定め'] ; L1 = [] ),
+    年の約束(Y),
+    append([L0, L1, [Y]], L).
+
+%% ---- 2条2項（更新）----
+% 4の欄が「していない」なら段を出さず、5の欄を見ない。「自動」でも5の欄は見ない（決め直していないので、更新した後の期間が無い）
+更新の段(C, []) :- 欄(更新, C, していない), !.
+更新の段(C, [s(koshin, '更新', 段(できる, '身元保証契約は更新できます。更新した後の期間は、更新の時から5年を超えられません。', ['2条2項'], [R, W]))]) :-
+    欄(更新, C, 自動), !,
+    原文規定('2条2項', R), 選んだ(更新, C, W).
+更新の段(C, [s(koshin, '更新', 段(St, M, ['2条2項'], [R, W1, W2 | L]))]) :-
+    欄(更新, C, 決め直した), 欄(更新年数, C, N),
+    N \== 空,
+    更新の答え(N, St, M, L0),
+    原文規定('2条2項', R), 選んだ(更新, C, W1), 入れた(更新年数, C, W2),
+    年の約束(Y), append(L0, [Y], L).
+
+更新の答え(N, 続く, M, []) :-
+    N =< 5, !,
+    format(atom(M), '更新した後の保証は、更新の時から~d年間続きます。', [N]).
+更新の答え(_, できる, '更新した後の期間は、更新の時から5年を超えられません。', ['更新した後の期間を5年より長く決めた']).
+</script>
+<script type="text/prolog" data-name="rules_c_tsuchi.pl">% rules/c_tsuchi.pl — 雇われている間に起きたこと（第3条・第4条）
+%
+%   段は3：tsuchi1（3条1号）・tsuchi2（3条2号）・kaijo（4条）。2026-11-26 案A。
+%   前は入口「通知」の中で、起きたこと（4択の1つ）→ 知り方 の順に欄を出し消しして、段 tsuchi・kaijo を出していた（C4・C5）。
+%   起きたことが1つの select だったので、第1号と第2号の事実を同時に入れられなかった（C1）。今は6の欄（第1号の事実）と7の欄（第2号の事実）に分け、
+%   3条の段も id を tsuchi1・tsuchi2 に分けた（同じ id だと run_cases の 段を探す が1件目しか取らない。AI同士の決め1・2）。
+%   第3条：会社（使用者）が保証人に遅れずに知らせる義務は2つの場合だけ。
+%           第1号 本人に仕事に向かない・不誠実なことがあり、保証人の責任が生じるおそれを会社が知ったとき（6の欄が「会社が知った」）。
+%           6の欄が「会社はまだ知らない」なら、会社が知るまでは第1号の義務は無い（当たらない）。
+%           第2号 本人の仕事か勤め先を変え、それで保証人の責任が重くなるか、保証人の監督が難しくなるとき（7の欄。重くなるかは あなたの考え）。
+%   第4条：保証人は、知らせを受けたとき、または自分で第1号・第2号の事実を知ったとき、これから先に向けて契約をやめられる。
+%           第1号の事実は本人の事跡で、会社が知ったかは含めない。6の欄が「会社はまだ知らない」でも、第4条の段は出す（決め5）。
+%           6・7の欄のどちらかに第1号・第2号の事実があれば、8の欄で答えを分ける。どちらにも無いときは、7の欄で変えたときだけ
+%           「第4条では保証をやめられません」を 当たらない で出し、6の欄が「問題は無い」で7の欄が「変えていない」なら、3条・4条の段を出さない（8の欄を見ない）。
+%   前の段の文の断り（:27「ほかの理由でやめられるかは、このページでは判定しません」）と、会社が知らせなかったときの補足の段 okotari（前の :30）は
+%   about へ移した（A5）。6の欄が「会社が知った」で8の欄が知らせでないときは、3条1号の「知らせなければなりません」が出る。
+
+起きたことの段(C, L) :-
+    欄(仕事ぶり, C, P), 欄(変更, C, H),
+    号1の段(P, C, L1),
+    号2の段(H, C, L2),
+    解除の段(P, H, C, L3),
+    append([L1, L2, L3], L).
+
+%% ---- 3条1号 ----
+号1の段(なし, _, []) :- !.
+号1の段(知った, C, [s(tsuchi1, '会社が保証人に知らせること（仕事ぶり）', 段(しなければならない, '会社は、遅れずに保証人へ知らせなければなりません。', ['3条1号'], [R, W]))]) :- !,
+    原文規定('3条1号', R), 選んだ(仕事ぶり, C, W).
+号1の段(知らない, C, [s(tsuchi1, '会社が保証人に知らせること（仕事ぶり）', 段(当たらない, '会社が知るまでは、第3条第1号で保証人へ知らせる義務はありません。', ['3条1号'], [R, W, Z]))]) :-
+    原文規定('3条1号', R), 選んだ(仕事ぶり, C, W), 当たらないの約束(Z).
+
+%% ---- 3条2号 ----
+号2の段(していない, _, []) :- !.
+号2の段(重く, C, [s(tsuchi2, '会社が保証人に知らせること（仕事の中身・勤め先）', 段(しなければならない, '会社は、遅れずに保証人へ知らせなければなりません。', ['3条2号'], [R, W]))]) :- !,
+    原文規定('3条2号', R), 選んだ(変更, C, W).
+号2の段(同じ, C, [s(tsuchi2, '会社が保証人に知らせること（仕事の中身・勤め先）', 段(当たらない, '会社に、第3条第2号で保証人へ知らせる義務はありません。', ['3条2号'], [R, W, Z]))]) :-
+    原文規定('3条2号', R), 選んだ(変更, C, W), 当たらないの約束(Z).
+
+%% ---- 4条 ----
+% 第1号・第2号の事実があるか（6の欄が「問題は無い」でない、か、7の欄が「重く」）
+事実がある(P, _) :- P \== なし, !.
+事実がある(_, 重く).
+
+解除の段(P, H, C, [s(kaijo, '保証人が保証をやめること', 段(St, M, ['4条'], [R | Ws]))]) :-
+    事実がある(P, H), !,
+    欄(知り方, C, Y), 解除の答え(Y, St, M),
+    原文規定('4条', R),
+    事実の葉(P, H, C, W0), 選んだ(知り方, C, W8),
+    append(W0, [W8], Ws).
+解除の段(なし, 同じ, C, [s(kaijo, '保証人が保証をやめること', 段(当たらない, '保証人は、第4条では保証をやめられません。', ['4条'], [R, W6, W7, Z]))]) :- !,
+    原文規定('4条', R), 選んだ(仕事ぶり, C, W6), 選んだ(変更, C, W7), 当たらないの約束(Z).
+解除の段(_, _, _, []).
+
+解除の答え(通知, できる, '保証人は、これから先に向けて保証をやめられます。やめる前に起きた損害の分は消えません。') :- !.
+解除の答え(自分, できる, '保証人は、これから先に向けて保証をやめられます。やめる前に起きた損害の分は消えません。') :- !.
+解除の答え(知らない, 要る, '保証人は、会社から知らせを受けたとき、または自分で事実を知ったときに、これから先に向けて保証をやめられます。').
+
+% 葉：事実のある欄だけを並べる
+事実の葉(P, H, C, Ws) :-
+    ( P \== なし -> 選んだ(仕事ぶり, C, W6), L6 = [W6] ; L6 = [] ),
+    ( H == 重く -> 選んだ(変更, C, W7), L7 = [W7] ; L7 = [] ),
+    append(L6, L7, Ws).
+</script>
+<script type="text/prolog" data-name="rules_d_baisho.pl">% rules/d_baisho.pl — 損害（第5条・第6条）
+%
+%   段は2：gaku（5条）・zengaku（6条・5条）。2026-11-26 案A。
+%   前は入口「賠償」で、第5条の段をどの入力でも同じ文で出し、全額の特約は 判定しない で止めていた（前の :15）。
+%   第5条：保証人が払う責任と額は、裁判所が一切の事情を考え合わせて決める。9の欄で損害が出たときだけ段を出す（決め6）。
+%           条文が挙げる事情（会社の監督の落ち度／保証人になったいきさつと注意の程度／本人の仕事や身の上の変化）を並べる。
+%           前の段の文の「このページは額も割合も計算しません」（前の :12）は about へ移した（A5）。
+%   第6条：「損害は全額保証人が払う」と書いた特約は、状態 裁判所が決める で、不利な特約は無効、額は裁判所が第5条の事情で決める、と答える（決め3）。
+%           無効とは言い切らない。損害が出ていなくても、特約は損害の前から決まっているので段を出す（案A）。
+
+損害の段(C, L) :-
+    額の段(C, L1),
+    全額の段(C, L2),
+    append(L1, L2, L).
+
+額の段(C, [s(gaku, '保証人が払う額', 段(裁判所が決める, '保証人が払うかどうかと払う額は、裁判所が、会社の監督の落ち度、保証人になったいきさつと注意の程度、本人の仕事や身の上の変化など一切の事情を考え合わせて決めます。', ['5条'], [R, W]))]) :-
+    欄(損害, C, 出た), !,
+    原文規定('5条', R), 選んだ(損害, C, W).
+額の段(_, []).
+
+全額の段(C, [s(zengaku, '「全額払う」と書いた特約', 段(裁判所が決める, 'この法律の定めに反して保証人に不利な特約は無効です。保証人が払う額は、裁判所が第5条の事情を考え合わせて決めます。', ['6条', '5条'], [R6, R5, W]))]) :-
+    欄(特約, C, 全額), !,
+    原文規定('6条', R6), 原文規定('5条', R5), 選んだ(特約, C, W).
+全額の段(_, []).
+</script>
+<script type="text/prolog" data-name="rules_g_hantei.pl">% rules/g_hantei.pl — 段を束ねて見出し・根拠条文・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 箱の条, 葉のリスト)　結論ごとの段 = s(画面のid, 見出し, 段)
+%     段は10：mujun_a・mujun_i（schema の 組み合わせなし。mujun_i は 2026-11-26 決め9）、keiyaku・kikan・koshin（b_kikan）、tsuchi1・tsuchi2・kaijo（c_tsuchi）、gaku・zengaku（d_baisho）
+%   形は akiya-prolog の g_hantei.pl と同じ（2026-11-26 案A）。
+%   前は 話の段/3 が入口1つの段だけを返し、この法律に無いことの共通段（betsu「民法は読んでいないので…判定しません」）と
+%   語の共通段（go「語の意味と、判定しないこと」）の 補足 を全部の入口に足していた。
+%   見出し/2 は全部の段の答えを1段落につなぎ（A7）、組の番号は 判定しない が1・答え が2・足りる が3で、
+%   木は全部を「次のすべてが成り立つ」の下にぶら下げた1本で、全部の段にアプリの約束事①②を付けていた（B5・A5）。
+%   今は段ごとに状態を持ち、状態を全部名前で書き、知らない状態は throw で止める（agents/dog/rules.md:96）。
+%   betsu・go は消した（語は欄の説明へ、断りは about へ）。止まる状態/1（判定しない を1番にしていた）も消し、印/2 にした。
+%   段の文には、画面の上で指す先の無い指示語（その・これを・当該・同項・前項 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+%   1の欄が「損害を払う」なら kikan（1条か2条1項）の段がいつも出るので、「判定できませんでした」になるのは ctx の値が欄の選択肢に無いときと、
+%   4の欄が「決め直した」で5の欄が空のときだけ。
+
+%% ---- judge ----
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    Steps \== [],
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 成り立たない組があれば、その組だけを段にする（REVIEW_RULES C3。ほかの段は出さない）。
+% 組は findall で全部集め、組ごとに1段にする（id は mujun_a・mujun_i。REVIEW_RULES 末尾「AI同士で決めた書き方」1・2）。
+% 無ければ、1の欄が「引き取るだけ」なら1条（当たらない）の段だけを出す（第2条〜第6条は、どれも身元保証契約の条。案A「段の出し方」）。
+% 身元保証契約なら、契約 → 更新 → 雇われている間に起きたこと → 損害 の順に同じ入力で当て、そのあと 当たった答えを先に（止まる答えを先に）。
+% 同じ述語を別のファイルに分けて書くと後の読み込みで消えるので、まとめはここに1つだけ置く
+全部の段(C, Steps) :-
+    findall(s(Id, 'この組み合わせはありません', 段(組み合わせなし, 'この組み合わせはありません。', As, Ws)),
+            ( 組み合わせなし(C, K, Ws, As), atom_concat(mujun_, K, Id) ), Steps),
+    Steps \== [], !.
+全部の段(C, Steps) :-
+    約束の段(C, L1),
+    ( 身元保証契約(C) ->
+        期間の段(C, L2),
+        更新の段(C, L3),
+        起きたことの段(C, L4),
+        損害の段(C, L5),
+        append([L1, L2, L3, L4, L5], L0)
+    ; L0 = L1 ),
+    当たった答えを先に(L0, Steps).
+
+%% ---- 並べ方 ----
+% 並びは ①止まる答え ②当たった答え ④「当たりません」の文（この本に ③答えを支える文 は無い）
+% ①②が無いときは「当たりません」が聞いた答えなので、そのまま出す（akiya-prolog と同じ並べ方）
+% 組の番号 は番号を空のまま呼んで後で比べる。番号を束ねて呼ぶと頭に合わず、最後の throw の節に落ちて止まる（sorin-prolog 2026-11-22 22:50 run_cases。akiya と同じ）
+当たった答えを先に([], []) :- !.
+当たった答えを先に(L0, L) :-
+    ( member(s(_, _, 段(St0, _, _, _)), L0), 組の番号(St0, N0), N0 =< 2 -> Order = [1, 2, 3, 4] ; Order = [4, 3] ),
+    findall(S, ( member(N, Order), member(S, L0), S = s(_, _, 段(St, _, _, _)), 組の番号(St, M), M =:= N ), L).
+
+% 組の番号(状態, 1=止まる答え | 2=当たった答え | 4=当たりません)。
+% 状態は全部名前で書き、知らない状態は止める（agents/dog/rules.md:96。akiya-prolog g_hantei.pl の 組の番号 を写し、状態は案A「組の番号」）
+% 前の 判定しない（全額の特約）は 裁判所が決める に直した（A5・決め3）。答え（受け皿の2番だった）は 続く・縮む・しなければならない・できる・
+% 当たらない に分けた。足りる（前の3番。6条の期間の段）は段ごと消した（決め「契約の期間が6年以上のとき、第6条の段を出さない」）。
+% 案の 無効（6条の期間・全額の特約のB）は使う段が無くなったので、行ごと置かない。補足 は段ごと消した。3番は使わない
+組の番号(組み合わせなし, 1) :- !.     % ア（引き取るだけ×全額の特約）・イ（会社がまだ知らない×知らせで知った。決め9）
+組の番号(要る, 1) :- !.               % 4条（保証人がまだ知らない）
+組の番号(続く, 2) :- !.               % 1条・2条1項（5年以下）・2条2項（5年以下）
+組の番号(縮む, 2) :- !.               % 2条1項（5年を超える）
+組の番号(しなければならない, 2) :- !. % 3条1号・3条2号
+組の番号(できる, 2) :- !.             % 4条・2条2項（自動で更新すると書いてあるだけ・更新した後の期間を5年より長く決めた）
+組の番号(裁判所が決める, 2) :- !.     % 5条・6条（全額の特約）
+組の番号(当たらない, 4) :- !.         % 1条（引き取るだけ）・3条1号（会社がまだ知らない）・3条2号（変えたが変わらない）・4条（変えたが変わらないだけ）
+組の番号(St, _) :- throw(知らない状態(St)).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、段の文だけを出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」を付けない）。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(_, Steps, Ws) :-
+    findall(W, ( member(s(_, _, S), Steps), 問いの答え(S, W) ), Ws).
+
+% 答えの文に箱の条を（）で付ける。条の無い段は付けない（「（）」を画面に出さない。この本の段はどれも条がある）
+問いの答え(S, W) :-
+    S = 段(_, _, As, _),
+    答え(S, W0),
+    ( As == [] -> W = W0 ; 条の表記(As, A), format(atom(W), '~w（~w）', [W0, A]) ).
+
+% 節の文：答えの文（条を付けない）
+節の文(_, S, W) :- 答え(S, W).
+
+% 答え(段, 答えの文)：段の文の末尾の「。」を外す。
+答え(段(_, M, _, _), W) :-
+    ( atom_concat(M0, '。', M) -> W = M0 ; W = M ).
+
+%% ---- 根拠条文 ----
+% 段の順に並べ、重複は1つに
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As, _), Ss), member(A, As) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5。結論をつないだ行と「次のすべてが成り立つ」の根は置かない）。
+% 並びは結論の箱と同じ。一番上の行は結論の箱の文で、その下に葉（規定の行・起きた事実・約束事）を置く。
+木(_, Steps, Trees) :-
+    findall(T, ( member(s(_, _, S), Steps), 段の木(S, T) ), Trees).
+
+段の木(S, t(K, W, '', Cs)) :-
+    S = 段(St, _, _, Fs),
+    問いの答え(S, W),
+    maplist(葉の行, Fs, Kids),
+    すべて(W, '', Kids, t(_, W, _, Cs)),
+    印(St, K).
+
+% 止まった段（組の番号の1番と、当たらない）は info、そのほか（2番）は ok（木ごとに、その段で決める。akiya-prolog と同じ）
+% 状態は1つに決まっていて、入っているかを見るだけなので memberchk（REVIEW_RULES 末尾「AI同士で決めた書き方」1）
+印(St, K) :- 組の番号(St, _), ( memberchk(St, [組み合わせなし, 要る, 当たらない]) -> K = info ; K = ok ).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は akiya-prolog の web.pl と同じ（2026-11-26 案A）。
+%   前は result・explain の2つで、explain は木1本を平らにしていた。
+%   今は木を結論ごとに1本にし（B5）、「この組み合わせはありません」も段の1つにした（rules/g_hantei.pl の 全部の段）。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+</script>
+<script type="application/json" id="law">{"1":{"t":"第一条","c":"","p":[{"n":"1","s":"引受、保証其ノ他名称ノ如何ヲ問ハズ期間ヲ定メズシテ被用者ノ行為ニ因リ使用者ノ受ケタル損害ヲ賠償スルコトヲ約スル身元保証契約ハ其ノ成立ノ日ヨリ三年間其ノ効力ヲ有ス但シ商工業見習者ノ身元保証契約ニ付テハ之ヲ五年トス","i":[]}]},"2":{"t":"第二条","c":"","p":[{"n":"1","s":"身元保証契約ノ期間ハ五年ヲ超ユルコトヲ得ズ若シ之ヨリ長キ期間ヲ定メタルトキハ其ノ期間ハ之ヲ五年ニ短縮ス","i":[]},{"n":"2","s":"身元保証契約ハ之ヲ更新スルコトヲ得但シ其ノ期間ハ更新ノ時ヨリ五年ヲ超ユルコトヲ得ズ","i":[]}]},"3":{"t":"第三条","c":"","p":[{"n":"1","s":"使用者ハ左ノ場合ニ於テハ遅滞ナク身元保証人ニ通知スベシ","i":[{"n":"1","t":"一","s":"被用者ニ業務上不適任又ハ不誠実ナル事跡アリテ之ガ為身元保証人ノ責任ヲ惹起スル虞アルコトヲ知リタルトキ","sub":[]},{"n":"2","t":"二","s":"被用者ノ任務又ハ任地ヲ変更シ之ガ為身元保証人ノ責任ヲ加重シ又ハ其ノ監督ヲ困難ナラシムルトキ","sub":[]}]}]},"4":{"t":"第四条","c":"","p":[{"n":"1","s":"身元保証人前条ノ通知ヲ受ケタルトキハ将来ニ向テ契約ノ解除ヲ為スコトヲ得身元保証人自ラ前条第一号及第二号ノ事実アリタルコトヲ知リタルトキ亦同ジ","i":[]}]},"5":{"t":"第五条","c":"","p":[{"n":"1","s":"裁判所ハ身元保証人ノ損害賠償ノ責任及其ノ金額ヲ定ムルニ付被用者ノ監督ニ関スル使用者ノ過失ノ有無、身元保証人ガ身元保証ヲ為スニ至リタル事由及之ヲ為スニ当リ用ヰタル注意ノ程度、被用者ノ任務又ハ身上ノ変化其ノ他一切ノ事情ヲ斟酌ス","i":[]}]},"6":{"t":"第六条","c":"","p":[{"n":"1","s":"本法ノ規定ニ反スル特約ニシテ身元保証人ニ不利益ナルモノハ総テ之ヲ無効トス","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"本則","a":[{"k":"1","t":"第一条","c":"","u":1},{"k":"2","t":"第二条","c":"","u":1},{"k":"3","t":"第三条","c":"","u":1},{"k":"4","t":"第四条","c":"","u":1},{"k":"5","t":"第五条","c":"","u":1},{"k":"6","t":"第六条","c":"","u":1}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+// ==== 共有ここから（別ページでも同じ部品を使う） ====
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  // '2条1項' '3条1号' のような形。複数条が「・」で区切られることもある → 最初の条だけ見る
+  const first = String(a).split("・")[0];
+  const m = first.match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(?:第?(\d+)号((?:の\d+)*))?([イロハニホ])?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[4] ? m[4] + (m[5] || "").replace(/の/g, "_") : null, sub: m[6] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para);
+  // 号まで指定があれば、項の本文とその号だけ出す
+  if (r.item) ps = ps.filter(p => p.i.some(it => it.n === r.item));
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const list = r.item ? p.i.filter(it => it.n === r.item) : p.i;
+    const its = list.map(it => `<p class="it">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => r.sub && x.startsWith(r.sub + " ") ? `<br><span class="hit">　${esc(x)}</span>` : `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなく、このアプリの決め事（収録範囲・仕組みのページに一覧）。</p>`;
+// 凡例は最初の木の上に1回だけ出す（legend＝false で外す。akiya-prolog と同じ。2026-11-26 案Aで木を結論ごとにしたため）
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+// ==== 共有ここまで ====
+
+async function boot(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const need = ["result/2", "explain/2", "heads/2", "answers/2"].filter(p => !once(`current_predicate(${p})`));
+    if (need.length) throw new Error(`Prologの読み込みが不完全です（${need.join("・")} がありません）。${errBuf.slice(-3).join(" ")}`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    renderPresets();
+    ask();
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+    $("answer").innerHTML = `<p class="loading err">エラー：${esc(e.message)}</p>`;
+  }
+}
+
+// ---- 入力 → ctx の文字 ----
+// 欄はいつも全部出し、出し消しをしない（REVIEW_RULES C5。形は akiya-prolog と同じ。2026-11-26 案A）。
+// 並びは schema.pl の ctx の引数の順（1〜10）。前の SLOTS・updateSlots（入口ごとの欄の出し消し。前の :345–368）と、
+// 隠れた欄を 関係なし で渡す shown・buildCtx（前の :370–382）はやめた（JS と Prolog の2か所に同じ見方を持っていた）。関係のない欄は Prolog が見ないだけ。
+const IDS = ["yakusoku","kikan","minarai","koshin","knen","shigoto","henko","shirikata","songai","tokuyaku"];
+// 数字の欄（年）。空なら「空」、読めない値は「不正」で渡す（schema.pl の ctx_valid で範囲を見る。不正なら「判定できませんでした」）。
+// 前の shown の整数の読み（前の :377）を残した。先頭の0は外す（07 → 7）。形は risoku-prolog の val と同じ
+const NUM_IDS = ["kikan","knen"];
+const val = id => {
+  const el = $(id), v = el.value.trim();
+  if (!NUM_IDS.includes(id)) return atom(v);
+  if (v === "") return "空";
+  return /^[0-9]{1,3}$/.test(v) ? String(parseInt(v, 10)) : "不正";
+};
+function buildCtx(){
+  return `ctx(${IDS.map(val).join(",")})`;
+}
+
+// ---- 判定と表示 ----
+const HEAD = `<div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div>`;
+const lawBtn = a => a === "@約束事" ? `<span class="yk">アプリの約束事</span>` : (a ? `<button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : "");
+const artsHTML = as => as.map(String).map(lawBtn).join(" ");
+// 断り書き（当てはめは判定しない・条文だけを読む・民法と判例は読まない・額は計算しない・取得した版）は
+// about.html の範囲の節と約束事に置く（REVIEW_RULES A1・A5。2026-11-26 結果の下の NOTE_HANTEI・NOTE_JOBUN・NOTE_HOKA（前の :387–389・:418–420）と
+// 段の「このページでは判定しません」「計算しません」、補足の段（betsu・go・jido・okotari）、下の帯の「含みません」を移した）。頭の注意は見本の1文だけ（A3）。
+
+// 段(状態, 文, 箱の条, 葉) を1段ぶんの行にする。文は答え（answers/2。段の文から末尾の「。」を外したもの）
+function stepHTML(id, title, s, ans){
+  const [st, , as] = T(s).args;
+  return `<p class="sec">${esc(title)}</p><p class="step" id="${id}" data-st="${esc(st)}">${esc(ans)}。 ${artsHTML(as)}</p>`;
+}
+
+// 根拠の条ごとに、原文（XML のまま）を左、このアプリの言い換え（a_genbun.pl の 言い換え/2）を右に並べる
+function pairHTML(a){
+  const h = once(`言い換え(${atom(a)}, W)`);
+  return `<div class="pair" data-art="${esc(a)}">${lawHTML(a)}<p class="heii"><b>言い換え（${esc(a)}）</b>${esc(h ? h.W : "言い換えがありません")}</p></div>`;
+}
+
+function ask(){
+  const c = buildCtx();
+  $("qline").textContent = `?- result(${c}, R).`;
+  if (!pl) return;
+  try{
+    // 木は結論1つにつき1本（REVIEW_RULES B5）。凡例は最初の木の上に1回だけ
+    const lr = once(`explain(${c}, Lines)`);
+    const trees = lr ? lr.Lines.map(ls => ls.map(T).map(t => t.args)) : [];
+    const r = once(`result(${c}, r(Head,Steps,Arts))`);
+    if (!r){
+      // 1の欄が「損害を払う」なら期間の段が必ず出るので、ここに来るのは欄の値が選択肢に無いときと、数の欄が1〜99でないとき、
+      // 更新を決め直して5の欄が空のときだけ（rules/g_hantei.pl の judge）
+      $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">判定できませんでした</div></div><p class="hint">年の欄には1〜99の整数を入れてください。</p></div>`;
+      return;
+    }
+    const ar = once(`answers(${c}, L)`);
+    const ans = Object.fromEntries((ar ? ar.L : []).map(T).map(t => t.args));
+    const steps = r.Steps.map(T).map(t => t.args).filter(([id]) => ans[id] !== undefined);
+    // 答えが2つ以上なら箇条書き、1つなら1文のまま（REVIEW_RULES A7）。並びは止まる答えが先
+    const hr = once(`heads(${c}, L)`);
+    const hs = hr ? hr.L.map(String) : [];
+    const big = hs.length > 1 ? `<ul>${hs.map(h => `<li>${esc(h)}</li>`).join("")}</ul>` : esc(r.Head);
+    const arts = r.Arts.map(String);
+    // 条文はカタカナの文語なので、根拠の条ごとに原文と言い換えを並べる（前のまま。akiya には無い節）
+    $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">${big}</div></div>
+      ${steps.map(([id, title, s], i) => stepHTML("st-" + id, `${i + 1}　${title}`, s, ans[id])).join("")}
+      <p class="sec">根拠条文</p><p class="arts" id="arts">${arts.length ? artsHTML(arts) : "当てはまる条文はありません。"}</p>
+      <p class="sec">条文の原文と言い換え</p><div id="pairs">${arts.map(pairHTML).join("")}</div>
+      ${trees.length ? `<p class="sec">なぜそうなるか（論理の木）</p>${trees.map((ls, i) => treeHTML(ls, i === 0)).join("")}` : ""}</div>`;
+  } catch(e){ $("answer").innerHTML = `<p class="hint">エラー：${esc(e.message)}</p>`; }
+}
+
+// ---- 例（名前は起きた事実の言葉で書く。条文の文を写さず、指示語で始めない（REVIEW_RULES C2・C4））----
+function presetList(){
+  // 欄の値は DEFAULTS から変えるものだけ書く。2026-11-26 10欄で組み直した（前の例18個は入口 iri つきで、
+  // 「期間を決めていない・商工業見習者」「更新した・更新後の期間7年」「どれにも当たらない（本人と仲が悪くなった など）」
+  // 「保証人はいくら払うか（特約なし）」のような、条文の語・欄の値の並び・問いの名前だった）。
+  // 依頼書の9つ（期間を決めずに雇った／見習いとして雇い期間を決めなかった／期間を10年と決めた／期間が終わって決め直し7年とした／
+  // 自動で更新すると書いてあるだけ／使い込みを会社が知ったが保証人に知らせていない／勤め先を遠くへ変え保証人が自分で知った／
+  // 身柄を引き取るだけの約束で損害が出た／損害が出て「全額払う」と書いてある）を入れた
+  return [
+    ["期間を決めずに、身元保証人になった", {}],
+    ["見習いとして雇われ、期間を決めずに身元保証人になった", {minarai:"はい"}],
+    ["期間を3年と決めた", {kikan:"3"}],
+    ["期間を5年と決めた", {kikan:"5"}],
+    ["期間を10年と決めた", {kikan:"10"}],
+    ["見習いとして雇われ、期間を10年と決めた", {kikan:"10",minarai:"はい"}],
+    ["5年の期間が終わり、5年で決め直した", {kikan:"5",koshin:"決め直した",knen:"5"}],
+    ["5年の期間が終わり、7年で決め直した", {kikan:"5",koshin:"決め直した",knen:"7"}],
+    ["契約に、期間が終わったら自動で更新すると書いてあるだけ", {kikan:"5",koshin:"自動"}],
+    ["使い込みを会社が知ったが、保証人に知らせていない", {shigoto:"知った"}],
+    ["使い込みを会社から知らされた", {shigoto:"知った",shirikata:"通知"}],
+    ["無断欠勤が続いているが、会社はまだ気づいていない", {shigoto:"知らない"}],
+    ["勤め先を遠くへ変えられ、保証人が自分で知った", {henko:"重く",shirikata:"自分"}],
+    ["勤め先は変わったが、仕事も責任も前と同じ", {henko:"同じ"}],
+    ["身柄を引き取るだけの約束で、損害が出た", {yakusoku:"引取り",songai:"出た"}],
+    ["本人の行いで、会社に損害が出た", {songai:"出た"}],
+    ["損害が出て、「全額払う」と書いてある", {songai:"出た",tokuyaku:"全額"}],
+  ];
+}
+// 例に書いていない欄は既定に戻す（前の例の値を残すと、名前と違う入力になるため。akiya-prolog と同じ）
+// 既定のままで「保証は、契約が成り立った日から3年間続きます（1条）」の答えが1つ付く（案A「全組合せの数」の既定）
+const DEFAULTS = {yakusoku:"損害",kikan:"",minarai:"いいえ",koshin:"していない",knen:"5",shigoto:"なし",henko:"していない",shirikata:"知らない",songai:"出ていない",tokuyaku:"なし"};
+function setDefaults(p){
+  for (const [id, v] of Object.entries(DEFAULTS)) $(id).value = p[id] !== undefined ? String(p[id]) : v;
+}
+function applyPreset(p){
+  setDefaults(p);
+  ask();
+}
+function renderPresets(){
+  $("presets").innerHTML = presetList().map((p, i) => `<button type="button" data-preset="${i}">${esc(p[0])}</button>`).join("");
+}
+
+// 初期表示（既定の値）
+setDefaults({});
+
+document.addEventListener("change", e => { if (e.target.closest("#slots")) ask(); });
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.preset !== undefined){ applyPreset(presetList()[+b.dataset.preset][1]); $("answer").scrollIntoView?.(); }
+  else if (b.dataset.art && pl){
+    const host = b.closest(".tr") || b.closest("li") || b.parentElement, nx = host.nextElementSibling;
+    if (nx && nx.classList.contains("lawtext") && nx.dataset.for === b.dataset.art) nx.remove();
+    else { host.insertAdjacentHTML("afterend", lawHTML(b.dataset.art)); host.nextElementSibling.dataset.for = b.dataset.art; }
+  }
+});
+
+if (typeof SWIPL === "function") boot();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; $("answer").innerHTML = `<p class="loading err">Prolog（swipl-wasm）を読み込めませんでした。ページを再読み込みしてください。</p>`; }
+</script>
