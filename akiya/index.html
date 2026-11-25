@@ -1,0 +1,1203 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="隣の空き家が崩れそうなとき区や市は何ができるのか、いきなり取り壊しを命じられるのか、持ち主が分からないときはどうなるのか、調査に来た人を断れるのかを、空家法の条文から判定します。">
+<title>空家法を逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+/* 欄の上の小見出し（家と持ち主／調査／助言・指導・勧告・命令／命令の前の手続／持ち主が分からないとき・急ぐとき）。選ばせる欄ではないので番号を数えない
+   （daishikko-prolog と同じ。2026-11-25 案A）。前の .step.off（判定していない段の色）・.flow・NOTE_* の枠（tokurei）・.disclaimer-inline・
+   pre の左線は、daishikko の style に揃えて外した */
+.slots .slot-h{margin:0;padding:8px 10px 4px;border-bottom:2px solid var(--line);border-right:2px solid var(--line);background:var(--paper)}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border:1px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+/* 数字の欄（数字を打つので ▼ を出さない。この本に数字の欄は無いが、daishikko と style を揃えて残す）*/
+.field.num::after{display:none}
+.field input{appearance:textfield;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 10px;min-width:0;width:100%}
+.field input:focus-visible{outline:none}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <h1>空家法を<span class="ao">逆から引く</span></h1>
+    <div class="judge-plate"><span class="jp-k">判定</span><img src="densuke_icon.svg" width="64" height="64" alt="でんすけのアイコン"><span class="jp-v">でんすけ<small>秘書AI</small></span></div>
+    <p class="lead">空き家について区や市から調査・助言・指導・勧告・命令を受けたときや、持ち主が分からないとき・急ぐときに、区や市が何をできるか、何をしなければならないかを、でんすけが空家法（空家等対策の推進に関する特別措置法）の条文で判定します。</p>
+    <p class="caution" role="note"><b>注意</b><span>条文をルールにして、論理的にそのまま演算した結果です。役所や裁判所の判断とは異なる場合があります。<a class="aboutlink" href="about.html">収録範囲・仕組み →</a></span></p>
+  </header>
+
+  <section class="ask">
+    <div>
+      <p class="sec-h">例から選ぶ</p>
+      <div class="presets" id="presets"></div>
+    </div>
+    <!-- 欄は起きた事実を聞く19個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-25 案A。形は daishikko-prolog と同じ）。
+         前の入口「どの話か」（iri）・聞きたいこと（kik）・立入りで聞きたいこと（kiq）と、欄の出し消し（SLOTS・updateSlots）、
+         隠れた欄を 関係なし で渡す shown・buildCtx をやめた。関係のない欄は Prolog が見ないだけ（schema.pl の ctx のコメント）。
+         並びは schema.pl の ctx の引数の順（1〜19）。小見出しは選ばせる欄ではない（番号を数えない）。
+         改善（kai）・措置（sot）・履行（rik）は11の欄に、受けた（uke）・従わなかったもの（nan）は3と10の欄にまとめた（C1）。
+         特に必要（hit）・おそれが大きい（ooi）は欄にせず、段の文に「…と認めるときは」と書く（決め0）。
+         欄名・選択肢から条文の写し（「使われていないことが常態」「過失がなくて相手を確知できない」「災害その他非常の場合」
+         「緊急に措置をとる必要があると認められるか」「いとまがないか」「第22条第1項〜第3項…のため」など）を外した（C2）。
+         欄の説明の断り（当てはめは判定しません 9つ）と、結果の下の NOTE_HANTEI・NOTE_JOBUN・NOTE_HOKA、下の帯の「含みません」、
+         頭の注意の2文目・3文目（入力のとおりに受けます・特別区の区長）は about へ移した（A3・A5） -->
+    <div class="slots" id="slots">
+      <p class="sec-h slot-h full-slot">家と持ち主</p>
+      <div class="slot" id="s-shoyu"><label for="shoyu">持ち主か管理している者</label><span class="field"><select id="shoyu">
+        <option value="個人">個人・会社など</option><option value="公">国か地方公共団体（区や市など）</option>
+      </select></span><p class="desc">区や市＝条文の「市町村長」には特別区（東京23区）の区長が入る（8条2項）</p></div>
+      <div class="slot" id="s-shiyo"><label for="shiyo">住む人・使う人</label><span class="field"><select id="shiyo">
+        <option value="続いている">誰も住まず、使ってもいない状態が続いている</option><option value="使っている">住んでいる人がいる・ときどき使っている</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-jotai"><label for="jotai">区や市から言われた家の状態</label><span class="field"><select id="jotai">
+        <option value="危険">特定空家等（倒れる・崩れるなど保安上危険か、衛生上有害のおそれ）</option>
+        <option value="景観">特定空家等（景観や生活環境の面だけ）</option>
+        <option value="管理不全">管理不全空家等（放置すると特定空家等になるおそれ）</option>
+        <option value="どれでもない">どれとも言われていない</option>
+      </select></span><p class="desc">特定空家等＝放置すると危険・有害になるおそれがあるなど、放置が不適切な状態の空き家。管理不全空家等＝放置すると特定空家等になるおそれのある空き家</p></div>
+
+      <p class="sec-h slot-h full-slot">調査</p>
+      <div class="slot" id="s-chosa"><label for="chosa">調査で求められたこと</label><span class="field"><select id="chosa">
+        <option value="なし">何も求められていない</option><option value="報告">報告</option><option value="立入り">立入り</option>
+      </select></span></div>
+      <div class="slot" id="s-wake"><label for="wake">区や市が説明した調査のわけ</label><span class="field"><select id="wake">
+        <option value="特定">特定空家等への助言・指導・勧告・命令のため</option><option value="管理不全">管理不全空家等への指導・勧告のため</option><option value="その他">説明がない・ほかのわけ</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-ojikata"><label for="ojikata">報告・立入りに</label><span class="field"><select id="ojikata">
+        <option value="応じた">応じた</option><option value="断った">断った（報告しない・立入りを拒む・妨げる・避ける）</option><option value="うそ">うその報告をした</option>
+      </select></span></div>
+      <div class="slot" id="s-tsuchi"><label for="tsuchi">立入りの5日前までの通知</label><span class="field"><select id="tsuchi">
+        <option value="来た">来た</option><option value="来ていない">来ていない</option>
+      </select></span></div>
+      <div class="slot" id="s-renraku"><label for="renraku">持ち主か管理している者と、区や市の連絡</label><span class="field"><select id="renraku">
+        <option value="つく">つく</option><option value="つかない">つかない（住所が分からないなど）</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-shomei"><label for="shomei">立ち入る人の身分の証明書</label><span class="field"><select id="shomei">
+        <option value="言っていない">見せてと言っていない</option><option value="見せた">見せてと言い、見せた</option><option value="見せなかった">見せてと言ったが、見せなかった</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">助言・指導・勧告・命令</p>
+      <div class="slot full-slot" id="s-uke"><label for="uke">区や市から受けたもので一番後のもの</label><span class="field"><select id="uke">
+        <option value="なし">何も受けていない</option><option value="指導">助言か指導</option><option value="勧告">勧告</option>
+        <option value="通知書">命令の前の通知書（命じる措置、意見書の出し先と期限が書いてあるもの）</option><option value="命令">命令</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-sochi"><label for="sochi">勧告や命令で求められた措置</label><span class="field"><select id="sochi">
+        <option value="していない">期限を過ぎてもしていない</option><option value="一部">期限を過ぎたが、一部だけした</option>
+        <option value="見込みなし">期限前だが、期限までに終わりそうにない</option><option value="全部">全部した</option>
+      </select></span><p class="desc">措置＝取り壊し・修繕・立ち木の伐採など</p></div>
+      <div class="slot full-slot" id="s-riyu"><label for="riyu">措置をとらなかったことに、正当な理由（あなたの考え）</label><span class="field"><select id="riyu">
+        <option value="ない">ない</option><option value="ある">ある</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">命令の前の手続</p>
+      <div class="slot" id="s-nissu"><label for="nissu">通知書を受け取った日から</label><span class="field"><select id="nissu">
+        <option value="以内">5日以内</option><option value="過ぎた">6日目以降</option>
+      </select></span><p class="desc">受け取った日は数えない</p></div>
+      <div class="slot" id="s-seikyu"><label for="seikyu">公開の意見の聴取（公開の場で意見を聞く手続）を</label><span class="field"><select id="seikyu">
+        <option value="していない">請求していない</option><option value="した">請求した</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">分からない・急ぐ</p>
+      <div class="slot full-slot" id="s-aite"><label for="aite">持ち主か管理している者の名前と住所を、区や市は</label><span class="field"><select id="aite">
+        <option value="分かる">分かっている</option><option value="分からない">調べても分からなかった</option><option value="調べ不足">十分に調べないまま、分からないとしている</option>
+      </select></span><p class="desc">十分に調べたかは、あなたの考え</p></div>
+      <div class="slot full-slot" id="s-kokoku"><label for="kokoku">区や市のお知らせ（期限までにしなければ、区や市が行って費用を取るという公告）</label><span class="field"><select id="kokoku">
+        <option value="あった">あった</option><option value="なかった">なかった</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-hijo"><label for="hijo">今は、災害の最中・前後か、家が今にも倒れそうなど非常の時か（あなたの考え）</label><span class="field"><select id="hijo">
+        <option value="いいえ">いいえ</option><option value="はい">はい</option>
+      </select></span></div>
+      <div class="slot" id="s-kinkyu"><label for="kinkyu">区や市は、急いで措置をとる必要があると</label><span class="field"><select id="kinkyu">
+        <option value="認めた">認めた</option><option value="認めていない">認めていない</option>
+      </select></span></div>
+      <div class="slot" id="s-jikan"><label for="jikan">命令の手続（通知書・意見書・意見の聴取）をとる時間（あなたの考え）</label><span class="field"><select id="jikan">
+        <option value="ない">ない</option><option value="ある">ある</option>
+      </select></span></div>
+    </div>
+    <div class="qline" id="qline"></div>
+  </section>
+
+  <section id="answer" aria-live="polite"><p class="loading">でんすけが条文のルール（Prolog）を読み込んでいます…</p></section>
+
+  <p class="foot techline"><span>空家法／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot" id="foot">e-Gov法令検索の空家等対策の推進に関する特別措置法（平成二十六年法律第百二十七号）の本則の原文から、第2条・第9条・第13条・第22条・第30条をルールにしたものです。条文は2026年11月4日に取得した版で、それ以後の改正と、公布済みで施行前の改正は読んでいません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 空家法のProlog 共通の型・欄の読み出し・成り立たない組・木の部品
+%
+% ctx(所有, 使用, 状態, 調査, わけ, 応じ方, 通知, 連絡, 証明書, 受けた, 措置, 理由, 日数, 請求, 相手, 公告, 非常, 緊急, 時間)
+%   欄は起きた事実を聞く19個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-25 案A。
+%   案は ../akiya_form_plan_answer_1125.md の案A、決めは ../akiya_form_plan_decision_1125.md）。形は daishikko-prolog と同じ。
+%   前は ctx(入口, 詳細) で、入口（できること | その先 | 調査）を先に選ばせ、その先の中でも「聞く」（手続 | 従わない | 不明 | 急ぐ | 費用 | 標識）、
+%   調査の中でも「聞く」（通知 | 証明書 | 拒む）を選ばせていた。画面が欄を出し消しして、隠れた欄を 関係なし で渡していた
+%   （形OK/2 が欄の並びを入口ごとに直書きしていた）。今は使わない欄を判定で見ないだけにした。
+%   改善（kai）・措置（sot）・履行（rik）は11の欄に、受けた（uke）・従わなかったもの（nan）は3と10の欄にまとめた（案A「1つにまとめる欄」・C1）。
+%   特に必要（hit）・おそれが大きい（ooi）と、改善の「認める」は欄にせず、段の文に「…と認めるときは」と条件で書く（案A・決め0）。
+%   引数の順は画面の欄の番号（1〜19）と同じ。画面では5つの小見出し（家と持ち主／調査／助言・指導・勧告・命令／命令の前の手続／
+%   分からない・急ぐ）の下に並べる。
+%    1 所有     : 個人 | 公（持ち主か管理している者：個人・会社など | 国か地方公共団体）
+%    2 使用     : 続いている | 使っている（誰も住まず使ってもいない状態が続いている | 住んでいる人がいる・ときどき使っている）
+%    3 状態     : 危険 | 景観 | 管理不全 | どれでもない（区や市から言われた家の状態）
+%    4 調査     : なし | 報告 | 立入り（調査で求められたこと）
+%    5 わけ     : 特定 | 管理不全 | その他（区や市が説明した調査のわけ）
+%    6 応じ方   : 応じた | 断った | うそ（報告・立入りに）
+%    7 通知     : 来た | 来ていない（立入りの5日前までの通知）
+%    8 連絡     : つく | つかない（持ち主か管理している者と、区や市の連絡）
+%    9 証明書   : 言っていない | 見せた | 見せなかった（立ち入る人の身分の証明書）
+%   10 受けた   : なし | 指導 | 勧告 | 通知書 | 命令（区や市から受けたもので一番後のもの）
+%   11 措置     : していない | 一部 | 見込みなし | 全部（勧告や命令で求められた措置：期限を過ぎてもしていない | 期限を過ぎたが一部だけ |
+%                 期限前だが期限までに終わりそうにない | 全部した）
+%   12 理由     : ない | ある（措置をとらなかったことに、正当な理由。あなたの考え）
+%   13 日数     : 以内 | 過ぎた（通知書を受け取った日から：5日以内 | 6日目以降）
+%   14 請求     : していない | した（公開の意見の聴取を）
+%   15 相手     : 分かる | 分からない | 調べ不足（持ち主か管理している者の名前と住所を、区や市は：分かっている |
+%                 調べても分からなかった | 十分に調べないまま、分からないとしている）
+%   16 公告     : あった | なかった（期限までにしなければ区や市が行って費用を取るというお知らせ）
+%   17 非常     : いいえ | はい（災害の最中・前後か、家が今にも倒れそうなど非常の時か。あなたの考え）
+%   18 緊急     : 認めた | 認めていない（区や市は、急いで措置をとる必要があると）
+%   19 時間     : ない | ある（命令の手続をとる時間。あなたの考え）
+%
+%   関係のない欄（1・2の欄が空家等に当たらないときの3〜19、4の欄が「何も求められていない」のときの5〜9、
+%   4の欄が「報告」か5の欄が「管理不全空家等のため」のときの7〜9、7の欄が「来た」のときの8、
+%   3の欄が「どれとも言われていない」のときの10〜19、3の欄が特定空家等でないときの11〜19、
+%   10の欄が「勧告」でも「命令」でもないときの11・12、10の欄が「命令」か11の欄が「全部した」のときの12、
+%   10の欄が「命令の前の通知書」でないときの13・14、15の欄が「調べても分からなかった」でないときの16、17の欄が「いいえ」のときの18・19）は、
+%   組み合わせなしにせず見ないだけ（daishikko-prolog と同じ）。欄どうしで成り立たない組はこのファイルの 組み合わせなし/4 が返す（REVIEW_RULES C3）。
+%
+% 書き方のきまり：
+%   ・条番号は '13条1項' '22条10項' のような原子。この法律の読む範囲に号は無い。
+%   ・ルールの中で範囲の外の条を、原子の先頭に条番号を置く形で書かない。書くと build.py が使う条に数え、画面に中身が埋まる。
+%   ・段は 段(状態, 文, 箱の条, 葉のリスト)。結論ごとの段は s(画面のid, 見出し, 段)。段の文は、末尾の「。」を外して結論の箱にも出す。
+%     段の文は本題だけを書き、入力の言い直しは葉に置く（REVIEW_RULES A2。葉は論理の木にだけ出る）。
+%     葉は文（原子）か、木の行 t(...) そのもの（規定・約束の行。schema の 葉の行）。
+%     前は 段(状態, 文, 条のリスト) の3つで、木は条の原文と約束事①だけだった（入力の葉が無かった）。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | and | or | info
+%   ・アプリの約束事の行は 条 を '@約束事' にする。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか。組の成り立ちは 組み合わせなし/4 で見る）----
+ctx_valid(C) :-
+    functor(C, ctx, 19),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )).
+
+欄の値(1, [個人, 公]).
+欄の値(2, [続いている, 使っている]).
+欄の値(3, [危険, 景観, 管理不全, どれでもない]).
+欄の値(4, [なし, 報告, 立入り]).
+欄の値(5, [特定, 管理不全, その他]).
+欄の値(6, [応じた, 断った, うそ]).
+欄の値(7, [来た, 来ていない]).
+欄の値(8, [つく, つかない]).
+欄の値(9, [言っていない, 見せた, 見せなかった]).
+欄の値(10, [なし, 指導, 勧告, 通知書, 命令]).
+欄の値(11, [していない, 一部, 見込みなし, 全部]).
+欄の値(12, [ない, ある]).
+欄の値(13, [以内, 過ぎた]).
+欄の値(14, [していない, した]).
+欄の値(15, [分かる, 分からない, 調べ不足]).
+欄の値(16, [あった, なかった]).
+欄の値(17, [いいえ, はい]).
+欄の値(18, [認めた, 認めていない]).
+欄の値(19, [ない, ある]).
+
+%% ---- 欄の読み出し（番号は画面の欄の番号）----
+欄の番号(所有, 1).
+欄の番号(使用, 2).
+欄の番号(状態, 3).
+欄の番号(調査, 4).
+欄の番号(わけ, 5).
+欄の番号(応じ方, 6).
+欄の番号(通知, 7).
+欄の番号(連絡, 8).
+欄の番号(証明書, 9).
+欄の番号(受けた, 10).
+欄の番号(措置, 11).
+欄の番号(理由, 12).
+欄の番号(日数, 13).
+欄の番号(請求, 14).
+欄の番号(相手, 15).
+欄の番号(公告, 16).
+欄の番号(非常, 17).
+欄の番号(緊急, 18).
+欄の番号(時間, 19).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+%% ---- 成り立たない組（組み合わせなし/4。REVIEW_RULES C3。案A「この組み合わせはありません」）----
+% 組み合わせなし(C, 記号, 葉のリスト, 箱の条)。rules/g_hantei.pl の 全部の段 が findall で全部集める（REVIEW_RULES 末尾「AI同士で決めた書き方」1・2）。
+%   ア 4の欄が「立入り」で、6の欄が「うその報告をした」。根拠は9条2項・30条2項（うその報告は、報告を求められたときのこと）
+%   イ 15の欄が「分かっている」でなく、10の欄が「命令の前の通知書」か「命令」。根拠は22条4項・22条10項
+%      （通知書と命令は措置を命じる相手に渡すもので、相手が分からないときは22条10項の話。決め4）
+% 法に沿わない手順（勧告を受けずに命令が来た など）は起きうる事実なので、ありませんにせず段の答えで出す（daishikko と同じ）。
+% 助言か指導・勧告の後に相手が分からなくなった場合は、22条10項のかっこ書きに入るので、ありませんにしない（案A）。
+組み合わせなし(C, a, ['うその報告は、報告を求められたときのこと。立入りでは報告を求めていない', W], ['9条2項', '30条2項']) :-
+    欄(調査, C, 立入り), 欄(応じ方, C, うそ),
+    二つ選んだ(調査, 応じ方, C, W).
+組み合わせなし(C, i, ['通知書と命令は、措置を命じる相手に渡すもの。相手が分からないときは、22条10項で市町村長が代わりに行う', W], ['22条4項', '22条10項']) :-
+    \+ 欄(相手, C, 分かる), 欄(受けた, C, U), memberchk(U, [通知書, 命令]),
+    二つ選んだ(相手, 受けた, C, W).
+
+二つ選んだ(N1, N2, C, W) :-
+    欄の番号(N1, I1), 欄(N1, C, V1), 葉の語(I1, V1, W1),
+    欄の番号(N2, I2), 欄(N2, C, V2), 葉の語(I2, V2, W2),
+    format(atom(W), '~wの欄で~wを選び、~wの欄で~wを選んだ', [I1, W1, I2, W2]).
+
+%% ---- 木の葉に出す欄の値の言葉（画面の選択肢と同じ語）----
+% 葉の語(欄の番号, 値, 選択肢の語)
+葉の語(1, 個人, '個人・会社など').
+葉の語(1, 公, '国か地方公共団体（区や市など）').
+葉の語(2, 続いている, '誰も住まず、使ってもいない状態が続いている').
+葉の語(2, 使っている, '住んでいる人がいる・ときどき使っている').
+葉の語(3, 危険, '特定空家等（倒れる・崩れるなど保安上危険か、衛生上有害のおそれ）').
+葉の語(3, 景観, '特定空家等（景観や生活環境の面だけ）').
+葉の語(3, 管理不全, '管理不全空家等（放置すると特定空家等になるおそれ）').
+葉の語(3, どれでもない, 'どれとも言われていない').
+葉の語(4, なし, '何も求められていない').
+葉の語(4, 報告, '報告').
+葉の語(4, 立入り, '立入り').
+葉の語(5, 特定, '特定空家等への助言・指導・勧告・命令のため').
+葉の語(5, 管理不全, '管理不全空家等への指導・勧告のため').
+葉の語(5, その他, '説明がない・ほかのわけ').
+葉の語(6, 応じた, '応じた').
+葉の語(6, 断った, '断った（報告しない・立入りを拒む・妨げる・避ける）').
+葉の語(6, うそ, 'うその報告をした').
+葉の語(7, 来た, '来た').
+葉の語(7, 来ていない, '来ていない').
+葉の語(8, つく, 'つく').
+葉の語(8, つかない, 'つかない（住所が分からないなど）').
+葉の語(9, 言っていない, '見せてと言っていない').
+葉の語(9, 見せた, '見せてと言い、見せた').
+葉の語(9, 見せなかった, '見せてと言ったが、見せなかった').
+葉の語(10, なし, '何も受けていない').
+葉の語(10, 指導, '助言か指導').
+葉の語(10, 勧告, '勧告').
+葉の語(10, 通知書, '命令の前の通知書').
+葉の語(10, 命令, '命令').
+葉の語(11, していない, '期限を過ぎてもしていない').
+葉の語(11, 一部, '期限を過ぎたが、一部だけした').
+葉の語(11, 見込みなし, '期限前だが、期限までに終わりそうにない').
+葉の語(11, 全部, '全部した').
+葉の語(12, ない, 'ない').
+葉の語(12, ある, 'ある').
+葉の語(13, 以内, '5日以内').
+葉の語(13, 過ぎた, '6日目以降').
+葉の語(14, していない, '請求していない').
+葉の語(14, した, '請求した').
+葉の語(15, 分かる, '分かっている').
+葉の語(15, 分からない, '調べても分からなかった').
+葉の語(15, 調べ不足, '十分に調べないまま、分からないとしている').
+葉の語(16, あった, 'あった').
+葉の語(16, なかった, 'なかった').
+葉の語(17, いいえ, 'いいえ').
+葉の語(17, はい, 'はい').
+葉の語(18, 認めた, '認めた').
+葉の語(18, 認めていない, '認めていない').
+葉の語(19, ない, 'ない').
+葉の語(19, ある, 'ある').
+
+% 入力の葉：「Nの欄で、◯◯を選んだ」。欄の名前から番号と値を引く
+選んだ(Name, C, W) :-
+    欄の番号(Name, N), 欄(Name, C, V), 葉の語(N, V, VW),
+    format(atom(W), '~wの欄で、~wを選んだ', [N, VW]).
+
+%% ---- 理由の語をつなぐ ----
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---- 木の部品 ----
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+原文規定(Art, X) :- 原文(Art, W), 規定(Art, W, X).
+% 成り立つ文（起きた事実・条文の読み）
+文(X, t(ok, X, '', [])).
+約束(X, t(ok, X, '@約束事', [])).
+% 葉の行：木の行 t(...) はそのまま、文はそのまま1行（schema の「書き方のきまり」）
+葉の行(t(K, X, A, Cs), t(K, X, A, Cs)) :- !.
+葉の行(W, X) :- 文(W, X).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+% 前は子が1つでも「次のすべてが成り立つ」の節を作っていた（前の :105。daishikko-prolog schema.pl の すべて/4 を写した）
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（空家法の条文にないもの）
+%
+%   ① 2条1項「常態」、22条3項「正当な理由」、22条11項「災害その他非常の場合」「いとま」、22条10項「過失がなくて」は、
+%      条文に中身が書いていない。2の欄は事実（誰も住まず、使ってもいない状態が続いている）として聞き、
+%      12・17・19の欄は「（あなたの考え）」として、15の欄は「調べても分からなかった／十分に調べないまま」として聞く。当てはめはしない。
+%      2条2項・13条1項の「認められる」「認める」（特定空家等・管理不全空家等か）は、3の欄で区や市から言われた状態として受ける。
+%      22条11項の「緊急に…必要があると認めるとき」は「認める」の語があるので、18の欄で区や市が認めたかを事実として聞く。
+%      22条2項「なお…改善されないと認めるとき」・13条2項「おそれが大きいと認めるとき」・22条3項「特に必要があると認めるとき」は、
+%      次の措置を決める市町村長の判断で、勧告や命令が届くまで利用者に分からないので、欄にせず、段の文に「…と認めるときは」と条件で書く（決め0）。
+%      22条2項・3項「相当の猶予期限」は「相当」かを聞かず、11の欄で期限を過ぎたかだけを聞く。
+%      ①は about の約束事①にだけ置き、木には出さない（2026-11-25 案A。前は「…判定しない。本人がそう考えたとして答えている」の行を、
+%      全部の段の木に付けていた（前の g_hantei.pl:89–90 の 段の約束）。A5。daishikko-prolog の kihon.pl と同じ扱い）。
+%   ② 「当たりません」は、その条に当たらないと言うだけで、反対の結論を言うものではない（前のまま）。
+%      「当たりません」の段の木にだけ出す。前の名前 場面外の約束 は 当たらないの約束 に変えた（daishikko と同じ名前）。
+
+当たらないの約束(X) :-
+    約束('「当たりません」は、その条に当たらないと言うだけで、反対の結論を言うものではない', X).
+</script>
+<script type="text/prolog" data-name="rules_a_genbun.pl">% rules/a_genbun.pl — 判定に使う条文の原文（law/akiya.xml の本則のまま）
+%
+%   原文(条, 文)。test/page_test.mjs が XML を別に読み、全行が一字一句一致するかを確かめる。
+%   この表の条に号は無い。第2条第1項・第9条第3項・第22条第10項・第22条第14項は Sentence が2つで、続けて書いた（XML を読んで確かめた）。
+%   第22条第16項・第17項は入れていない（判定に使わない）。第8条は第2項の括弧書きのためだけに置く。
+%   1条・5条・8条2項は段・木・根拠条文では使わず、原文の表に残す（2026-11-25 案A・決め6。前は語の共通段 ku の箱の条に置いていた）。
+%   全条文の地図では使っている条のマスに出る（daishikko-prolog の1条と同じ扱い）。
+
+原文('1条', 'この法律は、適切な管理が行われていない空家等が防災、衛生、景観等の地域住民の生活環境に深刻な影響を及ぼしていることに鑑み、地域住民の生命、身体又は財産を保護するとともに、その生活環境の保全を図り、あわせて空家等の活用を促進するため、空家等に関する施策に関し、国による基本指針の策定、市町村（特別区を含む。第十条第二項を除き、以下同じ。）による空家等対策計画の作成その他の空家等に関する施策を推進するために必要な事項を定めることにより、空家等に関する施策を総合的かつ計画的に推進し、もって公共の福祉の増進と地域の振興に寄与することを目的とする。').
+原文('2条1項', 'この法律において「空家等」とは、建築物又はこれに附属する工作物であって居住その他の使用がなされていないことが常態であるもの及びその敷地（立木その他の土地に定着する物を含む。第十四条第二項において同じ。）をいう。ただし、国又は地方公共団体が所有し、又は管理するものを除く。').
+原文('2条2項', 'この法律において「特定空家等」とは、そのまま放置すれば倒壊等著しく保安上危険となるおそれのある状態又は著しく衛生上有害となるおそれのある状態、適切な管理が行われていないことにより著しく景観を損なっている状態その他周辺の生活環境の保全を図るために放置することが不適切である状態にあると認められる空家等をいう。').
+原文('5条', '空家等の所有者又は管理者（以下「所有者等」という。）は、周辺の生活環境に悪影響を及ぼさないよう、空家等の適切な管理に努めるとともに、国又は地方公共団体が実施する空家等に関する施策に協力するよう努めなければならない。').
+原文('8条2項', '協議会は、市町村長（特別区の区長を含む。以下同じ。）のほか、地域住民、市町村の議会の議員、法務、不動産、建築、福祉、文化等に関する学識経験者その他の市町村長が必要と認める者をもって構成する。').
+原文('9条2項', '市町村長は、第二十二条第一項から第三項までの規定の施行に必要な限度において、空家等の所有者等に対し、当該空家等に関する事項に関し報告させ、又はその職員若しくはその委任した者に、空家等と認められる場所に立ち入って調査をさせることができる。').
+原文('9条3項', '市町村長は、前項の規定により当該職員又はその委任した者を空家等と認められる場所に立ち入らせようとするときは、その五日前までに、当該空家等の所有者等にその旨を通知しなければならない。ただし、当該所有者等に対し通知することが困難であるときは、この限りでない。').
+原文('9条4項', '第二項の規定により空家等と認められる場所に立ち入ろうとする者は、その身分を示す証明書を携帯し、関係者の請求があったときは、これを提示しなければならない。').
+原文('9条5項', '第二項の規定による立入調査の権限は、犯罪捜査のために認められたものと解釈してはならない。').
+原文('13条1項', '市町村長は、空家等が適切な管理が行われていないことによりそのまま放置すれば特定空家等に該当することとなるおそれのある状態にあると認めるときは、当該状態にあると認められる空家等（以下「管理不全空家等」という。）の所有者等に対し、基本指針（第六条第二項第三号に掲げる事項に係る部分に限る。）に即し、当該管理不全空家等が特定空家等に該当することとなることを防止するために必要な措置をとるよう指導をすることができる。').
+原文('13条2項', '市町村長は、前項の規定による指導をした場合において、なお当該管理不全空家等の状態が改善されず、そのまま放置すれば特定空家等に該当することとなるおそれが大きいと認めるときは、当該指導をした者に対し、修繕、立木竹の伐採その他の当該管理不全空家等が特定空家等に該当することとなることを防止するために必要な具体的な措置について勧告することができる。').
+原文('22条1項', '市町村長は、特定空家等の所有者等に対し、当該特定空家等に関し、除却、修繕、立木竹の伐採その他周辺の生活環境の保全を図るために必要な措置（そのまま放置すれば倒壊等著しく保安上危険となるおそれのある状態又は著しく衛生上有害となるおそれのある状態にない特定空家等については、建築物の除却を除く。次項において同じ。）をとるよう助言又は指導をすることができる。').
+原文('22条2項', '市町村長は、前項の規定による助言又は指導をした場合において、なお当該特定空家等の状態が改善されないと認めるときは、当該助言又は指導を受けた者に対し、相当の猶予期限を付けて、除却、修繕、立木竹の伐採その他周辺の生活環境の保全を図るために必要な措置をとることを勧告することができる。').
+原文('22条3項', '市町村長は、前項の規定による勧告を受けた者が正当な理由がなくてその勧告に係る措置をとらなかった場合において、特に必要があると認めるときは、その者に対し、相当の猶予期限を付けて、その勧告に係る措置をとることを命ずることができる。').
+原文('22条4項', '市町村長は、前項の措置を命じようとする場合においては、あらかじめ、その措置を命じようとする者に対し、その命じようとする措置及びその事由並びに意見書の提出先及び提出期限を記載した通知書を交付して、その措置を命じようとする者又はその代理人に意見書及び自己に有利な証拠を提出する機会を与えなければならない。').
+原文('22条5項', '前項の通知書の交付を受けた者は、その交付を受けた日から五日以内に、市町村長に対し、意見書の提出に代えて公開による意見の聴取を行うことを請求することができる。').
+原文('22条6項', '市町村長は、前項の規定による意見の聴取の請求があった場合においては、第三項の措置を命じようとする者又はその代理人の出頭を求めて、公開による意見の聴取を行わなければならない。').
+原文('22条7項', '市町村長は、前項の規定による意見の聴取を行う場合においては、第三項の規定によって命じようとする措置並びに意見の聴取の期日及び場所を、期日の三日前までに、前項に規定する者に通知するとともに、これを公告しなければならない。').
+原文('22条8項', '第六項に規定する者は、意見の聴取に際して、証人を出席させ、かつ、自己に有利な証拠を提出することができる。').
+原文('22条9項', '市町村長は、第三項の規定により必要な措置を命じた場合において、その措置を命ぜられた者がその措置を履行しないとき、履行しても十分でないとき又は履行しても同項の期限までに完了する見込みがないときは、行政代執行法（昭和二十三年法律第四十三号）の定めるところに従い、自ら義務者のなすべき行為をし、又は第三者をしてこれをさせることができる。').
+原文('22条10項', '第三項の規定により必要な措置を命じようとする場合において、過失がなくてその措置を命ぜられるべき者（以下この項及び次項において「命令対象者」という。）を確知することができないとき（過失がなくて第一項の助言若しくは指導又は第二項の勧告が行われるべき者を確知することができないため第三項に定める手続により命令を行うことができないときを含む。）は、市町村長は、当該命令対象者の負担において、その措置を自ら行い、又はその命じた者若しくは委任した者（以下この項及び次項において「措置実施者」という。）にその措置を行わせることができる。この場合においては、市町村長は、その定めた期限内に命令対象者においてその措置を行うべき旨及びその期限までにその措置を行わないときは市町村長又は措置実施者がその措置を行い、当該措置に要した費用を徴収する旨を、あらかじめ公告しなければならない。').
+原文('22条11項', '市町村長は、災害その他非常の場合において、特定空家等が保安上著しく危険な状態にある等当該特定空家等に関し緊急に除却、修繕、立木竹の伐採その他周辺の生活環境の保全を図るために必要な措置をとる必要があると認めるときで、第三項から第八項までの規定により当該措置をとることを命ずるいとまがないときは、これらの規定にかかわらず、当該特定空家等に係る命令対象者の負担において、その措置を自ら行い、又は措置実施者に行わせることができる。').
+原文('22条12項', '前二項の規定により負担させる費用の徴収については、行政代執行法第五条及び第六条の規定を準用する。').
+原文('22条13項', '市町村長は、第三項の規定による命令をした場合においては、標識の設置その他国土交通省令・総務省令で定める方法により、その旨を公示しなければならない。').
+原文('22条14項', '前項の標識は、第三項の規定による命令に係る特定空家等に設置することができる。この場合においては、当該特定空家等の所有者等は、当該標識の設置を拒み、又は妨げてはならない。').
+原文('22条15項', '第三項の規定による命令については、行政手続法（平成五年法律第八十八号）第三章（第十二条及び第十四条を除く。）の規定は、適用しない。').
+原文('30条1項', '第二十二条第三項の規定による市町村長の命令に違反した者は、五十万円以下の過料に処する。').
+原文('30条2項', '第九条第二項の規定による報告をせず、若しくは虚偽の報告をし、又は同項の規定による立入調査を拒み、妨げ、若しくは忌避した者は、二十万円以下の過料に処する。').
+</script>
+<script type="text/prolog" data-name="rules_b_dekiru.pl">% rules/b_dekiru.pl — 空家等か・家の状態・助言か指導・勧告・命令ができるか（2条・13条・22条1項〜3項・30条1項（勧告だけ））
+%
+%   段は5：akiya（2条1項）・toku（2条2項・13条1項）・ima（13条・22条1項〜3項）・jokyaku（22条1項のかっこ書き）・karyo_kankoku（30条1項）。
+%   2026-11-25 案A。前は入口「できること」の中で、所有 → 常態 → 状態 → 受けた → 改善・措置・正当・必要・大きい の順に欄を出し消しして、
+%   最初に欠けた1つで答えていた（前の読み (8)）。今は1〜3・10〜12の欄から同じ入力で当て、欠けた条件と入力は葉に並べる。
+%   第22条は 助言か指導（第1項）→ 勧告（第2項）→ 命令（第3項）の順。どれも「できる」で、市町村長の義務ではない。
+%   22条2項「なお…改善されないと認めるとき」・13条2項「おそれが大きいと認めるとき」・22条3項「特に必要があると認めるとき」は
+%   欄にせず、段の文に「…と認めるときは」と条件で書く（決め0。前は kai・ooi・hit の欄で聞いていた）。
+%   前の段の文の「〜と入力されたので」「〜ので」は葉へ移し（A2）、「条文は「できる」で、必ず行うとは書いていません」
+%   「例外は第10項と第11項だけです」と、語の意味の補足の段（前の できることの語/1）は about へ移した（A5・決め2）。
+%   段の文には、画面の上で指す先の無い指示語（その・これを・当該・同項・前項 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+
+%% ---- 2条1項 空家等に当たるか ----
+% 2条1項が成り立つための欄の値（欄の順）
+空家等の条件(所有, 個人).
+空家等の条件(使用, 続いている).
+
+空家等が成り立つ(C) :- forall(空家等の条件(K, V), 欄(K, C, V)).
+
+空家等の段(C, [s(akiya, '空家等に当たるか', S)]) :-
+    原文規定('2条1項', R),
+    findall(W, ( 空家等の条件(K, V), \+ 欄(K, C, V), 選んだ(K, C, W) ), Ws),
+    ( Ws == [] ->
+        選んだ(所有, C, W1), 選んだ(使用, C, W2),
+        S = 段(足りる, '空家等に当たります。', ['2条1項'], [R, W1, W2])
+    ; 当たらないの約束(Z), append([R | Ws], [Z], Ls),
+      S = 段(当たらない, '空家等に当たりません。', ['2条1項'], Ls) ).
+
+%% ---- 2条2項・13条1項 家の状態 ----
+% 3の欄は区や市から言われた状態として受ける（2条2項の「認められる」・13条1項の「認める」。約束事①）
+特定空家等(C) :- 欄(状態, C, S), memberchk(S, [危険, 景観]).
+
+状態の段(C, [s(toku, '特定空家等か', 段(足りる, '特定空家等として、第22条の措置の対象になります。', ['2条2項'], [R, W]))]) :-
+    特定空家等(C), !,
+    原文規定('2条2項', R), 選んだ(状態, C, W).
+状態の段(C, [s(toku, '管理不全空家等か', 段(足りる, '管理不全空家等として、第13条の措置の対象になります。', ['13条1項'], [R, W]))]) :-
+    欄(状態, C, 管理不全), !,
+    原文規定('13条1項', R), 選んだ(状態, C, W).
+状態の段(C, [s(toku, '第13条・第22条の対象か', 段(当たらない, '第13条と第22条の措置の対象になりません。', ['13条1項', '22条1項'], [R1, R2, W, Z]))]) :-
+    原文規定('13条1項', R1), 原文規定('22条1項', R2), 選んだ(状態, C, W), 当たらないの約束(Z).
+
+%% ---- 13条・22条1項〜3項 今の段階で何ができるか ----
+% 10の欄が「命令の前の通知書」「命令」の特定空家等は、c_sonosaki.pl の 手続の段・命令後の段 が答える
+段階の段(C, L) :-
+    特定空家等(C), !,
+    欄(受けた, C, U),
+    特定の段(U, C, L1),
+    除却の段(C, L2),
+    勧告の過料の段(U, C, L3),
+    append([L1, L2, L3], L).
+段階の段(C, L) :-
+    欄(状態, C, 管理不全), !,
+    欄(受けた, C, U),
+    管理不全の段(U, C, L).
+段階の段(_, []).
+
+% 特定空家等
+特定の段(なし, C, [s(ima, '今の段階で何ができるか', 段(できる, '市町村長は、所有者等に、必要な措置をとるよう助言か指導をすることができます。', ['22条1項'], [R, W]))]) :- !,
+    原文規定('22条1項', R), 選んだ(受けた, C, W).
+特定の段(指導, C, [s(ima, '今の段階で何ができるか', 段(できる, '市町村長は、助言か指導のあと、なお状態が改善されないと認めるときは、相当の猶予期限を付けて勧告をすることができます。', ['22条2項'], [R, W]))]) :- !,
+    原文規定('22条2項', R), 選んだ(受けた, C, W).
+特定の段(勧告, C, [s(ima, '今の段階で何ができるか', S)]) :- !,
+    原文規定('22条3項', R), 選んだ(受けた, C, W1), 欄(措置, C, X),
+    命令の答え(X, C, S0),
+    ( S0 = できる ->
+        選んだ(措置, C, W2), 選んだ(理由, C, W3),
+        S = 段(できる, '市町村長は、特に必要があると認めるときは、相当の猶予期限を付けて、勧告された措置をとるよう命ずることができます。', ['22条3項'], [R, W1, W2, W3])
+    ; S0 = 葉(Ws),
+      当たらないの約束(Z), append([[R, W1], Ws, [Z]], Ls),
+      S = 段(当たらない, '命令はできません。', ['22条3項'], Ls) ).
+特定の段(_, _, []).
+
+% 命令の答え(措置, C, できる | 葉(欠けた条件の葉))
+% 22条3項は「勧告を受けた者が正当な理由がなくてその勧告に係る措置をとらなかった場合」。
+% 11の欄が「全部した」なら措置をとった。「期限前だが、期限までに終わりそうにない」は、勧告の期限がまだ来ておらず、
+% まだ「とらなかった」に当たらないと読む（案に無かった読み。about の読み）。12の欄（正当な理由）は、とらなかったときだけ見る
+命令の答え(全部, C, 葉([W])) :- !, 選んだ(措置, C, W).
+命令の答え(見込みなし, C, 葉([W])) :- !, 選んだ(措置, C, W).
+命令の答え(_, C, 葉([W1, W2])) :- 欄(理由, C, ある), !, 選んだ(措置, C, W1), 選んだ(理由, C, W2).
+命令の答え(_, _, できる).
+
+% 22条1項のかっこ書き：危険か有害のおそれの状態にない特定空家等（景観だけ）は、建物の除却を除く（第2項まで及ぶ）。
+% 第3項は「その勧告に係る措置」なので同じ範囲に収まると読む（前の読み (5)）
+除却の段(C, [s(jokyaku, '建物の取り壊しは入るか', 段(足りる, '建物の除却（取り壊し）も、求める措置に入ります。', ['22条1項'], [R, W]))]) :-
+    欄(状態, C, 危険), !,
+    原文規定('22条1項', R), 選んだ(状態, C, W).
+除却の段(C, [s(jokyaku, '建物の取り壊しは入るか', 段(足りる, '建物の除却（取り壊し）は、助言・指導・勧告・命令で求める措置から除かれます。', ['22条1項', '22条3項'], [R1, R3, W, '22条3項の命令は、勧告された措置をとるよう命じるもの']))]) :-
+    原文規定('22条1項', R1), 原文規定('22条3項', R3), 選んだ(状態, C, W).
+
+% 30条1項は22条3項の命令に違反した者だけ。勧告を受けて期限を過ぎても措置をとっていないとき（していない・一部だけ）に出す
+勧告の過料の段(勧告, C, [s(karyo_kankoku, '勧告に従わないときの過料', 段(当たらない, '勧告に従わないだけでは、過料の対象になりません。', ['30条1項'], [R, W1, W2, Z]))]) :-
+    欄(措置, C, X), memberchk(X, [していない, 一部]), !,
+    原文規定('30条1項', R), 選んだ(受けた, C, W1), 選んだ(措置, C, W2), 当たらないの約束(Z).
+勧告の過料の段(_, _, []).
+
+% 管理不全空家等（13条は指導と勧告まで。命令・代執行・過料は書いていない）
+管理不全の段(なし, C, [s(ima, '今の段階で何ができるか', 段(できる, '市町村長は、所有者等に、特定空家等になるのを防ぐ措置をとるよう指導をすることができます。', ['13条1項'], [R, W]))]) :- !,
+    原文規定('13条1項', R), 選んだ(受けた, C, W).
+管理不全の段(指導, C, [s(ima, '今の段階で何ができるか', 段(できる, '市町村長は、指導のあと、なお状態が改善されず、特定空家等になるおそれが大きいと認めるときは、勧告をすることができます。', ['13条2項'], [R, W]))]) :- !,
+    原文規定('13条2項', R), 選んだ(受けた, C, W).
+管理不全の段(_, C, [s(ima, '今の段階で何ができるか', 段(書いていない, '第13条には、命令の定めがありません。', ['13条1項', '13条2項'], [R1, R2, W]))]) :-
+    原文規定('13条1項', R1), 原文規定('13条2項', R2), 選んだ(受けた, C, W).
+</script>
+<script type="text/prolog" data-name="rules_c_sonosaki.pl">% rules/c_sonosaki.pl — 命令の前の手続・命令の後・持ち主が分からないとき・急ぐとき（22条4項〜15項・30条1項）
+%
+%   段は14：maetsu（22条4項）・chosho（22条5項・6項）・kijitsu（22条7項）・shonin（22条8項）・gyotetsu（22条15項）、
+%   dai9（22条9項）・karyo1（30条1項）・hyoshiki（22条13項）・hyoshiki2（22条14項）、fumei（22条10項）、
+%   kinkyu・kokoku（22条11項）、hiyo（22条12項）。2026-11-25 案A。
+%   前は入口「その先」の中で「聞きたいこと」（手続 | 従わない | 不明 | 急ぐ | 費用 | 標識）を選ばせ、選んだ話の段だけを出していた（C4）。
+%   今は10・11・13〜19の欄から同じ入力で当てる。どれも特定空家等（22条）の話なので、3の欄が特定空家等のときだけ呼ぶ。
+%   代執行は3通りで別物。22条9項＝命令に従わないとき（行政代執行法に従う）。22条10項＝過失なく相手が分からないとき（相手の負担・あらかじめ公告）。
+%   22条11項＝災害その他非常の場合（命令の手続なし）。22条11項で省けるのは第3項から第8項までの命令の手続だけで、
+%   助言か指導と勧告は省けない（決め2。前の読み (6)「例外は第10項と第11項だけ」は、第11項が助言か指導からの順番も外すと読んでいた）。
+%   段の id は段ごとに分けた（前は karyo が5か所・go が3ファイルで同じ id。REVIEW_RULES 末尾「AI同士で決めた書き方」1）。
+%   段の文の断り（行政代執行法・行政手続法・省令は読んでいません、いくらになるか・効果・違反に当たるかは判定しません）と、
+%   語の意味の補足の段（前の その先の語/1）は about へ移した（A5）。期間の外の請求は 判定しない から 当たらない にした（案A「組の番号」）。
+%   期限を過ぎて一部だけしたときも、30条1項の過料の対象と答える（決め8）。
+
+%% ---- 命令の前の手続（10の欄が「命令の前の通知書」。22条4項〜8項・15項）----
+手続の段(C, L) :-
+    特定空家等(C), 欄(受けた, C, 通知書), !,
+    原文規定('22条4項', R4), 選んだ(受けた, C, W),
+    聴取の段(C, L1),
+    原文規定('22条15項', R15), 当たらないの約束(Z),
+    append([[s(maetsu, '命令の前の手続', 段(しなければならない, '命令の前に、市町村長は通知書を渡し、意見書と有利な証拠を出す機会を与えなければなりません。', ['22条4項'], [R4, W]))],
+            L1,
+            [s(gyotetsu, '行政手続法との関係', 段(当たらない, '命令には、行政手続法の第3章の決まりは、一部を除いて当てはまりません。', ['22条15項'], [R15, Z]))]], L).
+手続の段(_, []).
+
+% 22条5項は「その交付を受けた日から五日以内」。13の欄は初日を数えない数え方で聞く（about の読み）
+聴取の段(C, [s(chosho, '公開の意見の聴取', 段(足りる, '意見書の代わりに、公開の意見の聴取を請求できます。', ['22条5項'], [R, W1, W2]))]) :-
+    欄(日数, C, 以内), 欄(請求, C, していない), !,
+    原文規定('22条5項', R), 選んだ(日数, C, W1), 選んだ(請求, C, W2).
+聴取の段(C, [s(chosho, '公開の意見の聴取', 段(しなければならない, '市町村長は、公開の意見の聴取を行わなければなりません。', ['22条6項'], [R5, R6, W1, W2])),
+             s(kijitsu, '意見の聴取の期日', 段(しなければならない, '市町村長は、期日の3日前までに、命じようとする措置と期日・場所を知らせ、公告しなければなりません。', ['22条7項'], [R7])),
+             s(shonin, '意見の聴取での証拠', 段(できる, '意見の聴取では、証人を出席させ、有利な証拠を出すことができます。', ['22条8項'], [R8]))]) :-
+    欄(日数, C, 以内), !,
+    原文規定('22条5項', R5), 原文規定('22条6項', R6), 原文規定('22条7項', R7), 原文規定('22条8項', R8),
+    選んだ(日数, C, W1), 選んだ(請求, C, W2).
+聴取の段(C, [s(chosho, '公開の意見の聴取', 段(当たらない, '公開の意見の聴取を請求できる期間を過ぎています。', ['22条5項'], [R, W1, W2, Z]))]) :-
+    原文規定('22条5項', R), 選んだ(日数, C, W1), 選んだ(請求, C, W2), 当たらないの約束(Z).
+
+%% ---- 命令の後（10の欄が「命令」。22条9項・13項・14項・30条1項）----
+命令後の段(C, L) :-
+    特定空家等(C), 欄(受けた, C, 命令), !,
+    欄(措置, C, X),
+    代執行の段(X, C, L1),
+    命令の過料の段(X, C, L2),
+    原文規定('22条13項', R13), 原文規定('22条14項', R14), 選んだ(受けた, C, W),
+    append([L1, L2,
+            [s(hyoshiki, '標識', 段(しなければならない, '市町村長は、標識の設置などで、命令をしたことを公示しなければなりません。', ['22条13項'], [R13, W])),
+             s(hyoshiki2, '標識の設置', 段(しなければならない, '所有者等は、標識の設置を拒んだり妨げたりしてはなりません。', ['22条14項'], [R14]))]], L).
+命令後の段(_, []).
+
+% 22条9項は「履行しないとき、履行しても十分でないとき又は履行しても同項の期限までに完了する見込みがないとき」。
+% 11の欄の「一部だけ」は「十分でない」、「期限までに終わりそうにない」は「完了する見込みがない」と読む
+代執行の段(全部, C, [s(dai9, '代わりに行えるか', 段(当たらない, '市町村長が代わりに行うことはできません。', ['22条9項'], [R, W1, W2, Z]))]) :- !,
+    原文規定('22条9項', R), 選んだ(受けた, C, W1), 選んだ(措置, C, W2), 当たらないの約束(Z).
+代執行の段(_, C, [s(dai9, '代わりに行えるか', 段(できる, '市町村長は、行政代執行法に従って、自ら行うか第三者にさせることができます。', ['22条9項'], [R, W1, W2]))]) :-
+    原文規定('22条9項', R), 選んだ(受けた, C, W1), 選んだ(措置, C, W2).
+
+% 30条1項は「命令に違反した者」。期限を過ぎてもしていない・一部だけのとき（決め8）。期限前と全部したときは出さない
+命令の過料の段(X, C, [s(karyo1, '命令に違反したときの過料', 段(過料, '命令に違反した者は、50万円以下の過料の対象です。', ['30条1項'], [R, W1, W2]))]) :-
+    memberchk(X, [していない, 一部]), !,
+    原文規定('30条1項', R), 選んだ(受けた, C, W1), 選んだ(措置, C, W2).
+命令の過料の段(_, _, []).
+
+%% ---- 持ち主が分からないとき（15の欄が「分かっている」でない。22条10項）----
+% 10の欄が「命令の前の通知書」「命令」の組は、組み合わせなし イ（schema.pl）で先に止まる
+不明の段(C, [s(fumei, '持ち主が分からないとき', S)]) :-
+    特定空家等(C), 欄(相手, C, A), A \== 分かる, !,
+    原文規定('22条10項', R), 選んだ(相手, C, W1),
+    不明の答え(A, C, R, W1, S).
+不明の段(_, []).
+
+不明の答え(調べ不足, _, R, W1, 段(当たらない, '市町村長が相手の負担で代わりに行うことはできません。', ['22条10項'], [R, W1, Z])) :- !,
+    当たらないの約束(Z).
+不明の答え(分からない, C, R, W1, 段(できる, '市町村長は、相手の負担で、自ら措置を行うか、命じた者か委任した者に行わせることができます。', ['22条10項'], [R, W1, W2])) :-
+    欄(公告, C, あった), !, 選んだ(公告, C, W2).
+不明の答え(分からない, C, R, W1, 段(要る, '市町村長は、行う前に公告しなければなりません。', ['22条10項'], [R, W1, W2])) :-
+    選んだ(公告, C, W2).
+
+%% ---- 急ぐとき（17の欄が「はい」。22条11項）----
+% 17の欄が「いいえ」なら段を出さない（daishikko の 9の欄＝いいえ と同じ）。景観だけの特定空家等でも条文どおり答える（決め5）
+急ぐの段(C, L) :-
+    特定空家等(C), 欄(非常, C, はい), !,
+    原文規定('22条11項', R), 選んだ(非常, C, W0),
+    findall(W, ( member(K-V, [緊急-認めた, 時間-ない]), \+ 欄(K, C, V), 選んだ(K, C, W) ), Ws),
+    欄(受けた, C, U),
+    急ぐの答え(Ws, U, C, R, W0, L).
+急ぐの段(_, []).
+
+急ぐの答え(Ws, _, _, R, W0, [s(kinkyu, '急ぐとき', 段(当たらない, '命令の手続は省けません。', ['22条11項'], Ls))]) :-
+    Ws \== [], !,
+    当たらないの約束(Z), append([[R, W0], Ws, [Z]], Ls).
+急ぐの答え(_, U, C, R, W0, [s(kinkyu, '急ぐとき', 段(当たらない, '第11項で省けるのは第3項から第8項までの命令の手続で、助言か指導と勧告は省けません。', ['22条11項'], [R, W0, W1, W2, W3, Z]))]) :-
+    memberchk(U, [なし, 指導]), !,
+    選んだ(緊急, C, W1), 選んだ(時間, C, W2), 選んだ(受けた, C, W3), 当たらないの約束(Z).
+急ぐの答え(_, _, C, R, W0, [s(kinkyu, '急ぐとき', 段(できる, '市町村長は、命令の手続を経ないで、相手の負担で、自ら措置を行うか、命じた者か委任した者に行わせることができます。', ['22条11項'], [R, W0, W1, W2, W3])),
+                            s(kokoku, '第10項の公告との違い', 段(書いていない, '第22条第11項には、第10項の公告の定めがありません。', ['22条10項', '22条11項'], [R10, R]))]) :-
+    選んだ(緊急, C, W1), 選んだ(時間, C, W2), 選んだ(受けた, C, W3), 原文規定('22条10項', R10).
+
+%% ---- 費用（22条12項）----
+% 22条10項か11項で「できる」になったときだけ出す（前は「聞きたいこと」で費用を選んだときだけ出していた）
+費用の段(Ss, [s(hiyo, '費用', 段(準用, '費用は、行政代執行法の第5条と第6条を準用して徴収します。', ['22条12項'], [R]))]) :-
+    member(s(Id, _, 段(できる, _, _, _)), Ss), memberchk(Id, [fumei, kinkyu]), !,
+    原文規定('22条12項', R).
+費用の段(_, []).
+</script>
+<script type="text/prolog" data-name="rules_d_chosa.pl">% rules/d_chosa.pl — 調査（9条2項〜5項・30条2項）
+%
+%   段は5：chosa（9条2項）・karyo2（30条2項）・tsuchi（9条3項）・shomei（9条4項）・sosa（9条5項）。2026-11-25 案A。
+%   前は入口「調査」の中で、目的 → 種類 → 応じ方 か「立入りで聞きたいこと」（通知 | 証明書 | 拒む）の順に欄を出し消しして、
+%   選んだ話の段だけを出していた（C4・C5）。今は4〜9の欄から同じ入力で当てる。4の欄が「何も求められていない」なら段を出さない。
+%   9条2項は「第二十二条第一項から第三項までの規定の施行に必要な限度」の文。管理不全空家等への指導・勧告のための調査は
+%   この文に入らず、断っても30条2項の過料に当たらない、と答える（決め3。前は 判定しない で止めていた）。
+%   9条1項の調査は「立ち入る」と書いていないので、答えに使わず about に置く（決め3）。
+%   説明がない・ほかのわけのときは、9条2項の段を条件（22条1項から3項までの施行に必要な限度）を書いた形で答える（案A。前は 判定しない）。
+%   9条3項〜5項は9条2項の立入りの決まりなので、5の欄が管理不全空家等のためのときは出さない。
+%   通知は5日前まで（困難なら不要。8の欄で連絡がつくかを事実として聞く）。証明書は携帯がいつも、提示は関係者の請求があったときだけ。
+%   段の文の断り（効果・いくらになるかは判定しません）と、語の意味の補足の段（前の 調査の語/1）は about へ移した（A5）。
+%   犯罪捜査の段（前の 補足）は 足りる の段にした（案A「組の番号」）。
+
+調査の段(C, []) :- 欄(調査, C, なし), !.
+調査の段(C, L) :-
+    欄(調査, C, T), 欄(わけ, C, M), 欄(応じ方, C, O),
+    原文規定('9条2項', R), 選んだ(調査, C, W1), 選んだ(わけ, C, W2),
+    ( M == 管理不全 ->
+        当たらないの約束(Z),
+        L1 = [s(chosa, '報告・立入調査', 段(当たらない, '第9条第2項の報告・立入調査は、第22条第1項から第3項までの施行に必要な限度の決まりで、管理不全空家等への指導・勧告のための調査は入っていません。', ['9条2項'], [R, W1, W2, Z]))],
+        外の過料の段(O, C, L2), L3 = []
+    ; 調査の文(T, M0),
+      L1 = [s(chosa, '報告・立入調査', 段(できる, M0, ['9条2項'], [R, W1, W2]))],
+      過料の段(T, O, C, L2),
+      立入りの段(T, C, L3) ),
+    append([L1, L2, L3], L).
+
+調査の文(報告, '市町村長は、第22条第1項から第3項までの施行に必要な限度で、所有者等に報告させることができます。').
+調査の文(立入り, '市町村長は、第22条第1項から第3項までの施行に必要な限度で、職員などを立ち入らせて調査をさせることができます。').
+
+%% ---- 30条2項 ----
+% 立入り×うその報告 は、組み合わせなし ア（schema.pl）で先に止まる
+過料の段(_, 応じた, _, []) :- !.
+過料の段(T, O, C, [s(karyo2, '報告・立入調査での過料', 段(過料, M, ['30条2項'], [R, W1, W2]))]) :-
+    断った文(T, O, M),
+    原文規定('30条2項', R), 選んだ(調査, C, W1), 選んだ(応じ方, C, W2).
+
+断った文(報告, 断った, '報告をしないと、20万円以下の過料の対象です。').
+断った文(報告, うそ, 'うその報告をすると、20万円以下の過料の対象です。').
+断った文(立入り, 断った, '立入調査を拒んだり、妨げたり、避けたりすると、20万円以下の過料の対象です。').
+
+% 管理不全空家等のための調査（決め3）
+外の過料の段(応じた, _, []) :- !.
+外の過料の段(O, C, [s(karyo2, '報告・立入調査での過料', 段(当たらない, M, ['30条2項'], [R, W1, W2, Z]))]) :-
+    外の文(O, M),
+    原文規定('30条2項', R), 選んだ(わけ, C, W1), 選んだ(応じ方, C, W2), 当たらないの約束(Z).
+
+外の文(断った, '断っても、第30条第2項の過料の対象になりません。').
+外の文(うそ, 'うその報告をしても、第30条第2項の過料の対象になりません。').
+
+%% ---- 9条3項〜5項（立入りのときだけ）----
+立入りの段(報告, _, []) :- !.
+立入りの段(立入り, C, [T, P, s(sosa, '犯罪捜査との関係', 段(足りる, '立入調査の権限は、犯罪捜査のために認められた権限ではありません。', ['9条5項'], [R5]))]) :-
+    通知の段(C, T), 証明書の段(C, P),
+    原文規定('9条5項', R5).
+
+通知の段(C, s(tsuchi, '立入りの通知', 段(足りる, '立入りの5日前までの通知は済んでいます。', ['9条3項'], [R, W]))) :-
+    欄(通知, C, 来た), !,
+    原文規定('9条3項', R), 選んだ(通知, C, W).
+通知の段(C, s(tsuchi, '立入りの通知', 段(足りる, '所有者等に通知することが難しいときは、5日前までの通知は要りません。', ['9条3項'], [R, W1, W2]))) :-
+    欄(連絡, C, つかない), !,
+    原文規定('9条3項', R), 選んだ(通知, C, W1), 選んだ(連絡, C, W2).
+通知の段(C, s(tsuchi, '立入りの通知', 段(要る, '立ち入る5日前までに、市町村長は所有者等に通知しなければなりません。', ['9条3項'], [R, W1, W2]))) :-
+    原文規定('9条3項', R), 選んだ(通知, C, W1), 選んだ(連絡, C, W2).
+
+証明書の段(C, s(shomei, '身分を示す証明書', 段(St, M, ['9条4項'], [R, W]))) :-
+    欄(証明書, C, V), 証明書の答え(V, St, M),
+    原文規定('9条4項', R), 選んだ(証明書, C, W).
+
+証明書の答え(言っていない, しなければならない, '立ち入る人は、身分を示す証明書を持っていなければなりません。').
+証明書の答え(見せた, 足りる, '身分を示す証明書の提示は済んでいます。').
+証明書の答え(見せなかった, 要る, '立ち入る人は、求められたら、身分を示す証明書を見せなければなりません。').
+</script>
+<script type="text/prolog" data-name="rules_g_hantei.pl">% rules/g_hantei.pl — 段を束ねて見出し・根拠条文・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 箱の条, 葉のリスト)　結論ごとの段 = s(画面のid, 見出し, 段)
+%     段は24：mujun_a・mujun_i（schema の 組み合わせなし）、akiya・toku・ima・jokyaku・karyo_kankoku（b_dekiru）、
+%     chosa・karyo2・tsuchi・shomei・sosa（d_chosa）、maetsu・chosho・kijitsu・shonin・gyotetsu・dai9・karyo1・hyoshiki・hyoshiki2・
+%     fumei・kinkyu・kokoku・hiyo（c_sonosaki）
+%   形は daishikko-prolog の g_hantei.pl と同じ（2026-11-25 案A）。
+%   前は 話の段/3 が入口1つの段だけを返し、語の共通段（ku「「市町村長」と「所有者等」」の 補足）を全部の入口に足していた。
+%   見出し/2 は全部の段の答えを1段落につなぎ（A7）、組の番号は 要る・判定しない が1・答え が2・足りる が3・当たらない が4で、
+%   木は全部を「次のすべてが成り立つ」の下にぶら下げた1本で、全部の段にアプリの約束事①を付けていた（B5・A5）。
+%   今は段ごとに状態を持ち、状態を全部名前で書き、知らない状態は throw で止める（agents/dog/rules.md:96）。
+%   語の共通段 ku は消した（1条・5条・8条2項は原文の表に残す。決め6）。止まる状態/1（判定しない を1番にしていた）も消し、印/2 にした。
+%   段の文には、画面の上で指す先の無い指示語（その・これを・当該・同項・前項 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+%   どの入力でも2条1項の段が出るので、「判定できませんでした」になるのは ctx の値が欄の選択肢に無いときだけ。
+
+%% ---- judge ----
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    Steps \== [],
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 成り立たない組があれば、その組だけを段にする（REVIEW_RULES C3。ほかの段は出さない）。
+% 組は findall で全部集め、組ごとに1段にする（id は mujun_a・mujun_i。REVIEW_RULES 末尾「AI同士で決めた書き方」1・2）。
+% 無ければ2条1項の段を当て、空家等に当たるときだけ、ほかの段を同じ入力で当てる（9条・13条・22条は、どれも空家等か特定空家等・
+% 管理不全空家等の条。daishikko の決め2と同じ形）。並びは時間の順（状態 → 調査 → 段階 → 命令の前の手続 → 命令の後 → 22条10項 →
+% 22条11項 → 費用）で、そのあと 当たった答えを先に（止まる答えを先に）。
+% 同じ述語を別のファイルに分けて書くと後の読み込みで消えるので、まとめはここに1つだけ置く
+全部の段(C, Steps) :-
+    findall(s(Id, 'この組み合わせはありません', 段(組み合わせなし, 'この組み合わせはありません。', As, Ws)),
+            ( 組み合わせなし(C, K, Ws, As), atom_concat(mujun_, K, Id) ), Steps),
+    Steps \== [], !.
+全部の段(C, Steps) :-
+    空家等の段(C, L1),
+    ( 空家等が成り立つ(C) ->
+        状態の段(C, L2),
+        調査の段(C, L3),
+        段階の段(C, L4),
+        手続の段(C, L5),
+        命令後の段(C, L6),
+        不明の段(C, L7),
+        急ぐの段(C, L8),
+        append([L1, L2, L3, L4, L5, L6, L7, L8], L9),
+        費用の段(L9, L10),
+        append(L9, L10, L0)
+    ; L0 = L1 ),
+    当たった答えを先に(L0, Steps).
+
+%% ---- 並べ方 ----
+% 並びは ①止まる答え ②当たった答え ④「当たりません」の文（この本に ③答えを支える文 は無い）
+% ①②が無いときは「当たりません」が聞いた答えなので、そのまま出す（daishikko-prolog と同じ並べ方）
+% 組の番号 は番号を空のまま呼んで後で比べる。番号を束ねて呼ぶと頭に合わず、最後の throw の節に落ちて止まる（sorin-prolog 2026-11-22 22:50 run_cases。daishikko と同じ）
+当たった答えを先に([], []) :- !.
+当たった答えを先に(L0, L) :-
+    ( member(s(_, _, 段(St0, _, _, _)), L0), 組の番号(St0, N0), N0 =< 2 -> Order = [1, 2, 3, 4] ; Order = [4, 3] ),
+    findall(S, ( member(N, Order), member(S, L0), S = s(_, _, 段(St, _, _, _)), 組の番号(St, M), M =:= N ), L).
+
+% 組の番号(状態, 1=止まる答え | 2=当たった答え | 4=当たりません)。
+% 状態は全部名前で書き、知らない状態は止める（agents/dog/rules.md:96。daishikko-prolog g_hantei.pl の 組の番号 を写し、状態は案A「組の番号」）
+% 前の 判定しない（期間の外の請求・13条のための調査・目的が分からない調査）は 当たらない・できる に直した（A5・決め3）。
+% 答え（受け皿の2番だった）は できる・しなければならない・過料・準用・書いていない に分けた。足りる は前の3番から2番に移した（3番は使わない）。
+% 補足 は段ごと消した
+組の番号(組み合わせなし, 1) :- !.     % ア（立入り×うその報告）・イ（分からない×通知書・命令）
+組の番号(要る, 1) :- !.               % 9条3項（通知が来ていない）・9条4項（見せなかった）・22条10項（公告が無い）
+組の番号(できる, 2) :- !.             % 9条2項・13条1項・13条2項・22条1項・2項・3項・8項・9項・10項・11項
+組の番号(しなければならない, 2) :- !. % 22条4項・6項・7項・13項・14項、9条4項（持つ）
+組の番号(足りる, 2) :- !.             % 2条1項（空家等）・2条2項（特定空家等）・13条1項（管理不全空家等）・22条1項（取り壊し）・22条5項（請求できる）・9条3項（通知が来た・ただし書）・9条4項（見せた）・9条5項
+組の番号(過料, 2) :- !.               % 30条1項・30条2項
+組の番号(準用, 2) :- !.               % 22条12項
+組の番号(書いていない, 2) :- !.       % 13条（命令の定めがない）・22条11項（10項の公告の定めがない）
+組の番号(当たらない, 4) :- !.         % 2条1項・状態がどれでもない・22条3項・22条5項（期間の外）・22条9項・22条10項・22条11項・22条15項・30条1項（勧告だけ）・9条2項・30条2項（管理不全のための調査）
+組の番号(St, _) :- throw(知らない状態(St)).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、段の文だけを出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」を付けない）。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(_, Steps, Ws) :-
+    findall(W, ( member(s(_, _, S), Steps), 問いの答え(S, W) ), Ws).
+
+% 答えの文に箱の条を（）で付ける。条の無い段は付けない（「（）」を画面に出さない。この本の段はどれも条がある）
+問いの答え(S, W) :-
+    S = 段(_, _, As, _),
+    答え(S, W0),
+    ( As == [] -> W = W0 ; 条の表記(As, A), format(atom(W), '~w（~w）', [W0, A]) ).
+
+% 節の文：答えの文（条を付けない）
+節の文(_, S, W) :- 答え(S, W).
+
+% 答え(段, 答えの文)：段の文の末尾の「。」を外す。
+答え(段(_, M, _, _), W) :-
+    ( atom_concat(M0, '。', M) -> W = M0 ; W = M ).
+
+%% ---- 根拠条文 ----
+% 段の順に並べ、重複は1つに
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As, _), Ss), member(A, As) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5。結論をつないだ行と「次のすべてが成り立つ」の根は置かない）。
+% 並びは結論の箱と同じ。一番上の行は結論の箱の文で、その下に葉（規定の行・起きた事実・約束事）を置く。
+木(_, Steps, Trees) :-
+    findall(T, ( member(s(_, _, S), Steps), 段の木(S, T) ), Trees).
+
+段の木(S, t(K, W, '', Cs)) :-
+    S = 段(St, _, _, Fs),
+    問いの答え(S, W),
+    maplist(葉の行, Fs, Kids),
+    すべて(W, '', Kids, t(_, W, _, Cs)),
+    印(St, K).
+
+% 止まった段（組の番号の1番と、当たらない）は info、そのほか（2番）は ok（木ごとに、その段で決める。daishikko-prolog と同じ）
+% 状態は1つに決まっていて、入っているかを見るだけなので memberchk（REVIEW_RULES 末尾「AI同士で決めた書き方」1）
+印(St, K) :- 組の番号(St, _), ( memberchk(St, [組み合わせなし, 要る, 当たらない]) -> K = info ; K = ok ).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は daishikko-prolog の web.pl と同じ（2026-11-25 案A）。
+%   前は result・explain の2つで、explain は木1本を平らにしていた。
+%   今は木を結論ごとに1本にし（B5）、「この組み合わせはありません」も段の1つにした（rules/g_hantei.pl の 全部の段）。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+</script>
+<script type="application/json" id="law">{"1":{"t":"第一条","c":"（目的）","p":[{"n":"1","s":"この法律は、適切な管理が行われていない空家等が防災、衛生、景観等の地域住民の生活環境に深刻な影響を及ぼしていることに鑑み、地域住民の生命、身体又は財産を保護するとともに、その生活環境の保全を図り、あわせて空家等の活用を促進するため、空家等に関する施策に関し、国による基本指針の策定、市町村（特別区を含む。第十条第二項を除き、以下同じ。）による空家等対策計画の作成その他の空家等に関する施策を推進するために必要な事項を定めることにより、空家等に関する施策を総合的かつ計画的に推進し、もって公共の福祉の増進と地域の振興に寄与することを目的とする。","i":[]}]},"2":{"t":"第二条","c":"（定義）","p":[{"n":"1","s":"この法律において「空家等」とは、建築物又はこれに附属する工作物であって居住その他の使用がなされていないことが常態であるもの及びその敷地（立木その他の土地に定着する物を含む。第十四条第二項において同じ。）をいう。ただし、国又は地方公共団体が所有し、又は管理するものを除く。","i":[]},{"n":"2","s":"この法律において「特定空家等」とは、そのまま放置すれば倒壊等著しく保安上危険となるおそれのある状態又は著しく衛生上有害となるおそれのある状態、適切な管理が行われていないことにより著しく景観を損なっている状態その他周辺の生活環境の保全を図るために放置することが不適切である状態にあると認められる空家等をいう。","i":[]}]},"5":{"t":"第五条","c":"（空家等の所有者等の責務）","p":[{"n":"1","s":"空家等の所有者又は管理者（以下「所有者等」という。）は、周辺の生活環境に悪影響を及ぼさないよう、空家等の適切な管理に努めるとともに、国又は地方公共団体が実施する空家等に関する施策に協力するよう努めなければならない。","i":[]}]},"8":{"t":"第八条","c":"（協議会）","p":[{"n":"2","s":"協議会は、市町村長（特別区の区長を含む。以下同じ。）のほか、地域住民、市町村の議会の議員、法務、不動産、建築、福祉、文化等に関する学識経験者その他の市町村長が必要と認める者をもって構成する。","i":[]}]},"9":{"t":"第九条","c":"（立入調査等）","p":[{"n":"1","s":"市町村長は、当該市町村の区域内にある空家等の所在及び当該空家等の所有者等を把握するための調査その他空家等に関しこの法律の施行のために必要な調査を行うことができる。","i":[]},{"n":"2","s":"市町村長は、第二十二条第一項から第三項までの規定の施行に必要な限度において、空家等の所有者等に対し、当該空家等に関する事項に関し報告させ、又はその職員若しくはその委任した者に、空家等と認められる場所に立ち入って調査をさせることができる。","i":[]},{"n":"3","s":"市町村長は、前項の規定により当該職員又はその委任した者を空家等と認められる場所に立ち入らせようとするときは、その五日前までに、当該空家等の所有者等にその旨を通知しなければならない。ただし、当該所有者等に対し通知することが困難であるときは、この限りでない。","i":[]},{"n":"4","s":"第二項の規定により空家等と認められる場所に立ち入ろうとする者は、その身分を示す証明書を携帯し、関係者の請求があったときは、これを提示しなければならない。","i":[]},{"n":"5","s":"第二項の規定による立入調査の権限は、犯罪捜査のために認められたものと解釈してはならない。","i":[]}]},"13":{"t":"第十三条","c":"（適切な管理が行われていない空家等の所有者等に対する措置）","p":[{"n":"1","s":"市町村長は、空家等が適切な管理が行われていないことによりそのまま放置すれば特定空家等に該当することとなるおそれのある状態にあると認めるときは、当該状態にあると認められる空家等（以下「管理不全空家等」という。）の所有者等に対し、基本指針（第六条第二項第三号に掲げる事項に係る部分に限る。）に即し、当該管理不全空家等が特定空家等に該当することとなることを防止するために必要な措置をとるよう指導をすることができる。","i":[]},{"n":"2","s":"市町村長は、前項の規定による指導をした場合において、なお当該管理不全空家等の状態が改善されず、そのまま放置すれば特定空家等に該当することとなるおそれが大きいと認めるときは、当該指導をした者に対し、修繕、立木竹の伐採その他の当該管理不全空家等が特定空家等に該当することとなることを防止するために必要な具体的な措置について勧告することができる。","i":[]}]},"22":{"t":"第二十二条","c":"","p":[{"n":"1","s":"市町村長は、特定空家等の所有者等に対し、当該特定空家等に関し、除却、修繕、立木竹の伐採その他周辺の生活環境の保全を図るために必要な措置（そのまま放置すれば倒壊等著しく保安上危険となるおそれのある状態又は著しく衛生上有害となるおそれのある状態にない特定空家等については、建築物の除却を除く。次項において同じ。）をとるよう助言又は指導をすることができる。","i":[]},{"n":"2","s":"市町村長は、前項の規定による助言又は指導をした場合において、なお当該特定空家等の状態が改善されないと認めるときは、当該助言又は指導を受けた者に対し、相当の猶予期限を付けて、除却、修繕、立木竹の伐採その他周辺の生活環境の保全を図るために必要な措置をとることを勧告することができる。","i":[]},{"n":"3","s":"市町村長は、前項の規定による勧告を受けた者が正当な理由がなくてその勧告に係る措置をとらなかった場合において、特に必要があると認めるときは、その者に対し、相当の猶予期限を付けて、その勧告に係る措置をとることを命ずることができる。","i":[]},{"n":"4","s":"市町村長は、前項の措置を命じようとする場合においては、あらかじめ、その措置を命じようとする者に対し、その命じようとする措置及びその事由並びに意見書の提出先及び提出期限を記載した通知書を交付して、その措置を命じようとする者又はその代理人に意見書及び自己に有利な証拠を提出する機会を与えなければならない。","i":[]},{"n":"5","s":"前項の通知書の交付を受けた者は、その交付を受けた日から五日以内に、市町村長に対し、意見書の提出に代えて公開による意見の聴取を行うことを請求することができる。","i":[]},{"n":"6","s":"市町村長は、前項の規定による意見の聴取の請求があった場合においては、第三項の措置を命じようとする者又はその代理人の出頭を求めて、公開による意見の聴取を行わなければならない。","i":[]},{"n":"7","s":"市町村長は、前項の規定による意見の聴取を行う場合においては、第三項の規定によって命じようとする措置並びに意見の聴取の期日及び場所を、期日の三日前までに、前項に規定する者に通知するとともに、これを公告しなければならない。","i":[]},{"n":"8","s":"第六項に規定する者は、意見の聴取に際して、証人を出席させ、かつ、自己に有利な証拠を提出することができる。","i":[]},{"n":"9","s":"市町村長は、第三項の規定により必要な措置を命じた場合において、その措置を命ぜられた者がその措置を履行しないとき、履行しても十分でないとき又は履行しても同項の期限までに完了する見込みがないときは、行政代執行法（昭和二十三年法律第四十三号）の定めるところに従い、自ら義務者のなすべき行為をし、又は第三者をしてこれをさせることができる。","i":[]},{"n":"10","s":"第三項の規定により必要な措置を命じようとする場合において、過失がなくてその措置を命ぜられるべき者（以下この項及び次項において「命令対象者」という。）を確知することができないとき（過失がなくて第一項の助言若しくは指導又は第二項の勧告が行われるべき者を確知することができないため第三項に定める手続により命令を行うことができないときを含む。）は、市町村長は、当該命令対象者の負担において、その措置を自ら行い、又はその命じた者若しくは委任した者（以下この項及び次項において「措置実施者」という。）にその措置を行わせることができる。この場合においては、市町村長は、その定めた期限内に命令対象者においてその措置を行うべき旨及びその期限までにその措置を行わないときは市町村長又は措置実施者がその措置を行い、当該措置に要した費用を徴収する旨を、あらかじめ公告しなければならない。","i":[]},{"n":"11","s":"市町村長は、災害その他非常の場合において、特定空家等が保安上著しく危険な状態にある等当該特定空家等に関し緊急に除却、修繕、立木竹の伐採その他周辺の生活環境の保全を図るために必要な措置をとる必要があると認めるときで、第三項から第八項までの規定により当該措置をとることを命ずるいとまがないときは、これらの規定にかかわらず、当該特定空家等に係る命令対象者の負担において、その措置を自ら行い、又は措置実施者に行わせることができる。","i":[]},{"n":"12","s":"前二項の規定により負担させる費用の徴収については、行政代執行法第五条及び第六条の規定を準用する。","i":[]},{"n":"13","s":"市町村長は、第三項の規定による命令をした場合においては、標識の設置その他国土交通省令・総務省令で定める方法により、その旨を公示しなければならない。","i":[]},{"n":"14","s":"前項の標識は、第三項の規定による命令に係る特定空家等に設置することができる。この場合においては、当該特定空家等の所有者等は、当該標識の設置を拒み、又は妨げてはならない。","i":[]},{"n":"15","s":"第三項の規定による命令については、行政手続法（平成五年法律第八十八号）第三章（第十二条及び第十四条を除く。）の規定は、適用しない。","i":[]},{"n":"16","s":"国土交通大臣及び総務大臣は、特定空家等に対する措置に関し、その適切な実施を図るために必要な指針を定めることができる。","i":[]},{"n":"17","s":"前各項に定めるもののほか、特定空家等に対する措置に関し必要な事項は、国土交通省令・総務省令で定める。","i":[]}]},"30":{"t":"第三十条","c":"","p":[{"n":"1","s":"第二十二条第三項の規定による市町村長の命令に違反した者は、五十万円以下の過料に処する。","i":[]},{"n":"2","s":"第九条第二項の規定による報告をせず、若しくは虚偽の報告をし、又は同項の規定による立入調査を拒み、妨げ、若しくは忌避した者は、二十万円以下の過料に処する。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"第一章　総則","a":[{"k":"1","t":"第一条","c":"（目的）","u":1},{"k":"2","t":"第二条","c":"（定義）","u":1},{"k":"3","t":"第三条","c":"（国の責務）","u":0},{"k":"4","t":"第四条","c":"（地方公共団体の責務）","u":0},{"k":"5","t":"第五条","c":"（空家等の所有者等の責務）","u":1},{"k":"6","t":"第六条","c":"（基本指針）","u":0},{"k":"7","t":"第七条","c":"（空家等対策計画）","u":0},{"k":"8","t":"第八条","c":"（協議会）","u":1}]},{"t":"第二章　空家等の調査","a":[{"k":"9","t":"第九条","c":"（立入調査等）","u":1},{"k":"10","t":"第十条","c":"（空家等の所有者等に関する情報の利用等）","u":0},{"k":"11","t":"第十一条","c":"（空家等に関するデータベースの整備等）","u":0}]},{"t":"第三章　空家等の適切な管理に係る措置","a":[{"k":"12","t":"第十二条","c":"（所有者等による空家等の適切な管理の促進）","u":0},{"k":"13","t":"第十三条","c":"（適切な管理が行われていない空家等の所有者等に対する措置）","u":1},{"k":"14","t":"第十四条","c":"（空家等の管理に関する民法の特例）","u":0}]},{"t":"第四章　空家等の活用に係る措置","a":[{"k":"15","t":"第十五条","c":"（空家等及び空家等の跡地の活用等）","u":0},{"k":"16","t":"第十六条","c":"（空家等の活用に関する計画作成市町村の要請等）","u":0},{"k":"17","t":"第十七条","c":"（建築基準法の特例）","u":0},{"k":"18","t":"第十八条","c":"（空家等の活用の促進についての配慮）","u":0},{"k":"19","t":"第十九条","c":"（地方住宅供給公社の業務の特例）","u":0},{"k":"20","t":"第二十条","c":"（独立行政法人都市再生機構の行う調査等業務）","u":0},{"k":"21","t":"第二十一条","c":"（独立行政法人住宅金融支援機構の行う援助）","u":0}]},{"t":"第五章　特定空家等に対する措置","a":[{"k":"22","t":"第二十二条","c":"","u":1}]},{"t":"第六章　空家等管理活用支援法人","a":[{"k":"23","t":"第二十三条","c":"（空家等管理活用支援法人の指定）","u":0},{"k":"24","t":"第二十四条","c":"（支援法人の業務）","u":0},{"k":"25","t":"第二十五条","c":"（監督等）","u":0},{"k":"26","t":"第二十六条","c":"（情報の提供等）","u":0},{"k":"27","t":"第二十七条","c":"（支援法人による空家等対策計画の作成等の提案）","u":0},{"k":"28","t":"第二十八条","c":"（市町村長への要請）","u":0}]},{"t":"第七章　雑則","a":[{"k":"29","t":"第二十九条","c":"","u":0}]},{"t":"第八章　罰則","a":[{"k":"30","t":"第三十条","c":"","u":1}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+// ==== 共有ここから（別ページでも同じ部品を使う） ====
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  // '2条1項' '22条10項' のような形（この法律の読む範囲に号は無い）。複数条が「・」で区切られることもある → 最初の条だけ見る
+  const first = String(a).split("・")[0];
+  const m = first.match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(?:第?(\d+)号((?:の\d+)*))?([イロハニホ])?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[4] ? m[4] + (m[5] || "").replace(/の/g, "_") : null, sub: m[6] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para);
+  // 号まで指定があれば、項の本文とその号だけ出す
+  if (r.item) ps = ps.filter(p => p.i.some(it => it.n === r.item));
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const list = r.item ? p.i.filter(it => it.n === r.item) : p.i;
+    const its = list.map(it => `<p class="it">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => r.sub && x.startsWith(r.sub + " ") ? `<br><span class="hit">　${esc(x)}</span>` : `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなく、このアプリの決め事（収録範囲・仕組みのページに一覧）。</p>`;
+// 凡例は最初の木の上に1回だけ出す（legend＝false で外す。daishikko-prolog と同じ。2026-11-25 案Aで木を結論ごとにしたため）
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+// ==== 共有ここまで ====
+
+async function boot(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const need = ["result/2", "explain/2", "heads/2", "answers/2"].filter(p => !once(`current_predicate(${p})`));
+    if (need.length) throw new Error(`Prologの読み込みが不完全です（${need.join("・")} がありません）。${errBuf.slice(-3).join(" ")}`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    renderPresets();
+    ask();
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+    $("answer").innerHTML = `<p class="loading err">エラー：${esc(e.message)}</p>`;
+  }
+}
+
+// ---- 入力 → ctx の文字 ----
+// 欄はいつも全部出し、出し消しをしない（REVIEW_RULES C5。形は daishikko-prolog と同じ。2026-11-25 案A）。
+// 並びは schema.pl の ctx の引数の順（1〜19）。前の SLOTS・updateSlots（入口ごとの欄の出し消し。前の :408–443）と、
+// 隠れた欄を 関係なし で渡す shown・buildCtx（前の :445–451）はやめた（JS と Prolog の2か所に同じ見方を持っていた）。関係のない欄は Prolog が見ないだけ。
+// この本に数字の欄は無い（全部 select）
+const IDS = ["shoyu","shiyo","jotai","chosa","wake","ojikata","tsuchi","renraku","shomei","uke","sochi","riyu","nissu","seikyu","aite","kokoku","hijo","kinkyu","jikan"];
+function buildCtx(){
+  return `ctx(${IDS.map(id => atom($(id).value)).join(",")})`;
+}
+
+// ---- 判定と表示 ----
+const HEAD = `<div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div>`;
+const lawBtn = a => a === "@約束事" ? `<span class="yk">アプリの約束事</span>` : (a ? `<button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : "");
+const artsHTML = as => as.map(String).map(lawBtn).join(" ");
+// 断り書き（当てはめは判定しない・条文だけを読む・判例と個別の法律は読まない・取得した版）は
+// about.html の範囲の節と約束事に置く（REVIEW_RULES A1・A5。2026-11-25 結果の下の NOTE_HANTEI・NOTE_JOBUN・NOTE_HOKA（前の :456–458・:481–483）と
+// 段の「このページでは判定しません」「読んでいません」、補足の段、下の帯の「含みません」を移した）。頭の注意は見本の1文だけ（A3）。
+
+// 段(状態, 文, 箱の条, 葉) を1段ぶんの行にする。文は答え（answers/2。段の文から末尾の「。」を外したもの）
+function stepHTML(id, title, s, ans){
+  const [st, , as] = T(s).args;
+  return `<p class="sec">${esc(title)}</p><p class="step" id="${id}" data-st="${esc(st)}">${esc(ans)}。 ${artsHTML(as)}</p>`;
+}
+
+function ask(){
+  const c = buildCtx();
+  $("qline").textContent = `?- result(${c}, R).`;
+  if (!pl) return;
+  try{
+    // 木は結論1つにつき1本（REVIEW_RULES B5）。凡例は最初の木の上に1回だけ
+    const lr = once(`explain(${c}, Lines)`);
+    const trees = lr ? lr.Lines.map(ls => ls.map(T).map(t => t.args)) : [];
+    const r = once(`result(${c}, r(Head,Steps,Arts))`);
+    if (!r){
+      // どの入力でも2条1項の段が出るので、ここに来るのは欄の値が選択肢に無いときだけ（rules/g_hantei.pl の judge）
+      $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">判定できませんでした</div></div><p class="hint">起きた出来事を欄で選んでください。</p></div>`;
+      return;
+    }
+    const ar = once(`answers(${c}, L)`);
+    const ans = Object.fromEntries((ar ? ar.L : []).map(T).map(t => t.args));
+    const steps = r.Steps.map(T).map(t => t.args).filter(([id]) => ans[id] !== undefined);
+    // 答えが2つ以上なら箇条書き、1つなら1文のまま（REVIEW_RULES A7）。並びは止まる答えが先
+    const hr = once(`heads(${c}, L)`);
+    const hs = hr ? hr.L.map(String) : [];
+    const big = hs.length > 1 ? `<ul>${hs.map(h => `<li>${esc(h)}</li>`).join("")}</ul>` : esc(r.Head);
+    $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">${big}</div></div>
+      ${steps.map(([id, title, s], i) => stepHTML("st-" + id, `${i + 1}　${title}`, s, ans[id])).join("")}
+      <p class="sec">根拠条文</p><p class="arts" id="arts">${r.Arts.length ? artsHTML(r.Arts) : "当てはまる条文はありません。"}</p>
+      ${trees.length ? `<p class="sec">なぜそうなるか（論理の木）</p>${trees.map((ls, i) => treeHTML(ls, i === 0)).join("")}` : ""}</div>`;
+  } catch(e){ $("answer").innerHTML = `<p class="hint">エラー：${esc(e.message)}</p>`; }
+}
+
+// ---- 例（名前は起きた事実の言葉で書く。条文の文を写さず、指示語で始めない（REVIEW_RULES C2・C4））----
+function presetList(){
+  // 欄の値は DEFAULTS から変えるものだけ書く。2026-11-25 19欄で組み直した（前の例51個は入口 iri・聞きたいこと kik・立入りで聞きたいこと kiq つきで、
+  // 「第10項・第11項の費用」「第22条のための立入り・5日前の通知あり」「勧告を受けた・とらない・正当な理由なし・特に必要と認める」のような
+  // 条と論点の名前・欄の値の並びの名前だった）。助言・指導・勧告・命令を順に受けた・意見の聴取の請求を5日を過ぎてした・
+  // 持ち主が分からず公告で取り壊された・台風で勧告の後に急いで取り壊された／助言も受けずに急いで取り壊された・立入りの通知が5日前より後に来た・
+  // 管理不全空家等の調査で立入りを断った・命令の期限を過ぎて一部だけした、を入れた（依頼書の「例は新しい欄の値で組み直す」）。
+  // 依頼書の「勧告を受けずに命令が来た」は入れていない（10の欄は「一番後のもの」を聞くので、勧告を飛ばしたことを入れる欄が無い）
+  return [
+    ["倒れそうだと言われた空き家に、まだ何も届いていない", {}],
+    ["区が持っている空き家", {shoyu:"公"}],
+    ["ときどき使っている実家", {shiyo:"使っている"}],
+    ["景観が悪いと言われた空き家に、まだ何も届いていない", {jotai:"景観"}],
+    ["管理不全空家等と言われ、まだ何も届いていない", {jotai:"管理不全"}],
+    ["管理不全空家等と言われ、指導を受けた", {jotai:"管理不全",uke:"指導"}],
+    ["管理不全空家等と言われ、勧告まで受けた", {jotai:"管理不全",uke:"勧告"}],
+    ["管理不全空家等と言われていたのに、命令が来た", {jotai:"管理不全",uke:"命令"}],
+    ["区や市からは何も言われていない空き家", {jotai:"どれでもない"}],
+    ["倒れそうだと言われ、助言を受けた", {uke:"指導"}],
+    ["勧告を受け、期限を過ぎても修繕していない", {uke:"勧告"}],
+    ["勧告を受け、期限を過ぎたが、一部だけ修繕した", {uke:"勧告",sochi:"一部"}],
+    ["勧告を受け、期限前だが、期限までに終わりそうにない", {uke:"勧告",sochi:"見込みなし"}],
+    ["勧告どおり、取り壊しを全部済ませた", {uke:"勧告",sochi:"全部"}],
+    ["勧告を受けたが、入院していて修繕できなかった", {uke:"勧告",riyu:"ある"}],
+    ["景観が悪いと言われ、勧告を受けたまま放置している", {jotai:"景観",uke:"勧告"}],
+    ["命令の前の通知書を受け取って3日目", {uke:"通知書"}],
+    ["通知書を受け取って3日目に、公開の意見の聴取を請求した", {uke:"通知書",seikyu:"した"}],
+    ["意見の聴取の請求を、通知書を受け取って5日を過ぎてした", {uke:"通知書",nissu:"過ぎた",seikyu:"した"}],
+    ["助言・指導・勧告・命令を順に受け、期限を過ぎても何もしていない", {uke:"命令"}],
+    ["命令の期限を過ぎて、一部だけ取り壊した", {uke:"命令",sochi:"一部"}],
+    ["命令を受け、期限前だが、期限までに終わりそうにない", {uke:"命令",sochi:"見込みなし"}],
+    ["命令どおり、取り壊しを全部済ませた", {uke:"命令",sochi:"全部"}],
+    ["持ち主が分からず、区が公告をして取り壊した", {aite:"分からない"}],
+    ["持ち主が分からないとして、公告のないまま取り壊しが始まった", {aite:"分からない",kokoku:"なかった"}],
+    ["区がよく調べないまま、持ち主が分からないとした", {aite:"調べ不足"}],
+    ["台風で倒れかけ、勧告の後に区が急いで取り壊した", {uke:"勧告",hijo:"はい"}],
+    ["助言も受けないうちに、台風の後で区が急いで取り壊した", {hijo:"はい"}],
+    ["台風の後だが、命令の手続をとる時間はあった", {uke:"勧告",hijo:"はい",jikan:"ある"}],
+    ["区から報告を求められ、応じた", {chosa:"報告"}],
+    ["区から報告を求められ、うその報告をした", {chosa:"報告",ojikata:"うそ"}],
+    ["わけの説明がないまま、報告を求められた", {chosa:"報告",wake:"その他"}],
+    ["立入りの調査を断った", {chosa:"立入り",ojikata:"断った"}],
+    ["立入りの通知が、5日前より後に来た", {chosa:"立入り",tsuchi:"来ていない"}],
+    ["持ち主と連絡がつかず、通知の無いまま立ち入られた", {chosa:"立入り",tsuchi:"来ていない",renraku:"つかない"}],
+    ["立ち入る人に証明書を見せてと言ったが、見せなかった", {chosa:"立入り",shomei:"見せなかった"}],
+    ["管理不全空家等の調査で、立入りを断った", {jotai:"管理不全",chosa:"立入り",wake:"管理不全",ojikata:"断った"}],
+  ];
+}
+// 例に書いていない欄は既定に戻す（前の例の値を残すと、名前と違う入力になるため。daishikko-prolog と同じ）
+// 既定のままで「空家等に当たります」「特定空家等として、第22条の措置の対象になります」「市町村長は、所有者等に、必要な措置をとるよう
+// 助言か指導をすることができます」「建物の除却（取り壊し）も、求める措置に入ります」の答えが4つ付く（案A「全組合せの数」の既定）
+const DEFAULTS = {shoyu:"個人",shiyo:"続いている",jotai:"危険",chosa:"なし",wake:"特定",ojikata:"応じた",tsuchi:"来た",renraku:"つく",shomei:"言っていない",uke:"なし",sochi:"していない",riyu:"ない",nissu:"以内",seikyu:"していない",aite:"分かる",kokoku:"あった",hijo:"いいえ",kinkyu:"認めた",jikan:"ない"};
+function setDefaults(p){
+  for (const [id, v] of Object.entries(DEFAULTS)) $(id).value = p[id] !== undefined ? String(p[id]) : v;
+}
+function applyPreset(p){
+  setDefaults(p);
+  ask();
+}
+function renderPresets(){
+  $("presets").innerHTML = presetList().map((p, i) => `<button type="button" data-preset="${i}">${esc(p[0])}</button>`).join("");
+}
+
+// 初期表示（既定の値）
+setDefaults({});
+
+document.addEventListener("change", e => { if (e.target.closest("#slots")) ask(); });
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.preset !== undefined){ applyPreset(presetList()[+b.dataset.preset][1]); $("answer").scrollIntoView?.(); }
+  else if (b.dataset.art && pl){
+    const host = b.closest(".tr") || b.closest("li") || b.parentElement, nx = host.nextElementSibling;
+    if (nx && nx.classList.contains("lawtext") && nx.dataset.for === b.dataset.art) nx.remove();
+    else { host.insertAdjacentHTML("afterend", lawHTML(b.dataset.art)); host.nextElementSibling.dataset.for = b.dataset.art; }
+  }
+});
+
+if (typeof SWIPL === "function") boot();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; $("answer").innerHTML = `<p class="loading err">Prolog（swipl-wasm）を読み込めませんでした。ページを再読み込みしてください。</p>`; }
+</script>
