@@ -1,0 +1,1367 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="「役所の文書の開示請求を逆から引く」の収録範囲、全条文の地図、アプリの約束事、Prologのソース全部。">
+<title>収録範囲・仕組み｜役所の文書の開示請求を逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+/* 欄の上の小見出し（相手と文書／開示請求書と手数料／返事の期限／届いた決定の通知／文書に書かれたほかの人／審査請求）。選ばせる欄ではないので番号を数えない
+   （akiya-prolog と同じ。2026-11-25 案A。style は akiya の template.html を写した）。前の .step.off（判定していない段の色）・NOTE_* の枠（左の色の線。E1）・
+   .disclaimer-inline・pre の左線は外した */
+.slots .slot-h{margin:0;padding:8px 10px 4px;border-bottom:2px solid var(--line);border-right:2px solid var(--line);background:var(--paper)}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border:1px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+/* 数字の欄（数字を打つので ▼ を出さない。この本に数字の欄は無いが、akiya・daishikko と style を揃えて残す）*/
+.field.num::after{display:none}
+.field input{appearance:textfield;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 10px;min-width:0;width:100%}
+.field input:focus-visible{outline:none}
+/* 日付の欄（7の欄。前の johokokai の template.html :76–80 のまま）*/
+.input{display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.input input{font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 10px;min-width:0;width:100%}
+.input input:focus-visible{outline:none}
+.input:hover{border-color:var(--blue)}
+.input:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+/* 日付の欄を「◯ヶ月前」で入れる（rd-。8本で同じ文字列。前の johokokai の template.html :176–192 のまま）*/
+.rd{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;min-width:0}
+.rd.rd-m{margin:4px 10px 6px}
+.rd input,.rd select{font:inherit;font-size:1rem;color:var(--ink);background:var(--field,var(--bg));border:1px solid var(--line);border-radius:0;padding:6px 8px;min-width:0}
+.rd input:disabled,.rd select:disabled{opacity:.45}
+.rd select option{background:var(--paper);color:var(--ink)}
+.rd .rd-n{flex:0 0 4.6em;width:4.6em}
+.rd .rd-u{flex:0 1 auto;width:auto}
+.rd-to{font-size:.8rem;color:var(--muted);white-space:nowrap}
+.rd-hide{display:none!important}
+.rd-other{min-width:0}
+.rd-other summary{cursor:pointer;font-size:.84rem;font-weight:400;color:var(--muted)}
+.rd-other label{display:block}
+.rd-other.rd-m > summary{padding:6px 10px}
+.rd-note{font-size:.76rem;color:var(--muted)}
+.rd-other.rd-m .rd-note{padding:0 10px 6px}
+.rd-when{font-size:.84rem;font-weight:700;color:var(--muted);margin:0 0 6px}
+</style>
+
+<div class="wrap about">
+  <header class="mast sub">
+    <p class="backlink"><a href="./" id="back">← 判定ページに戻る</a></p>
+    <h1>収録範囲・仕組み</h1>
+    <p class="lead">「役所の文書の開示請求を逆から引く」で、どの条文をどこまでルールにしたか、アプリが決めたこと、プログラムの中身です。</p>
+  </header>
+
+  <div class="appendix">
+  <details class="box" id="scope-box" open>
+    <summary>収録範囲と、入っていないもの</summary>
+    <div class="scope" id="scope">
+      <p><b>行政機関の保有する情報の公開に関する法律の本則のうち、第2条から第13条まで・第16条第3項・第18条第1項・第19条・第20条第1項・第25条をルールにしています。第4条第1項・第16条第1項・第22条は原文を地図に載せ、判定では使いません。</b></p>
+      <p>収録しているのは「開示を請求した先と文書」「開示請求書の補正と手数料の減額」「返事の期限・延長・大量の文書・別の機関への移送」「届いた決定の通知」「文書に書かれたほかの人の意見書」「審査請求と審査会への諮問」です。</p>
+      <p id="scope-ban">この XML は2026年11月2日に取得した版で、それ以後の改正と、公布済みで施行前の改正は読んでいません。</p>
+      <!-- 前の判定ページの注意の2文目・3文目、結果の下の NOTE_KUNI・NOTE_GIMU・NOTE_KACHIMAKE・NOTE_TOUHI、欄の説明の「判定しません」6つ、
+           下の帯の「含みません」の移し先（2026-11-25 案A。A3・A5） -->
+      <p id="scope-kakunin">入っていないもの：文書が開示されるか、不開示が違法かの当否（このアプリは、何が定められているかを条文で確かめるもので、勝ち負けは判定しません）。行政機関の長が「認める」判断と、記録された情報が第5条の号に当たるかの当てはめ（下の約束事①）。手数料の額（第16条第1項は「政令で定める額」と書くだけで、このアプリは政令を読んでいません）。地方公共団体の情報公開の条例（第25条は努力義務の定めで、条例の中身は判定しません）。判例・答申。詳しくは<a href="#notes-box">載せなかったもの</a>をご覧ください。</p>
+      <p id="scope-ran">判定ページは21個の欄をいつも全部出し、選んだ値によって欄を出したり消したりしません。入力に関わらない欄は、判定で見ないだけです。6つの小見出しの答えは、同じ入力で全部出します。</p>
+      <ul id="ran-list" style="font-size:.86rem;line-height:1.75;padding-left:1.2em;margin:0">
+        <li>2〜21の欄：1の欄が「国の行政機関（省庁など）」でなければ見ません。第25条か第2条第1項の答えだけを出します（下の (6)）</li>
+        <li>9の欄：8の欄が「来ていない」なら見ません。11の欄：10の欄が「来ていない」なら見ません</li>
+        <li>7の欄（開示を請求した日）：5の欄が「形の不備を直すよう求められた」なら、最終日の日付を出しません（下の (2)）</li>
+        <li>14・15の欄：13の欄が「まだ来ていない」「全部を開示する」「文書を持っていない」なら見ません。15の欄は、13の欄が「文書があるかないかも答えない」でも見ません</li>
+        <li>13〜21の欄：12の欄が「独立行政法人等へ」なら見ません（下の (5)）</li>
+        <li>17〜19の欄：16の欄が「書かれていない」なら見ません。18の欄は、17の欄が「とくに書かれていない」なら見ません。19の欄は、18の欄が「分からない」なら見ません</li>
+        <li>21の欄：20の欄が「していない」で、21の欄が「まだ何も来ていない」なら見ません（ほかの値は下のウ）</li>
+      </ul>
+      <p id="scope-nashi">「この組み合わせはありません」と出すのは3つの組です。ア：13の欄が「一部を開示する（黒塗りがある）」で、15の欄が「文書の全部に不開示の情報がある」（6条1項。一部の開示は、一部の不開示の情報を除いて開示するものです）。イ：13の欄が「全部を開示しない」で、15の欄が「一部に不開示の情報があり、その部分だけを除いた」（6条1項・9条2項。除いて開示したなら、全部を開示しない決定ではありません）。ウ：20の欄が「していない」で、21の欄が「まだ何も来ていない」でない（19条1項。審査会への諮問と裁決は、審査請求があったときのものです）。アかイとウは同時に出ることがあり、そのときは組ごとに1つずつ出します。反対意見書が出ているのに諮問の通知が無いまま全部を開示する裁決が来たときのように、法に沿わない手順は起きうる事実なので、「ありません」にせず答えで出します。</p>
+      <p id="scope-dou">第4条第1項（開示請求は、氏名・住所と、文書を特定できる事項を書いた開示請求書を出してする）・第16条第1項（手数料を納める）・第22条（行政機関の長は開示請求をしようとする人の利便を考えた措置をとり、総務大臣は総合的な案内所を整える）は、どの入力でも同じ文になるので、判定の答えには出していません。法人などの団体が請求するときは、開示請求書に代表者の氏名も書きます（第4条第1項第1号）。</p>
+      <p id="scope-kigen">最終日の数え方：第10条第1項は「開示請求があった日から三十日以内」で、最終日の数え方（最終日が休みの日のときの扱いを含む）はこの法律の条文に書いてありません。判定ページでは、開示請求があった日の翌日を1日目として30日目を最終日とし、答えに「（請求の翌日を1日目として数えた日）」と書きます。1日ずれることがあるので、最終日の前後は行政機関にご確認ください（下の (1)）。</p>
+      <p id="scope-arasou">審査請求の期間や先、裁判で争うときの訴えの形は、このページでは判定しません。行政不服審査法は<a href="../fufuku/">処分への不服のページ</a>、行政事件訴訟法は<a href="../gyosos/">処分を争う訴えのページ</a>で引いてください。</p>
+    </div>
+  </details>
+
+  <details class="box" id="cover-box">
+    <summary>行政機関情報公開法のどこまでをルールにしたか（全条文の地図）</summary>
+    <p class="hint" style="margin-top:6px">本則の全条文を章ごとに1マスずつ並べました。<span class="cell u1"></span> はプログラムのルールの中で使っている条（第4条・第16条・第22条は原文の表にも置いた条）、<span class="cell u0"></span> は使っていない条、<span class="cell u2"></span> は「削除」された条です。マスを押すと条の名前（使っている条は原文）が出ます。</p>
+    <div id="cover"></div>
+  </details>
+
+  <details class="box" id="yaku-box">
+    <summary>アプリの約束事（行政機関情報公開法の条文にないもの）</summary>
+    <p class="hint" style="margin-top:6px">判定のためにこのアプリが決めたことで、条文そのものではありません。論理の木では <span class="yk">アプリの約束事</span> の印が付きます。</p>
+    <!-- 前の7行（当否・号・認めるとき・金額・条例・勝ち負け・入口の段）は、①に1つにまとめ、金額・条例・勝ち負けは上の範囲の節へ移した（2026-11-25 案A。
+         前は論理の木の段ごとに約束事を付けていた。今は木に出すのは②だけ） -->
+    <ul class="hint" id="yaku-list" style="margin:8px 0 0;padding-left:1.2em">
+      <li>①行政機関の長が「認める」「認めるとき」の判断（第10条第2項「事務処理上の困難その他正当な理由」、第11条「著しく大量」「事務の遂行に著しい支障」、第4条第2項「形式上の不備があると認めるとき」、第6条第1項「容易に区分して除く」「有意の情報」、第7条「公益上特に必要があると認めるとき」、第13条第2項第1号「認められる」、第16条第3項「経済的困難その他特別の理由」、第19条第1項第1号「不適法」）と、記録された情報が第5条の号に当たるかは、このアプリは判定しない。判定ページでは欄にせず、通知や裁決に何と書いてあったかを事実として選んでもらう（5・8〜11・13〜15・17・21の欄）。欄にしない「認める」は、答えの文に「…と認めるときは」と条件で書く。第7条は、13の欄が「一部を開示する」「全部を開示しない」のときにいつも出す</li>
+      <li>②「当たりません」は、その条に当たらないと言うだけで、反対の結論を言うものではない</li>
+    </ul>
+  </details>
+
+  <details class="box" id="notes-box">
+    <summary>載せなかったものと、条文だけで決まらなかった点</summary>
+    <div class="scope">
+      <p><b>載せなかったもの（理由）：</b></p>
+      <ul style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>14条（開示の実施の方法の細部）：決定の後の手順で、方法の多くが政令に任されているため</li>
+        <li>15条（他の法令との調整）：他の法令の中身を読まないと答えが出せないため</li>
+        <li>17条（権限の委任）：請求する人の手続が変わる定めではないため</li>
+        <li>21条（訴訟の移送の特例）：裁判所どうしの移送で、訴えの形は<a href="../gyosos/">処分を争う訴えのページ</a>に任せるため</li>
+        <li>23条（施行の状況の公表）：総務大臣の定めで、請求する人の手続ではないため</li>
+        <li>24条（情報提供の施策）：政府の努力の定めで、請求の場面の話ではないため</li>
+        <li>26条（政令への委任）：政令の中身を収録しないため</li>
+        <li>手数料の額：第16条第1項が政令に任せていて、このアプリは政令を読んでいないため</li>
+        <li>審査請求の期間と先：行政不服審査法の定めのため。<a href="../fufuku/">処分への不服のページ</a>で引けます</li>
+        <li>独立行政法人等情報公開法・公文書管理法・個人情報保護法の開示請求：別の法律で、条文をここに収録していないため（下の (5)・(21)）</li>
+        <li>自治体の情報公開の条例：この法律の外のため（第25条は努力義務の定め）</li>
+        <li>判例・答申・法律の解釈・役所の運用：条文だけをルールにするため</li>
+        <li>附則：本則の範囲だけを読むため</li>
+      </ul>
+      <p><b>条文だけで決まらなかった点（22点）：</b></p>
+      <ul id="kimaranai" style="font-size:.86rem;line-height:1.75;padding-left:1.2em">
+        <li>（1）最終日の数え方 → 条文は「開示請求があった日から三十日以内」で数え方が無いので、翌日を1日目として30日目を最終日とし、答えに「（請求の翌日を1日目として数えた日）」と書く（上の「最終日の数え方」）</li>
+        <li>（2）補正があったときの日付 → 補正に要した日数が欄に無いので、最終日の日付を出さない</li>
+        <li>（3）11条の60日と補正 → 10条1項ただし書は「当該期間」の定めで、11条に同じ語が無い。補正に要した日数を60日に算入するかは答えに書かない。延長と特例の最終日の日付は出さない</li>
+        <li>（4）移送の後の期限 → 12条2項は移送前の行為を移送を受けた長がしたものとみなすが、期限の数え直しは書いていないので、日付を変えない</li>
+        <li>（5）独立行政法人等へ移送されたとき → 12条の2第2項で独立行政法人等情報公開法の規定が適用されるので、13〜21の欄を見ず、その法律の中身は答えない。13条の意見書の手続も開示決定のためのものなので、16〜19の欄も見ない</li>
+        <li>（6）相手が2条1項の行政機関でも地方公共団体の機関でもないとき → 25条は当たらないので、2条1項の答えを出して止める。地方公共団体の機関のときは25条の答えだけを出す</li>
+        <li>（7）3条の「何人も」→ 請求する人の欄を置かない。どの人でも答えが同じため</li>
+        <li>（8）2条2項本文の「職務上作成し、又は取得した」「組織的に用いる」→ 2・3の欄で事実として聞く。当たるかの当てはめは利用者の選び方による</li>
+        <li>（9）4条2項「形式上の不備があると認めるとき」→ 欄にせず、5の欄で補正を求められたかを聞く</li>
+        <li>（10）10条2項「事務処理上の困難その他正当な理由」→ 欄にせず、通知が書面か・30日以内か（8の欄）、延長後の期間と延長の理由が書いてあるか（9の欄）を聞く。理由が正当かは判定しない</li>
+        <li>（11）11条「著しく大量」「事務の遂行に著しい支障」→ 欄にせず、通知が書面か（10の欄）、一部ずつ決めることと理由・残りの文書を決める期限が書いてあるか（11の欄）を聞く。通知が30日以内に来たかは聞かない</li>
+        <li>（12）5条の号 → 14の欄で通知に書かれた号を選ぶ。記録された情報が本当にその号に当たるかは判定せず、答えは号の定めを言い切る。通知に2つ以上の号が書かれていたら、1つずつ選んで確かめる</li>
+        <li>（13）6条1項「容易に区分して除く」「有意の情報」→ 15の欄で、開示しない部分について通知に書かれたことを聞く</li>
+        <li>（14）6条2項 → 14の欄が「個人の情報（1号）」で、13の欄が「一部を開示する」「全部を開示しない」のときに出す</li>
+        <li>（15）7条「公益上特に必要があると認めるとき」→ 欄にせず、13の欄が「一部を開示する」「全部を開示しない」のときにいつも出す。14の欄が「匿名加工情報など（1号の2）」なら、7条の括弧で除かれると答える</li>
+        <li>（16）13条2項の号 → 17の欄で、役所がほかの人に知らせた開示の理由として聞く（人の命・健康・生活・財産を守るため＝1号、公益上とくに必要なため＝2号）。「認められる」は判定しない</li>
+        <li>（17）13条2項ただし書のとき → 「与えなくてもかまいません」だけを出し、13条1項は添えない</li>
+        <li>（18）13条3項 → 13の欄が「まだ来ていない」なら開示決定をするときの定めとして、「全部を開示する」「一部を開示する」なら2週間を置く定めとして答え、ほかの決定なら当たらないと答える</li>
+        <li>（19）19条1項1号「不適法」→ 21の欄で、諮問の通知が無いまま却下の裁決が来たかを聞く。不適法かは判定しない</li>
+        <li>（20）19条1項2号の反対意見書 → 16の欄が「書かれている」で、19の欄を見るときに「開示に反対」なら、反対意見書が出ていると読む。19条1項2号の「全部を開示」は、決定への審査請求と不作為への審査請求とで分けない（19条1項は両方を並べて書くため）</li>
+        <li>（21）2条2項2号の「特定歴史公文書等」→ 公文書管理法2条7項の語で、このアプリはその法律を読んでいない。選択肢は語のまま置いた</li>
+        <li>（22）語の開き方 → 「開示決定等」（開示するかどうかの決定）、「不開示情報」（不開示の情報）、「第三者」（文書に書かれたほかの人）、「不作為」（決定が来ないこと）などを平易に開いた文は、このアプリの言い換えで、詳しい意味は原文による</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="box" id="src-box">
+    <summary>プログラムの中身（Prologのソース全部）</summary>
+    <p class="hint" style="margin-top:6px">このページで動いているPrologのプログラムそのものです。ファイルを開くと全文が出ます。</p>
+    <div id="src"></div>
+  </details>
+
+  <details class="box" id="core-box">
+    <summary>仕組みを見る（上級者向け）</summary>
+    <p class="hint" style="margin-top:6px">Prologに直接聞く（最初の20件まで）：</p>
+    <textarea id="q" spellcheck="false">heads(ctx(国, 職員, 組織, どれでもない, 言われていない, 納めた, date(2026,11,2), 来ていない, 両方, 来ていない, 両方, 来ていない, 不開示, 個人, 除けない, 書かれている, とくにない, 分かる, 反対, した, 諮問), L).</textarea>
+    <button type="button" class="btn" id="run">実行</button>
+    <pre id="out"></pre>
+  </details>
+  </div>
+
+  <p class="foot techline"><span>行政機関情報公開法／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot">e-Gov法令検索の行政機関の保有する情報の公開に関する法律（平成十一年法律第四十二号）の本則の原文から、第2条から第13条まで・第16条・第18条から第20条まで・第25条をルールにしたものです。判例・答申・法律の解釈・役所の運用・附則は含みません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 行政機関情報公開法Prolog 共通の型・欄の読み出し・成り立たない組・日付・木の部品
+%
+% ctx(相手, 作成, 使い方, 種類, 請求書, 手数料, 請求日, 延長, 延長の記載, 特例, 特例の記載, 移送,
+%     決定, 理由, 部分, ほかの人, 知らせた理由, 居場所, 意見書, 審査請求, 審査の後)
+%   欄は起きた事実を聞く21個（select 20・日付1）で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-25 案A。
+%   案は ../johokokai_form_plan_answer_1125.md の案A、決めは ../johokokai_form_plan_decision_1125.md）。形は akiya-prolog と同じ。
+%   前は ctx(相手, 入口, 詳細) で、入口（請求 | 期限 | 不開示 | 第三者 | 不服）を先に選ばせ、画面が欄を出し消しして、
+%   隠れた欄を 関係なし で渡していた（前の 詳細OK/1・延長の欄OK/3 などが欄の並びを入口ごとに直書きしていた）。今は使わない欄を判定で見ないだけにした。
+%   請求者（shiu）は消した（3条は「何人も」で、どの値でも答えが同じ。決め4）。公益（kou）も消した（7条は行政機関の長の判断。決め5）。
+%   保有（hoyu）は13の「文書を持っていない」へ、不備（fubi）と補正（hos）は5へ、延長（enc）と延長幅（enh）は8へ、区分（kub）と有意（yui）は15へ、
+%   開示決定（ket3）と対象（tai）は13から、反対（han）は19から読む（案A「1つにまとめる欄」・C1）。
+%   延長理由（enr）・特例理由（tor）・裁決（sai）の「考える」「認める」は欄にせず、9・11・21の欄で通知や裁決に何と書いてあったかを聞く（案A「評価語の聞き方」）。
+%   引数の順は画面の欄の番号（1〜21）と同じ。画面では6つの小見出し（相手と文書／開示請求書と手数料／返事の期限／届いた決定の通知／
+%   文書に書かれたほかの人／審査請求）の下に並べる。
+%    1 相手       : 国 | 地方 | どちらでもない（開示を請求した先）
+%    2 作成       : 職員 | ちがう（文書を作った・受け取った人：請求先の役所の職員が仕事で | そうではない）
+%    3 使い方     : 組織 | 個人（役所での使い方：職員が組織として使っている | 職員個人のメモなど）
+%    4 種類       : 販売 | 歴史 | 特別 | どれでもない（文書の種類。2条2項ただし書の1号・2号・3号）
+%    5 請求書     : 言われていない | 不備（開示請求書について役所から：何も言われていない | 形の不備を直すよう求められた）
+%    6 手数料     : 納めた | 申し出た（納めるのが難しく、減額・免除を申し出た）
+%    7 請求日     : 未入力 | date(年,月,日)（開示を請求した日。任意）
+%    8 延長       : 来ていない | 以内 | 超える | 口頭（期限を延ばすという通知：書面で30日以内 | 書面で30日を超える | 口頭だけ）
+%    9 延長の記載 : 両方 | 欠ける（延長の通知に、延長後の期間と延長の理由の両方 | どちらかが無い）
+%   10 特例       : 来ていない | 書面 | 書面でない（文書が大量なので一部ずつ決めるという通知）
+%   11 特例の記載 : 両方 | 欠ける（その通知に、一部ずつ決めること（11条の「本条を適用する旨」）と理由、残りの文書を決める期限の両方 | どちらかが無い）
+%   12 移送       : 来ていない | 行政機関 | 独法（別の機関に回したという通知：ほかの国の行政機関へ | 独立行政法人等へ）
+%   13 決定       : まだ | 全部開示 | 一部開示 | 不開示 | 存否 | 持っていない（決定の通知）
+%   14 理由       : なし | 個人 | 匿名 | 法人 | 安全 | 犯罪 | 審議 | 事務（開示しない理由として書かれた情報の種類。5条の号）
+%   15 部分       : 全部 | 除いた | 除けない | 意味なし（開示しない部分について書かれていること）
+%   16 ほかの人   : 書かれていない | 書かれている（文書に、国・地方公共団体・独立行政法人等・請求した人のほかの人の情報が）
+%   17 知らせた理由 : とくにない | 命 | 公益（役所がその人に知らせた、開示する理由。13条2項1号・2号）
+%   18 居場所     : 分かる | 分からない
+%   19 意見書     : 出していない | 反対 | 反対でない
+%   20 審査請求   : していない | した
+%   21 審査の後   : 来ていない | 諮問 | 却下 | 全部開示 | ほか（審査請求の後に来たもの：審査会に諮問したという通知 |
+%                  諮問の通知が無いまま、却下の裁決 | 全部を開示する裁決 | ほかの裁決）
+%
+%   関係のない欄（1の欄が「国の行政機関」でないときの2〜21、8の欄が「来ていない」のときの9、10の欄が「来ていない」のときの11、
+%   13の欄が「まだ」「全部開示」「持っていない」のときの14・15、13の欄が「存否」のときの15、
+%   16の欄が「書かれていない」のときの17〜19、17の欄が「とくにない」のときの18、18の欄が「分からない」のときの19、
+%   5の欄が「不備」のときの7（補正に要した日数が分からないので最終日を出さない）、
+%   12の欄が「独法」のときの13〜21（12条の2第2項で独立行政法人等情報公開法が適用される。決め6）、
+%   20の欄が「していない」のときの21）は、組み合わせなしにせず見ないだけ（akiya-prolog と同じ）。
+%   欄どうしで成り立たない組はこのファイルの 組み合わせなし/4 が返す（REVIEW_RULES C3）。
+%
+% 書き方のきまり：
+%   ・条番号は '2条2項1号' '10条1項ただし書' '12条の2第1項' '5条1号の2' '5条1号イ' のような原子。
+%   ・ルールの中で範囲の外の条を、原子の先頭に条番号を置く形で書かない。書くと build.py が使う条に数え、画面に中身が埋まる。
+%   ・段は 段(状態, 文, 箱の条, 葉のリスト)。結論ごとの段は s(画面のid, 見出し, 段)。段の文は、末尾の「。」を外して結論の箱にも出す。
+%     段の文は本題だけを書き、入力の言い直しは葉に置く（REVIEW_RULES A2。葉は論理の木にだけ出る）。
+%     葉は文（原子）か、木の行 t(...) そのもの（規定・約束の行。schema の 葉の行）。
+%     前は 段(状態, 文, 条のリスト) の3つで、木は条の原文と約束事だけだった（入力の葉が無かった）。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | and | or | info
+%   ・アプリの約束事の行は 条 を '@約束事' にする。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか。組の成り立ちは 組み合わせなし/4 で見る）----
+% 7の欄（日付）だけは選択肢でなく、未入力か正しい日付
+ctx_valid(C) :-
+    functor(C, ctx, 21),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )),
+    arg(7, C, D), 日付の欄OK(D).
+
+欄の値(1, [国, 地方, どちらでもない]).
+欄の値(2, [職員, ちがう]).
+欄の値(3, [組織, 個人]).
+欄の値(4, [販売, 歴史, 特別, どれでもない]).
+欄の値(5, [言われていない, 不備]).
+欄の値(6, [納めた, 申し出た]).
+欄の値(8, [来ていない, 以内, 超える, 口頭]).
+欄の値(9, [両方, 欠ける]).
+欄の値(10, [来ていない, 書面, 書面でない]).
+欄の値(11, [両方, 欠ける]).
+欄の値(12, [来ていない, 行政機関, 独法]).
+欄の値(13, [まだ, 全部開示, 一部開示, 不開示, 存否, 持っていない]).
+欄の値(14, [なし, 個人, 匿名, 法人, 安全, 犯罪, 審議, 事務]).
+欄の値(15, [全部, 除いた, 除けない, 意味なし]).
+欄の値(16, [書かれていない, 書かれている]).
+欄の値(17, [とくにない, 命, 公益]).
+欄の値(18, [分かる, 分からない]).
+欄の値(19, [出していない, 反対, 反対でない]).
+欄の値(20, [していない, した]).
+欄の値(21, [来ていない, 諮問, 却下, 全部開示, ほか]).
+
+日付の欄OK(未入力) :- !.
+日付の欄OK(D) :- 日付OK(D).
+
+%% ---- 欄の読み出し（番号は画面の欄の番号）----
+欄の番号(相手, 1).
+欄の番号(作成, 2).
+欄の番号(使い方, 3).
+欄の番号(種類, 4).
+欄の番号(請求書, 5).
+欄の番号(手数料, 6).
+欄の番号(請求日, 7).
+欄の番号(延長, 8).
+欄の番号(延長の記載, 9).
+欄の番号(特例, 10).
+欄の番号(特例の記載, 11).
+欄の番号(移送, 12).
+欄の番号(決定, 13).
+欄の番号(理由, 14).
+欄の番号(部分, 15).
+欄の番号(ほかの人, 16).
+欄の番号(知らせた理由, 17).
+欄の番号(居場所, 18).
+欄の番号(意見書, 19).
+欄の番号(審査請求, 20).
+欄の番号(審査の後, 21).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+%% ---- 成り立たない組（組み合わせなし/4。REVIEW_RULES C3。案A「この組み合わせはありません」）----
+% 組み合わせなし(C, 記号, 葉のリスト, 箱の条)。rules/g_hantei.pl の 全部の段 が findall で全部集める（REVIEW_RULES 末尾「AI同士で決めた書き方」1・2）。
+%   ア 13の欄が「一部を開示する」で、15の欄が「文書の全部に不開示の情報がある」。根拠は6条1項（一部の開示は、一部の不開示の情報を除いて開示するもの）
+%   イ 13の欄が「全部を開示しない」で、15の欄が「一部に不開示の情報があり、その部分だけを除いた」。根拠は6条1項・9条2項
+%      （除いて開示したなら、全部を開示しない決定ではない）
+%   ウ 20の欄が「していない」で、21の欄が「まだ何も来ていない」でない。根拠は19条1項（諮問と裁決は、審査請求があったときのもの）
+% アとイは13の欄の値が違うので同時には出ない。アかイとウは同時に出る（組ごとに1段）。
+% 法に沿わない手順（反対意見書が出ているのに諮問の通知が無いまま全部を開示する裁決が来た など）は起きうる事実なので、
+% ありませんにせず段の答えで出す（akiya と同じ）。
+組み合わせなし(C, a, ['一部を開示する決定は、文書の一部にある不開示の情報を除いて開示するもの', W], ['6条1項']) :-
+    欄(決定, C, 一部開示), 欄(部分, C, 全部),
+    二つ選んだ(決定, 部分, C, W).
+組み合わせなし(C, i, ['不開示の情報の部分だけを除いて開示したなら、全部を開示しない決定ではない', W], ['6条1項', '9条2項']) :-
+    欄(決定, C, 不開示), 欄(部分, C, 除いた),
+    二つ選んだ(決定, 部分, C, W).
+組み合わせなし(C, u, ['審査会への諮問と裁決は、審査請求があったときのもの', W], ['19条1項']) :-
+    欄(審査請求, C, していない), \+ 欄(審査の後, C, 来ていない),
+    二つ選んだ(審査請求, 審査の後, C, W).
+
+二つ選んだ(N1, N2, C, W) :-
+    欄の番号(N1, I1), 欄(N1, C, V1), 葉の語(I1, V1, W1),
+    欄の番号(N2, I2), 欄(N2, C, V2), 葉の語(I2, V2, W2),
+    format(atom(W), '~wの欄で~wを選び、~wの欄で~wを選んだ', [I1, W1, I2, W2]).
+
+%% ---- 木の葉に出す欄の値の言葉（画面の選択肢と同じ語）----
+% 葉の語(欄の番号, 値, 選択肢の語)。7の欄（日付）は 選んだ/3 で別に書く
+葉の語(1, 国, '国の行政機関（省庁など）').
+葉の語(1, 地方, '都道府県・市区町村の機関').
+葉の語(1, どちらでもない, 'どちらでもない（独立行政法人・会社など）').
+葉の語(2, 職員, '請求先の役所の職員が仕事で').
+葉の語(2, ちがう, 'そうではない').
+葉の語(3, 組織, '職員が組織として使っている').
+葉の語(3, 個人, '職員個人のメモなど').
+葉の語(4, 販売, '売るために発行される官報・白書・新聞・雑誌・本など').
+葉の語(4, 歴史, '公文書管理法の特定歴史公文書等（歴史資料）').
+葉の語(4, 特別, '研究所などの施設で、歴史・文化・学術研究の資料として特別に管理されているもの').
+葉の語(4, どれでもない, 'どれでもない').
+葉の語(5, 言われていない, '何も言われていない').
+葉の語(5, 不備, '形の不備を直すよう求められた').
+葉の語(6, 納めた, '納めた').
+葉の語(6, 申し出た, '納めるのが難しく、減額・免除を申し出た').
+葉の語(8, 来ていない, '来ていない').
+葉の語(8, 以内, '書面で、延長は30日以内').
+葉の語(8, 超える, '書面で、延長は30日を超える').
+葉の語(8, 口頭, '口頭だけ').
+葉の語(9, 両方, '延長後の期間と延長の理由の両方').
+葉の語(9, 欠ける, 'どちらかが無い').
+葉の語(10, 来ていない, '来ていない').
+葉の語(10, 書面, '書面で来た').
+葉の語(10, 書面でない, '書面ではない').
+葉の語(11, 両方, '一部ずつ決めることと理由、残りの文書を決める期限の両方').
+葉の語(11, 欠ける, 'どちらかが無い').
+葉の語(12, 来ていない, '来ていない').
+葉の語(12, 行政機関, 'ほかの国の行政機関へ').
+葉の語(12, 独法, '独立行政法人等へ').
+葉の語(13, まだ, 'まだ来ていない').
+葉の語(13, 全部開示, '全部を開示する').
+葉の語(13, 一部開示, '一部を開示する（黒塗りがある）').
+葉の語(13, 不開示, '全部を開示しない').
+葉の語(13, 存否, '文書があるかないかも答えない').
+葉の語(13, 持っていない, '文書を持っていない').
+葉の語(14, なし, '書かれていない').
+葉の語(14, 個人, '個人の情報（1号）').
+葉の語(14, 匿名, '匿名加工情報など（1号の2）').
+葉の語(14, 法人, '会社など団体の情報（2号）').
+葉の語(14, 安全, '国の安全・外交（3号）').
+葉の語(14, 犯罪, '犯罪の予防・捜査など（4号）').
+葉の語(14, 審議, '役所の中の審議・検討（5号）').
+葉の語(14, 事務, '役所の事務・事業（6号）').
+葉の語(15, 全部, '文書の全部に不開示の情報がある').
+葉の語(15, 除いた, '一部に不開示の情報があり、その部分だけを除いた').
+葉の語(15, 除けない, '一部に不開示の情報があるが、その部分を分けて除けない').
+葉の語(15, 意味なし, '一部を除くと、残りに意味のある情報が無い').
+葉の語(16, 書かれていない, '書かれていない').
+葉の語(16, 書かれている, '書かれている').
+葉の語(17, とくにない, 'とくに書かれていない').
+葉の語(17, 命, '人の命・健康・生活・財産を守るため').
+葉の語(17, 公益, '公益上とくに必要なため').
+葉の語(18, 分かる, '分かっている').
+葉の語(18, 分からない, '分からない').
+葉の語(19, 出していない, '出していない').
+葉の語(19, 反対, '開示に反対').
+葉の語(19, 反対でない, '反対ではない').
+葉の語(20, していない, 'していない').
+葉の語(20, した, 'した').
+葉の語(21, 来ていない, 'まだ何も来ていない').
+葉の語(21, 諮問, '審査会に諮問したという通知').
+葉の語(21, 却下, '諮問の通知が無いまま、却下の裁決').
+葉の語(21, 全部開示, '諮問の通知が無いまま、全部を開示する裁決').
+葉の語(21, ほか, '諮問の通知が無いまま、ほかの裁決').
+
+% 入力の葉：「Nの欄で、◯◯を選んだ」。欄の名前から番号と値を引く。7の欄（日付）は「◯年◯月◯日を入れた」
+選んだ(請求日, C, W) :- !,
+    欄(請求日, C, D), 日付表示(D, S),
+    format(atom(W), '7の欄で、~wを入れた', [S]).
+選んだ(Name, C, W) :-
+    欄の番号(Name, N), 欄(Name, C, V), 葉の語(N, V, VW),
+    format(atom(W), '~wの欄で、~wを選んだ', [N, VW]).
+
+%% ---- 理由の語をつなぐ ----
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---- 日付（date(年,月,日)。gyosos-prolog/schema.pl と同じ。前のまま）----
+閏年(Y) :- Y mod 400 =:= 0, !.
+閏年(Y) :- Y mod 100 =\= 0, Y mod 4 =:= 0.
+月日数(Y, 2, 29) :- 閏年(Y), !.
+月日数(_, 2, 28) :- !.
+月日数(_, M, 30) :- memberchk(M, [4, 6, 9, 11]), !.
+月日数(_, M, 31) :- integer(M), M >= 1, M =< 12.
+
+日付OK(date(Y, M, D)) :-
+    integer(Y), integer(M), integer(D),
+    M >= 1, M =< 12, D >= 1,
+    月日数(Y, M, Max), D =< Max.
+
+翌日(date(Y, M, D), date(Y, M, D1)) :- 月日数(Y, M, Max), D < Max, !, D1 is D + 1.
+翌日(date(Y, M, _), date(Y, M1, 1)) :- M < 12, !, M1 is M + 1.
+翌日(date(Y, 12, _), date(Y1, 1, 1)) :- Y1 is Y + 1.
+
+日数後(D, 0, D) :- !.
+日数後(D0, N, D) :- 翌日(D0, D1), N1 is N - 1, 日数後(D1, N1, D).
+
+日付表示(date(Y, M, D), S) :- format(atom(S), '~w年~w月~w日', [Y, M, D]).
+
+%% ---- 木の部品 ----
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+原文規定(Art, X) :- 原文(Art, W), 規定(Art, W, X).
+% 成り立つ文（起きた事実・条文の読み）
+文(X, t(ok, X, '', [])).
+約束(X, t(ok, X, '@約束事', [])).
+% 葉の行：木の行 t(...) はそのまま、文はそのまま1行（schema の「書き方のきまり」）
+葉の行(t(K, X, A, Cs), t(K, X, A, Cs)) :- !.
+葉の行(W, X) :- 文(W, X).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+% 前は子が1つでも「次のすべてが成り立つ」の節を作っていた（前の :197。akiya-prolog schema.pl の すべて/4 を写した）
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（行政機関情報公開法の条文にないもの）
+%
+%   ① 行政機関の長が「認める」「認めるとき」の判断（10条2項「事務処理上の困難その他正当な理由」、11条「著しく大量」
+%      「事務の遂行に著しい支障」、4条2項「形式上の不備があると認めるとき」、6条1項「容易に区分して除く」「有意の情報」、
+%      7条「公益上特に必要があると認めるとき」、13条2項1号「認められる」、16条3項「経済的困難その他特別の理由」、
+%      19条1項1号「不適法」）と、記録された情報が5条の号に当たるかは、このアプリは判定しない。
+%      判定ページでは欄にせず、通知や裁決に何と書いてあったかを事実として聞く（5・8〜11・13〜15・17・21の欄）。
+%      欄にしない「認める」は、段の文に「…と認めるときは」と条件で書く（案A「評価語の聞き方」。7条は不開示の通知のときにいつも出す。決め5）。
+%      ①は about の約束事①にだけ置き、木には出さない（2026-11-25 案A。前は 当否の約束・号の約束・認定の約束・金額の約束・
+%      条例の約束・語の約束 の6つを、段の状態ごとに木に付けていた（前の g_hantei.pl:194–209 の 段の約束）。A5。akiya-prolog の kihon.pl と同じ扱い）。
+%      手数料の額（政令）・自治体の条例・4条1項・16条1項・22条（どの入力でも同じ文）は about の範囲の節へ移した（決め4）。
+%   ② 「当たりません」は、その条に当たらないと言うだけで、反対の結論を言うものではない。
+%      「当たりません」の段の木にだけ出す（akiya と同じ名前）。
+
+当たらないの約束(X) :-
+    約束('「当たりません」は、その条に当たらないと言うだけで、反対の結論を言うものではない', X).
+</script>
+<script type="text/prolog" data-name="rules_a_genbun.pl">% rules/a_genbun.pl — 判定に使う条文の原文（law/johokokai.xml の本則のまま）
+%
+%   原文(条, 文)。test/page_test.mjs が XML を別に読み、全行が一字一句一致するかを確かめる。
+%   本文・ただし書の語は、XML の Sentence に Function="main"・"proviso" があるものだけに使う（19条1項には無い）。
+
+原文('2条1項', 'この法律において「行政機関」とは、次に掲げる機関をいう。').
+原文('2条2項本文', 'この法律において「行政文書」とは、行政機関の職員が職務上作成し、又は取得した文書、図画及び電磁的記録（電子的方式、磁気的方式その他人の知覚によっては認識することができない方式で作られた記録をいう。以下同じ。）であって、当該行政機関の職員が組織的に用いるものとして、当該行政機関が保有しているものをいう。').
+原文('2条2項ただし書', 'ただし、次に掲げるものを除く。').
+原文('2条2項1号', '官報、白書、新聞、雑誌、書籍その他不特定多数の者に販売することを目的として発行されるもの').
+原文('2条2項2号', '公文書等の管理に関する法律（平成二十一年法律第六十六号）第二条第七項に規定する特定歴史公文書等').
+原文('2条2項3号', '政令で定める研究所その他の施設において、政令で定めるところにより、歴史的若しくは文化的な資料又は学術研究用の資料として特別の管理がされているもの（前号に掲げるものを除く。）').
+
+原文('3条', '何人も、この法律の定めるところにより、行政機関の長（前条第一項第五号から第七号までの政令で定める機関にあっては、その機関ごとに政令で定める者をいう。以下同じ。）に対し、当該行政機関の保有する行政文書の開示を請求することができる。').
+
+原文('4条1項', '前条の規定による開示の請求（以下「開示請求」という。）は、次に掲げる事項を記載した書面（以下「開示請求書」という。）を行政機関の長に提出してしなければならない。').
+原文('4条1項1号', '開示請求をする者の氏名又は名称及び住所又は居所並びに法人その他の団体にあっては代表者の氏名').
+原文('4条1項2号', '行政文書の名称その他の開示請求に係る行政文書を特定するに足りる事項').
+原文('4条2項', '行政機関の長は、開示請求書に形式上の不備があると認めるときは、開示請求をした者（以下「開示請求者」という。）に対し、相当の期間を定めて、その補正を求めることができる。この場合において、行政機関の長は、開示請求者に対し、補正の参考となる情報を提供するよう努めなければならない。').
+
+原文('5条', '行政機関の長は、開示請求があったときは、開示請求に係る行政文書に次の各号に掲げる情報（以下「不開示情報」という。）のいずれかが記録されている場合を除き、開示請求者に対し、当該行政文書を開示しなければならない。').
+原文('5条1号', '個人に関する情報（事業を営む個人の当該事業に関する情報を除く。）であって、当該情報に含まれる氏名、生年月日その他の記述等（文書、図画若しくは電磁的記録に記載され、若しくは記録され、又は音声、動作その他の方法を用いて表された一切の事項をいう。次条第二項において同じ。）により特定の個人を識別することができるもの（他の情報と照合することにより、特定の個人を識別することができることとなるものを含む。）又は特定の個人を識別することはできないが、公にすることにより、なお個人の権利利益を害するおそれがあるもの。ただし、次に掲げる情報を除く。').
+原文('5条1号ただし書', 'ただし、次に掲げる情報を除く。').
+原文('5条1号イ', '法令の規定により又は慣行として公にされ、又は公にすることが予定されている情報').
+原文('5条1号ロ', '人の生命、健康、生活又は財産を保護するため、公にすることが必要であると認められる情報').
+原文('5条1号ハ', '当該個人が公務員等（国家公務員法（昭和二十二年法律第百二十号）第二条第一項に規定する国家公務員（独立行政法人通則法（平成十一年法律第百三号）第二条第四項に規定する行政執行法人の役員及び職員を除く。）、独立行政法人等（独立行政法人等の保有する情報の公開に関する法律（平成十三年法律第百四十号。以下「独立行政法人等情報公開法」という。）第二条第一項に規定する独立行政法人等をいう。以下同じ。）の役員及び職員、地方公務員法（昭和二十五年法律第二百六十一号）第二条に規定する地方公務員並びに地方独立行政法人（地方独立行政法人法（平成十五年法律第百十八号）第二条第一項に規定する地方独立行政法人をいう。以下同じ。）の役員及び職員をいう。）である場合において、当該情報がその職務の遂行に係る情報であるときは、当該情報のうち、当該公務員等の職及び当該職務遂行の内容に係る部分').
+原文('5条1号の2', '個人情報の保護に関する法律（平成十五年法律第五十七号）第六十条第三項に規定する行政機関等匿名加工情報（同条第四項に規定する行政機関等匿名加工情報ファイルを構成するものに限る。以下この号において「行政機関等匿名加工情報」という。）又は行政機関等匿名加工情報の作成に用いた同条第一項に規定する保有個人情報から削除した同法第二条第一項第一号に規定する記述等若しくは同条第二項に規定する個人識別符号').
+原文('5条2号', '法人その他の団体（国、独立行政法人等、地方公共団体及び地方独立行政法人を除く。以下「法人等」という。）に関する情報又は事業を営む個人の当該事業に関する情報であって、次に掲げるもの。ただし、人の生命、健康、生活又は財産を保護するため、公にすることが必要であると認められる情報を除く。').
+原文('5条2号ただし書', 'ただし、人の生命、健康、生活又は財産を保護するため、公にすることが必要であると認められる情報を除く。').
+原文('5条2号イ', '公にすることにより、当該法人等又は当該個人の権利、競争上の地位その他正当な利益を害するおそれがあるもの').
+原文('5条2号ロ', '行政機関の要請を受けて、公にしないとの条件で任意に提供されたものであって、法人等又は個人における通例として公にしないこととされているものその他の当該条件を付することが当該情報の性質、当時の状況等に照らして合理的であると認められるもの').
+原文('5条3号', '公にすることにより、国の安全が害されるおそれ、他国若しくは国際機関との信頼関係が損なわれるおそれ又は他国若しくは国際機関との交渉上不利益を被るおそれがあると行政機関の長が認めることにつき相当の理由がある情報').
+原文('5条4号', '公にすることにより、犯罪の予防、鎮圧又は捜査、公訴の維持、刑の執行その他の公共の安全と秩序の維持に支障を及ぼすおそれがあると行政機関の長が認めることにつき相当の理由がある情報').
+原文('5条5号', '国の機関、独立行政法人等、地方公共団体及び地方独立行政法人の内部又は相互間における審議、検討又は協議に関する情報であって、公にすることにより、率直な意見の交換若しくは意思決定の中立性が不当に損なわれるおそれ、不当に国民の間に混乱を生じさせるおそれ又は特定の者に不当に利益を与え若しくは不利益を及ぼすおそれがあるもの').
+原文('5条6号', '国の機関、独立行政法人等、地方公共団体又は地方独立行政法人が行う事務又は事業に関する情報であって、公にすることにより、次に掲げるおそれその他当該事務又は事業の性質上、当該事務又は事業の適正な遂行に支障を及ぼすおそれがあるもの').
+原文('5条6号イ', '監査、検査、取締り、試験又は租税の賦課若しくは徴収に係る事務に関し、正確な事実の把握を困難にするおそれ又は違法若しくは不当な行為を容易にし、若しくはその発見を困難にするおそれ').
+原文('5条6号ロ', '契約、交渉又は争訟に係る事務に関し、国、独立行政法人等、地方公共団体又は地方独立行政法人の財産上の利益又は当事者としての地位を不当に害するおそれ').
+原文('5条6号ハ', '調査研究に係る事務に関し、その公正かつ能率的な遂行を不当に阻害するおそれ').
+原文('5条6号ニ', '人事管理に係る事務に関し、公正かつ円滑な人事の確保に支障を及ぼすおそれ').
+原文('5条6号ホ', '独立行政法人等、地方公共団体が経営する企業又は地方独立行政法人に係る事業に関し、その企業経営上の正当な利益を害するおそれ').
+
+原文('6条1項', '行政機関の長は、開示請求に係る行政文書の一部に不開示情報が記録されている場合において、不開示情報が記録されている部分を容易に区分して除くことができるときは、開示請求者に対し、当該部分を除いた部分につき開示しなければならない。ただし、当該部分を除いた部分に有意の情報が記録されていないと認められるときは、この限りでない。').
+原文('6条1項本文', '行政機関の長は、開示請求に係る行政文書の一部に不開示情報が記録されている場合において、不開示情報が記録されている部分を容易に区分して除くことができるときは、開示請求者に対し、当該部分を除いた部分につき開示しなければならない。').
+原文('6条1項ただし書', 'ただし、当該部分を除いた部分に有意の情報が記録されていないと認められるときは、この限りでない。').
+原文('6条2項', '開示請求に係る行政文書に前条第一号の情報（特定の個人を識別することができるものに限る。）が記録されている場合において、当該情報のうち、氏名、生年月日その他の特定の個人を識別することができることとなる記述等の部分を除くことにより、公にしても、個人の権利利益が害されるおそれがないと認められるときは、当該部分を除いた部分は、同号の情報に含まれないものとみなして、前項の規定を適用する。').
+
+原文('7条', '行政機関の長は、開示請求に係る行政文書に不開示情報（第五条第一号の二に掲げる情報を除く。）が記録されている場合であっても、公益上特に必要があると認めるときは、開示請求者に対し、当該行政文書を開示することができる。').
+原文('8条', '開示請求に対し、当該開示請求に係る行政文書が存在しているか否かを答えるだけで、不開示情報を開示することとなるときは、行政機関の長は、当該行政文書の存否を明らかにしないで、当該開示請求を拒否することができる。').
+
+原文('9条1項', '行政機関の長は、開示請求に係る行政文書の全部又は一部を開示するときは、その旨の決定をし、開示請求者に対し、その旨及び開示の実施に関し政令で定める事項を書面により通知しなければならない。').
+原文('9条2項', '行政機関の長は、開示請求に係る行政文書の全部を開示しないとき（前条の規定により開示請求を拒否するとき及び開示請求に係る行政文書を保有していないときを含む。）は、開示をしない旨の決定をし、開示請求者に対し、その旨を書面により通知しなければならない。').
+
+原文('10条1項本文', '前条各項の決定（以下「開示決定等」という。）は、開示請求があった日から三十日以内にしなければならない。').
+原文('10条1項ただし書', 'ただし、第四条第二項の規定により補正を求めた場合にあっては、当該補正に要した日数は、当該期間に算入しない。').
+原文('10条2項', '前項の規定にかかわらず、行政機関の長は、事務処理上の困難その他正当な理由があるときは、同項に規定する期間を三十日以内に限り延長することができる。この場合において、行政機関の長は、開示請求者に対し、遅滞なく、延長後の期間及び延長の理由を書面により通知しなければならない。').
+
+原文('11条1項', '開示請求に係る行政文書が著しく大量であるため、開示請求があった日から六十日以内にそのすべてについて開示決定等をすることにより事務の遂行に著しい支障が生ずるおそれがある場合には、前条の規定にかかわらず、行政機関の長は、開示請求に係る行政文書のうちの相当の部分につき当該期間内に開示決定等をし、残りの行政文書については相当の期間内に開示決定等をすれば足りる。この場合において、行政機関の長は、同条第一項に規定する期間内に、開示請求者に対し、次に掲げる事項を書面により通知しなければならない。').
+原文('11条1項1号', '本条を適用する旨及びその理由').
+原文('11条1項2号', '残りの行政文書について開示決定等をする期限').
+
+原文('12条1項', '行政機関の長は、開示請求に係る行政文書が他の行政機関により作成されたものであるときその他他の行政機関の長において開示決定等をすることにつき正当な理由があるときは、当該他の行政機関の長と協議の上、当該他の行政機関の長に対し、事案を移送することができる。この場合においては、移送をした行政機関の長は、開示請求者に対し、事案を移送した旨を書面により通知しなければならない。').
+原文('12条2項', '前項の規定により事案が移送されたときは、移送を受けた行政機関の長において、当該開示請求についての開示決定等をしなければならない。この場合において、移送をした行政機関の長が移送前にした行為は、移送を受けた行政機関の長がしたものとみなす。').
+原文('12条3項', '前項の場合において、移送を受けた行政機関の長が第九条第一項の決定（以下「開示決定」という。）をしたときは、当該行政機関の長は、開示の実施をしなければならない。この場合において、移送をした行政機関の長は、当該開示の実施に必要な協力をしなければならない。').
+原文('12条の2第1項', '行政機関の長は、開示請求に係る行政文書が独立行政法人等により作成されたものであるときその他独立行政法人等において独立行政法人等情報公開法第十条第一項に規定する開示決定等をすることにつき正当な理由があるときは、当該独立行政法人等と協議の上、当該独立行政法人等に対し、事案を移送することができる。この場合においては、移送をした行政機関の長は、開示請求者に対し、事案を移送した旨を書面により通知しなければならない。').
+原文('12条の2第2項', '前項の規定により事案が移送されたときは、当該事案については、行政文書を移送を受けた独立行政法人等が保有する独立行政法人等情報公開法第二条第二項に規定する法人文書と、開示請求を移送を受けた独立行政法人等に対する独立行政法人等情報公開法第四条第一項に規定する開示請求とみなして、独立行政法人等情報公開法の規定を適用する。この場合において、独立行政法人等情報公開法第十条第一項中「第四条第二項」とあるのは「行政機関の保有する情報の公開に関する法律（平成十一年法律第四十二号）第四条第二項」と、独立行政法人等情報公開法第十七条第一項中「開示請求をする者又は法人文書」とあるのは「法人文書」と、「により、それぞれ」とあるのは「により」と、「開示請求に係る手数料又は開示」とあるのは「開示」とする。').
+原文('12条の2第3項', '第一項の規定により事案が移送された場合において、移送を受けた独立行政法人等が開示の実施をするときは、移送をした行政機関の長は、当該開示の実施に必要な協力をしなければならない。').
+
+原文('13条1項', '開示請求に係る行政文書に国、独立行政法人等、地方公共団体、地方独立行政法人及び開示請求者以外の者（以下この条、第十九条第二項及び第二十条第一項において「第三者」という。）に関する情報が記録されているときは、行政機関の長は、開示決定等をするに当たって、当該情報に係る第三者に対し、開示請求に係る行政文書の表示その他政令で定める事項を通知して、意見書を提出する機会を与えることができる。').
+原文('13条2項本文', '行政機関の長は、次の各号のいずれかに該当するときは、開示決定に先立ち、当該第三者に対し、開示請求に係る行政文書の表示その他政令で定める事項を書面により通知して、意見書を提出する機会を与えなければならない。').
+原文('13条2項ただし書', 'ただし、当該第三者の所在が判明しない場合は、この限りでない。').
+原文('13条2項1号', '第三者に関する情報が記録されている行政文書を開示しようとする場合であって、当該情報が第五条第一号ロ又は同条第二号ただし書に規定する情報に該当すると認められるとき。').
+原文('13条2項2号', '第三者に関する情報が記録されている行政文書を第七条の規定により開示しようとするとき。').
+原文('13条3項', '行政機関の長は、前二項の規定により意見書の提出の機会を与えられた第三者が当該行政文書の開示に反対の意思を表示した意見書を提出した場合において、開示決定をするときは、開示決定の日と開示を実施する日との間に少なくとも二週間を置かなければならない。この場合において、行政機関の長は、開示決定後直ちに、当該意見書（第十九条において「反対意見書」という。）を提出した第三者に対し、開示決定をした旨及びその理由並びに開示を実施する日を書面により通知しなければならない。').
+
+原文('16条1項', '開示請求をする者又は行政文書の開示を受ける者は、政令で定めるところにより、それぞれ、実費の範囲内において政令で定める額の開示請求に係る手数料又は開示の実施に係る手数料を納めなければならない。').
+原文('16条3項', '行政機関の長は、経済的困難その他特別の理由があると認めるときは、政令で定めるところにより、第一項の手数料を減額し、又は免除することができる。').
+
+原文('18条1項', '開示決定等又は開示請求に係る不作為に係る審査請求については、行政不服審査法（平成二十六年法律第六十八号）第九条、第十七条、第二十四条、第二章第三節及び第四節並びに第五十条第二項の規定は、適用しない。').
+
+原文('19条1項', '開示決定等又は開示請求に係る不作為について審査請求があったときは、当該審査請求に対する裁決をすべき行政機関の長は、次の各号のいずれかに該当する場合を除き、情報公開・個人情報保護審査会（審査請求に対する裁決をすべき行政機関の長が会計検査院の長である場合にあっては、別に法律で定める審査会）に諮問しなければならない。').
+原文('19条1項1号', '審査請求が不適法であり、却下する場合').
+原文('19条1項2号', '裁決で、審査請求の全部を認容し、当該審査請求に係る行政文書の全部を開示することとする場合（当該行政文書の開示について反対意見書が提出されている場合を除く。）').
+原文('19条2項', '前項の規定により諮問をした行政機関の長は、次に掲げる者に対し、諮問をした旨を通知しなければならない。').
+原文('19条2項1号', '審査請求人及び参加人（行政不服審査法第十三条第四項に規定する参加人をいう。以下この項及び次条第一項第二号において同じ。）').
+原文('19条2項2号', '開示請求者（開示請求者が審査請求人又は参加人である場合を除く。）').
+原文('19条2項3号', '当該審査請求に係る行政文書の開示について反対意見書を提出した第三者（当該第三者が審査請求人又は参加人である場合を除く。）').
+
+原文('20条1項', '第十三条第三項の規定は、次の各号のいずれかに該当する裁決をする場合について準用する。').
+原文('20条1項1号', '開示決定に対する第三者からの審査請求を却下し、又は棄却する裁決').
+原文('20条1項2号', '審査請求に係る開示決定等（開示請求に係る行政文書の全部を開示する旨の決定を除く。）を変更し、当該審査請求に係る行政文書を開示する旨の裁決（第三者である参加人が当該行政文書の開示に反対の意思を表示している場合に限る。）').
+
+原文('22条1項', '行政機関の長は、開示請求をしようとする者が容易かつ的確に開示請求をすることができるよう、公文書等の管理に関する法律第七条第二項に規定するもののほか、当該行政機関が保有する行政文書の特定に資する情報の提供その他開示請求をしようとする者の利便を考慮した適切な措置を講ずるものとする。').
+原文('22条2項', '総務大臣は、この法律の円滑な運用を確保するため、開示請求に関する総合的な案内所を整備するものとする。').
+
+原文('25条', '地方公共団体は、この法律の趣旨にのっとり、その保有する情報の公開に関し必要な施策を策定し、及びこれを実施するよう努めなければならない。').
+</script>
+<script type="text/prolog" data-name="rules_b_seikyu.pl">% rules/b_seikyu.pl — 開示を請求した先・請求できる文書・開示請求書の補正・手数料の減額（2条・3条・4条2項・16条3項・25条）
+%
+%   段は6：aite（2条1項・25条）・bunsho（3条・2条2項）・hosei・hosei_joho（4条2項）・genmen（16条3項）。
+%   2026-11-25 案A。前は入口「請求」の中で、請求者（3条）・対象（2条2項）・開示請求書（4条1項）・手数料（16条1項）・情報の提供（22条）の
+%   5段をいつも出し、相手（段0）は入口の外で別に出していた。今は1〜6の欄から同じ入力で当てる。
+%   3条と2条2項は1つの段にした（案A「段の出し方」）。保有（前の hoyu）は13の欄の「文書を持っていない」で9条2項として答える（d_fukaiji.pl）。
+%   4条1項・16条1項・22条（どの入力でも同じ文）と、請求者の文（3条は「何人も」）は about へ移した（決め4）。
+%   前の段の文の「〜という入力です」「〜という入力なので」は葉へ移し（A2）、「このアプリでは金額を出しません」
+%   「認めるかどうかはアプリで判定しません」は about へ移した（A5）。
+%   段の文には、画面の上で指す先の無い指示語（その・これを・当該・同項・前項 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+
+%% ---- 2条1項・25条 開示を請求した先 ----
+国が相手(C) :- 欄(相手, C, 国).
+
+相手の段(C, []) :- 国が相手(C), !.
+相手の段(C, [s(aite, '開示を請求した先', 段(努力義務, '地方公共団体は、情報の公開に必要な施策を策定し、実施するよう努めなければなりません。', ['25条'], [R1, R2, W]))]) :-
+    欄(相手, C, 地方), !,
+    原文規定('25条', R1), 原文規定('2条1項', R2), 選んだ(相手, C, W).
+相手の段(C, [s(aite, '開示を請求した先', 段(当たらない, '行政機関情報公開法の開示請求の相手に当たりません。', ['2条1項'], [R, W, Z]))]) :-
+    原文規定('2条1項', R), 選んだ(相手, C, W), 当たらないの約束(Z).
+
+%% ---- 3条・2条2項 請求できる文書 ----
+% 2条2項本文が成り立つための欄の値（欄の順）
+行政文書の条件(作成, 職員).
+行政文書の条件(使い方, 組織).
+
+% 2条2項ただし書の号（4の欄の値 → 条・答え）
+除く号(販売, '2条2項1号', '売るために発行される官報・白書・新聞・雑誌・本などは、行政文書から除かれます。').
+除く号(歴史, '2条2項2号', '公文書管理法の特定歴史公文書等は、行政文書から除かれます。').
+除く号(特別, '2条2項3号', '研究所などの施設で、歴史・文化・学術研究の資料として特別に管理されているものは、行政文書から除かれます。').
+
+文書の段(C, [s(bunsho, '請求できる文書', S)]) :-
+    原文規定('2条2項本文', R),
+    findall(W, ( 行政文書の条件(K, V), \+ 欄(K, C, V), 選んだ(K, C, W) ), Ws),
+    ( Ws \== [] ->
+        当たらないの約束(Z), append([R | Ws], [Z], Ls),
+        S = 段(当たらない, '行政文書に当たりません。', ['2条2項'], Ls)
+    ; 欄(種類, C, K), 除く号(K, A, M) ->
+        原文規定('2条2項ただし書', R2), 原文規定(A, R3), 選んだ(種類, C, W), 当たらないの約束(Z),
+        S = 段(当たらない, M, [A], [R2, R3, W, Z])
+    ; 原文規定('3条', R0), 原文規定('2条2項ただし書', R2),
+      選んだ(作成, C, W1), 選んだ(使い方, C, W2), 選んだ(種類, C, W3),
+      S = 段(できる, '行政文書の開示を請求できます。', ['3条', '2条2項'], [R0, R, R2, W1, W2, W3]) ).
+
+%% ---- 4条2項 開示請求書の補正（5の欄が「形の不備を直すよう求められた」のとき）----
+% 「形式上の不備があると認めるとき」は行政機関の長の判断で、欄にしない（約束事①）。補正を求められたという事実だけを聞く
+請求書の段(C, [s(hosei, '開示請求書の補正', 段(できる, '行政機関の長は、開示請求書に形式上の不備があると認めるときは、相当の期間を定めて、補正を求めることができます。', ['4条2項'], [R, W])),
+               s(hosei_joho, '補正の参考となる情報', 段(努力義務, '補正を求めるときは、行政機関の長は、補正の参考となる情報を提供するよう努めなければなりません。', ['4条2項'], [R, W]))]) :-
+    欄(請求書, C, 不備), !,
+    原文規定('4条2項', R), 選んだ(請求書, C, W).
+請求書の段(_, []).
+
+%% ---- 16条3項 手数料の減額・免除（6の欄が「申し出た」のとき）----
+% 「経済的困難その他特別の理由があると認めるとき」は欄にせず、段の文に条件で書く（約束事①）。額は政令で、about の範囲の節へ（決め4）
+手数料の段(C, [s(genmen, '手数料の減額・免除', 段(できる, '行政機関の長は、経済的困難その他特別の理由があると認めるときは、手数料を減額し、又は免除することができます。', ['16条3項'], [R, W]))]) :-
+    欄(手数料, C, 申し出た), !,
+    原文規定('16条3項', R), 選んだ(手数料, C, W).
+手数料の段(_, []).
+</script>
+<script type="text/prolog" data-name="rules_c_kigen.pl">% rules/c_kigen.pl — 返事の期限・延長・大量の文書の特例・別の機関への移送（10条・11条・12条・12条の2）
+%
+%   段は6：kigen（10条1項本文）・kigen_hosei（10条1項ただし書）・encho（10条2項）・tokurei（11条）・iso（12条・12条の2）。
+%   2026-11-25 案A。前は入口「期限」の中で、原則・延長・特例・移送の4段をいつも出し、通知が来ていないときは「場面外」の段を出していた。
+%   今は5・7〜12の欄から同じ入力で当て、通知が来ていない欄の段は出さない。
+%   10条2項「事務処理上の困難その他正当な理由」・11条「著しく大量」「事務の遂行に著しい支障」は欄にせず（前の enr・tor）、
+%   9・11の欄で通知に何が書いてあったかを聞き、段の文に条件として書く（案A「評価語の聞き方」・約束事①）。
+%   最終日は10条1項の段の文に「（請求の翌日を1日目として数えた日）」の括弧だけを残し、数え方が条文に無いこと・休みの日の扱いは
+%   about へ移した（決め2。前は画面の NOTE_MANRYO）。補正を求められたときは、補正に要した日数が分からないので日付を出さない（前の NOTES (b)）。
+%   延長・特例の日付（前は60日目の日付も出していた）は、案Aの箱の文に無いので出さない。
+%   前の段の文の「〜という入力です」「当否はアプリで判定しません」「その法律の中身はこのアプリに入っていません」は、葉と about へ移した（A2・A5）。
+
+期限の段(C, L) :-
+    原則の段(C, L1), 補正の日数の段(C, L2), 延長の段(C, L3), 特例の段(C, L4), 移送の段(C, L5),
+    append([L1, L2, L3, L4, L5], L).
+
+%% ---- 10条1項本文 決定の期限（いつも出す）----
+% 最終日は、5の欄が「何も言われていない」で、7の欄に日付があるときだけ出す。開示請求があった日の翌日を1日目として30日目
+原則の段(C, [s(kigen, '決定の期限', 段(しなければならない, M, ['10条1項'], Ls))]) :-
+    原文規定('10条1項本文', R), 選んだ(請求書, C, W5),
+    ( 欄(請求書, C, 言われていない), 欄(請求日, C, D), D \== 未入力 ->
+        日数後(D, 30, E), 日付表示(E, L),
+        format(atom(M), '開示するかどうかの決定は、開示請求があった日から30日以内にしなければなりません。最終日は~wです（請求の翌日を1日目として数えた日）。', [L]),
+        選んだ(請求日, C, W7), Ls = [R, W5, W7]
+    ; M = '開示するかどうかの決定は、開示請求があった日から30日以内にしなければなりません。',
+      Ls = [R, W5] ).
+
+%% ---- 10条1項ただし書 補正に要した日数（5の欄が「形の不備を直すよう求められた」のとき）----
+補正の日数の段(C, [s(kigen_hosei, '補正に要した日数', 段(算入しない, '補正に要した日数は、30日に数えません。', ['10条1項ただし書'], [R, W]))]) :-
+    欄(請求書, C, 不備), !,
+    原文規定('10条1項ただし書', R), 選んだ(請求書, C, W).
+補正の日数の段(_, []).
+
+%% ---- 10条2項 期限の延長（8の欄が「来ていない」でないとき）----
+% 書面で30日以内・延長後の期間と理由の両方が書いてある → できる。書いてないか口頭だけ → 要る（書面で知らせる定め）。30日を超える → 当たらない
+延長の段(C, []) :- 欄(延長, C, 来ていない), !.
+延長の段(C, [s(encho, '期限の延長', S)]) :-
+    原文規定('10条2項', R), 選んだ(延長, C, W8), 欄(延長, C, E),
+    延長の答え(E, C, R, W8, S).
+
+延長の答え(超える, _, R, W8, 段(当たらない, '延長できるのは、30日以内に限られます。', ['10条2項'], [R, W8, Z])) :- !,
+    当たらないの約束(Z).
+延長の答え(口頭, _, R, W8, 段(要る, '延長の通知は、延長後の期間と延長の理由を書面でしなければなりません。', ['10条2項'], [R, W8])) :- !.
+延長の答え(以内, C, R, W8, 段(要る, '延長の通知は、延長後の期間と延長の理由を書面でしなければなりません。', ['10条2項'], [R, W8, W9])) :-
+    欄(延長の記載, C, 欠ける), !,
+    選んだ(延長の記載, C, W9).
+延長の答え(以内, C, R, W8, 段(できる, '行政機関の長は、事務処理上の困難その他正当な理由があるときは、30日以内に限り延長できます。', ['10条2項'], [R, W8, W9])) :-
+    選んだ(延長の記載, C, W9).
+
+%% ---- 11条 大量の文書の期限（10の欄が「来ていない」でないとき）----
+特例の段(C, []) :- 欄(特例, C, 来ていない), !.
+特例の段(C, [s(tokurei, '大量の文書の期限', 段(足りる, '開示請求があった日から60日以内に相当の部分を決め、残りは通知に書かれた期限までに決めれば足ります。', ['11条'], [R, W10, W11]))]) :-
+    欄(特例, C, 書面), 欄(特例の記載, C, 両方), !,
+    原文規定('11条1項', R), 選んだ(特例, C, W10), 選んだ(特例の記載, C, W11).
+特例の段(C, [s(tokurei, '大量の文書の期限', 段(要る, '一部ずつ決めるときは、一部ずつ決めることと理由、残りの文書を決める期限を、30日以内に書面で知らせなければなりません。', ['11条'], Ls))]) :-
+    原文規定('11条1項', R), 原文規定('11条1項1号', R1), 原文規定('11条1項2号', R2), 選んだ(特例, C, W10),
+    ( 欄(特例, C, 書面) -> 選んだ(特例の記載, C, W11), Ls = [R, R1, R2, W10, W11] ; Ls = [R, R1, R2, W10] ).
+
+%% ---- 12条・12条の2 別の機関への移送（12の欄が「来ていない」でないとき）----
+% 独立行政法人等へ移送されたときは、決定・第三者・審査請求の段を出さない（rules/g_hantei.pl の 全部の段。決め6）
+移送の段(C, []) :- 欄(移送, C, 来ていない), !.
+移送の段(C, [s(iso, '別の機関への移送', 段(しなければならない, '移送を受けた行政機関の長が、開示するかどうかの決定をしなければなりません。', ['12条2項'], [R1, R2, R3, W]))]) :-
+    欄(移送, C, 行政機関), !,
+    原文規定('12条1項', R1), 原文規定('12条2項', R2), 原文規定('12条3項', R3), 選んだ(移送, C, W).
+移送の段(C, [s(iso, '別の機関への移送', 段(別の法律, '独立行政法人等情報公開法の規定が適用されます。', ['12条の2第2項'], [R1, R2, R3, W]))]) :-
+    原文規定('12条の2第1項', R1), 原文規定('12条の2第2項', R2), 原文規定('12条の2第3項', R3), 選んだ(移送, C, W).
+</script>
+<script type="text/prolog" data-name="rules_d_fukaiji.pl">% rules/d_fukaiji.pl — 届いた決定の通知（5条〜9条）
+%
+%   段は6：kettei（9条）・gou（5条）・bubun（6条1項）・kojin（6条2項）・koueki（7条）・sonpi（8条）。
+%   2026-11-25 案A。前は入口「不開示」の中で、決定・号・部分開示・公益・存否の5段をいつも出し、欄が隠れた段は「判定しない」にしていた。
+%   今は13〜15の欄から同じ入力で当て、13の欄が「まだ来ていない」なら段を出さない。
+%   14の欄（開示しない理由として書かれた情報の種類）は、通知に書かれた5条の号を選択肢に添えて聞く（決め3）。
+%   その情報が本当にその号に当たるかは判定しない（約束事①）。答えは号の定めを言い切る（案A「評価語の聞き方」）。
+%   7条（公益）は欄にせず（前の kou）、13の欄が「一部を開示する」か「全部を開示しない」のときにいつも出す（決め5）。
+%   15の欄（前の kub・yui）は、通知に書かれたことを事実として聞く。「容易に区分して除く」「有意の情報」の当否は判定しない（約束事①）。
+%   前の段の文の「〜という入力です」「認められるかは判定しません」「「しなければならない」という義務ではありません」は、葉と about へ移した（A2・A5）。
+
+% 5条の号（14の欄の値 → 条・答え・下に付ける原文の行）
+不開示の号(個人, '5条1号', '個人に関する情報で特定の個人を識別できるものなどは、開示の義務から除かれます。', ['5条1号ただし書', '5条1号イ', '5条1号ロ', '5条1号ハ']).
+不開示の号(匿名, '5条1号の2', '行政機関等匿名加工情報などは、開示の義務から除かれます。', []).
+不開示の号(法人, '5条2号', '法人などの正当な利益を害するおそれがある情報などは、開示の義務から除かれます。', ['5条2号ただし書', '5条2号イ', '5条2号ロ']).
+不開示の号(安全, '5条3号', '国の安全が害されるおそれなどがあると行政機関の長が認めることに相当の理由がある情報は、開示の義務から除かれます。', []).
+不開示の号(犯罪, '5条4号', '犯罪の予防・捜査などに支障を及ぼすおそれがあると行政機関の長が認めることに相当の理由がある情報は、開示の義務から除かれます。', []).
+不開示の号(審議, '5条5号', '国の機関などの中の審議・検討の情報で、率直な意見の交換などが不当に損なわれるおそれがあるものは、開示の義務から除かれます。', []).
+不開示の号(事務, '5条6号', '国の機関などの事務・事業の適正な遂行に支障を及ぼすおそれがある情報は、開示の義務から除かれます。', ['5条6号イ', '5条6号ロ', '5条6号ハ', '5条6号ニ', '5条6号ホ']).
+
+% 13の欄で、開示しない部分がある決定（6条・7条を当てる）
+一部でも不開示(C) :- 欄(決定, C, K), memberchk(K, [一部開示, 不開示]).
+
+決定の段(C, []) :- 欄(決定, C, まだ), !.
+決定の段(C, L) :-
+    通知の段(C, L1), 号の段(C, L2), 部分の段(C, L3), 個人の部分の段(C, L4), 公益の段(C, L5), 存否の段(C, L6),
+    append([L1, L2, L3, L4, L5, L6], L).
+
+%% ---- 9条 決定の通知 ----
+通知の段(C, [s(kettei, '決定の通知', 段(しなければならない, '開示する決定は、開示の実施に関し政令で定める事項とあわせて、書面で知らせなければなりません。', ['9条1項'], [R, W]))]) :-
+    欄(決定, C, K), memberchk(K, [全部開示, 一部開示]), !,
+    原文規定('9条1項', R), 選んだ(決定, C, W).
+通知の段(C, [s(kettei, '決定の通知', 段(しなければならない, '開示しない決定は、書面で知らせなければなりません。', ['9条2項'], [R, W]))]) :-
+    原文規定('9条2項', R), 選んだ(決定, C, W).
+
+%% ---- 5条 開示しない理由の情報（13の欄が「一部を開示する」「全部を開示しない」「文書があるかないかも答えない」のとき）----
+号の段(C, []) :- 欄(決定, C, K), \+ memberchk(K, [一部開示, 不開示, 存否]), !.
+号の段(C, [s(gou, '開示しない理由の情報', 段(しなければならない, '行政機関の長は、不開示の情報が書かれている場合を除き、文書を開示しなければなりません。', ['5条'], [R, W]))]) :-
+    欄(理由, C, なし), !,
+    原文規定('5条', R), 選んだ(理由, C, W).
+号の段(C, [s(gou, '開示しない理由の情報', 段(除かれる, M, [A], Ls))]) :-
+    欄(理由, C, G), 不開示の号(G, A, M, Subs),
+    原文規定('5条', R0), 原文規定(A, R1), maplist(原文規定, Subs, Rs), 選んだ(理由, C, W),
+    append([[R0, R1], Rs, [W]], Ls).
+
+%% ---- 6条1項 一部を除いた開示（13の欄が「一部を開示する」「全部を開示しない」のとき）----
+% 13の欄が「一部を開示する」×15の欄が「文書の全部に…」（ア）と、「全部を開示しない」×「その部分だけを除いた」（イ）は、
+% schema.pl の 組み合わせなし が先に止める
+部分の段(C, []) :- \+ 一部でも不開示(C), !.
+部分の段(C, [s(bubun, '一部を除いた開示', S)]) :-
+    欄(部分, C, P), 選んだ(決定, C, W13), 選んだ(部分, C, W15),
+    部分の答え(P, W13, W15, S).
+
+部分の答え(除いた, W13, W15, 段(しなければならない, '不開示の情報の部分を除いた部分は、開示しなければなりません。', ['6条1項'], [R, W13, W15])) :- !,
+    原文規定('6条1項本文', R).
+部分の答え(全部, W13, W15, 段(当たらない, '文書の全部に不開示の情報が書かれているときは、部分を除いて開示する義務はありません。', ['6条1項'], [R, W13, W15, Z])) :- !,
+    原文規定('6条1項', R), 当たらないの約束(Z).
+部分の答え(除けない, W13, W15, 段(当たらない, '不開示の情報の部分を容易に分けて除けないときは、部分を除いて開示する義務はありません。', ['6条1項'], [R, W13, W15, Z])) :- !,
+    原文規定('6条1項', R), 当たらないの約束(Z).
+部分の答え(意味なし, W13, W15, 段(当たらない, '残りに意味のある情報が書かれていないと認められるときは、部分を除いて開示する義務はありません。', ['6条1項ただし書'], [R, W13, W15, Z])) :-
+    原文規定('6条1項ただし書', R), 当たらないの約束(Z).
+
+%% ---- 6条2項 個人の情報の一部を除いた開示（14の欄が「個人の情報」で、13の欄が「一部を開示する」「全部を開示しない」のとき）----
+個人の部分の段(C, [s(kojin, '個人の情報の一部を除いた開示', 段(しなければならない, '個人の情報でも、氏名など個人を識別できる部分を除けば個人の権利利益が害されるおそれがないと認められるときは、残りの部分を開示しなければなりません。', ['6条2項'], [R, W]))]) :-
+    一部でも不開示(C), 欄(理由, C, 個人), !,
+    原文規定('6条2項', R), 選んだ(理由, C, W).
+個人の部分の段(_, []).
+
+%% ---- 7条 公益上の理由による開示（13の欄が「一部を開示する」「全部を開示しない」のとき、いつも出す。決め5）----
+% 14の欄が「匿名加工情報など（1号の2）」なら、7条の括弧で除かれる
+公益の段(C, []) :- \+ 一部でも不開示(C), !.
+公益の段(C, [s(koueki, '公益上の理由による開示', 段(当たらない, '行政機関等匿名加工情報などは、公益上特に必要があっても開示できる情報に入りません。', ['7条'], [R, W, Z]))]) :-
+    欄(理由, C, 匿名), !,
+    原文規定('7条', R), 選んだ(理由, C, W), 当たらないの約束(Z).
+公益の段(C, [s(koueki, '公益上の理由による開示', 段(できる, '行政機関の長は、公益上特に必要があると認めるときは、不開示の情報が書かれていても開示することができます。', ['7条'], [R, W]))]) :-
+    原文規定('7条', R), 選んだ(決定, C, W).
+
+%% ---- 8条 文書があるかないかを答えない拒否（13の欄が「文書があるかないかも答えない」のとき）----
+存否の段(C, [s(sonpi, '文書があるかないかを答えない拒否', 段(できる, '文書があるかを答えるだけで不開示の情報を明かすことになるときは、行政機関の長は、あるかないかを答えずに開示請求を拒むことができます。', ['8条'], [R, W]))]) :-
+    欄(決定, C, 存否), !,
+    原文規定('8条', R), 選んだ(決定, C, W).
+存否の段(_, []).
+</script>
+<script type="text/prolog" data-name="rules_e_daisansha.pl">% rules/e_daisansha.pl — 文書に書かれたほかの人（13条・20条）
+%
+%   段は3：kikai（13条1項・2項）・hantai（13条3項）・junyo（20条1項）。
+%   2026-11-25 案A。前は入口「第三者」の中で、意見書を出す機会・反対の意見書・その先の手続の3段をいつも出し、
+%   場面（13条2項の号）・開示決定（ket3）を別の欄で聞いていた。今は16〜19の欄と13の欄から同じ入力で当てる。
+%   16の欄が「書かれていない」なら段を出さない（前の「13条の第三者に当たりません」の段は、どの入力でも同じ文の段だった）。
+%   13条2項の号は、17の欄で役所がその人に知らせた開示の理由として聞く（1号＝人の命・健康・生活・財産を守るため、2号＝公益上とくに必要なため）。
+%   「認められる」（13条2項1号）は判定しない（約束事①）。13条3項の「開示決定をするとき」は13の欄から読む（前の ket3。C1）。
+%   19の欄は、17の欄が「とくに書かれていない」か、18の欄が「分かっている」のときだけ見る（居場所が分からない人は意見書を出せない）。
+%   19条2項3号（反対意見書を出した人への諮問の通知）は、審査請求の段（f_fufuku.pl の shimontsuchi）にまとめた。
+%   前の段の文の「〜という入力です」「当該第三者」は、葉と名詞に直した（A2・A6）。
+
+第三者の段(C, []) :- 欄(ほかの人, C, 書かれていない), !.
+第三者の段(C, L) :-
+    機会の段(C, L1), 反対の段(C, L2),
+    append(L1, L2, L).
+
+% 19の欄を見るか（居場所が分からない人には意見書を出す機会が無い）
+意見書を見る(C) :- 欄(知らせた理由, C, とくにない), !.
+意見書を見る(C) :- 欄(居場所, C, 分かる).
+
+% 13条2項の号（17の欄の値 → 号の条）
+知らせた号(命, '13条2項1号').
+知らせた号(公益, '13条2項2号').
+
+%% ---- 13条1項・2項 意見書を出す機会 ----
+機会の段(C, [s(kikai, '意見書を出す機会', 段(できる, '行政機関の長は、文書に情報が書かれている人に、意見書を出す機会を与えることができます。', ['13条1項'], [R, W16, W17]))]) :-
+    欄(知らせた理由, C, とくにない), !,
+    原文規定('13条1項', R), 選んだ(ほかの人, C, W16), 選んだ(知らせた理由, C, W17).
+機会の段(C, [s(kikai, '意見書を出す機会', 段(しなければならない, '開示決定の前に、文書に情報が書かれている人に書面で知らせて、意見書を出す機会を与えなければなりません。', ['13条2項'], [R, R1, W16, W17, W18]))]) :-
+    欄(居場所, C, 分かる), !,
+    欄(知らせた理由, C, K), 知らせた号(K, A),
+    原文規定('13条2項本文', R), 原文規定(A, R1),
+    選んだ(ほかの人, C, W16), 選んだ(知らせた理由, C, W17), 選んだ(居場所, C, W18).
+機会の段(C, [s(kikai, '意見書を出す機会', 段(足りる, '居場所が分からない人には、意見書を出す機会を与えなくてもかまいません。', ['13条2項ただし書'], [R, W17, W18]))]) :-
+    原文規定('13条2項ただし書', R), 選んだ(知らせた理由, C, W17), 選んだ(居場所, C, W18).
+
+%% ---- 13条3項・20条1項 開示に反対の意見書 ----
+反対の段(C, []) :- \+ 意見書を見る(C), !.
+反対の段(C, [s(hantai, '開示を実施する日までの2週間', S), s(junyo, '裁決への準用', 段(準用, '開示に反対した人の審査請求を退ける裁決や、審査請求を受けて開示することにした裁決にも、2週間を置く定めが準用されます。', ['20条1項'], [R20, R20a, R20b, W19]))]) :-
+    欄(意見書, C, 反対), !,
+    原文規定('13条3項', R), 選んだ(意見書, C, W19), 選んだ(決定, C, W13), 欄(決定, C, K),
+    二週間の答え(K, R, W19, W13, S),
+    原文規定('20条1項', R20), 原文規定('20条1項1号', R20a), 原文規定('20条1項2号', R20b).
+反対の段(C, [s(hantai, '開示を実施する日までの2週間', 段(当たらない, '開示に反対でない意見書のときは、開示を実施する日までの2週間の定めは当たりません。', ['13条3項'], [R, W, Z]))]) :-
+    欄(意見書, C, 反対でない), !,
+    原文規定('13条3項', R), 選んだ(意見書, C, W), 当たらないの約束(Z).
+反対の段(_, []).
+
+% 13の欄が「まだ来ていない」→ 開示決定をするときの定め。全部・一部を開示する → 2週間を置く。開示決定が無い → 当たらない
+二週間の答え(まだ, R, W19, W13, 段(しなければならない, '開示決定をするときは、開示決定の日と開示を実施する日の間に、少なくとも2週間を置かなければなりません。', ['13条3項'], [R, W19, W13])) :- !.
+二週間の答え(K, R, W19, W13, 段(しなければならない, '開示決定の日と開示を実施する日の間に、少なくとも2週間を置かなければなりません。', ['13条3項'], [R, W19, W13])) :-
+    memberchk(K, [全部開示, 一部開示]), !.
+二週間の答え(_, R, W19, W13, 段(当たらない, '開示決定が無いときは、開示を実施する日までの2週間の定めは当たりません。', ['13条3項'], [R, W19, W13, Z])) :-
+    当たらないの約束(Z).
+</script>
+<script type="text/prolog" data-name="rules_f_fufuku.pl">% rules/f_fufuku.pl — 審査請求（18条1項・19条）
+%
+%   段は3：shinri（18条1項）・shimon（19条1項）・shimontsuchi（19条2項）。
+%   2026-11-25 案A。前は入口「不服」の中で、審査請求をしたか・対象（決定か不作為か）・裁決・反対意見書を別の欄で聞き、
+%   審査請求をしていないときは「場面外」の段、諮問しないときは「判定しない」の段を出していた。
+%   今は20・21の欄から段を出し、対象は13の欄（まだ来ていない＝不作為）から、反対意見書は16〜19の欄から読む（前の tai・han。C1）。
+%   21の欄は、諮問の通知が来たか・諮問の通知が無いまま来た裁決の種類を聞く。19条1項1号「不適法」の当否は判定しない（約束事①）。
+%   20の欄が「していない」なら段を出さない（20＝していない×21≠まだ何も来ていない は schema.pl の 組み合わせなし のウ）。
+%   審査請求の期間・先・訴えの形は about から fufuku・gyosos のページへリンクする（前は結果の下の note-next。A5）。
+
+審査の段(C, []) :- 欄(審査請求, C, していない), !.
+審査の段(C, L) :-
+    審理の段(C, L1), 諮問の段(C, L2), 諮問の通知の段(C, L3),
+    append([L1, L2, L3], L).
+
+% 反対意見書が出ているか（16の欄が「書かれている」で、19の欄を見るときに「開示に反対」）
+反対意見書がある(C) :- 欄(ほかの人, C, 書かれている), 意見書を見る(C), 欄(意見書, C, 反対).
+
+%% ---- 18条1項 審理員の規定 ----
+審理の段(C, [s(shinri, '審理員の規定', 段(適用しない, M, ['18条1項'], [R, W20, W13]))]) :-
+    原文規定('18条1項', R), 選んだ(審査請求, C, W20), 選んだ(決定, C, W13),
+    ( 欄(決定, C, まだ) -> M = '決定が来ないことへの審査請求には、行政不服審査法の審理員の規定は適用されません。'
+    ; M = '開示するかどうかの決定への審査請求には、行政不服審査法の審理員の規定は適用されません。' ).
+
+%% ---- 19条1項 審査会への諮問 ----
+諮問の段(C, [s(shimon, '審査会への諮問', S)]) :-
+    欄(審査の後, C, A), 選んだ(審査の後, C, W21),
+    諮問の答え(A, C, W21, S).
+
+諮問の答え(却下, _, W21, 段(当たらない, '却下の裁決のときは、審査会への諮問は要りません。', ['19条1項1号'], [R, W21, Z])) :- !,
+    原文規定('19条1項1号', R), 当たらないの約束(Z).
+諮問の答え(全部開示, C, W21, 段(要る, '反対意見書が出ているときは、全部を開示する裁決でも、審査会に諮問しなければなりません。', ['19条1項2号'], [R, W19, W21])) :-
+    反対意見書がある(C), !,
+    原文規定('19条1項2号', R), 選んだ(意見書, C, W19).
+諮問の答え(全部開示, _, W21, 段(当たらない, '反対意見書が無く、全部を開示する裁決のときは、審査会への諮問は要りません。', ['19条1項2号'], [R, W21, Z])) :- !,
+    原文規定('19条1項2号', R), 当たらないの約束(Z).
+諮問の答え(ほか, _, W21, 段(要る, '審査請求を受けた行政機関の長は、審査会に諮問しなければなりません。', ['19条1項'], [R, W21])) :- !,
+    原文規定('19条1項', R).
+% まだ何も来ていない・諮問したという通知
+諮問の答え(_, _, W21, 段(しなければならない, '審査請求を受けた行政機関の長は、情報公開・個人情報保護審査会に諮問しなければなりません。', ['19条1項'], [R, W21])) :-
+    原文規定('19条1項', R).
+
+%% ---- 19条2項 諮問したことの通知（21の欄が「審査会に諮問したという通知」のとき）----
+諮問の通知の段(C, [s(shimontsuchi, '諮問したことの通知', 段(しなければならない, '諮問した行政機関の長は、審査請求人・参加人・開示請求者・反対意見書を出した人に、諮問したことを知らせなければなりません。', ['19条2項'], [R, R1, R2, R3, W]))]) :-
+    欄(審査の後, C, 諮問), !,
+    原文規定('19条2項', R), 原文規定('19条2項1号', R1), 原文規定('19条2項2号', R2), 原文規定('19条2項3号', R3),
+    選んだ(審査の後, C, W).
+諮問の通知の段(_, []).
+</script>
+<script type="text/prolog" data-name="rules_g_hantei.pl">% rules/g_hantei.pl — 段を束ねて見出し・根拠条文・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 箱の条, 葉のリスト)　結論ごとの段 = s(画面のid, 見出し, 段)
+%     段は24：mujun_a・mujun_i・mujun_u（schema の 組み合わせなし）、aite・bunsho・hosei・hosei_joho・genmen（b_seikyu）、
+%     kigen・kigen_hosei・encho・tokurei・iso（c_kigen）、kettei・gou・bubun・kojin・koueki・sonpi（d_fukaiji）、
+%     kikai・hantai・junyo（e_daisansha）、shinri・shimon・shimontsuchi（f_fufuku）
+%   形は akiya-prolog の g_hantei.pl と同じ（2026-11-25 案A）。
+%   前は judge(C, r(見出し, 相手の段, 入口の段のリスト, 根拠条文), Tree) で、入口1つの段だけを返し、
+%   見出しは答えを1つだけ選んで出し（前の 入口の見出し・問いの答え。隠れた答えは段の文でしか読めなかった。A7）、
+%   木は全部の段を「次のすべてが成り立つ」の下にぶら下げた1本で（B5）、印は 止まった段がある・止まった見出し（見出しの文から状態を逆に引く）で決め、
+%   「判定しない」の段を 段の木 の fail で木から外し、段の状態ごとにアプリの約束事を木に付けていた（前の 段の約束。A5）。
+%   今は段ごとに状態を持ち、状態を全部名前で書き、知らない状態は throw で止める（agents/dog/rules.md:96）。
+%   段の文には、画面の上で指す先の無い指示語（その・これを・当該・同項・前項 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+%   どの入力でも、1の欄が国なら請求できる文書の段と決定の期限の段が、国でなければ開示を請求した先の段が出るので、
+%   「判定できませんでした」になるのは ctx の値が欄の選択肢に無いときだけ。
+
+%% ---- judge ----
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    Steps \== [],
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 成り立たない組があれば、その組だけを段にする（REVIEW_RULES C3。ほかの段は出さない）。
+% 組は findall で全部集め、組ごとに1段にする（id は mujun_a・mujun_i・mujun_u。REVIEW_RULES 末尾「AI同士で決めた書き方」1・2）。
+% 無ければ、1の欄が国でないときは開示を請求した先の段だけを出す（2〜21の欄は見ない）。
+% 国のときは、同じ入力で全部の段を当てる。並びは時間の順（文書 → 請求書 → 手数料 → 期限・延長・特例・移送 → 決定 → ほかの人 → 審査請求）で、
+% そのあと 当たった答えを先に（止まる答えを先に）。
+% 独立行政法人等へ移送されたときは、決定・ほかの人・審査請求の段を出さない（12条の2第2項で独立行政法人等情報公開法が適用される。決め6。
+% 13条の意見書の手続も開示決定のためのものなので、ほかの人の段も出さない）。
+% 同じ述語を別のファイルに分けて書くと後の読み込みで消えるので、まとめはここに1つだけ置く
+全部の段(C, Steps) :-
+    findall(s(Id, 'この組み合わせはありません', 段(組み合わせなし, 'この組み合わせはありません。', As, Ws)),
+            ( 組み合わせなし(C, K, Ws, As), atom_concat(mujun_, K, Id) ), Steps),
+    Steps \== [], !.
+全部の段(C, Steps) :-
+    相手の段(C, L1),
+    ( 国が相手(C) ->
+        文書の段(C, L2),
+        請求書の段(C, L3),
+        手数料の段(C, L4),
+        期限の段(C, L5),
+        ( 欄(移送, C, 独法) -> L6 = [], L7 = [], L8 = []
+        ; 決定の段(C, L6), 第三者の段(C, L7), 審査の段(C, L8) ),
+        append([L1, L2, L3, L4, L5, L6, L7, L8], L0)
+    ; L0 = L1 ),
+    当たった答えを先に(L0, Steps).
+
+%% ---- 並べ方 ----
+% 並びは ①止まる答え ②当たった答え ④「当たりません」の文（この本に ③答えを支える文 は無い）
+% ①②が無いときは「当たりません」が聞いた答えなので、そのまま出す（akiya-prolog と同じ並べ方）
+% 組の番号 は番号を空のまま呼んで後で比べる。番号を束ねて呼ぶと頭に合わず、最後の throw の節に落ちて止まる（sorin-prolog 2026-11-22 22:50 run_cases。akiya と同じ）
+当たった答えを先に([], []) :- !.
+当たった答えを先に(L0, L) :-
+    ( member(s(_, _, 段(St0, _, _, _)), L0), 組の番号(St0, N0), N0 =< 2 -> Order = [1, 2, 3, 4] ; Order = [4, 3] ),
+    findall(S, ( member(N, Order), member(S, L0), S = s(_, _, 段(St, _, _, _)), 組の番号(St, M), M =:= N ), L).
+
+% 組の番号(状態, 1=止まる答え | 2=当たった答え | 4=当たりません)。
+% 状態は全部名前で書き、知らない状態は止める（agents/dog/rules.md:96。akiya-prolog g_hantei.pl の 組の番号 を写し、状態は案A「組の番号」）
+% 前は 組の番号 が無く、状態は41種類（国・請求できる・保有しない・語に当たらない・場面外・判定しない など）だった。
+% 行き先は案A「組の番号」のとおり。場面外・判定しない・審査請求前は、段を出さないようにした（A5）。決定前は しなければならない に入れた。
+% 定め（22条）は about へ移し、18条1項は 適用しない にした（決め4）
+組の番号(組み合わせなし, 1) :- !.     % ア・イ（6条1項・9条2項）・ウ（19条1項）
+組の番号(要る, 1) :- !.               % 10条2項（口頭・書いていない）・11条（書面でない・書いていない）・19条1項（諮問の通知が無いまま裁決）・19条1項2号（反対意見書）
+組の番号(できる, 2) :- !.             % 3条・4条2項・7条・8条・10条2項・13条1項・16条3項
+組の番号(しなければならない, 2) :- !. % 5条・6条1項・6条2項・9条・10条1項・12条2項・13条2項・13条3項・19条1項・19条2項
+組の番号(努力義務, 2) :- !.           % 25条・4条2項後段
+組の番号(足りる, 2) :- !.             % 11条（すれば足りる）・13条2項ただし書
+組の番号(除かれる, 2) :- !.           % 5条の号（開示の義務から除かれる）
+組の番号(算入しない, 2) :- !.         % 10条1項ただし書
+組の番号(適用しない, 2) :- !.         % 18条1項（審理員の規定）
+組の番号(準用, 2) :- !.               % 20条1項
+組の番号(別の法律, 2) :- !.           % 12条の2第2項
+組の番号(当たらない, 4) :- !.         % 2条1項・2条2項（本文・ただし書）・6条1項（全部・除けない・ただし書）・7条（括弧）・10条2項（30日を超える）・13条3項（開示決定が無い・反対でない）・19条1項1号・2号
+組の番号(St, _) :- throw(知らない状態(St)).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、段の文だけを出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」を付けない）。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(_, Steps, Ws) :-
+    findall(W, ( member(s(_, _, S), Steps), 問いの答え(S, W) ), Ws).
+
+% 答えの文に箱の条を（）で付ける。条の無い段は付けない（「（）」を画面に出さない。この本の段はどれも条がある）
+問いの答え(S, W) :-
+    S = 段(_, _, As, _),
+    答え(S, W0),
+    ( As == [] -> W = W0 ; 条の表記(As, A), format(atom(W), '~w（~w）', [W0, A]) ).
+
+% 節の文：答えの文（条を付けない）
+節の文(_, S, W) :- 答え(S, W).
+
+% 答え(段, 答えの文)：段の文の末尾の「。」を外す。
+答え(段(_, M, _, _), W) :-
+    ( atom_concat(M0, '。', M) -> W = M0 ; W = M ).
+
+%% ---- 根拠条文 ----
+% 段の順に並べ、重複は1つに
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As, _), Ss), member(A, As) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5。結論をつないだ行と「次のすべてが成り立つ」の根は置かない）。
+% 並びは結論の箱と同じ。一番上の行は結論の箱の文で、その下に葉（規定の行・起きた事実・約束事）を置く。
+木(_, Steps, Trees) :-
+    findall(T, ( member(s(_, _, S), Steps), 段の木(S, T) ), Trees).
+
+段の木(S, t(K, W, '', Cs)) :-
+    S = 段(St, _, _, Fs),
+    問いの答え(S, W),
+    maplist(葉の行, Fs, Kids),
+    すべて(W, '', Kids, t(_, W, _, Cs)),
+    印(St, K).
+
+% 止まった段（組の番号の1番と、当たらない）は info、そのほか（2番）は ok（木ごとに、その段で決める。akiya-prolog と同じ）
+% 状態は1つに決まっていて、入っているかを見るだけなので memberchk（REVIEW_RULES 末尾「AI同士で決めた書き方」1）
+印(St, K) :- 組の番号(St, _), ( memberchk(St, [組み合わせなし, 要る, 当たらない]) -> K = info ; K = ok ).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は akiya-prolog の web.pl と同じ（2026-11-25 案A）。
+%   前は result・explain の2つで、explain は木1本を平らにしていた。
+%   今は木を結論ごとに1本にし（B5）、「この組み合わせはありません」も段の1つにした（rules/g_hantei.pl の 全部の段）。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+</script>
+<script type="application/json" id="law">{"2":{"t":"第二条","c":"（定義）","p":[{"n":"1","s":"この法律において「行政機関」とは、次に掲げる機関をいう。","i":[{"n":"1","t":"一","s":"法律の規定に基づき内閣に置かれる機関（内閣府及び防災庁を除く。）及び内閣の所轄の下に置かれる機関","sub":[]},{"n":"2","t":"二","s":"内閣府、宮内庁並びに内閣府設置法（平成十一年法律第八十九号）第四十九条第一項及び第二項に規定する機関（これらの機関のうち第五号の政令で定める機関が置かれる機関にあっては、当該政令で定める機関を除く。）","sub":[]},{"n":"3","t":"三","s":"防災庁（第六号の政令で定める施設等機関を除く。）","sub":[]},{"n":"4","t":"四","s":"国家行政組織法（昭和二十三年法律第百二十号）第三条第二項に規定する機関（第七号の政令で定める機関が置かれる機関にあっては、当該政令で定める機関を除く。）","sub":[]},{"n":"5","t":"五","s":"内閣府設置法第三十九条及び第五十五条並びに宮内庁法（昭和二十二年法律第七十号）第十六条第二項の機関並びに内閣府設置法第四十条及び第五十六条（宮内庁法第十八条第一項において準用する場合を含む。）の特別の機関で、政令で定めるもの","sub":[]},{"n":"6","t":"六","s":"防災庁設置法（令和八年法律第六十一号）第十五条の施設等機関で、政令で定めるもの","sub":[]},{"n":"7","t":"七","s":"国家行政組織法第八条の二の施設等機関及び同法第八条の三の特別の機関で、政令で定めるもの","sub":[]},{"n":"8","t":"八","s":"会計検査院","sub":[]}]},{"n":"2","s":"この法律において「行政文書」とは、行政機関の職員が職務上作成し、又は取得した文書、図画及び電磁的記録（電子的方式、磁気的方式その他人の知覚によっては認識することができない方式で作られた記録をいう。以下同じ。）であって、当該行政機関の職員が組織的に用いるものとして、当該行政機関が保有しているものをいう。ただし、次に掲げるものを除く。","i":[{"n":"1","t":"一","s":"官報、白書、新聞、雑誌、書籍その他不特定多数の者に販売することを目的として発行されるもの","sub":[]},{"n":"2","t":"二","s":"公文書等の管理に関する法律（平成二十一年法律第六十六号）第二条第七項に規定する特定歴史公文書等","sub":[]},{"n":"3","t":"三","s":"政令で定める研究所その他の施設において、政令で定めるところにより、歴史的若しくは文化的な資料又は学術研究用の資料として特別の管理がされているもの（前号に掲げるものを除く。）","sub":[]}]}]},"3":{"t":"第三条","c":"（開示請求権）","p":[{"n":"1","s":"何人も、この法律の定めるところにより、行政機関の長（前条第一項第五号から第七号までの政令で定める機関にあっては、その機関ごとに政令で定める者をいう。以下同じ。）に対し、当該行政機関の保有する行政文書の開示を請求することができる。","i":[]}]},"4":{"t":"第四条","c":"（開示請求の手続）","p":[{"n":"1","s":"前条の規定による開示の請求（以下「開示請求」という。）は、次に掲げる事項を記載した書面（以下「開示請求書」という。）を行政機関の長に提出してしなければならない。","i":[{"n":"1","t":"一","s":"開示請求をする者の氏名又は名称及び住所又は居所並びに法人その他の団体にあっては代表者の氏名","sub":[]},{"n":"2","t":"二","s":"行政文書の名称その他の開示請求に係る行政文書を特定するに足りる事項","sub":[]}]},{"n":"2","s":"行政機関の長は、開示請求書に形式上の不備があると認めるときは、開示請求をした者（以下「開示請求者」という。）に対し、相当の期間を定めて、その補正を求めることができる。この場合において、行政機関の長は、開示請求者に対し、補正の参考となる情報を提供するよう努めなければならない。","i":[]}]},"5":{"t":"第五条","c":"（行政文書の開示義務）","p":[{"n":"1","s":"行政機関の長は、開示請求があったときは、開示請求に係る行政文書に次の各号に掲げる情報（以下「不開示情報」という。）のいずれかが記録されている場合を除き、開示請求者に対し、当該行政文書を開示しなければならない。","i":[{"n":"1","t":"一","s":"個人に関する情報（事業を営む個人の当該事業に関する情報を除く。）であって、当該情報に含まれる氏名、生年月日その他の記述等（文書、図画若しくは電磁的記録に記載され、若しくは記録され、又は音声、動作その他の方法を用いて表された一切の事項をいう。次条第二項において同じ。）により特定の個人を識別することができるもの（他の情報と照合することにより、特定の個人を識別することができることとなるものを含む。）又は特定の個人を識別することはできないが、公にすることにより、なお個人の権利利益を害するおそれがあるもの。ただし、次に掲げる情報を除く。","sub":["イ 法令の規定により又は慣行として公にされ、又は公にすることが予定されている情報","ロ 人の生命、健康、生活又は財産を保護するため、公にすることが必要であると認められる情報","ハ 当該個人が公務員等（国家公務員法（昭和二十二年法律第百二十号）第二条第一項に規定する国家公務員（独立行政法人通則法（平成十一年法律第百三号）第二条第四項に規定する行政執行法人の役員及び職員を除く。）、独立行政法人等（独立行政法人等の保有する情報の公開に関する法律（平成十三年法律第百四十号。以下「独立行政法人等情報公開法」という。）第二条第一項に規定する独立行政法人等をいう。以下同じ。）の役員及び職員、地方公務員法（昭和二十五年法律第二百六十一号）第二条に規定する地方公務員並びに地方独立行政法人（地方独立行政法人法（平成十五年法律第百十八号）第二条第一項に規定する地方独立行政法人をいう。以下同じ。）の役員及び職員をいう。）である場合において、当該情報がその職務の遂行に係る情報であるときは、当該情報のうち、当該公務員等の職及び当該職務遂行の内容に係る部分"]},{"n":"1_2","t":"一の二","s":"個人情報の保護に関する法律（平成十五年法律第五十七号）第六十条第三項に規定する行政機関等匿名加工情報（同条第四項に規定する行政機関等匿名加工情報ファイルを構成するものに限る。以下この号において「行政機関等匿名加工情報」という。）又は行政機関等匿名加工情報の作成に用いた同条第一項に規定する保有個人情報から削除した同法第二条第一項第一号に規定する記述等若しくは同条第二項に規定する個人識別符号","sub":[]},{"n":"2","t":"二","s":"法人その他の団体（国、独立行政法人等、地方公共団体及び地方独立行政法人を除く。以下「法人等」という。）に関する情報又は事業を営む個人の当該事業に関する情報であって、次に掲げるもの。ただし、人の生命、健康、生活又は財産を保護するため、公にすることが必要であると認められる情報を除く。","sub":["イ 公にすることにより、当該法人等又は当該個人の権利、競争上の地位その他正当な利益を害するおそれがあるもの","ロ 行政機関の要請を受けて、公にしないとの条件で任意に提供されたものであって、法人等又は個人における通例として公にしないこととされているものその他の当該条件を付することが当該情報の性質、当時の状況等に照らして合理的であると認められるもの"]},{"n":"3","t":"三","s":"公にすることにより、国の安全が害されるおそれ、他国若しくは国際機関との信頼関係が損なわれるおそれ又は他国若しくは国際機関との交渉上不利益を被るおそれがあると行政機関の長が認めることにつき相当の理由がある情報","sub":[]},{"n":"4","t":"四","s":"公にすることにより、犯罪の予防、鎮圧又は捜査、公訴の維持、刑の執行その他の公共の安全と秩序の維持に支障を及ぼすおそれがあると行政機関の長が認めることにつき相当の理由がある情報","sub":[]},{"n":"5","t":"五","s":"国の機関、独立行政法人等、地方公共団体及び地方独立行政法人の内部又は相互間における審議、検討又は協議に関する情報であって、公にすることにより、率直な意見の交換若しくは意思決定の中立性が不当に損なわれるおそれ、不当に国民の間に混乱を生じさせるおそれ又は特定の者に不当に利益を与え若しくは不利益を及ぼすおそれがあるもの","sub":[]},{"n":"6","t":"六","s":"国の機関、独立行政法人等、地方公共団体又は地方独立行政法人が行う事務又は事業に関する情報であって、公にすることにより、次に掲げるおそれその他当該事務又は事業の性質上、当該事務又は事業の適正な遂行に支障を及ぼすおそれがあるもの","sub":["イ 監査、検査、取締り、試験又は租税の賦課若しくは徴収に係る事務に関し、正確な事実の把握を困難にするおそれ又は違法若しくは不当な行為を容易にし、若しくはその発見を困難にするおそれ","ロ 契約、交渉又は争訟に係る事務に関し、国、独立行政法人等、地方公共団体又は地方独立行政法人の財産上の利益又は当事者としての地位を不当に害するおそれ","ハ 調査研究に係る事務に関し、その公正かつ能率的な遂行を不当に阻害するおそれ","ニ 人事管理に係る事務に関し、公正かつ円滑な人事の確保に支障を及ぼすおそれ","ホ 独立行政法人等、地方公共団体が経営する企業又は地方独立行政法人に係る事業に関し、その企業経営上の正当な利益を害するおそれ"]}]}]},"6":{"t":"第六条","c":"（部分開示）","p":[{"n":"1","s":"行政機関の長は、開示請求に係る行政文書の一部に不開示情報が記録されている場合において、不開示情報が記録されている部分を容易に区分して除くことができるときは、開示請求者に対し、当該部分を除いた部分につき開示しなければならない。ただし、当該部分を除いた部分に有意の情報が記録されていないと認められるときは、この限りでない。","i":[]},{"n":"2","s":"開示請求に係る行政文書に前条第一号の情報（特定の個人を識別することができるものに限る。）が記録されている場合において、当該情報のうち、氏名、生年月日その他の特定の個人を識別することができることとなる記述等の部分を除くことにより、公にしても、個人の権利利益が害されるおそれがないと認められるときは、当該部分を除いた部分は、同号の情報に含まれないものとみなして、前項の規定を適用する。","i":[]}]},"7":{"t":"第七条","c":"（公益上の理由による裁量的開示）","p":[{"n":"1","s":"行政機関の長は、開示請求に係る行政文書に不開示情報（第五条第一号の二に掲げる情報を除く。）が記録されている場合であっても、公益上特に必要があると認めるときは、開示請求者に対し、当該行政文書を開示することができる。","i":[]}]},"8":{"t":"第八条","c":"（行政文書の存否に関する情報）","p":[{"n":"1","s":"開示請求に対し、当該開示請求に係る行政文書が存在しているか否かを答えるだけで、不開示情報を開示することとなるときは、行政機関の長は、当該行政文書の存否を明らかにしないで、当該開示請求を拒否することができる。","i":[]}]},"9":{"t":"第九条","c":"（開示請求に対する措置）","p":[{"n":"1","s":"行政機関の長は、開示請求に係る行政文書の全部又は一部を開示するときは、その旨の決定をし、開示請求者に対し、その旨及び開示の実施に関し政令で定める事項を書面により通知しなければならない。","i":[]},{"n":"2","s":"行政機関の長は、開示請求に係る行政文書の全部を開示しないとき（前条の規定により開示請求を拒否するとき及び開示請求に係る行政文書を保有していないときを含む。）は、開示をしない旨の決定をし、開示請求者に対し、その旨を書面により通知しなければならない。","i":[]}]},"10":{"t":"第十条","c":"（開示決定等の期限）","p":[{"n":"1","s":"前条各項の決定（以下「開示決定等」という。）は、開示請求があった日から三十日以内にしなければならない。ただし、第四条第二項の規定により補正を求めた場合にあっては、当該補正に要した日数は、当該期間に算入しない。","i":[]},{"n":"2","s":"前項の規定にかかわらず、行政機関の長は、事務処理上の困難その他正当な理由があるときは、同項に規定する期間を三十日以内に限り延長することができる。この場合において、行政機関の長は、開示請求者に対し、遅滞なく、延長後の期間及び延長の理由を書面により通知しなければならない。","i":[]}]},"11":{"t":"第十一条","c":"（開示決定等の期限の特例）","p":[{"n":"1","s":"開示請求に係る行政文書が著しく大量であるため、開示請求があった日から六十日以内にそのすべてについて開示決定等をすることにより事務の遂行に著しい支障が生ずるおそれがある場合には、前条の規定にかかわらず、行政機関の長は、開示請求に係る行政文書のうちの相当の部分につき当該期間内に開示決定等をし、残りの行政文書については相当の期間内に開示決定等をすれば足りる。この場合において、行政機関の長は、同条第一項に規定する期間内に、開示請求者に対し、次に掲げる事項を書面により通知しなければならない。","i":[{"n":"1","t":"一","s":"本条を適用する旨及びその理由","sub":[]},{"n":"2","t":"二","s":"残りの行政文書について開示決定等をする期限","sub":[]}]}]},"12":{"t":"第十二条","c":"（事案の移送）","p":[{"n":"1","s":"行政機関の長は、開示請求に係る行政文書が他の行政機関により作成されたものであるときその他他の行政機関の長において開示決定等をすることにつき正当な理由があるときは、当該他の行政機関の長と協議の上、当該他の行政機関の長に対し、事案を移送することができる。この場合においては、移送をした行政機関の長は、開示請求者に対し、事案を移送した旨を書面により通知しなければならない。","i":[]},{"n":"2","s":"前項の規定により事案が移送されたときは、移送を受けた行政機関の長において、当該開示請求についての開示決定等をしなければならない。この場合において、移送をした行政機関の長が移送前にした行為は、移送を受けた行政機関の長がしたものとみなす。","i":[]},{"n":"3","s":"前項の場合において、移送を受けた行政機関の長が第九条第一項の決定（以下「開示決定」という。）をしたときは、当該行政機関の長は、開示の実施をしなければならない。この場合において、移送をした行政機関の長は、当該開示の実施に必要な協力をしなければならない。","i":[]}]},"12_2":{"t":"第十二条の二","c":"（独立行政法人等への事案の移送）","p":[{"n":"1","s":"行政機関の長は、開示請求に係る行政文書が独立行政法人等により作成されたものであるときその他独立行政法人等において独立行政法人等情報公開法第十条第一項に規定する開示決定等をすることにつき正当な理由があるときは、当該独立行政法人等と協議の上、当該独立行政法人等に対し、事案を移送することができる。この場合においては、移送をした行政機関の長は、開示請求者に対し、事案を移送した旨を書面により通知しなければならない。","i":[]},{"n":"2","s":"前項の規定により事案が移送されたときは、当該事案については、行政文書を移送を受けた独立行政法人等が保有する独立行政法人等情報公開法第二条第二項に規定する法人文書と、開示請求を移送を受けた独立行政法人等に対する独立行政法人等情報公開法第四条第一項に規定する開示請求とみなして、独立行政法人等情報公開法の規定を適用する。この場合において、独立行政法人等情報公開法第十条第一項中「第四条第二項」とあるのは「行政機関の保有する情報の公開に関する法律（平成十一年法律第四十二号）第四条第二項」と、独立行政法人等情報公開法第十七条第一項中「開示請求をする者又は法人文書」とあるのは「法人文書」と、「により、それぞれ」とあるのは「により」と、「開示請求に係る手数料又は開示」とあるのは「開示」とする。","i":[]},{"n":"3","s":"第一項の規定により事案が移送された場合において、移送を受けた独立行政法人等が開示の実施をするときは、移送をした行政機関の長は、当該開示の実施に必要な協力をしなければならない。","i":[]}]},"13":{"t":"第十三条","c":"（第三者に対する意見書提出の機会の付与等）","p":[{"n":"1","s":"開示請求に係る行政文書に国、独立行政法人等、地方公共団体、地方独立行政法人及び開示請求者以外の者（以下この条、第十九条第二項及び第二十条第一項において「第三者」という。）に関する情報が記録されているときは、行政機関の長は、開示決定等をするに当たって、当該情報に係る第三者に対し、開示請求に係る行政文書の表示その他政令で定める事項を通知して、意見書を提出する機会を与えることができる。","i":[]},{"n":"2","s":"行政機関の長は、次の各号のいずれかに該当するときは、開示決定に先立ち、当該第三者に対し、開示請求に係る行政文書の表示その他政令で定める事項を書面により通知して、意見書を提出する機会を与えなければならない。ただし、当該第三者の所在が判明しない場合は、この限りでない。","i":[{"n":"1","t":"一","s":"第三者に関する情報が記録されている行政文書を開示しようとする場合であって、当該情報が第五条第一号ロ又は同条第二号ただし書に規定する情報に該当すると認められるとき。","sub":[]},{"n":"2","t":"二","s":"第三者に関する情報が記録されている行政文書を第七条の規定により開示しようとするとき。","sub":[]}]},{"n":"3","s":"行政機関の長は、前二項の規定により意見書の提出の機会を与えられた第三者が当該行政文書の開示に反対の意思を表示した意見書を提出した場合において、開示決定をするときは、開示決定の日と開示を実施する日との間に少なくとも二週間を置かなければならない。この場合において、行政機関の長は、開示決定後直ちに、当該意見書（第十九条において「反対意見書」という。）を提出した第三者に対し、開示決定をした旨及びその理由並びに開示を実施する日を書面により通知しなければならない。","i":[]}]},"16":{"t":"第十六条","c":"（手数料）","p":[{"n":"1","s":"開示請求をする者又は行政文書の開示を受ける者は、政令で定めるところにより、それぞれ、実費の範囲内において政令で定める額の開示請求に係る手数料又は開示の実施に係る手数料を納めなければならない。","i":[]},{"n":"2","s":"前項の手数料の額を定めるに当たっては、できる限り利用しやすい額とするよう配慮しなければならない。","i":[]},{"n":"3","s":"行政機関の長は、経済的困難その他特別の理由があると認めるときは、政令で定めるところにより、第一項の手数料を減額し、又は免除することができる。","i":[]}]},"18":{"t":"第十八条","c":"（審理員による審理手続に関する規定の適用除外等）","p":[{"n":"1","s":"開示決定等又は開示請求に係る不作為に係る審査請求については、行政不服審査法（平成二十六年法律第六十八号）第九条、第十七条、第二十四条、第二章第三節及び第四節並びに第五十条第二項の規定は、適用しない。","i":[]},{"n":"2","s":"開示決定等又は開示請求に係る不作為に係る審査請求についての行政不服審査法第二章の規定の適用については、同法第十一条第二項中「第九条第一項の規定により指名された者（以下「審理員」という。）」とあるのは「第四条（行政機関の保有する情報の公開に関する法律（平成十一年法律第四十二号）第二十条第二項の規定に基づく政令を含む。）の規定により審査請求がされた行政庁（第十四条の規定により引継ぎを受けた行政庁を含む。以下「審査庁」という。）」と、同法第十三条第一項及び第二項中「審理員」とあるのは「審査庁」と、同法第二十五条第七項中「あったとき、又は審理員から第四十条に規定する執行停止をすべき旨の意見書が提出されたとき」とあるのは「あったとき」と、同法第四十四条中「行政不服審査会等」とあるのは「情報公開・個人情報保護審査会（審査庁が会計検査院の長である場合にあっては、別に法律で定める審査会。第五十条第一項第四号において同じ。）」と、「受けたとき（前条第一項の規定による諮問を要しない場合（同項第二号又は第三号に該当する場合を除く。）にあっては審理員意見書が提出されたとき、同項第二号又は第三号に該当する場合にあっては同項第二号又は第三号に規定する議を経たとき）」とあるのは「受けたとき」と、同法第五十条第一項第四号中「審理員意見書又は行政不服審査会等若しくは審議会等」とあるのは「情報公開・個人情報保護審査会」とする。","i":[]}]},"19":{"t":"第十九条","c":"（審査会への諮問）","p":[{"n":"1","s":"開示決定等又は開示請求に係る不作為について審査請求があったときは、当該審査請求に対する裁決をすべき行政機関の長は、次の各号のいずれかに該当する場合を除き、情報公開・個人情報保護審査会（審査請求に対する裁決をすべき行政機関の長が会計検査院の長である場合にあっては、別に法律で定める審査会）に諮問しなければならない。","i":[{"n":"1","t":"一","s":"審査請求が不適法であり、却下する場合","sub":[]},{"n":"2","t":"二","s":"裁決で、審査請求の全部を認容し、当該審査請求に係る行政文書の全部を開示することとする場合（当該行政文書の開示について反対意見書が提出されている場合を除く。）","sub":[]}]},{"n":"2","s":"前項の規定により諮問をした行政機関の長は、次に掲げる者に対し、諮問をした旨を通知しなければならない。","i":[{"n":"1","t":"一","s":"審査請求人及び参加人（行政不服審査法第十三条第四項に規定する参加人をいう。以下この項及び次条第一項第二号において同じ。）","sub":[]},{"n":"2","t":"二","s":"開示請求者（開示請求者が審査請求人又は参加人である場合を除く。）","sub":[]},{"n":"3","t":"三","s":"当該審査請求に係る行政文書の開示について反対意見書を提出した第三者（当該第三者が審査請求人又は参加人である場合を除く。）","sub":[]}]}]},"20":{"t":"第二十条","c":"（第三者からの審査請求を棄却する場合等における手続等）","p":[{"n":"1","s":"第十三条第三項の規定は、次の各号のいずれかに該当する裁決をする場合について準用する。","i":[{"n":"1","t":"一","s":"開示決定に対する第三者からの審査請求を却下し、又は棄却する裁決","sub":[]},{"n":"2","t":"二","s":"審査請求に係る開示決定等（開示請求に係る行政文書の全部を開示する旨の決定を除く。）を変更し、当該審査請求に係る行政文書を開示する旨の裁決（第三者である参加人が当該行政文書の開示に反対の意思を表示している場合に限る。）","sub":[]}]},{"n":"2","s":"開示決定等又は開示請求に係る不作為についての審査請求については、政令で定めるところにより、行政不服審査法第四条の規定の特例を設けることができる。","i":[]}]},"22":{"t":"第二十二条","c":"（開示請求をしようとする者に対する情報の提供等）","p":[{"n":"1","s":"行政機関の長は、開示請求をしようとする者が容易かつ的確に開示請求をすることができるよう、公文書等の管理に関する法律第七条第二項に規定するもののほか、当該行政機関が保有する行政文書の特定に資する情報の提供その他開示請求をしようとする者の利便を考慮した適切な措置を講ずるものとする。","i":[]},{"n":"2","s":"総務大臣は、この法律の円滑な運用を確保するため、開示請求に関する総合的な案内所を整備するものとする。","i":[]}]},"25":{"t":"第二十五条","c":"（地方公共団体の情報公開）","p":[{"n":"1","s":"地方公共団体は、この法律の趣旨にのっとり、その保有する情報の公開に関し必要な施策を策定し、及びこれを実施するよう努めなければならない。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"第一章　総則","a":[{"k":"1","t":"第一条","c":"（目的）","u":0},{"k":"2","t":"第二条","c":"（定義）","u":1}]},{"t":"第二章　行政文書の開示","a":[{"k":"3","t":"第三条","c":"（開示請求権）","u":1},{"k":"4","t":"第四条","c":"（開示請求の手続）","u":1},{"k":"5","t":"第五条","c":"（行政文書の開示義務）","u":1},{"k":"6","t":"第六条","c":"（部分開示）","u":1},{"k":"7","t":"第七条","c":"（公益上の理由による裁量的開示）","u":1},{"k":"8","t":"第八条","c":"（行政文書の存否に関する情報）","u":1},{"k":"9","t":"第九条","c":"（開示請求に対する措置）","u":1},{"k":"10","t":"第十条","c":"（開示決定等の期限）","u":1},{"k":"11","t":"第十一条","c":"（開示決定等の期限の特例）","u":1},{"k":"12","t":"第十二条","c":"（事案の移送）","u":1},{"k":"12_2","t":"第十二条の二","c":"（独立行政法人等への事案の移送）","u":1},{"k":"13","t":"第十三条","c":"（第三者に対する意見書提出の機会の付与等）","u":1},{"k":"14","t":"第十四条","c":"（開示の実施）","u":0},{"k":"15","t":"第十五条","c":"（他の法令による開示の実施との調整）","u":0},{"k":"16","t":"第十六条","c":"（手数料）","u":1},{"k":"17","t":"第十七条","c":"（権限又は事務の委任）","u":0}]},{"t":"第三章　審査請求等","a":[{"k":"18","t":"第十八条","c":"（審理員による審理手続に関する規定の適用除外等）","u":1},{"k":"19","t":"第十九条","c":"（審査会への諮問）","u":1},{"k":"20","t":"第二十条","c":"（第三者からの審査請求を棄却する場合等における手続等）","u":1},{"k":"21","t":"第二十一条","c":"（訴訟の移送の特例）","u":0}]},{"t":"第四章　補則","a":[{"k":"22","t":"第二十二条","c":"（開示請求をしようとする者に対する情報の提供等）","u":1},{"k":"23","t":"第二十三条","c":"（施行の状況の公表）","u":0},{"k":"24","t":"第二十四条","c":"（行政機関の保有する情報の提供に関する施策の充実）","u":0},{"k":"25","t":"第二十五条","c":"（地方公共団体の情報公開）","u":1},{"k":"26","t":"第二十六条","c":"（政令への委任）","u":0}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// ---- 日付の欄：「◯ヶ月前」で入れる（8本で同じ文字列。前の johokokai の template.html :474–534 のまま）----
+// 計算した日付を今の date 入力へ入れて change を出すだけ。値の読み方と判定の処理は変えない。
+// 例・リセットは .value へ直接書くので、その書き込みを受けて表示を切り替える（利用者の入力はこの setter を通らない）
+const RD_DATE = "日付で入れる", RD_NATIVE = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+const rdIso = t => `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;   // toISOString は UTC になり、朝9時前は前日にずれる
+const rdShow = iso => iso.split("-").map(Number).join("/");
+function rdCalc(raw, unit){
+  const n = Number(raw);
+  if (raw === "" || !Number.isInteger(n) || n < 0) return "";
+  const t = new Date(), y = t.getFullYear(), m = t.getMonth(), day = t.getDate(), s = unit.endsWith("後") ? n : -n;
+  // 月は同じ日にそろえ、その日が無い月は月末にする
+  const r = unit.includes("ヶ月") ? new Date(y, m + s, Math.min(day, new Date(y, m + s + 1, 0).getDate())) : new Date(y, m, day + s);
+  return r.getFullYear() >= 1000 && r.getFullYear() <= 9999 ? rdIso(r) : "";
+}
+for (const d of document.querySelectorAll('input[type="date"]')){
+  const box = d.closest(".input") || d, m = box !== d ? " rd-m" : "";   // 欄の形は2種類（.input の中／.slot の直下）
+  const lab = document.querySelector(`label[for="${d.id}"]`);
+  if (d.hasAttribute("data-rd-today")){   // 判定の基準日：空なら今日。読むたびに今日を返すので、必須のエラーも出ない
+    const other = document.createElement("details"), when = document.createElement("p"), ans = $("answer");
+    other.className = "rd-other" + m;
+    other.innerHTML = `<summary>別の日で判定する</summary><p class="rd-note">消すと今日で判定します</p>`;
+    box.before(other);
+    other.querySelector("summary").after(lab, box);
+    Object.defineProperty(d, "value", { get: () => RD_NATIVE.get.call(d) || rdIso(new Date()), set: v => { RD_NATIVE.set.call(d, v); other.open = !!v; } });
+    when.className = "rd-when";
+    new MutationObserver(() => {   // 答えを書き直すたびに、答えの先頭へ入れ直す（欄が隠れている種類・答えが出ていないときは出さない）
+      if (d.closest(".slot").hidden || !ans.querySelector(".verdict")){ when.remove(); return; }
+      const v = d.value;
+      when.textContent = `${rdShow(v)}${v === rdIso(new Date()) ? "（今日）" : " "}時点の判定`;
+      if (!when.isConnected){ ans.prepend(when); const y = when.getBoundingClientRect().top; if (y < 0) window.scrollBy(0, y); }   // 例を押すと答えへ動いた後で入るので、画面の上に隠れた分だけ戻す
+    }).observe(ans, { childList: true });
+    continue;
+  }
+  const base = d.dataset.rdUnit || "ヶ月前", row = document.createElement("span");
+  row.className = "rd" + m;
+  row.innerHTML = `<input class="rd-n" type="number" min="0" step="1" inputmode="numeric"><select class="rd-u" aria-label="単位">${["ヶ月前", "日前", "ヶ月後", RD_DATE].map(u => `<option>${u}</option>`).join("")}</select><span class="rd-to"></span>`;
+  box.before(row);
+  const n = row.querySelector(".rd-n"), u = row.querySelector(".rd-u"), to = row.querySelector(".rd-to");
+  const show = () => {
+    const direct = u.value === RD_DATE, iso = RD_NATIVE.get.call(d);
+    n.classList.toggle("rd-hide", direct);
+    box.classList.toggle("rd-hide", !direct);
+    to.textContent = !direct && iso ? `→ ${rdShow(iso)}` : "";
+  };
+  const calc = () => {
+    if (u.value !== RD_DATE) RD_NATIVE.set.call(d, rdCalc(n.value, u.value));
+    show();
+    d.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+  n.addEventListener("input", calc);
+  u.addEventListener("change", calc);
+  Object.defineProperty(d, "value", { get: () => RD_NATIVE.get.call(d), set: v => { RD_NATIVE.set.call(d, v); n.value = ""; u.value = v ? RD_DATE : base; show(); } });
+  if (!lab.id) lab.id = "l-" + d.id;
+  n.setAttribute("aria-labelledby", lab.id);
+  lab.addEventListener("click", e => { if (box.classList.contains("rd-hide")){ e.preventDefault(); n.focus(); } });
+  const sameDisabled = () => { n.disabled = u.disabled = d.disabled; };   // 今のコードは date 入力の disabled だけを切り替える
+  new MutationObserver(sameDisabled).observe(d, { attributes: true, attributeFilter: ["disabled"] });
+  sameDisabled();
+  u.value = base;
+  show();
+}
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  // '2条2項1号' '10条1項ただし書' '12条の2第1項' '5条1号の2' '5条1号イ' のような形。複数条が「・」で区切られることもある → 最初の条だけ見る
+  // 号の枝番は XML では Num="1_2"（5条1号の2）。正規表現は前の johokokai と akiya で同じ
+  const first = String(a).split("・")[0];
+  const m = first.match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(?:第?(\d+)号((?:の\d+)*))?([イロハニホ])?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[4] ? m[4] + (m[5] || "").replace(/の/g, "_") : null, sub: m[6] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para);
+  // 号まで指定があれば、項の本文とその号だけ出す
+  if (r.item) ps = ps.filter(p => p.i.some(it => it.n === r.item));
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const list = r.item ? p.i.filter(it => it.n === r.item) : p.i;
+    const its = list.map(it => `<p class="it">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => r.sub && x.startsWith(r.sub + " ") ? `<br><span class="hit">　${esc(x)}</span>` : `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなく、このアプリの決め事（収録範囲・仕組みのページに一覧）。</p>`;
+// 凡例は最初の木の上に1回だけ出す（legend＝false で外す。daishikko-prolog と同じ。2026-11-25 案Aで木を結論ごとにしたため）
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+
+// ---------- ここから別ページ（about.html）だけの処理 ----------
+if (location.protocol === "file:") $("back").href = "johokokai.html";
+function openHash(){ const d = location.hash && document.getElementById(location.hash.slice(1)); if (d && d.tagName === "DETAILS") d.open = true; }
+openHash(); window.addEventListener("hashchange", openHash);
+
+async function bootAbout(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    // 全条文の地図
+    let C = []; try{ C = JSON.parse(document.getElementById("cover-data").textContent); }catch(e){}
+    const cover = $("cover");
+    C.forEach(ch => {
+      const div = document.createElement("div"); div.className = "cover-ch";
+      div.innerHTML = `<h4>${esc(ch.t)} <span>${ch.a.length}条</span></h4><div class="cells"></div>`;
+      const cells = div.querySelector(".cells");
+      ch.a.forEach(a => {
+        const btn = document.createElement("button"); btn.type = "button";
+        btn.className = `cell u${a.u}`; btn.title = `${a.t}${a.c}`;
+        btn.addEventListener("click", () => {
+          const old = document.getElementById("cover-pick"); if (old) old.remove();
+          const pk = document.createElement("div"); pk.id = "cover-pick";
+          pk.innerHTML = a.u === 1 ? lawHTML(a.k.includes("_") ? a.k.replace("_", "条の").replace(/_/g, "の") : a.k + "条") : `<p class="hint" style="margin-top:6px">${esc(a.t)}${esc(a.c)}${a.u === 2 ? "（削除）" : "（このアプリでは使用しない条）"}</p>`;
+          div.appendChild(pk);
+        });
+        cells.appendChild(btn);
+      });
+      cover.appendChild(div);
+    });
+    const used = C.flatMap(c => c.a).filter(a => a.u === 1).length;
+    const total = C.flatMap(c => c.a).filter(a => a.u !== 2).length;
+    cover.insertAdjacentHTML("afterbegin", `<p class="cover-total">使っている条：${used} / ${total} 条</p>`);
+    // ソース表示
+    const src = $("src");
+    files.forEach(f => {
+      const det = document.createElement("details"); det.className = "srcfile";
+      det.innerHTML = `<summary>${esc(f.dataset.name.replace(/_/g, "/"))}</summary><pre>${esc(f.textContent)}</pre>`;
+      src.appendChild(det);
+    });
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+  }
+}
+
+// 直接クエリ実行
+$("run").addEventListener("click", () => {
+  if (!pl){ $("out").textContent = "まだ読み込み中です。"; return; }
+  const q = $("q").value.trim().replace(/\.$/, "");
+  try{
+    const it = pl.prolog.query(q); const out = [];
+    for (let i = 0; i < 20; i++){
+      const r = it.next();
+      if (!r) break;
+      if (r.error){ out.push("エラー：" + r.message); break; }
+      // 最後の解は done:true に値が付いて返る。done で先に抜けると、その解を捨てて「解なし」に見える
+      if (r.value && r.value.$tag === "bindings"){
+        const { $tag, ...vars } = r.value;
+        out.push(Object.keys(vars).length ? JSON.stringify(vars, null, 2) : "true");
+      }
+      if (r.done) break;
+    }
+    $("out").textContent = out.length ? out.join("\n---\n") : "（解なし）";
+  } catch(e){ $("out").textContent = "エラー：" + e.message; }
+});
+
+if (typeof SWIPL === "function") bootAbout();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; }
+</script>
