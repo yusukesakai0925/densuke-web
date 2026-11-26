@@ -1,0 +1,1929 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="株主総会について、株主は何を請求できるか、招集の通知は足りているか、決議は通るか、決議の効力を争えるかを、会社法の条文から判定します。">
+<title>株主総会の決議を逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+/* 欄の上の小見出し（会社／総会で決めること／招集の通知／出席と賛成／定款で決めた割合・数／株主の請求／決議の後）。
+   選ばせる欄ではないので番号を数えない（kubun-prolog と同じ。2026-11-27 案A 4回目）。
+   前の .step.off（判定していない段の色）・.flow・NOTE_* の枠（tokurei。左だけ太い色の線＝REVIEW_RULES E1）・.disclaimer-inline・pre の左線は、kubun の style に揃えて外した */
+.slots .slot-h{margin:0;padding:8px 10px 4px;border-bottom:2px solid var(--line);border-right:2px solid var(--line);background:var(--paper)}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft);box-shadow:inset 3px 0 0 var(--blue)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border:1px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+/* 数字の欄（数字を打つので ▼ を出さない。日数・人数・議決権・割合・月数の24欄）*/
+.field.num::after{display:none}
+.field input{appearance:textfield;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 10px;min-width:0;width:100%}
+.field input:focus-visible{outline:none}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <h1>株主総会の決議を<span class="ao">逆から引く</span></h1>
+    <div class="judge-plate"><span class="jp-k">判定</span><img src="densuke_icon.svg" width="64" height="64" alt="でんすけのアイコン"><span class="jp-v">でんすけ<small>秘書AI</small></span></div>
+    <p class="lead">株主総会について、株主は何を請求できるか、招集の通知は足りているか、決議は通るか、決議の効力を争えるかを、でんすけが会社法の条文で判定します。</p>
+    <p class="caution" role="note"><b>注意</b><span>条文をルールにして、論理的にそのまま演算した結果です。裁判所の判断とは異なる場合があります。<a class="aboutlink" href="about.html">収録範囲・仕組み →</a></span></p>
+  </header>
+
+  <section class="ask">
+    <div>
+      <p class="sec-h">例から選ぶ</p>
+      <div class="presets" id="presets"></div>
+    </div>
+    <!-- 欄は1つの株主総会について、前（株主の請求）・招集・当日（決議）・後（訴え）に起きた事実を聞く44個で、いつも全部を出す
+         （REVIEW_RULES C4・C5。2026-11-27 案A 4回目。形は kubun-prolog と同じ）。
+         前の入口「どの話か」（iri）、招集の「どの話か」（shanashi）、決議の種類（kshu）、請求の種類（ysyu）、問題の種類（amon）、
+         欄の出し消し（SLOTS・updateSlots）、選択肢の無効化（kq の「定足数を無くした」）、欄の名前の入れ替え（l-kh・l-kv・l-kq）、
+         隠れた欄を 関係なし で渡す shown・buildCtx をやめた。関係のない欄は Prolog が見ないだけ（schema.pl の ctx のコメント）。
+         並びは schema.pl の ctx の引数の順（1〜44。欄の番号/2）。小見出しは選ばせる欄ではない（番号を数えない）。
+         値と選択肢の語は schema.pl の 欄の値/2・葉の語/3 と同じ（「（あなたの考え）」は画面の欄の名前だけに付ける）。
+         公開会社か・取締役会か（skoukai・ykoukai・storishi・ytorishi）は1・2の欄に、差（ssa・ysa・ysei・ytsuchi）は6・29の欄に、
+         同一の議案（ydoitsu・ykeika）は32の欄にまとめた（C1）。総株主の議決権と行使できない議決権（ysou・yjo）は欄にせず、12の欄を分母にする（約束事⑤）。
+         定款で決めたか（kq・ks・kn・steitan・ywari・ykosu・ytei・ysyuu）は欄にせず、数の欄を空にして「決めていない」を表す。
+         831条2項の「重大」「決議に影響」（ajuu・aeikyo）は聞かない（却下済み。831条2項は判定せず、about の「載せなかったもの」に書いた。2026-11-27）。
+         欄の説明の断り（判定しません・「遅滞なく」に当たるかは判定しません）と、結果の下の NOTE_HANTEI・NOTE_JOBUN・NOTE_HOKA、
+         下の帯の「含みません」は about へ移した（A3・A5）。前の 判定できませんでした の下の入力の注意は、数の欄の説明に移した（A1） -->
+    <div class="slots" id="slots">
+      <p class="sec-h slot-h full-slot">会社</p>
+      <div class="slot full-slot" id="s-koukai"><label for="koukai">公開会社か</label><span class="field"><select id="koukai">
+        <option value="はい">はい</option><option value="いいえ">いいえ</option>
+      </select></span><p class="desc">公開会社＝出している株式の全部か一部に、譲渡には会社の承認が要るという定款の定めが無い会社（2条5号）</p></div>
+      <div class="slot full-slot" id="s-torishi"><label for="torishi">取締役会を置いているか</label><span class="field"><select id="torishi">
+        <option value="はい">はい</option><option value="いいえ">いいえ</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-touhyo"><label for="touhyo">総会に出ない株主が、書面かインターネットで議決権を行使できると決めたか</label><span class="field"><select id="touhyo">
+        <option value="いいえ">いいえ</option><option value="はい">はい</option>
+      </select></span><p class="desc">インターネット＝電磁的方法（298条1項3号・4号）</p></div>
+
+      <p class="sec-h slot-h full-slot">総会で決めること</p>
+      <div class="slot full-slot" id="s-kotogara"><label for="kotogara">総会で決める事柄</label><span class="field"><select id="kotogara">
+        <option value="選任">取締役・会計参与・監査役を選ぶ</option>
+        <option value="解任">取締役・会計参与を解く</option>
+        <option value="特別の解任">監査役か監査等委員である取締役を解く、累積投票で選んだ取締役を解く</option>
+        <option value="定款変更">定款を変える</option>
+        <option value="譲渡制限">全部の株式に、譲渡には会社の承認が要るという定めを付ける</option>
+        <option value="異なる取扱い">株主ごとに、配当・残余財産・議決権の扱いを変える定めを定款に置く・変える</option>
+        <option value="事業譲渡">事業の全部か大事な一部を譲る・解散する</option>
+        <option value="組織再編">合併・会社分割・株式交換・株式移転・株式交付</option>
+        <option value="再編の制限株式">合併などで、消える側・完全子会社になる側の公開会社が、株主に譲渡制限株式などを渡す</option>
+        <option value="資本金減少">資本金の額を減らす</option>
+        <option value="欠損の減資">定時総会で、欠損の額を超えない範囲で資本金の額を減らす</option>
+        <option value="併合">株式を併合する</option>
+        <option value="特定の買取り">特定の株主から、自社の株式を買い取る</option>
+        <option value="不承認の買取り">譲渡を承認しなかった株式を、会社か会社の指定した人が買い取る</option>
+        <option value="全部取得">全部取得条項付種類株式を取得する・相続人などに株式の売渡しを求める</option>
+        <option value="募集">株式・新株予約権の募集の事項を総会で決める</option>
+        <option value="責任免除">役員などの責任の一部を免除する</option>
+        <option value="現物配当">金銭以外で配当し、株主に金銭を求める権利を与えない</option>
+        <option value="どれでもない">上のどれでもない</option>
+      </select></span><p class="desc">「取締役・会計参与を解く」は監査役などを解く場合を、「定款を変える」は譲渡の承認・株主ごとの扱いの定めを、「資本金の額を減らす」は欠損の範囲で減らす場合を、「合併・会社分割…」は譲渡制限株式などを渡す場合を除く。「株主ごとに…」は定めを無くす場合を除く</p></div>
+      <div class="slot full-slot" id="s-shomen"><label for="shomen">議決権を行使できる株主の全員が、総会を開かずに、提案に書面かメールで同意したか</label><span class="field"><select id="shomen">
+        <option value="いいえ">いいえ</option><option value="はい">はい</option>
+      </select></span><p class="desc">メール＝電磁的記録（319条1項）</p></div>
+
+      <p class="sec-h slot-h full-slot">招集の通知</p>
+      <div class="slot full-slot" id="s-tsuchisa"><label for="tsuchisa">通知を出した日と総会の日の日数の差（出していなければ空）</label><span class="field num"><input id="tsuchisa" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">0以上の整数。例：通知が5日・総会が20日なら15</p></div>
+      <div class="slot full-slot" id="s-dashikata"><label for="dashikata">通知の出し方</label><span class="field"><select id="dashikata">
+        <option value="書面">書面</option><option value="承諾あり">株主の承諾を得てメールなどで</option><option value="承諾なし">承諾なしにメールなどで</option><option value="口頭">口頭など、書面・メール以外で</option>
+      </select></span><p class="desc">メールなど＝電磁的方法（299条3項）</p></div>
+      <div class="slot full-slot" id="s-shoryaku"><label for="shoryaku">株主の全員が、招集の手続を省くことに同意したか</label><span class="field"><select id="shoryaku">
+        <option value="いいえ">いいえ</option><option value="はい">はい</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-kisai"><label for="kisai">4の事柄を、招集の通知に書いたか</label><span class="field"><select id="kisai">
+        <option value="はい">はい</option><option value="いいえ">いいえ</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-teibi"><label for="teibi">定款で決めた通知の日数（決めていなければ空）</label><span class="field num"><input id="teibi" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">1以上の整数</p></div>
+
+      <p class="sec-h slot-h full-slot">出席と賛成</p>
+      <div class="slot" id="s-zh"><label for="zh">議決権を行使できる株主の数</label><span class="field num"><input id="zh" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">1以上の整数</p></div>
+      <div class="slot" id="s-zv"><label for="zv">11の人たちの議決権の数</label><span class="field num"><input id="zv" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">1以上の整数</p></div>
+      <div class="slot full-slot" id="s-dev"><label for="dev">出席した株主の議決権の数</label><span class="field num"><input id="dev" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">12の欄の数まで</p></div>
+      <div class="slot" id="s-sanh"><label for="sanh">賛成した株主の数</label><span class="field num"><input id="sanh" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">11の欄の数まで</p></div>
+      <div class="slot" id="s-sanv"><label for="sanv">14の人たちの議決権の数</label><span class="field num"><input id="sanv" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">13の欄の数まで</p></div>
+      <div class="slot" id="s-soh"><label for="soh">総株主の数（議決権の無い株主も数える。株主ごとの扱いを変える定めの決議でなければ空）</label><span class="field num"><input id="soh" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">16と17の欄は、両方とも空か、両方とも数。11の欄の数以上</p></div>
+      <div class="slot" id="s-sov"><label for="sov">16の人たちの議決権の数（株主ごとの扱いを変える定めの決議でなければ空）</label><span class="field num"><input id="sov" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">12の欄の数以上</p></div>
+
+      <p class="sec-h slot-h full-slot">定款で決めた割合・数</p>
+      <div class="slot" id="s-qn"><label for="qn">出席に要る割合（定足数）を定款で決めた分子（決めていなければ空）</label><span class="field num"><input id="qn" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">18と19の欄は、両方とも空か、両方とも数。分子は分母以下。定足数を無くしたなら分子は0</p></div>
+      <div class="slot" id="s-qd"><label for="qd">18の割合の分母（決めていなければ空）</label><span class="field num"><input id="qd" type="number" min="1" step="1" inputmode="numeric"></span></div>
+      <div class="slot" id="s-sn"><label for="sn">賛成に要る割合を定款で決めた分子（決めていなければ空）</label><span class="field num"><input id="sn" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">20と21の欄は、両方とも空か、両方とも数。分子は分母以下</p></div>
+      <div class="slot" id="s-sd"><label for="sd">20の割合の分母（決めていなければ空）</label><span class="field num"><input id="sd" type="number" min="1" step="1" inputmode="numeric"></span></div>
+      <div class="slot full-slot" id="s-ninzu"><label for="ninzu">賛成に要る株主の数を定款で決めた数（決めていなければ空）</label><span class="field num"><input id="ninzu" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">1以上の整数</p></div>
+      <div class="slot" id="s-hn"><label for="hn">賛成に要る株主の頭数の割合を定款で決めた分子（決めていなければ空）</label><span class="field num"><input id="hn" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">23と24の欄は、両方とも空か、両方とも数。分子は分母以下</p></div>
+      <div class="slot" id="s-hd"><label for="hd">23の割合の分母（決めていなければ空）</label><span class="field num"><input id="hd" type="number" min="1" step="1" inputmode="numeric"></span></div>
+
+      <p class="sec-h slot-h full-slot">株主の請求</p>
+      <div class="slot full-slot" id="s-seikyu"><label for="seikyu">株主がしたこと</label><span class="field"><select id="seikyu">
+        <option value="なし">何もしていない</option><option value="招集">取締役に総会を開くよう求めた</option><option value="議題">4の事柄を総会で決めるよう求めた</option><option value="提出">総会の場で4の事柄の議案を出した</option><option value="要領">自分の議案の要領を通知に載せるよう求めた</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-koshi"><label for="koshi">求めた株主は、4の事柄で議決権を行使できるか</label><span class="field"><select id="koshi">
+        <option value="はい">はい</option><option value="いいえ">いいえ</option>
+      </select></span></div>
+      <div class="slot" id="s-mochi"><label for="mochi">求めた株主の議決権の数</label><span class="field num"><input id="mochi" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">12の欄の数まで</p></div>
+      <div class="slot" id="s-tsukisu"><label for="tsukisu">求めた株主が、27の議決権を引き続き持っている月数</label><span class="field num"><input id="tsukisu" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">0以上の整数</p></div>
+      <div class="slot full-slot" id="s-seisa"><label for="seisa">求めた日から総会の日まで何日か（総会の日が決まっていなければ空）</label><span class="field num"><input id="seisa" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">0以上の整数。例：求めたのが1日・総会が27日なら26</p></div>
+      <div class="slot full-slot" id="s-chitai"><label for="chitai">求めた後、取締役は遅滞なく招集の手続をしたか（あなたの考え）</label><span class="field"><select id="chitai">
+        <option value="した">した</option><option value="していない">していない</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-ihan"><label for="ihan">議案が法令か定款に違反する（あなたの考え）</label><span class="field"><select id="ihan">
+        <option value="いいえ">いいえ</option><option value="はい">はい</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-douitsu"><label for="douitsu">中身が実質的に同じ議案が前に出たとき（あなたの考え）</label><span class="field"><select id="douitsu">
+        <option value="なし">出ていない</option><option value="以上">賛成が十分の一以上だった</option><option value="三年経過">十分の一未満で、3年たった</option><option value="三年以内">十分の一未満で、3年たっていない</option>
+      </select></span><p class="desc">十分の一は、定款で下げた割合があればその割合。賛成の割合の分母は、議案で議決権を行使できない株主を除いた総株主の議決権</p></div>
+      <div class="slot" id="s-wn"><label for="wn">定款で下げた持株の割合の分子（下げていなければ空）</label><span class="field num"><input id="wn" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">33と34の欄は、両方とも空か、両方とも数。分子は分母以下</p></div>
+      <div class="slot" id="s-wd"><label for="wd">33の割合の分母（下げていなければ空）</label><span class="field num"><input id="wd" type="number" min="1" step="1" inputmode="numeric"></span></div>
+      <div class="slot" id="s-kosu"><label for="kosu">定款で三百個から下げた議決権の個数（下げていなければ空）</label><span class="field num"><input id="kosu" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">1以上の整数</p></div>
+      <div class="slot" id="s-tsuki"><label for="tsuki">定款で六箇月から短くした保有の月数（短くしていなければ空）</label><span class="field num"><input id="tsuki" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">1以上の整数</p></div>
+      <div class="slot full-slot" id="s-shuubi"><label for="shuubi">定款で八週間から短くした日数（短くしていなければ空）</label><span class="field num"><input id="shuubi" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">1以上の整数</p></div>
+
+      <p class="sec-h slot-h full-slot">決議の後</p>
+      <div class="slot full-slot" id="s-kikan"><label for="kikan">決議の日から</label><span class="field"><select id="kikan">
+        <option value="以内">3か月以内</option><option value="過ぎた">3か月を過ぎた</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-soukai"><label for="soukai">株主総会を</label><span class="field"><select id="soukai">
+        <option value="開いた">開いて決議した</option><option value="開いていない">開いていないのに、決議があったことにされている</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-hourei"><label for="hourei">決議の内容が法令に違反する（あなたの考え）</label><span class="field"><select id="hourei">
+        <option value="いいえ">いいえ</option><option value="はい">はい</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-teikan"><label for="teikan">決議の内容が定款に違反する（あなたの考え）</label><span class="field"><select id="teikan">
+        <option value="いいえ">いいえ</option><option value="はい">はい</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-fukousei"><label for="fukousei">招集の手続か決議の方法が、著しく不公正だった（あなたの考え）</label><span class="field"><select id="fukousei">
+        <option value="いいえ">いいえ</option><option value="はい">はい</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-rigai"><label for="rigai">特別の利害関係を持つ株主の議決権（あなたの考え）</label><span class="field"><select id="rigai">
+        <option value="行使なし">行使していない</option><option value="不当でない">行使したが、著しく不当な決議ではない</option><option value="不当">行使して、著しく不当な決議になった</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-tetsuzuki"><label for="tetsuzuki">6〜9のほかに、招集の手続か決議の方法が法令・定款に違反した（あなたの考え）</label><span class="field"><select id="tetsuzuki">
+        <option value="いいえ">いいえ</option><option value="はい">はい</option>
+      </select></span></div>
+    </div>
+    <div class="qline" id="qline"></div>
+  </section>
+
+  <section id="answer" aria-live="polite"><p class="loading">でんすけが条文のルール（Prolog）を読み込んでいます…</p></section>
+
+  <p class="foot techline"><span>会社法（株主総会）／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot" id="foot">e-Gov法令検索の会社法（平成十七年法律第八十六号）の本則の原文から、第297条、第298条第1項、第299条、第300条、第303条、第304条、第305条第1項〜第3項・第6項、第309条、第319条第1項、第341条、第830条、第831条をルールにしたものです。「この組み合わせはありません」の根拠に、第2条第5号、第109条第2項、第327条第1項第1号を挙げます。条文は2026年11月3日までに取得した版で、それ以後の改正と、公布済みで施行前の改正は読んでいません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 会社法の株主総会のProlog 共通の型・欄の読み出し・成り立たない組・木の部品
+%
+% ctx(公開, 取締役会, 投票, 事柄, 書面同意, 通知差, 出し方, 省略同意, 通知記載, 定日,
+%     全人, 全権, 出権, 賛人, 賛権, 総人, 総権, 定子, 定母, 賛子, 賛母, 人数, 頭子, 頭母,
+%     請求, 行使, 持権, 月数, 請差, 遅滞, 違反, 同一, 割子, 割母, 個数, 月, 週日,
+%     期間, 総会, 内容法令, 内容定款, 不公正, 特別利害, 手続違反)
+%   欄は1つの株主総会について、前（株主の請求）・招集・当日（決議）・後（訴え）に起きた事実を聞く44個で、いつも全部を出す
+%   （REVIEW_RULES C4・C5。2026-11-26 案A。案は ../kaisha_form_plan_answer_1126.md の案A、決めは ../kaisha_form_plan_decision_1126.md）。
+%   形は kubun-prolog の schema.pl と同じ。
+%   前は ctx(入口, 詳細) で、入口（決議 | 招集 | 請求 | 争い）を先に選ばせ、決議の中で「種類」（普通 | 第2項 | 第3項 | 第4項 | 役員）、
+%   招集の中で「話」（期間 | 形 | 省略 | 事項）、請求の中で「種類」、争いの中で「問題」を選ばせていた（C2・C4）。
+%   画面が欄を出し消しして、隠れた欄を 関係なし で渡していた（形OK/2 が欄の並びを入口ごとに直書きしていた）。今は使わない欄を判定で見ないだけにした。
+%   公開会社か・取締役会か（招集と請求で2回聞いていた）は1・2の欄に、請求の日と総会の日の差（差・請差・通知）は29の欄に、
+%   実質的に同一の議案（同一・経過）は32の欄にまとめた。総株主の議決権と行使できない議決権（総権・除権）は欄にせず、
+%   12の欄を請求の分母とみる（アプリの約束事⑤）。定款で決めたか（定別・定短・賛規・人規・定割・定個・定月・定週）は欄にせず、数の欄を空にして「決めていない」を表す。
+%   決議の種類は聞かず、4の欄の事柄から条を当てる（アプリの約束事③）。831条2項の「重大」「決議に影響」は聞かない（案「5：評価語の聞き方」）。
+%   引数の順は画面の欄の番号（1〜44）と同じ。画面では小見出し（会社／総会で決めること／招集の通知／出席と賛成／
+%   定款で決めた割合・数／株主の請求／決議の後）の下に並べる。
+%    1 公開     : はい | いいえ（公開会社か）
+%    2 取締役会 : はい | いいえ（取締役会を置いているか）
+%    3 投票     : はい | いいえ（総会に出ない株主が、書面かインターネットで議決権を行使できると決めたか）
+%    4 事柄     : 選任 | 解任 | 特別の解任 | 定款変更 | 譲渡制限 | 異なる取扱い | 事業譲渡 | 組織再編 | 再編の制限株式 |
+%                 資本金減少 | 欠損の減資 | 併合 | 特定の買取り | 不承認の買取り | 全部取得 | 募集 | 責任免除 | 現物配当 | どれでもない
+%                 （決める事柄。19択。選択肢の語は 葉の語/3）
+%    5 書面同意 : はい | いいえ（議決権を行使できる株主の全員が、総会を開かずに、提案に書面かメールで同意したか）
+%    6 通知差   : 空 | 0以上の整数（通知を出した日と総会の日の日数の差。出していなければ空）
+%    7 出し方   : 書面 | 承諾あり | 承諾なし | 口頭（通知の出し方：書面 | 株主の承諾を得てメールなどで | 承諾なしにメールなどで |
+%                 口頭など、書面・メール以外で）
+%    8 省略同意 : はい | いいえ（株主の全員が、招集の手続を省くことに同意したか）
+%    9 通知記載 : はい | いいえ（4の事柄を、招集の通知に書いたか）
+%   10 定日     : 空 | 1以上の整数（定款で決めた通知の日数。決めていなければ空）
+%   11 全人・12 全権 : 1以上の整数（議決権を行使できる株主の数と議決権の数）
+%   13 出権     : 0以上の整数（出席した株主の議決権の数）
+%   14 賛人・15 賛権 : 0以上の整数（賛成した株主の数と議決権の数）
+%   16 総人・17 総権 : 空 | 1以上の整数（総株主の数と議決権の数。議決権の無い株主も数える。4の欄が「異なる取扱い」のとき（309条4項）だけ使う）
+%   18 定子・19 定母 : 空 | 整数（出席に要る割合を定款で決めた分子・分母。分子0＝定足数を無くした）
+%   20 賛子・21 賛母 : 空 | 1以上の整数（賛成に要る割合を定款で決めた分子・分母）
+%   22 人数     : 空 | 1以上の整数（賛成に要る株主の数を定款で決めた数。309条2項後段）
+%   23 頭子・24 頭母 : 空 | 1以上の整数（賛成に要る株主の頭数の割合を定款で決めた分子・分母。309条3項・4項）
+%   25 請求     : なし | 招集 | 議題 | 提出 | 要領（株主がしたこと：何もしていない | 取締役に総会を開くよう求めた |
+%                 4の事柄を総会で決めるよう求めた | 総会の場で4の事柄の議案を出した | 自分の議案の要領を通知に載せるよう求めた）
+%   26 行使     : はい | いいえ（求めた株主は、4の事柄で議決権を行使できるか）
+%   27 持権     : 空 | 0以上の整数（求めた株主の議決権の数）
+%   28 月数     : 空 | 0以上の整数（求めた株主が、27の議決権を引き続き持っている月数）
+%   29 請差     : 空 | 0以上の整数（求めた日から総会の日まで何日か。総会の日が決まっていなければ空）
+%   30 遅滞     : した | していない（求めた後、取締役は遅滞なく招集の手続をしたか。あなたの考え）
+%   31 違反     : はい | いいえ（議案が法令か定款に違反する。あなたの考え）
+%   32 同一     : なし | 以上 | 三年経過 | 三年以内（中身が実質的に同じ議案が前に出たとき：出ていない | 賛成が十分の一以上だった |
+%                 十分の一未満で、3年たった | 十分の一未満で、3年たっていない。あなたの考え）
+%   33 割子・34 割母 : 空 | 1以上の整数（定款で下げた持株の割合の分子・分母）
+%   35 個数     : 空 | 1以上の整数（定款で下げた議決権の個数。三百個）
+%   36 月       : 空 | 1以上の整数（定款で短くした保有の月数。六箇月）
+%   37 週日     : 空 | 1以上の整数（定款で短くした日数。八週間）
+%   38 期間     : 以内 | 過ぎた（決議の日から：3か月以内 | 3か月を過ぎた）
+%   39 総会     : 開いた | 開いていない（総会：開いて決議した | 開いていないのに、決議があったことにされている）
+%   40 内容法令 : はい | いいえ（決議の内容が法令に違反する。あなたの考え）
+%   41 内容定款 : はい | いいえ（決議の内容が定款に違反する。あなたの考え）
+%   42 不公正   : はい | いいえ（招集の手続か決議の方法が、著しく不公正だった。あなたの考え）
+%   43 特別利害 : 行使なし | 不当でない | 不当（特別の利害関係を持つ株主の議決権：行使していない |
+%                 行使したが、著しく不当な決議ではない | 行使して、著しく不当な決議になった。あなたの考え）
+%   44 手続違反 : はい | いいえ（6〜9のほかに、招集の手続か決議の方法が法令・定款に違反した。あなたの考え）
+%
+%   関係のない欄（25の欄が「なし」のときの26〜37、6の欄が空のときの7・10、4の欄が「異なる取扱い」でないときの16・17 など）は、
+%   組み合わせなしにせず見ないだけ（kubun-prolog と同じ）。欄どうしで成り立たない組はこのファイルの 組み合わせなし/4 が返す（REVIEW_RULES C3）。
+%   数の欄が枠の外（賛成が出席より多い・出席が全部の議決権より多い・割合の分子と分母の片方だけ空 など）のときは
+%   ctx_valid が失敗し、画面は「判定できませんでした」になる（前の 出席の票・割合の形・数の組 と同じ確かめ）。
+%   数の欄が空で段の答えが出せないときは、rules/ の側でその段を出さない（決め6）。
+%
+% 書き方のきまり：
+%   ・条番号は '309条1項' '341条' '299条2項第1号' '2条第5号' のような原子。
+%     ただし書・前段・後段は原文の表の行にせず、文の中に書く（表は項か号まで）。
+%   ・ルールの中で範囲の外の条を、原子の先頭に条番号を置く形で書かない。書くと build.py が使う条に数え、画面に中身が埋まる。
+%     ただし 組み合わせなし/4 の根拠に挙げる 327条1項第1号・2条第5号・109条2項 は、原文の表に足して箱の条に出す（決め2）。
+%   ・段は 段(状態, 文, 箱の条, 葉のリスト)。結論ごとの段は s(画面のid, 見出し, 段)。段の文は、末尾の「。」を外して結論の箱にも出す。
+%     段の文は本題だけを書き、入力の言い直しと数の不足は葉に置く（REVIEW_RULES A2。葉は論理の木にだけ出る）。
+%     葉は文（原子）か、木の行 t(...) そのもの（規定・約束の行。schema の 葉の行）。
+%     前は 段(状態, 文, 条のリスト) の3つで、入れた数を段の文に入れていた（「賛成の議決権は 25 で、必要な 26 に 1 足りません」）。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | and | or | info
+%   ・アプリの約束事の行は 条 を '@約束事' にする。
+%   ・割合の計算は整数の掛け算だけで比べる（浮動小数点を使わない）。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか・数の欄が範囲か・数の欄どうしの大小。組の成り立ちは 組み合わせなし/4 で見る）----
+ctx_valid(C) :-
+    functor(C, ctx, 44),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )),
+    forall(数の欄(N, P), ( arg(N, C, V), call(P, V) )),
+    数の形(C).
+
+欄の値(1, [はい, いいえ]).
+欄の値(2, [はい, いいえ]).
+欄の値(3, [はい, いいえ]).
+欄の値(4, [選任, 解任, 特別の解任, 定款変更, 譲渡制限, 異なる取扱い, 事業譲渡, 組織再編, 再編の制限株式,
+           資本金減少, 欠損の減資, 併合, 特定の買取り, 不承認の買取り, 全部取得, 募集, 責任免除, 現物配当, どれでもない]).
+欄の値(5, [はい, いいえ]).
+欄の値(7, [書面, 承諾あり, 承諾なし, 口頭]).
+欄の値(8, [はい, いいえ]).
+欄の値(9, [はい, いいえ]).
+欄の値(25, [なし, 招集, 議題, 提出, 要領]).
+欄の値(26, [はい, いいえ]).
+欄の値(30, [した, していない]).
+欄の値(31, [はい, いいえ]).
+欄の値(32, [なし, 以上, 三年経過, 三年以内]).
+欄の値(38, [以内, 過ぎた]).
+欄の値(39, [開いた, 開いていない]).
+欄の値(40, [はい, いいえ]).
+欄の値(41, [はい, いいえ]).
+欄の値(42, [はい, いいえ]).
+欄の値(43, [行使なし, 不当でない, 不当]).
+欄の値(44, [はい, いいえ]).
+
+% 数の欄（整数か空）。前の 正/1・非負/1 を残し、空を足した（kubun-prolog の 正か空・非負か空 と同じ形）
+数の欄(6, 非負か空).
+数の欄(10, 正か空).
+数の欄(11, 正).
+数の欄(12, 正).
+数の欄(13, 非負).
+数の欄(14, 非負).
+数の欄(15, 非負).
+数の欄(16, 正か空).
+数の欄(17, 正か空).
+数の欄(18, 非負か空).
+数の欄(19, 正か空).
+数の欄(20, 正か空).
+数の欄(21, 正か空).
+数の欄(22, 正か空).
+数の欄(23, 正か空).
+数の欄(24, 正か空).
+数の欄(27, 非負か空).
+数の欄(28, 非負か空).
+数の欄(29, 非負か空).
+数の欄(33, 正か空).
+数の欄(34, 正か空).
+数の欄(35, 正か空).
+数の欄(36, 正か空).
+数の欄(37, 正か空).
+
+非負(N) :- integer(N), N >= 0.
+正(N) :- integer(N), N >= 1.
+正か空(空) :- !.
+正か空(N) :- 正(N).
+非負か空(空) :- !.
+非負か空(N) :- 非負(N).
+
+% 数の欄どうしの大小（前の 出席の票 :86・割合の形 :63・数の組 :133-135 を1つにした）。
+% 賛成の株主の数は、議決権を行使できる株主の数を超えない（出席した株主の数は聞かないので、全人と比べる）
+数の形(C) :-
+    欄(全人, C, H), 欄(全権, C, V),
+    欄(出権, C, O), O =< V,
+    欄(賛人, C, AH), AH =< H,
+    欄(賛権, C, A), A =< O,
+    総株主の形(H, V, C),
+    割合か空(定子, 定母, C),
+    割合か空(賛子, 賛母, C),
+    割合か空(頭子, 頭母, C),
+    割合か空(割子, 割母, C),
+    欄(持権, C, P), ( P == 空 -> true ; P =< V ).
+
+% 16・17の欄は両方空か、両方が数で、議決権を行使できる株主の数・議決権の数以上（総株主は議決権の無い株主も数える）
+総株主の形(H, V, C) :-
+    欄(総人, C, TH), 欄(総権, C, TV),
+    ( TH == 空, TV == 空 -> true ; 正(TH), 正(TV), H =< TH, V =< TV ).
+
+% 分子と分母は両方空（定款で決めていない）か、両方が数で分子が分母以下。片方だけ空は判定できない。
+% 分子0は18の欄（定足数を無くした）だけで入る（数の欄の 非負か空。ほかの分子は 正か空 で先に外れる）
+割合か空(N1, N2, C) :-
+    欄(N1, C, A), 欄(N2, C, B),
+    ( A == 空, B == 空 -> true ; 割合の形(A, B) ).
+
+割合の形(N, D) :- 非負(N), 正(D), N =< D.
+
+%% ---- 欄の読み出し（番号は画面の欄の番号）----
+欄の番号(公開, 1).
+欄の番号(取締役会, 2).
+欄の番号(投票, 3).
+欄の番号(事柄, 4).
+欄の番号(書面同意, 5).
+欄の番号(通知差, 6).
+欄の番号(出し方, 7).
+欄の番号(省略同意, 8).
+欄の番号(通知記載, 9).
+欄の番号(定日, 10).
+欄の番号(全人, 11).
+欄の番号(全権, 12).
+欄の番号(出権, 13).
+欄の番号(賛人, 14).
+欄の番号(賛権, 15).
+欄の番号(総人, 16).
+欄の番号(総権, 17).
+欄の番号(定子, 18).
+欄の番号(定母, 19).
+欄の番号(賛子, 20).
+欄の番号(賛母, 21).
+欄の番号(人数, 22).
+欄の番号(頭子, 23).
+欄の番号(頭母, 24).
+欄の番号(請求, 25).
+欄の番号(行使, 26).
+欄の番号(持権, 27).
+欄の番号(月数, 28).
+欄の番号(請差, 29).
+欄の番号(遅滞, 30).
+欄の番号(違反, 31).
+欄の番号(同一, 32).
+欄の番号(割子, 33).
+欄の番号(割母, 34).
+欄の番号(個数, 35).
+欄の番号(月, 36).
+欄の番号(週日, 37).
+欄の番号(期間, 38).
+欄の番号(総会, 39).
+欄の番号(内容法令, 40).
+欄の番号(内容定款, 41).
+欄の番号(不公正, 42).
+欄の番号(特別利害, 43).
+欄の番号(手続違反, 44).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+%% ---- 成り立たない組（組み合わせなし/4。REVIEW_RULES C3。案A「この組み合わせはありません」）----
+% 組み合わせなし(C, 記号, 葉のリスト, 箱の条)。rules/g_hantei.pl の 全部の段 が findall で全部集める（REVIEW_RULES 末尾「AI同士で決めた書き方」1・2）。
+%   組は ア〜ウ の3つ（決め2。根拠は範囲の12条の外の条なので、原文の表に3条を足す。範囲の12条は変えない）。
+%   ア は1と2の欄、イ・ウ は1と4の欄なので、ア と イ か ウ が同時に当たれば段を並べる（イ と ウ は4の欄の値が違うので同時には当たらない）。
+%   ア 1の欄が「はい」（公開会社）で、2の欄が「いいえ」（取締役会なし）。根拠は327条1項1号（公開会社は取締役会を置かなければならない）
+%   イ 4の欄が「全部の株式に、譲渡には会社の承認が要るという定めを付ける」で、1の欄が「いいえ」。
+%      根拠は2条5号（公開会社でない会社は、すでに全部の株式に譲渡の制限がある）
+%   ウ 4の欄が「株主ごとに、配当・残余財産・議決権の扱いを変える定めを置く・変える」で、1の欄が「はい」。
+%      根拠は109条2項（株主ごとに異なる取扱いを定款で定められるのは、公開会社でない会社）
+%   案のエ（4の欄が「再編の制限株式」で1の欄が「いいえ」）は決め2に入っていないので組にしていない（選択肢の言い方で外れる）。
+% 組は4の欄が何でも先に見る。25の欄が「なし」で26〜37を入れた組、5の欄が「はい」で11〜24を入れた組、6の欄が空で7・10を入れた組は
+% 見ないだけで、ありませんにしない（案A「ありませんにしないもの」）。
+組み合わせなし(C, a, ['公開会社は、取締役会を置かなければならない', W], ['327条1項第1号']) :-
+    欄(公開, C, はい), 欄(取締役会, C, いいえ),
+    二つ選んだ(公開, 取締役会, C, W).
+組み合わせなし(C, i, ['公開会社でない会社は、すでに全部の株式に、譲渡には会社の承認が要るという定めがある', W], ['2条第5号']) :-
+    欄(公開, C, いいえ), 欄(事柄, C, 譲渡制限),
+    二つ選んだ(公開, 事柄, C, W).
+組み合わせなし(C, u, ['株主ごとに、配当・残余財産・議決権の扱いを変える定めを定款に置けるのは、公開会社でない会社', W], ['109条2項']) :-
+    欄(公開, C, はい), 欄(事柄, C, 異なる取扱い),
+    二つ選んだ(公開, 事柄, C, W).
+
+二つ選んだ(N1, N2, C, W) :-
+    欄の番号(N1, I1), 欄(N1, C, V1), 葉の語(I1, V1, W1),
+    欄の番号(N2, I2), 欄(N2, C, V2), 葉の語(I2, V2, W2),
+    format(atom(W), '~wの欄で~wを選び、~wの欄で~wを選んだ', [I1, W1, I2, W2]).
+
+%% ---- 木の葉に出す欄の値の言葉（画面の選択肢と同じ語。「（あなたの考え）」は付けない）----
+% 葉の語(欄の番号, 値, 選択肢の語)。数の欄は 入れた/3 で書く
+葉の語(N, はい, 'はい') :- memberchk(N, [1, 2, 3, 5, 8, 9, 26, 31, 40, 41, 42, 44]).
+葉の語(N, いいえ, 'いいえ') :- memberchk(N, [1, 2, 3, 5, 8, 9, 26, 31, 40, 41, 42, 44]).
+葉の語(4, 選任, '取締役・会計参与・監査役を選ぶ').
+葉の語(4, 解任, '取締役・会計参与を解く').
+葉の語(4, 特別の解任, '監査役か監査等委員である取締役を解く、累積投票で選んだ取締役を解く').
+葉の語(4, 定款変更, '定款を変える').
+葉の語(4, 譲渡制限, '全部の株式に、譲渡には会社の承認が要るという定めを付ける').
+葉の語(4, 異なる取扱い, '株主ごとに、配当・残余財産・議決権の扱いを変える定めを定款に置く・変える').
+葉の語(4, 事業譲渡, '事業の全部か大事な一部を譲る・解散する').
+葉の語(4, 組織再編, '合併・会社分割・株式交換・株式移転・株式交付').
+葉の語(4, 再編の制限株式, '合併などで、消える側・完全子会社になる側の公開会社が、株主に譲渡制限株式などを渡す').
+葉の語(4, 資本金減少, '資本金の額を減らす').
+葉の語(4, 欠損の減資, '定時総会で、欠損の額を超えない範囲で資本金の額を減らす').
+葉の語(4, 併合, '株式を併合する').
+葉の語(4, 特定の買取り, '特定の株主から、自社の株式を買い取る').
+葉の語(4, 不承認の買取り, '譲渡を承認しなかった株式を、会社か会社の指定した人が買い取る').
+葉の語(4, 全部取得, '全部取得条項付種類株式を取得する・相続人などに株式の売渡しを求める').
+葉の語(4, 募集, '株式・新株予約権の募集の事項を総会で決める').
+葉の語(4, 責任免除, '役員などの責任の一部を免除する').
+葉の語(4, 現物配当, '金銭以外で配当し、株主に金銭を求める権利を与えない').
+葉の語(4, どれでもない, '上のどれでもない').
+葉の語(7, 書面, '書面').
+葉の語(7, 承諾あり, '株主の承諾を得てメールなどで').
+葉の語(7, 承諾なし, '承諾なしにメールなどで').
+葉の語(7, 口頭, '口頭など、書面・メール以外で').
+葉の語(25, なし, '何もしていない').
+葉の語(25, 招集, '取締役に総会を開くよう求めた').
+葉の語(25, 議題, '4の事柄を総会で決めるよう求めた').
+葉の語(25, 提出, '総会の場で4の事柄の議案を出した').
+葉の語(25, 要領, '自分の議案の要領を通知に載せるよう求めた').
+葉の語(30, した, 'した').
+葉の語(30, していない, 'していない').
+葉の語(32, なし, '出ていない').
+葉の語(32, 以上, '賛成が十分の一以上だった').
+葉の語(32, 三年経過, '十分の一未満で、3年たった').
+葉の語(32, 三年以内, '十分の一未満で、3年たっていない').
+葉の語(38, 以内, '3か月以内').
+葉の語(38, 過ぎた, '3か月を過ぎた').
+葉の語(39, 開いた, '開いて決議した').
+葉の語(39, 開いていない, '開いていないのに、決議があったことにされている').
+葉の語(43, 行使なし, '行使していない').
+葉の語(43, 不当でない, '行使したが、著しく不当な決議ではない').
+葉の語(43, 不当, '行使して、著しく不当な決議になった').
+
+% 入力の葉：「Nの欄で、◯◯を選んだ」。欄の名前から番号と値を引く
+選んだ(Name, C, W) :-
+    欄の番号(Name, N), 欄(Name, C, V), 葉の語(N, V, VW),
+    format(atom(W), '~wの欄で、~wを選んだ', [N, VW]).
+
+% 数の欄の葉：「Nの欄に、◯と入れた」「Nの欄を空にした」
+入れた(Name, C, W) :-
+    欄の番号(Name, N), 欄(Name, C, V),
+    ( V == 空 -> format(atom(W), '~wの欄を空にした', [N])
+    ; format(atom(W), '~wの欄に、~dと入れた', [N, V]) ).
+
+%% ---- 割合の計算（整数の掛け算だけ）----
+%  割合は 過半 か r(分子, 分母, 語)。r は「以上」で比べる
+満たす(過半, V, D) :- V * 2 > D.
+満たす(r(A, B, _), V, D) :- V * B >= D * A.
+
+必要数(過半, D, N) :- N is D // 2 + 1.
+必要数(r(A, B, _), D, N) :- N is (D * A + B - 1) // B.
+
+割合の語(過半, 過半数).
+割合の語(r(_, _, W), W).
+
+% 定款の割合が基準を上回るか・下回るか
+上回る(過半, N, D) :- N * 2 > D.
+上回る(r(A, B, _), N, D) :- N * B > A * D.
+下回る(r(A, B, _), N, D) :- N * B < A * D.
+
+定款の語(N, D, W) :- format(atom(W), '定款の~w分の~w', [D, N]).
+
+%% ---- 理由の語をつなぐ ----
+% 前は rules/g_hantei.pl にあり、重複を消していなかった（kubun-prolog schema.pl と同じ形にした）
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---- 木の部品 ----
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+原文規定(Art, X) :- 原文(Art, W), 規定(Art, W, X).
+% 成り立つ文（起きた事実・条文の読み）
+文(X, t(ok, X, '', [])).
+約束(X, t(ok, X, '@約束事', [])).
+% 葉の行：木の行 t(...) はそのまま、文はそのまま1行（schema の「書き方のきまり」）
+葉の行(t(K, X, A, Cs), t(K, X, A, Cs)) :- !.
+葉の行(W, X) :- 文(W, X).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+% 前は子が1つでも「次のすべてが成り立つ」の節を作っていた（前の :197）
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（会社法の条文にないもの）
+%
+%   ① （あなたの考え）と書いた欄（遅滞なく・議案が法令か定款に違反・実質的に同一の議案・決議の内容が法令か定款に違反・
+%      著しく不公正・著しく不当・6〜9のほかの法令か定款の違反）は判定しない。本人がそう考えたとして答える。
+%      木では、その欄を使う段の葉の最後に出す（全部の段には付けない。REVIEW_RULES A5）。
+%   ② 「当たりません」は、その条に当たらないと言うだけで、反対の結論を言うものではない。
+%   ③ 4の欄の事柄が309条2項〜4項の各号のどれに当たるかは、各号が指す条（140条・156条・171条・199条・339条・447条 など）を読まずに、
+%      事柄の名前で当てている。「上のどれでもない」は309条1項（普通の決議）で答える（2026-11-26 決め1。REVIEW_RULES C2・D1）。
+%   ④ 招集の段で「足りない」「できない」と答えた組（299条1項・2項・300条・309条5項）は、
+%      831条1項1号の「招集の手続又は決議の方法が法令に違反するとき」に当たるとして、取消しの訴えの段へつなぐ（決め3）。
+%   ⑤ 297条3項・303条4項・305条3項の分母（総株主の議決権から、請求の事柄で議決権を行使できない株主の議決権を除いた数）は、
+%      4の欄の事柄を請求の事柄と同じとみて、12の欄（議決権を行使できる株主の議決権の数）で数える（決め5）。
+%
+%   前は①が「決議の種類、「著しく不公正」「重大」「決議に影響」「著しく不当」「遅滞なく」は判定しない」で、全部の段の木に付いていた。
+%   決議の種類は4の欄の事柄から当てる③に、「重大」「決議に影響」は聞かずに831条2項を条件つきの文で答える形にした（2026-11-26 案A）。
+%   831条2項の条件つきの文は 2026-11-27 LLMレビューで段ごと消し、判定しないこととして about に書いた（REVIEW_RULES A1）。
+%   ③〜⑤は案A「今のコードから変える場所」の yakusoku/kihon.pl の行。どの段の葉に出すかは rules/b〜e を書く回（2回目・3回目）で決める。
+
+評価の約束(X) :-
+    約束('（あなたの考え）と書いた欄は判定せず、本人がそう考えたとして答えている', X).
+
+場面外の約束(X) :-
+    約束('「当たりません」は、その条に当たらないと言うだけで、反対の結論を言うものではない', X).
+
+事柄の約束(X) :-
+    約束('決める事柄が309条2項〜4項の各号のどれに当たるかは、各号が指す条を読まずに、事柄の名前で当てている。「上のどれでもない」は309条1項の普通の決議で答えている', X).
+
+招集の違反の約束(X) :-
+    約束('299条1項・2項・300条・309条5項の決まりに合わないと答えた招集の手続・決議の方法は、831条1項1号の「法令に違反するとき」に当たるとして扱っている', X).
+
+分母の約束(X) :-
+    約束('297条3項・303条4項・305条3項の分母は、決める事柄を請求の事柄と同じとみて、議決権を行使できる株主の議決権の数（12の欄）で数えている', X).
+</script>
+<script type="text/prolog" data-name="rules_a_genbun.pl">% rules/a_genbun.pl — 判定に使う条文の原文（law/kaisha.xml の本則のまま）
+%
+%   原文(条, 文)。test/page_test.mjs が XML を別に読み、全行が一字一句一致するかを確かめる。
+%   2文ある項は続けて1行にする（build.py の text() と同じ）。号の語と定義の間（XML の Column の区切り）は全角の空白1つにする（同じ）。
+%   最後の3行（327条1項第1号・2条第5号・109条2項）は範囲の12条の外で、schema.pl の 組み合わせなし/4 の箱の条に出す根拠（決め1。2026-11-27 案A 4回目）。
+%   327条1項第1号は号の文だけ（「公開会社」）で、柱書「次に掲げる株式会社は、取締役会を置かなければならない。」は行にしていない（依頼の3行どおり）。
+%   2026-11-27 LLMレビュー：295条1項を足した（取締役会のない会社で通知に書いた事柄を決議できる根拠。c_shoshu.pl の 事項の答え）。
+%   831条2項の行は消した（棄却の段を消し、どの段の条にも出なくなったため。page_test が全行をボタンで開くかを見る）。行の数は39のまま。
+
+原文('295条1項', '株主総会は、この法律に規定する事項及び株式会社の組織、運営、管理その他株式会社に関する一切の事項について決議をすることができる。').
+原文('297条1項','総株主の議決権の百分の三（これを下回る割合を定款で定めた場合にあっては、その割合）以上の議決権を六箇月（これを下回る期間を定款で定めた場合にあっては、その期間）前から引き続き有する株主は、取締役に対し、株主総会の目的である事項（当該株主が議決権を行使することができる事項に限る。）及び招集の理由を示して、株主総会の招集を請求することができる。').
+原文('297条2項', '公開会社でない株式会社における前項の規定の適用については、同項中「六箇月（これを下回る期間を定款で定めた場合にあっては、その期間）前から引き続き有する」とあるのは、「有する」とする。').
+原文('297条3項', '第一項の株主総会の目的である事項について議決権を行使することができない株主が有する議決権の数は、同項の総株主の議決権の数に算入しない。').
+原文('297条4項第1号', '第一項の規定による請求の後遅滞なく招集の手続が行われない場合').
+原文('297条4項第2号', '第一項の規定による請求があった日から八週間（これを下回る期間を定款で定めた場合にあっては、その期間）以内の日を株主総会の日とする株主総会の招集の通知が発せられない場合').
+原文('298条1項第2号', '株主総会の目的である事項があるときは、当該事項').
+原文('298条1項第3号', '株主総会に出席しない株主が書面によって議決権を行使することができることとするときは、その旨').
+原文('298条1項第4号', '株主総会に出席しない株主が電磁的方法によって議決権を行使することができることとするときは、その旨').
+原文('299条1項', '株主総会を招集するには、取締役は、株主総会の日の二週間（前条第一項第三号又は第四号に掲げる事項を定めたときを除き、公開会社でない株式会社にあっては、一週間（当該株式会社が取締役会設置会社以外の株式会社である場合において、これを下回る期間を定款で定めた場合にあっては、その期間））前までに、株主に対してその通知を発しなければならない。').
+原文('299条2項', '次に掲げる場合には、前項の通知は、書面でしなければならない。').
+原文('299条2項第1号', '前条第一項第三号又は第四号に掲げる事項を定めた場合').
+原文('299条2項第2号', '株式会社が取締役会設置会社である場合').
+原文('299条3項', '取締役は、前項の書面による通知の発出に代えて、政令で定めるところにより、株主の承諾を得て、電磁的方法により通知を発することができる。この場合において、当該取締役は、同項の書面による通知を発したものとみなす。').
+原文('300条', '前条の規定にかかわらず、株主総会は、株主の全員の同意があるときは、招集の手続を経ることなく開催することができる。ただし、第二百九十八条第一項第三号又は第四号に掲げる事項を定めた場合は、この限りでない。').
+原文('303条1項', '株主は、取締役に対し、一定の事項（当該株主が議決権を行使することができる事項に限る。次項において同じ。）を株主総会の目的とすることを請求することができる。').
+原文('303条2項', '前項の規定にかかわらず、取締役会設置会社においては、総株主の議決権の百分の一（これを下回る割合を定款で定めた場合にあっては、その割合）以上の議決権又は三百個（これを下回る数を定款で定めた場合にあっては、その個数）以上の議決権を六箇月（これを下回る期間を定款で定めた場合にあっては、その期間）前から引き続き有する株主に限り、取締役に対し、一定の事項を株主総会の目的とすることを請求することができる。この場合において、その請求は、株主総会の日の八週間（これを下回る期間を定款で定めた場合にあっては、その期間）前までにしなければならない。').
+原文('303条3項', '公開会社でない取締役会設置会社における前項の規定の適用については、同項中「六箇月（これを下回る期間を定款で定めた場合にあっては、その期間）前から引き続き有する」とあるのは、「有する」とする。').
+原文('303条4項', '第二項の一定の事項について議決権を行使することができない株主が有する議決権の数は、同項の総株主の議決権の数に算入しない。').
+原文('304条', '株主は、株主総会において、株主総会の目的である事項（当該株主が議決権を行使することができる事項に限る。次条第一項において同じ。）につき議案を提出することができる。ただし、当該議案が法令若しくは定款に違反する場合又は実質的に同一の議案につき株主総会において総株主（当該議案について議決権を行使することができない株主を除く。）の議決権の十分の一（これを下回る割合を定款で定めた場合にあっては、その割合）以上の賛成を得られなかった日から三年を経過していない場合は、この限りでない。').
+原文('305条1項', '株主は、取締役に対し、株主総会の日の八週間（これを下回る期間を定款で定めた場合にあっては、その期間）前までに、株主総会の目的である事項につき当該株主が提出しようとする議案の要領を株主に通知すること（第二百九十九条第二項又は第三項の通知をする場合にあっては、その通知に記載し、又は記録すること）を請求することができる。ただし、取締役会設置会社においては、総株主の議決権の百分の一（これを下回る割合を定款で定めた場合にあっては、その割合）以上の議決権又は三百個（これを下回る数を定款で定めた場合にあっては、その個数）以上の議決権を六箇月（これを下回る期間を定款で定めた場合にあっては、その期間）前から引き続き有する株主に限り、当該請求をすることができる。').
+原文('305条2項', '公開会社でない取締役会設置会社における前項ただし書の規定の適用については、同項ただし書中「六箇月（これを下回る期間を定款で定めた場合にあっては、その期間）前から引き続き有する」とあるのは、「有する」とする。').
+原文('305条3項', '第一項の株主総会の目的である事項について議決権を行使することができない株主が有する議決権の数は、同項ただし書の総株主の議決権の数に算入しない。').
+原文('305条6項', '第一項から第三項までの規定は、第一項の議案が法令若しくは定款に違反する場合又は実質的に同一の議案につき株主総会において総株主（当該議案について議決権を行使することができない株主を除く。）の議決権の十分の一（これを下回る割合を定款で定めた場合にあっては、その割合）以上の賛成を得られなかった日から三年を経過していない場合には、適用しない。').
+原文('309条1項', '株主総会の決議は、定款に別段の定めがある場合を除き、議決権を行使することができる株主の議決権の過半数を有する株主が出席し、出席した当該株主の議決権の過半数をもって行う。').
+原文('309条2項', '前項の規定にかかわらず、次に掲げる株主総会の決議は、当該株主総会において議決権を行使することができる株主の議決権の過半数（三分の一以上の割合を定款で定めた場合にあっては、その割合以上）を有する株主が出席し、出席した当該株主の議決権の三分の二（これを上回る割合を定款で定めた場合にあっては、その割合）以上に当たる多数をもって行わなければならない。この場合においては、当該決議の要件に加えて、一定の数以上の株主の賛成を要する旨その他の要件を定款で定めることを妨げない。').
+原文('309条3項', '前二項の規定にかかわらず、次に掲げる株主総会（種類株式発行会社の株主総会を除く。）の決議は、当該株主総会において議決権を行使することができる株主の半数以上（これを上回る割合を定款で定めた場合にあっては、その割合以上）であって、当該株主の議決権の三分の二（これを上回る割合を定款で定めた場合にあっては、その割合）以上に当たる多数をもって行わなければならない。').
+原文('309条4項', '前三項の規定にかかわらず、第百九条第二項の規定による定款の定めについての定款の変更（当該定款の定めを廃止するものを除く。）を行う株主総会の決議は、総株主の半数以上（これを上回る割合を定款で定めた場合にあっては、その割合以上）であって、総株主の議決権の四分の三（これを上回る割合を定款で定めた場合にあっては、その割合）以上に当たる多数をもって行わなければならない。').
+原文('309条5項', '取締役会設置会社においては、株主総会は、第二百九十八条第一項第二号に掲げる事項以外の事項については、決議をすることができない。ただし、第三百十六条第一項若しくは第二項に規定する者の選任又は第三百九十八条第二項の会計監査人の出席を求めることについては、この限りでない。').
+原文('319条1項', '取締役又は株主が株主総会の目的である事項について提案をした場合において、当該提案につき株主（当該事項について議決権を行使することができるものに限る。）の全員が書面又は電磁的記録により同意の意思表示をしたときは、当該提案を可決する旨の株主総会の決議があったものとみなす。').
+原文('341条', '第三百九条第一項の規定にかかわらず、役員を選任し、又は解任する株主総会の決議は、議決権を行使することができる株主の議決権の過半数（三分の一以上の割合を定款で定めた場合にあっては、その割合以上）を有する株主が出席し、出席した当該株主の議決権の過半数（これを上回る割合を定款で定めた場合にあっては、その割合以上）をもって行わなければならない。').
+原文('830条1項', '株主総会若しくは種類株主総会又は創立総会若しくは種類創立総会（以下この節及び第九百三十七条第一項第一号トにおいて「株主総会等」という。）の決議については、決議が存在しないことの確認を、訴えをもって請求することができる。').
+原文('830条2項', '株主総会等の決議については、決議の内容が法令に違反することを理由として、決議が無効であることの確認を、訴えをもって請求することができる。').
+原文('831条1項第1号', '株主総会等の招集の手続又は決議の方法が法令若しくは定款に違反し、又は著しく不公正なとき。').
+原文('831条1項第2号', '株主総会等の決議の内容が定款に違反するとき。').
+原文('831条1項第3号', '株主総会等の決議について特別の利害関係を有する者が議決権を行使したことによって、著しく不当な決議がされたとき。').
+原文('327条1項第1号', '公開会社').
+原文('2条第5号', '公開会社　その発行する全部又は一部の株式の内容として譲渡による当該株式の取得について株式会社の承認を要する旨の定款の定めを設けていない株式会社をいう。').
+原文('109条2項', '前項の規定にかかわらず、公開会社でない株式会社は、第百五条第一項各号に掲げる権利に関する事項について、株主ごとに異なる取扱いを行う旨を定款で定めることができる。').
+</script>
+<script type="text/prolog" data-name="rules_b_ketsugi.pl">% rules/b_ketsugi.pl — 決議は通るか（309条1項〜4項・319条1項・341条）
+%
+%   段は1つ：doui（5の欄が「はい」。319条1項）か kekka（決議は通るか）。g_hantei.pl の 全部の段 が呼ぶ。
+%   2026-11-27 案A 2回目。前は入口「この数で決議は通るか」の中で決議の種類（種類：普通 | 第2項 | 第3項 | 第4項 | 役員）を選ばせ（C2・C4）、
+%   箱の文に入れた数と分母を入れ（A2）、分母の段（bunbo）と読みの段（yomi_*）を 補足 の段として並べていた（A5）。
+%   今は4の欄の事柄から決議の種類を引き（アプリの約束事③）、箱は「通ります／通りません」だけにして、入れた数・不足・分母は葉に置いた。
+%   309条5項で決議できない組では「通ります」の代わりに「賛成の数は◯◯に足ります」（状態 足りる。下の 事項で決議できない）。
+%   読みの段は about へ移す（文は agents/beaver/workspace/kaisha_planA2_yomi_1127.md に控えた。4回目）。
+%   5の欄が「いいえ」のときに毎回出していた「319条1項には当たりません」の段（doui・当たらない）は消した（同じ控えに理由）。
+%   形は kubun-prolog の rules/b_ketsugi.pl（決議の段/2・決議の文/3・数の入力・割合の入力・原文の葉）。
+%   計算は schema.pl の 満たす/3（整数の掛け算）だけで比べる（前の :31-95 をそのまま残し、欄の名前だけ ctx/44 に合わせた）。
+%   分母：普通・第2項・役員は、定足数が議決権を行使できる株主の議決権、賛成が出席した議決権。第3項・第4項は出席でなく全員（about の点 (e)）。
+%   39の欄が「開いていない」で5の欄が「いいえ」のときは総会を開いていないので、決議の数を数えない（決め5。830条1項は e_arasoi.pl が答える）。
+%   39の欄が「開いていない」で5の欄が「はい」のときは、319条1項で決議があったものとみなされるので doui の段を出す（決め5）。
+%   4の欄が「異なる取扱い」（309条4項）で16の欄が空のときは、分母の総株主が無いので段を出さない（決め6）。
+%   段の文には、画面の上で指す先の無い指示語（その・これを・当該・同項・前項 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+
+決議の段(C, [s(doui, '全員の同意', 段(みなす, '提案を可決する株主総会の決議があったものとみなされます。', ['319条1項'], [R, W5]))]) :-
+    欄(書面同意, C, はい), !,
+    原文規定('319条1項', R), 選んだ(書面同意, C, W5).
+決議の段(C, []) :- 決議を数えない(C), !.
+決議の段(C, [s(kekka, '決議は通るか', 段(St, T, As, Ls))]) :-
+    欄(事柄, C, J), 事柄の決議(J, K),
+    決議の語(K, Name),
+    決議の条(K, As),
+    要件(K, C, Ks, Bun),
+    findall(W, ( member(Y, Ks), 不足の文(Y, W) ), Lacks),
+    (   Lacks == []
+    ->  findall(W, ( member(Y, Ks), 足りた文(Y, W) ), Ns),
+        ( 事項で決議できない(C) -> St = 足りる ; St = 通る )
+    ;   St = 通らない, Ns = Lacks ),
+    決議の文(St, Name, T),
+    原文の葉(As, Rs),
+    選んだ(事柄, C, W4),
+    数の入力(K, C, Ws),
+    事柄の約束(P3),
+    append([Rs, [W4], Ws, Ns, [Bun, P3]], Ls).
+
+決議を数えない(C) :- 欄(総会, C, 開いていない), !.
+決議を数えない(C) :- 欄(事柄, C, J), 事柄の決議(J, 第4項), 欄(総人, C, 空).
+
+決議の文(通る, Name, T) :- format(atom(T), '~wは通ります。', [Name]).
+決議の文(足りる, Name, T) :- format(atom(T), '賛成の数は~wに足ります。', [Name]).
+決議の文(通らない, Name, T) :- format(atom(T), '~wは通りません。', [Name]).
+
+% 309条5項で決議できない組（取締役会のある会社で、4の事柄を招集の通知に書いていない）。c_shoshu.pl の 事項の段 が できない と答える組。
+% このときは数が足りても「通ります」と言わず、状態 足りる で「賛成の数は◯◯に足ります」と答える（2026-11-27 LLMレビュー。依頼の2）。
+% 前は「総会は、招集の通知に書いていない事柄を決議できません（309条5項）」と「普通の決議は通ります（309条1項）」が並び、打ち消し合っていた。
+% 数が足りないときは今のまま「通りません」（決議できないことと食い違わない）
+% 事項の段 の答えを先に受けてから形を見る。呼ぶ側でリストの形を渡すと、6の欄が空の組の1つ目の節（[] を返して ! で止める）を
+% 素通りして2つ目の節に落ち、通知を出していない組まで「足ります」になっていた（2026-11-27 07:3x でんすけ。run_cases の決め7で NG）
+事項で決議できない(C) :- 事項の段(C, L), L = [s(_, _, 段(できない, _, _, _))].
+
+% 4の欄の事柄 → 決議の種類（アプリの約束事③。当てる号は案A「欄の一覧」4 の「当てる条」）。
+%   選任・解任 → 341条、特別の解任 → 309条2項7号、定款変更・事業譲渡 → 2項11号、組織再編 → 2項12号、資本金減少 → 2項9号、
+%   欠損の減資 → 1項（2項9号の括弧書き）、併合 → 2項4号、特定の買取り → 2項2号、不承認の買取り → 2項1号、全部取得 → 2項3号、
+%   募集 → 2項5号・6号、責任免除 → 2項8号、現物配当 → 2項10号、譲渡制限 → 3項1号、再編の制限株式 → 3項2号・3号、異なる取扱い → 4項、
+%   どれでもない → 1項
+事柄の決議(選任, 役員).
+事柄の決議(解任, 役員).
+事柄の決議(特別の解任, 第2項).
+事柄の決議(定款変更, 第2項).
+事柄の決議(譲渡制限, 第3項).
+事柄の決議(異なる取扱い, 第4項).
+事柄の決議(事業譲渡, 第2項).
+事柄の決議(組織再編, 第2項).
+事柄の決議(再編の制限株式, 第3項).
+事柄の決議(資本金減少, 第2項).
+事柄の決議(欠損の減資, 普通).
+事柄の決議(併合, 第2項).
+事柄の決議(特定の買取り, 第2項).
+事柄の決議(不承認の買取り, 第2項).
+事柄の決議(全部取得, 第2項).
+事柄の決議(募集, 第2項).
+事柄の決議(責任免除, 第2項).
+事柄の決議(現物配当, 第2項).
+事柄の決議(どれでもない, 普通).
+
+決議の語(普通, '普通の決議').
+決議の語(第2項, '第309条第2項の決議').
+決議の語(第3項, '第309条第3項の決議').
+決議の語(第4項, '第309条第4項の決議').
+決議の語(役員, '役員の選任・解任の決議').
+
+決議の条(普通, ['309条1項']).
+決議の条(第2項, ['309条2項']).
+決議の条(第3項, ['309条3項']).
+決議の条(第4項, ['309条4項']).
+決議の条(役員, ['341条']).
+
+%% ---- 割合 ----
+% 要件は y(語, 割合, 持つ数, 分母, 単位)。Bun は分母の葉
+% 18の欄（定子）：空＝定款で決めていない、0＝定足数を無くした、1以上＝定款の割合（前の 定別：なし | 無くす | 割合）
+% 20・21の欄（賛子・賛母）に数があれば、309条1項の「定款に別段の定め」として賛成の割合に当てる（決め6＝B。2026-11-27 3回目）。
+% 309条1項は上回る・下回るを分けていないので、第2項などの 賛成の割合 と違い、上回るときだけにしない。空なら過半数
+要件(普通, C, Ks, Bun) :-
+    欄(全権, C, V), 欄(出権, C, O), 欄(賛権, C, A), 欄(定子, C, Q),
+    普通の定足(Q, C, V, O, K0),
+    普通の賛成(C, RA),
+    append(K0, [y('賛成の議決権', RA, A, O, '')], Ks),
+    普通の分母(Q, V, O, Bun).
+要件(第2項, C, [y('出席した議決権', RQ, O, V, ''), y('賛成の議決権', RA, A, O, '') | K3], Bun) :-
+    欄(全権, C, V), 欄(出権, C, O), 欄(賛権, C, A),
+    定足の割合(C, RQ),
+    賛成の割合(r(2, 3, 三分の二), C, RA),
+    後段の要件(C, K3),
+    出席の分母(V, O, Bun).
+要件(役員, C, [y('出席した議決権', RQ, O, V, ''), y('賛成の議決権', RA, A, O, '')], Bun) :-
+    欄(全権, C, V), 欄(出権, C, O), 欄(賛権, C, A),
+    定足の割合(C, RQ),
+    賛成の割合(過半, C, RA),
+    出席の分母(V, O, Bun).
+要件(第3項, C, [y('賛成の株主の数', RH, AH, H, ' 人'), y('賛成の議決権', RV, A, V, '')], Bun) :-
+    全員の組(r(2, 3, 三分の二), 全人, 全権, C, H, V, AH, A, RH, RV),
+    format(atom(Bun), '分母は出席ではなく、議決権を行使できる株主の全員 ~w 人と、全員の議決権 ~w', [H, V]).
+要件(第4項, C, [y('賛成の株主の数', RH, AH, H, ' 人'), y('賛成の議決権', RV, A, V, '')], Bun) :-
+    全員の組(r(3, 4, 四分の三), 総人, 総権, C, H, V, AH, A, RH, RV),
+    format(atom(Bun), '分母は出席ではなく、総株主 ~w 人と、総株主の議決権 ~w', [H, V]).
+
+% 第3項は11・12の欄（議決権を行使できる株主）、第4項は16・17の欄（総株主）を分母にする（前は第4項のとき画面が11・12の欄の名前を入れ替えていた）
+全員の組(Base, NH, NV, C, H, V, AH, A, RH, RV) :-
+    欄(NH, C, H), 欄(NV, C, V), 欄(賛人, C, AH), 欄(賛権, C, A),
+    頭数の割合(C, RH),
+    賛成の割合(Base, C, RV).
+
+普通の定足(0, _, _, _, []) :- !.
+普通の定足(空, _, V, O, [y('出席した議決権', 過半, O, V, '')]) :- !.
+普通の定足(N, C, V, O, [y('出席した議決権', r(N, D, W), O, V, '')]) :-
+    欄(定母, C, D), 定款の語(N, D, W).
+
+普通の分母(0, _, O, T) :- !,
+    format(atom(T), '分母は出席した議決権 ~w で、定款で定足数を無くしたので、出席の数は問わない', [O]).
+普通の分母(_, V, O, T) :- 出席の分母(V, O, T).
+出席の分母(V, O, T) :-
+    format(atom(T), '定足数の分母は議決権を行使できる株主の議決権 ~w、賛成の分母は出席した議決権 ~w', [V, O]).
+
+% 定足数の定款の割合は「三分の一以上」のときだけ使う（309条2項・341条の括弧書き）。18の欄が0（無くした）なら過半数
+定足の割合(C, r(N, D, W)) :-
+    欄(定子, C, N), integer(N), 欄(定母, C, D),
+    N * 3 >= D, !,
+    定款の語(N, D, W).
+定足の割合(_, 過半).
+
+% 賛成の定款の割合（20・21の欄）は基準を「上回る」ときだけ使う
+賛成の割合(Base, C, r(N, D, W)) :-
+    欄(賛子, C, N), integer(N), 欄(賛母, C, D),
+    上回る(Base, N, D), !,
+    定款の語(N, D, W).
+賛成の割合(Base, _, Base).
+
+% 普通の決議の賛成の割合（20・21の欄。決め6。要件(普通, …) から呼ぶ）
+普通の賛成(C, r(N, D, W)) :-
+    欄(賛子, C, N), integer(N), !,
+    欄(賛母, C, D), 定款の語(N, D, W).
+普通の賛成(_, 過半).
+
+% 第3項・第4項の株主の数の定款の割合（23・24の欄）は「半数を上回る」ときだけ使う（前は18・19の欄を使い回していた）
+頭数の割合(C, r(N, D, W)) :-
+    欄(頭子, C, N), integer(N), 欄(頭母, C, D),
+    上回る(r(1, 2, 半数), N, D), !,
+    定款の語(N, D, W).
+頭数の割合(_, r(1, 2, 半数)).
+
+% 309条2項後段（22の欄に数があれば、賛成の株主の数がその数以上）
+後段の要件(C, [y('賛成の株主の数', r(K, 1, W), H, 1, ' 人')]) :-
+    欄(人数, C, K), integer(K), !,
+    欄(賛人, C, H),
+    format(atom(W), '定款の~w人以上', [K]).
+後段の要件(_, []).
+
+%% ---- 足りない分・足りた数（葉）----
+不足の文(y(_, R, Has, D, _), _) :- 満たす(R, Has, D), !, fail.
+不足の文(y(L, R, Has, D, U), T) :-
+    必要数(R, D, Need), Gap is Need - Has,
+    format(atom(T), '~wは ~w~w で、必要な ~w~w に ~w~w 足りない', [L, Has, U, Need, U, Gap, U]).
+
+足りた文(y(L, R, Has, D, U), T) :-
+    必要数(R, D, Need), 割合の語(R, W),
+    format(atom(T), '~wは ~w~w で、~w（必要な ~w~w）に足りている', [L, Has, U, W, Need, U]).
+
+%% ---- 入力の葉 ----
+% その決議で使った数の欄だけを並べる。定款の割合の欄は数が入っているときだけ
+数の入力(普通, C, Ws) :- !,
+    入れた(全権, C, W12), 入れた(出権, C, W13), 入れた(賛権, C, W15),
+    割合の入力(定子, 定母, C, Qs), 割合の入力(賛子, 賛母, C, Ss),
+    append([[W12, W13, W15], Qs, Ss], Ws).
+数の入力(第3項, C, Ws) :- !,
+    入れた(全人, C, W11), 入れた(全権, C, W12), 入れた(賛人, C, W14), 入れた(賛権, C, W15),
+    割合の入力(頭子, 頭母, C, Hs), 割合の入力(賛子, 賛母, C, Ss),
+    append([[W11, W12, W14, W15], Hs, Ss], Ws).
+数の入力(第4項, C, Ws) :- !,
+    入れた(総人, C, W16), 入れた(総権, C, W17), 入れた(賛人, C, W14), 入れた(賛権, C, W15),
+    割合の入力(頭子, 頭母, C, Hs), 割合の入力(賛子, 賛母, C, Ss),
+    append([[W16, W17, W14, W15], Hs, Ss], Ws).
+% 第2項・役員
+数の入力(K, C, Ws) :-
+    入れた(全権, C, W12), 入れた(出権, C, W13), 入れた(賛権, C, W15),
+    割合の入力(定子, 定母, C, Qs), 割合の入力(賛子, 賛母, C, Ss),
+    (   K == 第2項, 欄(人数, C, P), integer(P)
+    ->  入れた(賛人, C, W14), 入れた(人数, C, W22), Ps = [W14, W22]
+    ;   Ps = [] ),
+    append([[W12, W13, W15], Qs, Ss, Ps], Ws).
+
+割合の入力(N1, N2, C, [W1, W2]) :-
+    欄(N1, C, A), integer(A), !,
+    入れた(N1, C, W1), 入れた(N2, C, W2).
+割合の入力(_, _, _, []).
+
+%% ---- 条の原文の葉（rules/c〜e からも呼ぶ。同じ述語を別のファイルに書くと後の読み込みで消えるので、ここに1つだけ置く。kubun と同じ）----
+原文の葉(As, Rs) :- list_to_set(As, As1), maplist(原文規定, As1, Rs).
+</script>
+<script type="text/prolog" data-name="rules_c_shoshu.pl">% rules/c_shoshu.pl — 招集の通知（298条1項・299条1項〜3項・300条・309条5項・295条1項）
+%
+%   段は4つの述語から出す（g_hantei.pl の 招集の四つの段 が、5の欄が「いいえ」で39の欄が「開いた」ときに呼ぶ）。
+%     期間の段/2：kikan（299条1項）。6の欄が空なら出さない
+%     形の段/2：katachi（299条2項・3項）。6の欄が空なら出さない
+%     省略の段/2：shoryaku（300条）。6の欄が空のときだけ出す
+%     事項の段/2：jikou（309条5項。取締役会のない会社で通知に書いた事柄は295条1項）。6の欄が空なら出さない（決め7。期間・形の段と揃え、通知を出していないのに「通知に書いたか」を聞かない）
+%   2026-11-27 案A 2回目。前は入口「招集」の中で「話」（期間 | 形 | 省略 | 事項）を選ばせ、選んだ話の段だけを出していた（C4）。
+%   今は1〜10の欄から同じ入力で全部の段を当てる。
+%   前の通知の形の段は「承諾」（はい | いいえ）を聞き、通知を書面でする決まりを状態 書面 で述べていた。今は7の欄（書面 | 承諾あり |
+%   承諾なし | 口頭）を聞き、299条2項に当たるときは 足りる | 足りない で答える（案A「段の出し方」3）。
+%   前の段の文の「〜ので」「総会の日の~w前までに発する決まりで、…差は ~w で…」と入れた数は葉へ移し（A2）、
+%   読みの段（yomi_nissu・yomi_teikan）と補足の段（touhyou）は about へ移す（文は agents/beaver/workspace/kaisha_planA2_yomi_1127.md に控えた。4回目）。
+%   事項の段の見出し「その事項を決議できるか」は指示語が残っていたので直した（A6）。箱の309条5項ただし書の文は外した（4の欄に当たる事柄が無い。同じ控え）。
+%   「二週間前までに」は、発した日と総会の日の間に丸14日ある（差15）で足りると読む（about の点 (a)）。
+%   段の文には、画面の上で指す先の無い指示語（その・これを・当該・同項・前項 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+
+%% ---- 通知の期間（299条1項）----
+期間の段(C, []) :- 欄(通知差, C, 空), !.
+期間の段(C, [s(kikan, '招集の通知は間に合うか', 段(St, T, ['299条1項'], Ls))]) :-
+    欄(通知差, C, S),
+    必要な期間(C, Days, W, Ns),
+    Need is Days + 1,
+    期間の答え(S, Need, W, St, T, F),
+    原文規定('299条1項', R),
+    投票の葉(C, Ts),
+    findall(X, ( member(N, Ns), 選んだ(N, C, X) ), Ws),
+    入れた(通知差, C, W6),
+    定日の葉(C, Days, Ds),
+    append([[R], Ts, Ws, [W6], Ds, [F]], Ls).
+
+% Days は「前までに」の日数、W はその語、Ns は期間を決めた欄（葉に出す）。
+% 10の欄（定日）は、公開会社でなく、取締役会設置会社でなく、投票を定めていないときに、一週間を下回るときだけ使う（299条1項の括弧書き）
+必要な期間(C, 14, '二週間', [公開]) :- 欄(公開, C, はい), !.
+必要な期間(C, 14, '二週間', [公開, 投票]) :- 欄(投票, C, はい), !.
+必要な期間(C, N, W, [公開, 投票, 取締役会]) :-
+    欄(取締役会, C, いいえ), 欄(定日, C, N), integer(N),
+    N < 7, !,
+    format(atom(W), '定款で定めた ~w 日', [N]).
+必要な期間(_, 7, '一週間', [公開, 投票, 取締役会]).
+
+期間の答え(S, Need, W, 足りる, '招集の通知は間に合います。', F) :-
+    S >= Need, !,
+    format(atom(F), '総会の日の~w前までに通知を発する決まりで、通知を出した日と総会の日の日数の差は ~w で、必要な差 ~w に足りている', [W, S, Need]).
+期間の答え(S, Need, W, 足りない, '招集の通知は間に合いません。', F) :-
+    Gap is Need - S,
+    format(atom(F), '総会の日の~w前までに通知を発する決まりで、通知を出した日と総会の日の日数の差は ~w で、必要な差 ~w に ~w 足りない', [W, S, Need, Gap]).
+
+% 公開会社でなく、投票を定めたとき：二週間になる理由の298条1項3号・4号の原文を葉に置く（前の補足の段 touhyou の条）
+投票の葉(C, Rs) :-
+    欄(公開, C, いいえ), 欄(投票, C, はい), !,
+    原文の葉(['298条1項第3号', '298条1項第4号'], Rs).
+投票の葉(_, []).
+
+% 10の欄は、二週間でないときに数が入っていれば葉に置く
+定日の葉(C, Days, [W10]) :-
+    Days \== 14, 欄(定日, C, N), integer(N), !,
+    入れた(定日, C, W10).
+定日の葉(_, _, []).
+
+%% ---- 通知の出し方（299条2項・3項）----
+形の段(C, []) :- 欄(通知差, C, 空), !.
+形の段(C, [s(katachi, '招集の通知の出し方', 段(当たらない, '招集の通知を書面でする決まりには当たりません。', ['299条2項'], [R, W2, W3]))]) :-
+    欄(取締役会, C, いいえ), 欄(投票, C, いいえ), !,
+    原文規定('299条2項', R), 選んだ(取締役会, C, W2), 選んだ(投票, C, W3).
+形の段(C, [s(katachi, '招集の通知の出し方', 段(St, T, As, Ls))]) :-
+    欄(出し方, C, H),
+    形の答え(H, St, T, A3),
+    形の号(C, Gs),
+    append([['299条2項'], Gs, A3], As),
+    原文の葉(As, Rs),
+    findall(X, ( member(N, [取締役会, 投票]), 欄(N, C, はい), 選んだ(N, C, X) ), Ws),
+    選んだ(出し方, C, W7),
+    append([Rs, Ws, [W7]], Ls).
+
+% 299条2項に当たるとき：書面か、株主の承諾を得た電磁的方法（299条3項）なら足りる
+形の答え(書面, 足りる, '招集の通知の出し方は足りています。', []).
+形の答え(承諾あり, 足りる, '招集の通知の出し方は足りています。', ['299条3項']).
+形の答え(承諾なし, 足りない, '招集の通知の出し方は足りません。', ['299条3項']).
+形の答え(口頭, 足りない, '招集の通知の出し方は足りません。', []).
+
+形の号(C, Gs) :-
+    findall(G, ( 欄(投票, C, はい), G = '299条2項第1号' ; 欄(取締役会, C, はい), G = '299条2項第2号' ), Gs).
+
+%% ---- 招集の手続の省略（300条）----
+% 6の欄が空（通知を出していない）のときだけ出す（案A「段の出し方」4）
+省略の段(C, []) :- \+ 欄(通知差, C, 空), !.
+省略の段(C, [s(shoryaku, '招集の手続を省けるか', 段(St, T, ['300条'], Ls))]) :-
+    欄(省略同意, C, Y), 欄(投票, C, B),
+    省略の答え(Y, B, St, T, Ns),
+    原文規定('300条', R),
+    入れた(通知差, C, W6),
+    findall(X, ( member(N, Ns), 選んだ(N, C, X) ), Ws),
+    append([[R, W6], Ws], Ls).
+
+省略の答え(いいえ, _, できない, '招集の手続を経ないで総会を開けません。', [省略同意]) :- !.
+省略の答え(はい, はい, できない, '招集の手続を経ないで総会を開けません。', [省略同意, 投票]) :- !.
+省略の答え(はい, いいえ, 開ける, '招集の手続を経ないで総会を開けます。', [省略同意, 投票]).
+
+%% ---- 招集の通知に書いていない事柄（309条5項）----
+事項の段(C, []) :- 欄(通知差, C, 空), !.
+事項の段(C, [s(jikou, '決める事柄を総会で決議できるか', 段(St, T, As, Ls))]) :-
+    欄(取締役会, C, K), 欄(通知記載, C, Y),
+    事項の答え(K, Y, St, T, As),
+    原文の葉(As, Rs),
+    選んだ(取締役会, C, W2), 選んだ(事柄, C, W4), 選んだ(通知記載, C, W9),
+    append(Rs, [W2, W4, W9], Ls).
+
+事項の答え(はい, いいえ, できない, '総会は、招集の通知に書いていない事柄を決議できません。', ['309条5項', '298条1項第2号']) :- !.
+事項の答え(はい, はい, 止まらない, '総会は、招集の通知に書いた事柄を決議できます。', ['309条5項', '298条1項第2号']) :- !.
+% 取締役会のない会社で通知に書いた事柄は、295条1項（一切の事項について決議できる）で答える。
+% 前は書いた・書いていないを分けず「書いていない事柄も決議できます（309条5項）」と答え、書いた事柄なのに「書いていない」と出ていた（2026-11-27 LLMレビュー。依頼の3）。
+% 309条5項は取締役会設置会社の決まりなので、書いた事柄の根拠にしない
+事項の答え(いいえ, はい, 止まらない, '総会は、招集の通知に書いた事柄を決議できます。', ['295条1項']) :- !.
+事項の答え(いいえ, いいえ, 止まらない, '総会は、招集の通知に書いていない事柄も決議できます。', ['309条5項']).
+</script>
+<script type="text/prolog" data-name="rules_d_seikyu.pl">% rules/d_seikyu.pl — 株主の請求（297条1項〜3項・303条・304条・305条1項〜3項・6項）と裁判所の許可（297条4項）
+%
+%   段は2つの述語から出す（g_hantei.pl の 全部の段 がいつも呼ぶ）。
+%     請求の段/2：seikyu（25の欄が 招集 | 議題 | 提出 | 要領 のとき。なし なら []）
+%     許可の段/2：kyoka（25の欄が 招集 で、請求の段が「できる」のとき。297条4項は「第一項の規定による請求」の後の決まりなので、
+%                 請求できない・数が空で請求の段を出さない組では出さない）
+%   2026-11-27 案A 3回目。前は入口「請求」の中で「種類」（招集 | 議題 | 提出 | 要領 | 許可）を選ばせ（C4）、公開会社か・取締役会かを
+%   請求の中でもう一度聞き、分母を総株主の議決権（総権）−行使できない議決権（除権）で数えていた。
+%   今は25の欄（株主がしたこと）で請求を当て、1・2の欄を招集・決議と同じ欄から読み、分母は12の欄（全権）で数える（アプリの約束事⑤）。
+%   日数の差（前の 差・請差・通知）は29の欄にまとめた（空＝総会の日が決まっていない＝297条4項2号の通知が発せられていない）。
+%   前の段の文の「その事項で議決権を行使できないからです」（指示語。A6）・入れた数と分母（A2）は葉へ移し、箱は「請求できます／できません」だけにした。
+%   持分・月・個数の計算（前の :108-141 の 割合を下げる・個数の基準・月の不足・持分の答え）は残し、文を葉にした（末尾の「。」を外した）。
+%   読みの段（前の :157-171 の 請求の読み。状態 補足）は about へ移す（文は agents/beaver/workspace/kaisha_planA3_yomi_1127.md に控えた。4回目）。
+%   必要な数の欄（27・28・29）が空で答えが出せないときは段を出さない（決め6。請求の答え が失敗する）。
+%   割合は schema.pl の 満たす/3（整数の掛け算）で比べる。八週間は差57、定款のN日は差N+1（about の点 (a)）。
+%   形は kubun-prolog の rules/f_seikyu.pl（箱は「請求できます／できません」だけ・入力と欠けた条件は葉に並べる）。
+%   段の文には、画面の上で指す先の無い指示語（その・これを・当該・同項・前項 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+
+%% ---- 請求の段 ----
+請求の段(C, []) :- 欄(請求, C, なし), !.
+請求の段(C, L) :-
+    欄(請求, C, K),
+    ( 請求の答え(K, C, S) -> L = [S] ; L = [] ).
+
+請求の見出し(招集, '株主総会の招集を請求できるか').
+請求の見出し(議題, '議題を請求できるか').
+請求の見出し(提出, '議案を提出できるか').
+請求の見出し(要領, '議案の要領の通知を請求できるか').
+
+請求の文(招集, できる, '株主総会の招集を請求できます。').
+請求の文(招集, できない, '株主総会の招集は請求できません。').
+請求の文(議題, できる, '議題を請求できます。').
+請求の文(議題, できない, '議題は請求できません。').
+請求の文(提出, できる, '議案を提出できます。').
+請求の文(提出, できない, '議案は提出できません。').
+請求の文(要領, できる, '議案の要領の通知を請求できます。').
+請求の文(要領, できない, '議案の要領の通知は請求できません。').
+
+段にする(K, St, As, Ls, s(seikyu, H, 段(St, T, As, Ls))) :-
+    請求の見出し(K, H), 請求の文(K, St, T).
+
+%% ---- 株主総会の招集の請求（297条1項〜3項）----
+請求の答え(招集, C, S) :-
+    欄(行使, C, いいえ), !,
+    原文規定('297条1項', R), 選んだ(請求, C, W25), 選んだ(行使, C, W26),
+    段にする(招集, できない, ['297条1項'], [R, W25, W26], S).
+請求の答え(招集, C, S) :-
+    欄(公開, C, P),
+    条に足す(P, ['297条1項'], ['297条2項'], As),
+    持分の判定(r(3, 100, '百分の三'), なし, C, Den, O1, I1, F1),
+    月の判定(C, O2, I2, F2),
+    可否([O1, O2], St),
+    原文の葉(As, Rs), 選んだ(請求, C, W25), 選んだ(行使, C, W26),
+    分母の葉('297条3項', Den, Bs),
+    append([Rs, [W25, W26], I1, I2, F1, F2, Bs], Ls),
+    段にする(招集, St, As, Ls, S).
+
+%% ---- 議題の請求（303条）----
+請求の答え(議題, C, S) :-
+    欄(行使, C, いいえ), !,
+    ( 欄(取締役会, C, はい) -> As = ['303条1項', '303条2項'] ; As = ['303条1項'] ),
+    原文の葉(As, Rs), 選んだ(請求, C, W25), 選んだ(行使, C, W26),
+    append(Rs, [W25, W26], Ls),
+    段にする(議題, できない, As, Ls, S).
+請求の答え(議題, C, S) :-
+    欄(取締役会, C, いいえ), !,
+    原文規定('303条1項', R), 選んだ(請求, C, W25), 選んだ(取締役会, C, W2), 選んだ(行使, C, W26),
+    段にする(議題, できる, ['303条1項'], [R, W25, W2, W26], S).
+請求の答え(議題, C, S) :-
+    欄(公開, C, P),
+    条に足す(P, ['303条2項'], ['303条3項'], As),
+    個数の基準(C, Kosu),
+    持分の判定(r(1, 100, '百分の一'), Kosu, C, Den, O1, I1, F1),
+    月の判定(C, O2, I2, F2),
+    日の判定(C, O3, I3, F3),
+    可否([O1, O2, O3], St),
+    原文の葉(As, Rs), 選んだ(請求, C, W25), 選んだ(取締役会, C, W2), 選んだ(行使, C, W26),
+    分母の葉('303条4項', Den, Bs),
+    append([Rs, [W25, W2, W26], I1, I2, I3, F1, F2, F3, Bs], Ls),
+    段にする(議題, St, As, Ls, S).
+
+%% ---- 議案の提出（304条）----
+% ただし書の2つ（法令・定款に違反・実質的に同一の議案で3年たっていない）と行使できない事項は、どれか1つで提出できない。
+% 31・32の欄は（あなたの考え）なので、約束事①を葉の最後に置く
+請求の答え(提出, C, S) :-
+    ( ( 欄(行使, C, いいえ) ; 欄(違反, C, はい) ; 三年の内(C) ) -> St = できない ; St = できる ),
+    原文規定('304条', R),
+    選んだ(請求, C, W25), 選んだ(行使, C, W26), 選んだ(違反, C, W31), 選んだ(同一, C, W32),
+    評価の約束(Y),
+    段にする(提出, St, ['304条'], [R, W25, W26, W31, W32, Y], S).
+
+%% ---- 議案の要領の通知の請求（305条1項〜3項・6項）----
+請求の答え(要領, C, S) :-
+    欄(行使, C, いいえ), !,
+    原文の葉(['304条', '305条1項'], Rs), 選んだ(請求, C, W25), 選んだ(行使, C, W26),
+    append(Rs, [W25, W26], Ls),
+    段にする(要領, できない, ['304条', '305条1項'], Ls, S).
+請求の答え(要領, C, S) :-
+    ( 欄(違反, C, はい) ; 三年の内(C) ), !,
+    原文規定('305条6項', R), 選んだ(請求, C, W25), 選んだ(違反, C, W31), 選んだ(同一, C, W32),
+    評価の約束(Y),
+    段にする(要領, できない, ['305条6項'], [R, W25, W31, W32, Y], S).
+% 取締役会を置いていない会社は、持株も期間も問わず、八週間前までだけを見る（305条1項本文）
+請求の答え(要領, C, S) :-
+    欄(取締役会, C, いいえ), !,
+    日の判定(C, O3, I3, F3),
+    可否([O3], St),
+    原文規定('305条1項', R), 選んだ(請求, C, W25), 選んだ(取締役会, C, W2), 選んだ(行使, C, W26),
+    選んだ(違反, C, W31), 選んだ(同一, C, W32), 評価の約束(Y),
+    append([[R, W25, W2, W26, W31, W32], I3, F3, [Y]], Ls),
+    段にする(要領, St, ['305条1項'], Ls, S).
+請求の答え(要領, C, S) :-
+    欄(公開, C, P),
+    条に足す(P, ['305条1項'], ['305条2項'], As),
+    個数の基準(C, Kosu),
+    持分の判定(r(1, 100, '百分の一'), Kosu, C, Den, O1, I1, F1),
+    月の判定(C, O2, I2, F2),
+    日の判定(C, O3, I3, F3),
+    可否([O1, O2, O3], St),
+    原文の葉(As, Rs), 選んだ(請求, C, W25), 選んだ(取締役会, C, W2), 選んだ(行使, C, W26),
+    選んだ(違反, C, W31), 選んだ(同一, C, W32), 評価の約束(Y),
+    分母の葉('305条3項', Den, Bs),
+    append([Rs, [W25, W2, W26, W31, W32], I1, I2, I3, F1, F2, F3, Bs, [Y]], Ls),
+    段にする(要領, St, As, Ls, S).
+
+%% ---- 裁判所の許可（297条4項）----
+許可の段(C, [S]) :-
+    欄(請求, C, 招集),
+    請求の答え(招集, C, s(_, _, 段(できる, _, _, _))), !,
+    許可の答え(C, S).
+許可の段(_, []).
+
+許可の見出し('裁判所の許可を得て招集できるか').
+
+% 30の欄は（あなたの考え）なので、どの答えでも約束事①を葉の最後に置く
+許可の答え(C, s(kyoka, H, 段(できる, '裁判所の許可を得て、株主総会を招集できます。', ['297条4項第1号'], [R, W0, W30, Y]))) :-
+    欄(遅滞, C, していない), !,
+    許可の見出し(H), 原文規定('297条4項第1号', R), 請求できた葉(W0), 選んだ(遅滞, C, W30), 評価の約束(Y).
+許可の答え(C, s(kyoka, H, 段(できる, '裁判所の許可を得て、株主総会を招集できます。', ['297条4項第2号'], [R, W0, W30, W29, F, Y]))) :-
+    欄(請差, C, 空), !,
+    許可の見出し(H), 原文規定('297条4項第2号', R), 請求できた葉(W0), 選んだ(遅滞, C, W30), 入れた(請差, C, W29),
+    F = '総会の日を決めた招集の通知は発せられていない',
+    評価の約束(Y).
+許可の答え(C, s(kyoka, H, 段(St, T, ['297条4項第2号'], Ls))) :-
+    欄(請差, C, N),
+    許可の上限(C, Max, Wd, I37),
+    (   N =< Max
+    ->  St = 当たらない, T = '裁判所の許可を得て株主総会を招集する決まりには当たりません。',
+        format(atom(F), '請求の日から総会の日まで ~w 日で、~w（~w 日）以内', [N, Wd, Max])
+    ;   St = できる, T = '裁判所の許可を得て、株主総会を招集できます。',
+        format(atom(F), '請求の日から総会の日まで ~w 日で、~w（~w 日）より後', [N, Wd, Max]) ),
+    許可の見出し(H), 原文規定('297条4項第2号', R), 請求できた葉(W0), 選んだ(遅滞, C, W30), 入れた(請差, C, W29),
+    評価の約束(Y),
+    append([[R, W0, W30, W29], I37, [F, Y]], Ls).
+
+請求できた葉('取締役に株主総会の招集を請求できる（297条1項）').
+
+% 37の欄は、八週間（56日）を下回るときだけ使う（297条4項2号の括弧書き）。数が入っていれば葉に置く
+許可の上限(C, K, '定款で定めた期間', [W37]) :-
+    欄(週日, C, K), integer(K), K < 56, !,
+    入れた(週日, C, W37).
+許可の上限(C, 56, '八週間', Ws) :- 定款の数の葉(週日, C, Ws).
+
+%% ---- 部品 ----
+% 32の欄：十分の一未満の賛成から3年たっていない（304条ただし書・305条6項）
+三年の内(C) :- 欄(同一, C, 三年以内).
+
+% 公開会社は基の条だけ、公開会社でなければ読み替えの条を足す
+条に足す(はい, As, _, As).
+条に足す(いいえ, As, Bs, Cs) :- append(As, Bs, Cs).
+
+% 判定の結果（はい | いいえ）を並べ、1つでも いいえ なら できない
+可否(Os, St) :- ( memberchk(いいえ, Os) -> St = できない ; St = できる ).
+
+% 定款の数の欄（35〜37）は、数が入っていれば葉に置く
+定款の数の葉(N, C, [W]) :- 欄(N, C, V), integer(V), !, 入れた(N, C, W).
+定款の数の葉(_, _, []).
+
+% 分母の葉：行使できない議決権を除く条の原文・分母の数・約束事⑤（決め5）
+分母の葉(Art, Den, [R, T, Y]) :-
+    原文規定(Art, R),
+    format(atom(T), '割合の分母は、議決権を行使できる株主の議決権 ~w', [Den]),
+    分母の約束(Y).
+
+% 分母（12の欄。約束事⑤）と割合。前は 総権−除権 だった
+百分比(Base, C, R, Den) :-
+    欄(全権, C, Den),
+    割合を下げる(Base, C, R).
+
+% 33・34の欄の割合は、基準を下回るときだけ使う（297条1項・303条2項・305条1項の括弧書き）
+割合を下げる(Base, C, r(N, D, W)) :-
+    欄(割子, C, N), integer(N), 欄(割母, C, D),
+    下回る(Base, N, D), !,
+    定款の語(N, D, W).
+割合を下げる(Base, _, Base).
+
+% 持分の判定(基準の割合, 個数の基準 | なし, C, 分母, はい | いいえ, 入力の葉, 判定の葉)。27の欄が空なら失敗（段を出さない）
+持分の判定(Base, Kosu, C, Den, O, Is, [F]) :-
+    欄(持権, C, H), integer(H),
+    百分比(Base, C, R, Den),
+    入れた(全権, C, W12), 入れた(持権, C, W27),
+    割合の入力(割子, 割母, C, Ps),
+    ( Kosu == なし -> Ks = [] ; 定款の数の葉(個数, C, Ks) ),
+    append([[W12, W27], Ps, Ks], Is),
+    必要数(R, Den, Need), 割合の語(R, W),
+    (   満たす(R, H, Den)
+    ->  O = はい, format(atom(F), '持っている議決権は ~w で、~w（必要な ~w）に足りている', [H, W, Need])
+    ;   Kosu \== なし, H >= Kosu
+    ->  O = はい, format(atom(F), '持っている議決権は ~w で、~w 個に足りている', [H, Kosu])
+    ;   O = いいえ, 持分の不足(R, H, Need, Kosu, F) ).
+
+持分の不足(R, H, Need, なし, F) :- !,
+    Gap is Need - H, 割合の語(R, W),
+    format(atom(F), '持っている議決権は ~w で、~wに当たる ~w に ~w 足りない', [H, W, Need, Gap]).
+持分の不足(R, H, Need, Kosu, F) :-
+    割合の語(R, W),
+    format(atom(F), '持っている議決権は ~w で、~wに当たる ~w にも ~w 個にも足りない', [H, W, Need, Kosu]).
+
+% 35の欄の個数は、三百個を下回るときだけ使う
+個数の基準(C, K) :- 欄(個数, C, K), integer(K), K < 300, !.
+個数の基準(_, 300).
+
+% 月の判定：公開会社でなければ保有の期間を問わない（297条2項・303条3項・305条2項）。28の欄が空なら失敗（段を出さない）。
+% 36の欄の月数は、六箇月を下回るときだけ使う
+月の判定(C, はい, [W1], []) :- 欄(公開, C, いいえ), !, 選んだ(公開, C, W1).
+月の判定(C, O, Is, [F]) :-
+    欄(月数, C, M), integer(M),
+    ( 欄(月, C, K), integer(K), K < 6 -> Need = K, W = '定款で定めた期間' ; Need = 6, W = '六箇月' ),
+    入れた(月数, C, W28), 定款の数の葉(月, C, Ks),
+    append([W28], Ks, Is),
+    (   M >= Need
+    ->  O = はい, format(atom(F), '保有は ~w か月で、~w（~w か月）に足りている', [M, W, Need])
+    ;   O = いいえ, format(atom(F), '保有は ~w か月で、~w（~w か月）に足りない', [M, W, Need]) ).
+
+% 日の判定：「八週間前までに」（303条2項・305条1項）。29の欄が空なら失敗（段を出さない）。37の欄の日数は八週間を下回るときだけ使う
+日の判定(C, O, Is, [F]) :-
+    欄(請差, C, S), integer(S),
+    ( 欄(週日, C, K), integer(K), K < 56 -> Need is K + 1, W = '定款で定めた日数' ; Need = 57, W = '八週間' ),
+    入れた(請差, C, W29), 定款の数の葉(週日, C, Ks),
+    append([W29], Ks, Is),
+    (   S >= Need
+    ->  O = はい, format(atom(F), '請求の日と総会の日の日数の差は ~w で、~w前までに必要な差 ~w に足りている', [S, W, Need])
+    ;   O = いいえ, Gap is Need - S,
+        format(atom(F), '請求の日と総会の日の日数の差は ~w で、~w前までに必要な差 ~w に ~w 足りない', [S, W, Need, Gap]) ).
+</script>
+<script type="text/prolog" data-name="rules_e_arasoi.pl">% rules/e_arasoi.pl — 決議の効力を争う訴え（830条・831条）
+%
+%   段は 訴えの段/2 から出す（g_hantei.pl の 全部の段 がいつも呼ぶ）。どれにも当たらなければ []。
+%     sonzai（830条1項）：39の欄が「開いていない」で、5の欄が「いいえ」のとき。このときはこの段だけを出す（決め5。決議・招集の段も出ない）
+%     mukou（830条2項）：40の欄が「はい」
+%     torikeshi（831条1項）：1号・2号・3号の理由が1つでもあるとき。理由は1つの段にまとめ、当たった号を全部箱の条に並べる
+%       1号＝招集の段のどれかが 足りない・できない（g_hantei.pl の 招集の違反/2。アプリの約束事④）か、42・44の欄が「はい」
+%       2号＝41の欄が「はい」。3号＝43の欄が「行使して、著しく不当な決議になった」
+%       38の欄が「3か月を過ぎた」なら できない（831条1項の三箇月以内）
+%     rigai（831条1項3号・当たらない）：43の欄が「行使したが、著しく不当な決議ではない」
+%   831条2項（裁判所の棄却）は段にしない。2026-11-27 LLMレビューで直した（依頼 ../task_beaver_kaisha_llmfix_1127.md の1）。
+%   前は kikyaku の段（状態 棄却できる）で「違反する事実が重大でなく、かつ、決議に影響を及ぼさないと裁判所が認めるときは、
+%   裁判所は取消しの請求を棄却できます」を結論の箱に出していたが、重大さ・影響を聞く欄が無く、入力から出した判定ではなかった（REVIEW_RULES A1）。
+%   判定しないことは about の「載せなかったもの」に1文で書いた。欄を足して判定にはしない（頼まれていない欄を足さない。B6）。
+%   39の欄が「開いていない」で5の欄が「はい」のときは、319条1項で決議があったものとみなされるので830条1項はつなげず、
+%   40〜44の欄と38の欄でほかの訴えを答える（決め5）。招集の段はこのとき出ないので、招集の違反 は [] になる。
+%   この組（みなし決議/1）では42・43・44の欄を見ず、40（830条2項）・41（831条1項2号）だけを当てる（決め9。2026-11-27 案A 4回目）。
+%   みなし決議には招集の手続も総会での採決も無く、全員の同意なので特別の利害関係を持つ株主の議決権の行使（831条1項3号）も起きないため。
+%   止める所は3つ：第1号の葉（42・44）・取消しの理由の3号（43「不当」）・利害の段（43「不当でない」）。前は4つ目に棄却の段（44）があった。
+%   39の欄が「開いた」で5の欄が「はい」の組は決め9の外で、42〜44をそのまま見る（招集の段は 招集の四つの段 が5の欄で止める）。
+%   2026-11-27 案A 3回目。前は「問題」（不存在 | 内容法令 | 内容定款 | 不公正 | 特別利害 | 招集法令 | 方法法令 …）を1つ選ばせ（C4）、
+%   831条2項を「重大」「影響」の欄で答え分け（:31-33。:33 は入力の言い直し＝A2）、「株主等」の読みの段（:9。状態 補足）を毎回出していた（A5）。
+%   読みと消した文は agents/beaver/workspace/kaisha_planA3_yomi_1127.md に控えた（4回目に about へ）。
+%   40〜44の欄は（あなたの考え）なので、使った段の葉の最後に約束事①を置く。招集の違反を使った段には約束事④を置く。
+%   形は kubun-prolog の rules/f_seikyu.pl（箱は「請求できます／できません」だけ・当たった理由は全部葉に並べる）。
+%   段の文には、画面の上で指す先の無い指示語（その・これを・当該・同項・前項 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+
+訴えの段(C, [s(sonzai, '決議が存在しないことの確認', 段(できる, '訴えで、決議が存在しないことの確認を請求できます。', ['830条1項'], [R, W39, W5]))]) :-
+    欄(総会, C, 開いていない), 欄(書面同意, C, いいえ), !,
+    原文規定('830条1項', R), 選んだ(総会, C, W39), 選んだ(書面同意, C, W5).
+訴えの段(C, L) :-
+    無効の段(C, L1),
+    取消しの段(C, L2),
+    利害の段(C, L3),
+    append([L1, L2, L3], L).
+
+%% ---- 決議の無効の確認（830条2項）----
+無効の段(C, [s(mukou, '決議が無効であることの確認', 段(できる, '訴えで、決議が無効であることの確認を請求できます。', ['830条2項'], [R, W40, Y]))]) :-
+    欄(内容法令, C, はい), !,
+    原文規定('830条2項', R), 選んだ(内容法令, C, W40), 評価の約束(Y).
+無効の段(_, []).
+
+%% ---- 決議の取消し（831条1項）----
+取消しの段(C, L) :-
+    findall(A-Ws, 取消しの理由(C, A, Ws), Ps),
+    取消しの答え(Ps, C, L).
+
+取消しの答え([], _, []) :- !.
+取消しの答え(Ps, C, [s(torikeshi, '決議の取消しの訴え', 段(St, T, As, Ls))]) :-
+    findall(A, member(A-_, Ps), As),
+    原文の葉(As, Rs),
+    findall(W, ( member(_-Ws, Ps), member(W, Ws) ), Fs),
+    取消しの期間(C, St, T, W38, F38),
+    理由の約束(C, Ys),
+    append([Rs, Fs, [W38, F38], Ys], Ls).
+
+% 取消しの理由(C, 号, 葉)。号の順に1つずつ（同じ号は1回だけ。1号は招集の違反・42・44の欄をまとめる）
+取消しの理由(C, '831条1項第1号', Ws) :-
+    第1号の葉(C, Ws), Ws \== [].
+取消しの理由(C, '831条1項第2号', [W41]) :-
+    欄(内容定款, C, はい), 選んだ(内容定款, C, W41).
+取消しの理由(C, '831条1項第3号', [W43]) :-
+    \+ みなし決議(C),
+    欄(特別利害, C, 不当), 選んだ(特別利害, C, W43).
+
+% 39の欄が「開いていない」で5の欄が「はい」（319条1項で決議があったものとみなされる組。決め9）
+みなし決議(C) :- 欄(総会, C, 開いていない), 欄(書面同意, C, はい).
+
+% 1号の葉：招集の段の答え（足りない・できない）・44の欄・42の欄。みなし決議の組では見ない（決め9）
+第1号の葉(C, []) :- みなし決議(C), !.
+第1号の葉(C, Ws) :-
+    招集の違反の葉(C, Ws1),
+    findall(W, ( member(N, [手続違反, 不公正]), 欄(N, C, はい), 選んだ(N, C, W) ), Ws2),
+    append(Ws1, Ws2, Ws).
+
+% 招集の段の答えを、箱に出た文と条のまま葉にする（「招集の通知は間に合いません（299条1項）」）
+招集の違反の葉(C, Ws) :-
+    招集の違反(C, Ss),
+    findall(W, ( member(S, Ss), 問いの答え(S, W) ), Ws).
+
+取消しの期間(C, できる, '訴えで、決議の取消しを請求できます。', W38, F) :-
+    欄(期間, C, 以内), !,
+    選んだ(期間, C, W38), 三箇月の文(F).
+取消しの期間(C, できない, '訴えで、決議の取消しを請求できません。', W38, F) :-
+    選んだ(期間, C, W38), 三箇月の文(F).
+
+三箇月の文('決議の取消しの訴えは、決議の日から三箇月以内に起こせる（831条1項）').
+
+% 約束事④（招集の違反を使った）・①（40〜44の（あなたの考え）の欄を使った）。①は1つだけ置く
+理由の約束(C, Ys) :-
+    ( 招集の違反(C, [_|_]) -> 招集の違反の約束(Y4), L4 = [Y4] ; L4 = [] ),
+    ( 考えの欄を使った(C) -> 評価の約束(Y1), L1 = [Y1] ; L1 = [] ),
+    append(L4, L1, Ys).
+
+考えの欄を使った(C) :- 欄(手続違反, C, はい), !.
+考えの欄を使った(C) :- 欄(不公正, C, はい), !.
+考えの欄を使った(C) :- 欄(内容定款, C, はい), !.
+考えの欄を使った(C) :- 欄(特別利害, C, 不当).
+
+%% ---- 特別の利害関係（831条1項3号に当たらない）----
+% 43の欄が「行使したが、著しく不当な決議ではない」のとき。当たらない の段には g_hantei.pl が約束事②を足す。みなし決議の組では出さない（決め9）
+利害の段(C, []) :- みなし決議(C), !.
+利害の段(C, [s(rigai, '特別の利害関係を有する者の議決権の行使', 段(当たらない, '特別の利害関係を有する者の議決権の行使は、決議の取消しの理由に当たりません。', ['831条1項第3号'], [R, W43, Y]))]) :-
+    欄(特別利害, C, 不当でない), !,
+    原文規定('831条1項第3号', R), 選んだ(特別利害, C, W43), 評価の約束(Y).
+利害の段(_, []).
+</script>
+<script type="text/prolog" data-name="rules_g_hantei.pl">% rules/g_hantei.pl — 段を束ねて見出し・根拠条文・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 箱の条, 葉のリスト)　結論ごとの段 = s(画面のid, 見出し, 段)
+%     段は mujun_a・mujun_i・mujun_u（schema の 組み合わせなし）と、rules/b〜e が返す段（id は段ごとに分ける）
+%   形は kubun-prolog の g_hantei.pl と同じ（2026-11-26 案A）。
+%   前は 入口の段/3 が入口1つの段だけを返し、見出し/2 は全部の段の答えを1段落につなぎ（A7）、組の番号は 止まる状態 が1・
+%   足りる・止まらない が3・当たらない が4で、ほかは受け皿の 組の番号(_, 2). で2番になっていた（みなす・通る・書面・開ける・できる・棄却 が
+%   黙って2番）。木は全部を「次のすべてが成り立つ」の下にぶら下げた1本で、全部の段にアプリの約束事①を付けていた（B5・A5）。
+%   補足 の段は木と見出しから外して段にだけ出していた。
+%   今は段ごとに状態を持ち、状態を全部名前で書き、知らない状態は throw で止める。補足 は状態から消した（読みは about へ、分母は葉へ。決め）。
+%   止まる状態/1 と 止まった段がある/1 は消し、印/2 にした。約束事①は全部の段に付けず、（あなたの考え）の欄を使う段だけが葉に置く。
+%   段の文には、画面の上で指す先の無い指示語（その・これを・当該・同項・前項 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+%
+%   rules/b〜e が返す段（2回目・3回目で書く。名前と引数はここで決める）：
+%     決議の段(C, L)  … b_ketsugi.pl（309条1項〜4項・341条・319条1項）
+%     期間の段(C, L)・形の段(C, L)・省略の段(C, L)・事項の段(C, L) … c_shoshu.pl（299条1項・2項・3項・300条・309条5項・295条1項）
+%     請求の段(C, L)・許可の段(C, L) … d_seikyu.pl（297条・303条〜305条・297条4項）
+%     訴えの段(C, L)  … e_arasoi.pl（830条・831条。招集の違反/2 を呼んで831条1項1号へつなぐ）
+%   どれも自分の段に当たらないとき・数の欄が空で答えが出せないときは [] を返す（決め6）。
+
+%% ---- judge ----
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    Steps \== [],
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 成り立たない組があれば、その組だけを段にする（REVIEW_RULES C3。ほかの段は出さない）。
+% 組は findall で全部集め、組ごとに1段にする（id は mujun_a〜mujun_u。REVIEW_RULES 末尾「AI同士で決めた書き方」1・2）。
+% 無ければ1つの株主総会で起きた事実を、同じ入力で全部の段に当てる（REVIEW_RULES C4・C5）。並びは案A「段の出し方」の順
+% （決議 → 通知の期間 → 通知の形 → 省略 → 事項 → 請求 → 許可 → 訴え）で、そのあと 当たった答えを先に（止まる答えを先に）。
+% 5の欄が「はい」（総会を開かずに全員が書面かメールで同意した。319条1項）のときは総会を開いていないので、招集の段を呼ばない
+% （kubun の 集会が要る と同じ止め方。案Aには書いていない＝1回目の戻り値の「決めてほしい」）。
+% 同じ述語を別のファイルに分けて書くと後の読み込みで消えるので、まとめはここに1つだけ置く
+全部の段(C, Steps) :-
+    findall(s(Id, 'この組み合わせはありません', 段(組み合わせなし, 'この組み合わせはありません。', As, Ws)),
+            ( 組み合わせなし(C, K, Ws, As), atom_concat(mujun_, K, Id) ), Steps),
+    Steps \== [], !.
+全部の段(C, Steps) :-
+    決議の段(C, L1),
+    招集の四つの段(C, L2),
+    請求の段(C, L3),
+    許可の段(C, L4),
+    訴えの段(C, L5),
+    append([L1, L2, L3, L4, L5], L0),
+    当たった答えを先に(L0, Steps).
+
+% 招集の段（通知の期間・通知の形・省略・事項）を順に並べる。訴えの段の 招集の違反/2 もここから引く（段を作る所を1つにする）
+% 39の欄が「開いていない」（総会を開いていない）ときも招集の段を呼ばない。招集の期間を数えると「開いた」と読まれるため（決め5。
+% 決議の段は b_ketsugi.pl の 決議を数えない が同じ欄で止める。830条1項は e_arasoi.pl が答える）
+招集の四つの段(C, []) :- 欄(書面同意, C, はい), !.
+招集の四つの段(C, []) :- 欄(総会, C, 開いていない), !.
+招集の四つの段(C, L) :-
+    期間の段(C, L1),
+    形の段(C, L2),
+    省略の段(C, L3),
+    事項の段(C, L4),
+    append([L1, L2, L3, L4], L).
+
+% 招集の違反(C, 段のリスト)：招集の段のうち、足りない・できない と答えた段（アプリの約束事④。831条1項1号へつなぐ。決め3）。
+% e_arasoi.pl の 訴えの段 が呼ぶ。段は候補を並べるので member、状態は member で決まった後に入っているかを見るので memberchk
+% （REVIEW_RULES 末尾「AI同士で決めた書き方」1）。無ければ [] を返す
+招集の違反(C, Ss) :-
+    招集の四つの段(C, L),
+    findall(S, ( member(s(_, _, S), L), S = 段(St, _, _, _), memberchk(St, [足りない, できない]) ), Ss).
+
+%% ---- 並べ方 ----
+% 並びは ①止まる答え ②当たった答え ③答えを支える文（止まらないので聞いた答えの後ろ） ④「当たりません」の文
+% ①②が無いときは「当たりません」が聞いた答えなので、③より前に出す（前の 当たった答えを先に と同じ並べ方。形は kubun-prolog）
+% 組の番号 は番号を空のまま呼んで後で比べる。番号を束ねて呼ぶと頭に合わず、最後の throw の節に落ちて止まる（sorin-prolog 2026-11-22 22:50 run_cases。kubun と同じ）
+当たった答えを先に([], []) :- !.
+当たった答えを先に(L0, L) :-
+    ( member(s(_, _, 段(St0, _, _, _)), L0), 組の番号(St0, N0), N0 =< 2 -> Order = [1, 2, 3, 4] ; Order = [4, 3] ),
+    findall(S, ( member(N, Order), member(S, L0), S = s(_, _, 段(St, _, _, _)), 組の番号(St, M), M =:= N ), L).
+
+% 組の番号(状態, 1=止まる答え | 2=当たった答え | 3=答えを支える文 | 4=当たりません)。
+% 状態は全部名前で書き、知らない状態は止める（agents/dog/rules.md:97。kubun-prolog g_hantei.pl の 組の番号 の形で、状態は案「4：組の番号」の13行から 棄却できる を消した12行）
+% 前の 棄却 は 棄却できる に名前を変え、書面 は消した（通知の形の段は 足りる・足りない で答える）。補足 は段ごと消した
+% 棄却できる（831条2項）は 2026-11-27 LLMレビューで段ごと消した（e_arasoi.pl の頭。入力から出した判定ではなかった＝A1）。
+% 足りる は決議の段でも使う：309条5項で決議できない組で、数は足りているとき（「賛成の数は普通の決議に足ります」。b_ketsugi.pl の 決議の段）
+組の番号(組み合わせなし, 1) :- !.   % ア〜ウ（決め2）
+組の番号(通らない, 1) :- !.         % 309条・341条
+組の番号(できない, 1) :- !.         % 300条・309条5項・297条・303条〜305条・831条（期間の外）
+組の番号(足りない, 1) :- !.         % 299条1項・299条2項
+組の番号(通る, 2) :- !.             % 309条・341条
+組の番号(みなす, 2) :- !.           % 319条1項
+組の番号(開ける, 2) :- !.           % 300条
+組の番号(できる, 2) :- !.           % 297条・303条〜305条・830条・831条1項
+組の番号(足りる, 3) :- !.           % 299条1項・2項・309条・341条（309条5項で決議できない組の数）
+組の番号(止まらない, 3) :- !.       % 309条5項・295条1項
+組の番号(当たらない, 4) :- !.       % 831条1項3号・297条4項2号
+組の番号(St, _) :- throw(知らない状態(St)).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、段の文だけを出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」・数の不足を付けない）。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(_, Steps, Ws) :-
+    findall(W, ( member(s(_, _, S), Steps), 問いの答え(S, W) ), Ws).
+
+% 答えの文に箱の条を（）で付ける。条の無い段は付けない（「（）」を画面に出さない）
+問いの答え(S, W) :-
+    S = 段(_, _, As, _),
+    答え(S, W0),
+    ( As == [] -> W = W0 ; 条の表記(As, A), format(atom(W), '~w（~w）', [W0, A]) ).
+
+% 節の文：答えの文（条を付けない）
+節の文(_, S, W) :- 答え(S, W).
+
+% 答え(段, 答えの文)：段の文の末尾の「。」を外す。
+答え(段(_, M, _, _), W) :-
+    ( atom_concat(M0, '。', M) -> W = M0 ; W = M ).
+
+%% ---- 根拠条文 ----
+% 段の順に並べ、重複は1つに
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As, _), Ss), member(A, As) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5。結論をつないだ行と「次のすべてが成り立つ」の根は置かない）。
+% 並びは結論の箱と同じ。一番上の行は結論の箱の文で、その下に葉（規定の行・起きた事実・数の不足・約束事）を置く。
+木(_, Steps, Trees) :-
+    findall(T, ( member(s(_, _, S), Steps), 段の木(S, T) ), Trees).
+
+% 当たらない の段には約束事②（「当たりません」は反対の結論を言うものではない）を葉の最後に足す（前の 段の約束/2 の②。①は全部の段には付けない）
+段の木(S, t(K, W, '', Cs)) :-
+    S = 段(St, _, _, Fs),
+    問いの答え(S, W),
+    段の約束(St, Ys),
+    append(Fs, Ys, Fs1),
+    maplist(葉の行, Fs1, Kids),
+    すべて(W, '', Kids, t(_, W, _, Cs)),
+    印(St, K).
+
+段の約束(当たらない, [Y]) :- !, 場面外の約束(Y).
+段の約束(_, []).
+
+% 止まった段（組の番号の1番）と当たりません（4番）は info、そのほか（2番・3番）は ok（木ごとに、その段で決める）
+% 前の 止まった段がある/1 も、当たらない と 止まる状態 のときに info にしていた。番号は1つに決まっていて、入っているかを見るだけなので memberchk
+印(St, K) :- 組の番号(St, N), ( memberchk(N, [1, 4]) -> K = info ; K = ok ).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は kubun-prolog の web.pl と同じ（2026-11-26 案A）。
+%   前は result・explain の2つで、explain は木1本を平らにしていた。
+%   今は木を結論ごとに1本にし（B5）、「この組み合わせはありません」も段の1つにした（rules/g_hantei.pl の 全部の段）。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+</script>
+<script type="application/json" id="law">{"2":{"t":"第二条","c":"（定義）","p":[{"n":"1","s":"この法律において、次の各号に掲げる用語の意義は、当該各号に定めるところによる。","i":[{"n":"1","t":"一","s":"会社　株式会社、合名会社、合資会社又は合同会社をいう。","sub":[]},{"n":"2","t":"二","s":"外国会社　外国の法令に準拠して設立された法人その他の外国の団体であって、会社と同種のもの又は会社に類似するものをいう。","sub":[]},{"n":"3","t":"三","s":"子会社　会社がその総株主の議決権の過半数を有する株式会社その他の当該会社がその経営を支配している法人として法務省令で定めるものをいう。","sub":[]},{"n":"3_2","t":"三の二","s":"子会社等　次のいずれかに該当する者をいう。","sub":["イ 子会社","ロ 会社以外の者がその経営を支配している法人として法務省令で定めるもの"]},{"n":"4","t":"四","s":"親会社　株式会社を子会社とする会社その他の当該株式会社の経営を支配している法人として法務省令で定めるものをいう。","sub":[]},{"n":"4_2","t":"四の二","s":"親会社等　次のいずれかに該当する者をいう。","sub":["イ 親会社","ロ 株式会社の経営を支配している者（法人であるものを除く。）として法務省令で定めるもの"]},{"n":"5","t":"五","s":"公開会社　その発行する全部又は一部の株式の内容として譲渡による当該株式の取得について株式会社の承認を要する旨の定款の定めを設けていない株式会社をいう。","sub":[]},{"n":"6","t":"六","s":"大会社　次に掲げる要件のいずれかに該当する株式会社をいう。","sub":["イ 最終事業年度に係る貸借対照表（第四百三十九条前段に規定する場合にあっては、同条の規定により定時株主総会に報告された貸借対照表をいい、株式会社の成立後最初の定時株主総会までの間においては、第四百三十五条第一項の貸借対照表をいう。ロにおいて同じ。）に資本金として計上した額が五億円以上であること。","ロ 最終事業年度に係る貸借対照表の負債の部に計上した額の合計額が二百億円以上であること。"]},{"n":"7","t":"七","s":"取締役会設置会社　取締役会を置く株式会社又はこの法律の規定により取締役会を置かなければならない株式会社をいう。","sub":[]},{"n":"8","t":"八","s":"会計参与設置会社　会計参与を置く株式会社をいう。","sub":[]},{"n":"9","t":"九","s":"監査役設置会社　監査役を置く株式会社（その監査役の監査の範囲を会計に関するものに限定する旨の定款の定めがあるものを除く。）又はこの法律の規定により監査役を置かなければならない株式会社をいう。","sub":[]},{"n":"10","t":"十","s":"監査役会設置会社　監査役会を置く株式会社又はこの法律の規定により監査役会を置かなければならない株式会社をいう。","sub":[]},{"n":"11","t":"十一","s":"会計監査人設置会社　会計監査人を置く株式会社又はこの法律の規定により会計監査人を置かなければならない株式会社をいう。","sub":[]},{"n":"11_2","t":"十一の二","s":"監査等委員会設置会社　監査等委員会を置く株式会社をいう。","sub":[]},{"n":"12","t":"十二","s":"指名委員会等設置会社　指名委員会、監査委員会及び報酬委員会（以下「指名委員会等」という。）を置く株式会社をいう。","sub":[]},{"n":"13","t":"十三","s":"種類株式発行会社　剰余金の配当その他の第百八条第一項各号に掲げる事項について内容の異なる二以上の種類の株式を発行する株式会社をいう。","sub":[]},{"n":"14","t":"十四","s":"種類株主総会　種類株主（種類株式発行会社におけるある種類の株式の株主をいう。以下同じ。）の総会をいう。","sub":[]},{"n":"15","t":"十五","s":"社外取締役　株式会社の取締役であって、次に掲げる要件のいずれにも該当するものをいう。","sub":["イ 当該株式会社又はその子会社の業務執行取締役（株式会社の第三百六十三条第一項各号に掲げる取締役及び当該株式会社の業務を執行したその他の取締役をいう。以下同じ。）若しくは執行役又は支配人その他の使用人（以下「業務執行取締役等」という。）でなく、かつ、その就任の前十年間当該株式会社又はその子会社の業務執行取締役等であったことがないこと。","ロ その就任の前十年内のいずれかの時において当該株式会社又はその子会社の取締役、会計参与（会計参与が法人であるときは、その職務を行うべき社員）又は監査役であったことがある者（業務執行取締役等であったことがあるものを除く。）にあっては、当該取締役、会計参与又は監査役への就任の前十年間当該株式会社又はその子会社の業務執行取締役等であったことがないこと。","ハ 当該株式会社の親会社等（自然人であるものに限る。）又は親会社等の取締役若しくは執行役若しくは支配人その他の使用人でないこと。","ニ 当該株式会社の親会社等の子会社等（当該株式会社及びその子会社を除く。）の業務執行取締役等でないこと。","ホ 当該株式会社の取締役若しくは執行役若しくは支配人その他の重要な使用人又は親会社等（自然人であるものに限る。）の配偶者又は二親等内の親族でないこと。"]},{"n":"16","t":"十六","s":"社外監査役　株式会社の監査役であって、次に掲げる要件のいずれにも該当するものをいう。","sub":["イ その就任の前十年間当該株式会社又はその子会社の取締役、会計参与（会計参与が法人であるときは、その職務を行うべき社員。ロにおいて同じ。）若しくは執行役又は支配人その他の使用人であったことがないこと。","ロ その就任の前十年内のいずれかの時において当該株式会社又はその子会社の監査役であったことがある者にあっては、当該監査役への就任の前十年間当該株式会社又はその子会社の取締役、会計参与若しくは執行役又は支配人その他の使用人であったことがないこと。","ハ 当該株式会社の親会社等（自然人であるものに限る。）又は親会社等の取締役、監査役若しくは執行役若しくは支配人その他の使用人でないこと。","ニ 当該株式会社の親会社等の子会社等（当該株式会社及びその子会社を除く。）の業務執行取締役等でないこと。","ホ 当該株式会社の取締役若しくは支配人その他の重要な使用人又は親会社等（自然人であるものに限る。）の配偶者又は二親等内の親族でないこと。"]},{"n":"17","t":"十七","s":"譲渡制限株式　株式会社がその発行する全部又は一部の株式の内容として譲渡による当該株式の取得について当該株式会社の承認を要する旨の定めを設けている場合における当該株式をいう。","sub":[]},{"n":"18","t":"十八","s":"取得請求権付株式　株式会社がその発行する全部又は一部の株式の内容として株主が当該株式会社に対して当該株式の取得を請求することができる旨の定めを設けている場合における当該株式をいう。","sub":[]},{"n":"19","t":"十九","s":"取得条項付株式　株式会社がその発行する全部又は一部の株式の内容として当該株式会社が一定の事由が生じたことを条件として当該株式を取得することができる旨の定めを設けている場合における当該株式をいう。","sub":[]},{"n":"20","t":"二十","s":"単元株式数　株式会社がその発行する株式について、一定の数の株式をもって株主が株主総会又は種類株主総会において一個の議決権を行使することができる一単元の株式とする旨の定款の定めを設けている場合における当該一定の数をいう。","sub":[]},{"n":"21","t":"二十一","s":"新株予約権　株式会社に対して行使することにより当該株式会社の株式の交付を受けることができる権利をいう。","sub":[]},{"n":"22","t":"二十二","s":"新株予約権付社債　新株予約権を付した社債をいう。","sub":[]},{"n":"23","t":"二十三","s":"社債　この法律の規定により会社が行う割当てにより発生する当該会社を債務者とする金銭債権であって、第六百七十六条各号に掲げる事項についての定めに従い償還されるものをいう。","sub":[]},{"n":"24","t":"二十四","s":"最終事業年度　各事業年度に係る第四百三十五条第二項に規定する計算書類につき第四百三十八条第二項の承認（第四百三十九条前段に規定する場合にあっては、第四百三十六条第三項の承認）を受けた場合における当該各事業年度のうち最も遅いものをいう。","sub":[]},{"n":"25","t":"二十五","s":"配当財産　株式会社が剰余金の配当をする場合における配当する財産をいう。","sub":[]},{"n":"26","t":"二十六","s":"組織変更　次のイ又はロに掲げる会社がその組織を変更することにより当該イ又はロに定める会社となることをいう。","sub":["イ 株式会社　合名会社、合資会社又は合同会社","ロ 合名会社、合資会社又は合同会社　株式会社"]},{"n":"27","t":"二十七","s":"吸収合併　会社が他の会社とする合併であって、合併により消滅する会社の権利義務の全部を合併後存続する会社に承継させるものをいう。","sub":[]},{"n":"28","t":"二十八","s":"新設合併　二以上の会社がする合併であって、合併により消滅する会社の権利義務の全部を合併により設立する会社に承継させるものをいう。","sub":[]},{"n":"29","t":"二十九","s":"吸収分割　株式会社又は合同会社がその事業に関して有する権利義務の全部又は一部を分割後他の会社に承継させることをいう。","sub":[]},{"n":"30","t":"三十","s":"新設分割　一又は二以上の株式会社又は合同会社がその事業に関して有する権利義務の全部又は一部を分割により設立する会社に承継させることをいう。","sub":[]},{"n":"31","t":"三十一","s":"株式交換　株式会社がその発行済株式（株式会社が発行している株式をいう。以下同じ。）の全部を他の株式会社又は合同会社に取得させることをいう。","sub":[]},{"n":"32","t":"三十二","s":"株式移転　一又は二以上の株式会社がその発行済株式の全部を新たに設立する株式会社に取得させることをいう。","sub":[]},{"n":"32_2","t":"三十二の二","s":"株式交付　株式会社が他の株式会社をその子会社（法務省令で定めるものに限る。第七百七十四条の三第二項において同じ。）とするために当該他の株式会社の株式を譲り受け、当該株式の譲渡人に対して当該株式の対価として当該株式会社の株式を交付することをいう。","sub":[]},{"n":"33","t":"三十三","s":"公告方法　会社（外国会社を含む。）が公告（この法律又は他の法律の規定により官報に掲載する方法によりしなければならないものとされているものを除く。）をする方法をいう。","sub":[]},{"n":"34","t":"三十四","s":"電子公告　公告方法のうち、電磁的方法（電子情報処理組織を使用する方法その他の情報通信の技術を利用する方法であって法務省令で定めるものをいう。以下同じ。）により不特定多数の者が公告すべき内容である情報の提供を受けることができる状態に置く措置であって法務省令で定めるものをとる方法をいう。","sub":[]}]}]},"109":{"t":"第百九条","c":"（株主の平等）","p":[{"n":"1","s":"株式会社は、株主を、その有する株式の内容及び数に応じて、平等に取り扱わなければならない。","i":[]},{"n":"2","s":"前項の規定にかかわらず、公開会社でない株式会社は、第百五条第一項各号に掲げる権利に関する事項について、株主ごとに異なる取扱いを行う旨を定款で定めることができる。","i":[]},{"n":"3","s":"前項の規定による定款の定めがある場合には、同項の株主が有する株式を同項の権利に関する事項について内容の異なる種類の株式とみなして、この編及び第五編の規定を適用する。","i":[]}]},"295":{"t":"第二百九十五条","c":"（株主総会の権限）","p":[{"n":"1","s":"株主総会は、この法律に規定する事項及び株式会社の組織、運営、管理その他株式会社に関する一切の事項について決議をすることができる。","i":[]},{"n":"2","s":"前項の規定にかかわらず、取締役会設置会社においては、株主総会は、この法律に規定する事項及び定款で定めた事項に限り、決議をすることができる。","i":[]},{"n":"3","s":"この法律の規定により株主総会の決議を必要とする事項について、取締役、執行役、取締役会その他の株主総会以外の機関が決定することができることを内容とする定款の定めは、その効力を有しない。","i":[]}]},"297":{"t":"第二百九十七条","c":"（株主による招集の請求）","p":[{"n":"1","s":"総株主の議決権の百分の三（これを下回る割合を定款で定めた場合にあっては、その割合）以上の議決権を六箇月（これを下回る期間を定款で定めた場合にあっては、その期間）前から引き続き有する株主は、取締役に対し、株主総会の目的である事項（当該株主が議決権を行使することができる事項に限る。）及び招集の理由を示して、株主総会の招集を請求することができる。","i":[]},{"n":"2","s":"公開会社でない株式会社における前項の規定の適用については、同項中「六箇月（これを下回る期間を定款で定めた場合にあっては、その期間）前から引き続き有する」とあるのは、「有する」とする。","i":[]},{"n":"3","s":"第一項の株主総会の目的である事項について議決権を行使することができない株主が有する議決権の数は、同項の総株主の議決権の数に算入しない。","i":[]},{"n":"4","s":"次に掲げる場合には、第一項の規定による請求をした株主は、裁判所の許可を得て、株主総会を招集することができる。","i":[{"n":"1","t":"一","s":"第一項の規定による請求の後遅滞なく招集の手続が行われない場合","sub":[]},{"n":"2","t":"二","s":"第一項の規定による請求があった日から八週間（これを下回る期間を定款で定めた場合にあっては、その期間）以内の日を株主総会の日とする株主総会の招集の通知が発せられない場合","sub":[]}]}]},"298":{"t":"第二百九十八条","c":"（株主総会の招集の決定）","p":[{"n":"1","s":"取締役（前条第四項の規定により株主が株主総会を招集する場合にあっては、当該株主。次項本文及び次条から第三百二条までにおいて同じ。）は、株主総会を招集する場合には、次に掲げる事項を定めなければならない。","i":[{"n":"1","t":"一","s":"株主総会の日時及び場所","sub":[]},{"n":"2","t":"二","s":"株主総会の目的である事項があるときは、当該事項","sub":[]},{"n":"3","t":"三","s":"株主総会に出席しない株主が書面によって議決権を行使することができることとするときは、その旨","sub":[]},{"n":"4","t":"四","s":"株主総会に出席しない株主が電磁的方法によって議決権を行使することができることとするときは、その旨","sub":[]},{"n":"5","t":"五","s":"前各号に掲げるもののほか、法務省令で定める事項","sub":[]}]},{"n":"2","s":"取締役は、株主（株主総会において決議をすることができる事項の全部につき議決権を行使することができない株主を除く。次条から第三百二条までにおいて同じ。）の数が千人以上である場合には、前項第三号に掲げる事項を定めなければならない。ただし、当該株式会社が金融商品取引法第二条第十六項に規定する金融商品取引所に上場されている株式を発行している株式会社であって法務省令で定めるものである場合は、この限りでない。","i":[]},{"n":"3","s":"取締役会設置会社における前項の規定の適用については、同項中「株主総会において決議をすることができる事項」とあるのは、「前項第二号に掲げる事項」とする。","i":[]},{"n":"4","s":"取締役会設置会社においては、前条第四項の規定により株主が株主総会を招集するときを除き、第一項各号に掲げる事項の決定は、取締役会の決議によらなければならない。","i":[]}]},"299":{"t":"第二百九十九条","c":"（株主総会の招集の通知）","p":[{"n":"1","s":"株主総会を招集するには、取締役は、株主総会の日の二週間（前条第一項第三号又は第四号に掲げる事項を定めたときを除き、公開会社でない株式会社にあっては、一週間（当該株式会社が取締役会設置会社以外の株式会社である場合において、これを下回る期間を定款で定めた場合にあっては、その期間））前までに、株主に対してその通知を発しなければならない。","i":[]},{"n":"2","s":"次に掲げる場合には、前項の通知は、書面でしなければならない。","i":[{"n":"1","t":"一","s":"前条第一項第三号又は第四号に掲げる事項を定めた場合","sub":[]},{"n":"2","t":"二","s":"株式会社が取締役会設置会社である場合","sub":[]}]},{"n":"3","s":"取締役は、前項の書面による通知の発出に代えて、政令で定めるところにより、株主の承諾を得て、電磁的方法により通知を発することができる。この場合において、当該取締役は、同項の書面による通知を発したものとみなす。","i":[]},{"n":"4","s":"前二項の通知には、前条第一項各号に掲げる事項を記載し、又は記録しなければならない。","i":[]}]},"300":{"t":"第三百条","c":"（招集手続の省略）","p":[{"n":"1","s":"前条の規定にかかわらず、株主総会は、株主の全員の同意があるときは、招集の手続を経ることなく開催することができる。ただし、第二百九十八条第一項第三号又は第四号に掲げる事項を定めた場合は、この限りでない。","i":[]}]},"303":{"t":"第三百三条","c":"（株主提案権）","p":[{"n":"1","s":"株主は、取締役に対し、一定の事項（当該株主が議決権を行使することができる事項に限る。次項において同じ。）を株主総会の目的とすることを請求することができる。","i":[]},{"n":"2","s":"前項の規定にかかわらず、取締役会設置会社においては、総株主の議決権の百分の一（これを下回る割合を定款で定めた場合にあっては、その割合）以上の議決権又は三百個（これを下回る数を定款で定めた場合にあっては、その個数）以上の議決権を六箇月（これを下回る期間を定款で定めた場合にあっては、その期間）前から引き続き有する株主に限り、取締役に対し、一定の事項を株主総会の目的とすることを請求することができる。この場合において、その請求は、株主総会の日の八週間（これを下回る期間を定款で定めた場合にあっては、その期間）前までにしなければならない。","i":[]},{"n":"3","s":"公開会社でない取締役会設置会社における前項の規定の適用については、同項中「六箇月（これを下回る期間を定款で定めた場合にあっては、その期間）前から引き続き有する」とあるのは、「有する」とする。","i":[]},{"n":"4","s":"第二項の一定の事項について議決権を行使することができない株主が有する議決権の数は、同項の総株主の議決権の数に算入しない。","i":[]}]},"304":{"t":"第三百四条","c":"","p":[{"n":"1","s":"株主は、株主総会において、株主総会の目的である事項（当該株主が議決権を行使することができる事項に限る。次条第一項において同じ。）につき議案を提出することができる。ただし、当該議案が法令若しくは定款に違反する場合又は実質的に同一の議案につき株主総会において総株主（当該議案について議決権を行使することができない株主を除く。）の議決権の十分の一（これを下回る割合を定款で定めた場合にあっては、その割合）以上の賛成を得られなかった日から三年を経過していない場合は、この限りでない。","i":[]}]},"305":{"t":"第三百五条","c":"","p":[{"n":"1","s":"株主は、取締役に対し、株主総会の日の八週間（これを下回る期間を定款で定めた場合にあっては、その期間）前までに、株主総会の目的である事項につき当該株主が提出しようとする議案の要領を株主に通知すること（第二百九十九条第二項又は第三項の通知をする場合にあっては、その通知に記載し、又は記録すること）を請求することができる。ただし、取締役会設置会社においては、総株主の議決権の百分の一（これを下回る割合を定款で定めた場合にあっては、その割合）以上の議決権又は三百個（これを下回る数を定款で定めた場合にあっては、その個数）以上の議決権を六箇月（これを下回る期間を定款で定めた場合にあっては、その期間）前から引き続き有する株主に限り、当該請求をすることができる。","i":[]},{"n":"2","s":"公開会社でない取締役会設置会社における前項ただし書の規定の適用については、同項ただし書中「六箇月（これを下回る期間を定款で定めた場合にあっては、その期間）前から引き続き有する」とあるのは、「有する」とする。","i":[]},{"n":"3","s":"第一項の株主総会の目的である事項について議決権を行使することができない株主が有する議決権の数は、同項ただし書の総株主の議決権の数に算入しない。","i":[]},{"n":"4","s":"取締役会設置会社の株主が第一項の規定による請求をする場合において、当該株主が提出しようとする議案の数が十を超えるときは、前三項の規定は、十を超える数に相当することとなる数の議案については、適用しない。この場合において、当該株主が提出しようとする次の各号に掲げる議案の数については、当該各号に定めるところによる。","i":[{"n":"1","t":"一","s":"取締役、会計参与、監査役又は会計監査人（次号において「役員等」という。）の選任に関する議案　当該議案の数にかかわらず、これを一の議案とみなす。","sub":[]},{"n":"2","t":"二","s":"役員等の解任に関する議案　当該議案の数にかかわらず、これを一の議案とみなす。","sub":[]},{"n":"3","t":"三","s":"会計監査人を再任しないことに関する議案　当該議案の数にかかわらず、これを一の議案とみなす。","sub":[]},{"n":"4","t":"四","s":"定款の変更に関する二以上の議案　当該二以上の議案について異なる議決がされたとすれば当該議決の内容が相互に矛盾する可能性がある場合には、これらを一の議案とみなす。","sub":[]}]},{"n":"5","s":"前項前段の十を超える数に相当することとなる数の議案は、取締役がこれを定める。ただし、第一項の規定による請求をした株主が当該請求と併せて当該株主が提出しようとする二以上の議案の全部又は一部につき議案相互間の優先順位を定めている場合には、取締役は、当該優先順位に従い、これを定めるものとする。","i":[]},{"n":"6","s":"第一項から第三項までの規定は、第一項の議案が法令若しくは定款に違反する場合又は実質的に同一の議案につき株主総会において総株主（当該議案について議決権を行使することができない株主を除く。）の議決権の十分の一（これを下回る割合を定款で定めた場合にあっては、その割合）以上の賛成を得られなかった日から三年を経過していない場合には、適用しない。","i":[]}]},"309":{"t":"第三百九条","c":"（株主総会の決議）","p":[{"n":"1","s":"株主総会の決議は、定款に別段の定めがある場合を除き、議決権を行使することができる株主の議決権の過半数を有する株主が出席し、出席した当該株主の議決権の過半数をもって行う。","i":[]},{"n":"2","s":"前項の規定にかかわらず、次に掲げる株主総会の決議は、当該株主総会において議決権を行使することができる株主の議決権の過半数（三分の一以上の割合を定款で定めた場合にあっては、その割合以上）を有する株主が出席し、出席した当該株主の議決権の三分の二（これを上回る割合を定款で定めた場合にあっては、その割合）以上に当たる多数をもって行わなければならない。この場合においては、当該決議の要件に加えて、一定の数以上の株主の賛成を要する旨その他の要件を定款で定めることを妨げない。","i":[{"n":"1","t":"一","s":"第百四十条第二項及び第五項の株主総会","sub":[]},{"n":"2","t":"二","s":"第百五十六条第一項の株主総会（第百六十条第一項の特定の株主を定める場合に限る。）","sub":[]},{"n":"3","t":"三","s":"第百七十一条第一項及び第百七十五条第一項の株主総会","sub":[]},{"n":"4","t":"四","s":"第百八十条第二項の株主総会","sub":[]},{"n":"5","t":"五","s":"第百九十九条第二項、第二百条第一項、第二百二条第三項第四号、第二百四条第二項及び第二百五条第二項の株主総会","sub":[]},{"n":"6","t":"六","s":"第二百三十八条第二項、第二百三十九条第一項、第二百四十一条第三項第四号、第二百四十三条第二項及び第二百四十四条第三項の株主総会","sub":[]},{"n":"7","t":"七","s":"第三百三十九条第一項の株主総会（第三百四十二条第三項から第五項までの規定により選任された取締役（監査等委員である取締役を除く。）を解任する場合又は監査等委員である取締役若しくは監査役を解任する場合に限る。）","sub":[]},{"n":"8","t":"八","s":"第四百二十五条第一項の株主総会","sub":[]},{"n":"9","t":"九","s":"第四百四十七条第一項の株主総会（次のいずれにも該当する場合を除く。）","sub":["イ 定時株主総会において第四百四十七条第一項各号に掲げる事項を定めること。","ロ 第四百四十七条第一項第一号の額がイの定時株主総会の日（第四百三十九条前段に規定する場合にあっては、第四百三十六条第三項の承認があった日）における欠損の額として法務省令で定める方法により算定される額を超えないこと。"]},{"n":"10","t":"十","s":"第四百五十四条第四項の株主総会（配当財産が金銭以外の財産であり、かつ、株主に対して同項第一号に規定する金銭分配請求権を与えないこととする場合に限る。）","sub":[]},{"n":"11","t":"十一","s":"第六章から第八章までの規定により株主総会の決議を要する場合における当該株主総会","sub":[]},{"n":"12","t":"十二","s":"第五編の規定により株主総会の決議を要する場合における当該株主総会","sub":[]}]},{"n":"3","s":"前二項の規定にかかわらず、次に掲げる株主総会（種類株式発行会社の株主総会を除く。）の決議は、当該株主総会において議決権を行使することができる株主の半数以上（これを上回る割合を定款で定めた場合にあっては、その割合以上）であって、当該株主の議決権の三分の二（これを上回る割合を定款で定めた場合にあっては、その割合）以上に当たる多数をもって行わなければならない。","i":[{"n":"1","t":"一","s":"その発行する全部の株式の内容として譲渡による当該株式の取得について当該株式会社の承認を要する旨の定款の定めを設ける定款の変更を行う株主総会","sub":[]},{"n":"2","t":"二","s":"第七百八十三条第一項の株主総会（合併により消滅する株式会社又は株式交換をする株式会社が公開会社であり、かつ、当該株式会社の株主に対して交付する金銭等の全部又は一部が譲渡制限株式等（同条第三項に規定する譲渡制限株式等をいう。次号において同じ。）である場合における当該株主総会に限る。）","sub":[]},{"n":"3","t":"三","s":"第八百四条第一項の株主総会（合併又は株式移転をする株式会社が公開会社であり、かつ、当該株式会社の株主に対して交付する金銭等の全部又は一部が譲渡制限株式等である場合における当該株主総会に限る。）","sub":[]}]},{"n":"4","s":"前三項の規定にかかわらず、第百九条第二項の規定による定款の定めについての定款の変更（当該定款の定めを廃止するものを除く。）を行う株主総会の決議は、総株主の半数以上（これを上回る割合を定款で定めた場合にあっては、その割合以上）であって、総株主の議決権の四分の三（これを上回る割合を定款で定めた場合にあっては、その割合）以上に当たる多数をもって行わなければならない。","i":[]},{"n":"5","s":"取締役会設置会社においては、株主総会は、第二百九十八条第一項第二号に掲げる事項以外の事項については、決議をすることができない。ただし、第三百十六条第一項若しくは第二項に規定する者の選任又は第三百九十八条第二項の会計監査人の出席を求めることについては、この限りでない。","i":[]}]},"319":{"t":"第三百十九条","c":"（株主総会の決議の省略）","p":[{"n":"1","s":"取締役又は株主が株主総会の目的である事項について提案をした場合において、当該提案につき株主（当該事項について議決権を行使することができるものに限る。）の全員が書面又は電磁的記録により同意の意思表示をしたときは、当該提案を可決する旨の株主総会の決議があったものとみなす。","i":[]},{"n":"2","s":"株式会社は、前項の規定により株主総会の決議があったものとみなされた日から十年間、同項の書面又は電磁的記録をその本店に備え置かなければならない。","i":[]},{"n":"3","s":"株主及び債権者は、株式会社の営業時間内は、いつでも、次に掲げる請求をすることができる。","i":[{"n":"1","t":"一","s":"前項の書面の閲覧又は謄写の請求","sub":[]},{"n":"2","t":"二","s":"前項の電磁的記録に記録された事項を法務省令で定める方法により表示したものの閲覧又は謄写の請求","sub":[]}]},{"n":"4","s":"株式会社の親会社社員は、その権利を行使するため必要があるときは、裁判所の許可を得て、第二項の書面又は電磁的記録について前項各号に掲げる請求をすることができる。","i":[]},{"n":"5","s":"第一項の規定により定時株主総会の目的である事項のすべてについての提案を可決する旨の株主総会の決議があったものとみなされた場合には、その時に当該定時株主総会が終結したものとみなす。","i":[]}]},"327":{"t":"第三百二十七条","c":"（取締役会等の設置義務等）","p":[{"n":"1","s":"次に掲げる株式会社は、取締役会を置かなければならない。","i":[{"n":"1","t":"一","s":"公開会社","sub":[]},{"n":"2","t":"二","s":"監査役会設置会社","sub":[]},{"n":"3","t":"三","s":"監査等委員会設置会社","sub":[]},{"n":"4","t":"四","s":"指名委員会等設置会社","sub":[]}]},{"n":"2","s":"取締役会設置会社（監査等委員会設置会社及び指名委員会等設置会社を除く。）は、監査役を置かなければならない。ただし、公開会社でない会計参与設置会社については、この限りでない。","i":[]},{"n":"3","s":"会計監査人設置会社（監査等委員会設置会社及び指名委員会等設置会社を除く。）は、監査役を置かなければならない。","i":[]},{"n":"4","s":"監査等委員会設置会社及び指名委員会等設置会社は、監査役を置いてはならない。","i":[]},{"n":"5","s":"監査等委員会設置会社及び指名委員会等設置会社は、会計監査人を置かなければならない。","i":[]},{"n":"6","s":"指名委員会等設置会社は、監査等委員会を置いてはならない。","i":[]}]},"341":{"t":"第三百四十一条","c":"（役員の選任及び解任の株主総会の決議）","p":[{"n":"1","s":"第三百九条第一項の規定にかかわらず、役員を選任し、又は解任する株主総会の決議は、議決権を行使することができる株主の議決権の過半数（三分の一以上の割合を定款で定めた場合にあっては、その割合以上）を有する株主が出席し、出席した当該株主の議決権の過半数（これを上回る割合を定款で定めた場合にあっては、その割合以上）をもって行わなければならない。","i":[]}]},"830":{"t":"第八百三十条","c":"（株主総会等の決議の不存在又は無効の確認の訴え）","p":[{"n":"1","s":"株主総会若しくは種類株主総会又は創立総会若しくは種類創立総会（以下この節及び第九百三十七条第一項第一号トにおいて「株主総会等」という。）の決議については、決議が存在しないことの確認を、訴えをもって請求することができる。","i":[]},{"n":"2","s":"株主総会等の決議については、決議の内容が法令に違反することを理由として、決議が無効であることの確認を、訴えをもって請求することができる。","i":[]}]},"831":{"t":"第八百三十一条","c":"（株主総会等の決議の取消しの訴え）","p":[{"n":"1","s":"次の各号に掲げる場合には、株主等（当該各号の株主総会等が創立総会又は種類創立総会である場合にあっては、株主等、設立時株主、設立時取締役又は設立時監査役）は、株主総会等の決議の日から三箇月以内に、訴えをもって当該決議の取消しを請求することができる。当該決議の取消しにより株主（当該決議が創立総会の決議である場合にあっては、設立時株主）又は取締役（監査等委員会設置会社にあっては、監査等委員である取締役又はそれ以外の取締役。以下この項において同じ。）、監査役若しくは清算人（当該決議が株主総会又は種類株主総会の決議である場合にあっては第三百四十六条第一項（第四百七十九条第四項において準用する場合を含む。）の規定により取締役、監査役又は清算人としての権利義務を有する者を含み、当該決議が創立総会又は種類創立総会の決議である場合にあっては設立時取締役（設立しようとする株式会社が監査等委員会設置会社である場合にあっては、設立時監査等委員である設立時取締役又はそれ以外の設立時取締役）又は設立時監査役を含む。）となる者も、同様とする。","i":[{"n":"1","t":"一","s":"株主総会等の招集の手続又は決議の方法が法令若しくは定款に違反し、又は著しく不公正なとき。","sub":[]},{"n":"2","t":"二","s":"株主総会等の決議の内容が定款に違反するとき。","sub":[]},{"n":"3","t":"三","s":"株主総会等の決議について特別の利害関係を有する者が議決権を行使したことによって、著しく不当な決議がされたとき。","sub":[]}]},{"n":"2","s":"前項の訴えの提起があった場合において、株主総会等の招集の手続又は決議の方法が法令又は定款に違反するときであっても、裁判所は、その違反する事実が重大でなく、かつ、決議に影響を及ぼさないものであると認めるときは、同項の規定による請求を棄却することができる。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"第一編　総則 第一章　通則","a":[{"k":"1","t":"第一条","c":"（趣旨）","u":0},{"k":"2","t":"第二条","c":"（定義）","u":1},{"k":"3","t":"第三条","c":"（法人格）","u":0},{"k":"4","t":"第四条","c":"（住所）","u":0},{"k":"5","t":"第五条","c":"（商行為）","u":0}]},{"t":"第一編　総則 第二章　会社の商号","a":[{"k":"6","t":"第六条","c":"（商号）","u":0},{"k":"7","t":"第七条","c":"（会社と誤認させる名称等の使用の禁止）","u":0},{"k":"8","t":"第八条","c":"","u":0},{"k":"9","t":"第九条","c":"（自己の商号の使用を他人に許諾した会社の責任）","u":0}]},{"t":"第一編　総則 第三章　会社の使用人等","a":[{"k":"10","t":"第十条","c":"（支配人）","u":0},{"k":"11","t":"第十一条","c":"（支配人の代理権）","u":0},{"k":"12","t":"第十二条","c":"（支配人の競業の禁止）","u":0},{"k":"13","t":"第十三条","c":"（表見支配人）","u":0},{"k":"14","t":"第十四条","c":"（ある種類又は特定の事項の委任を受けた使用人）","u":0},{"k":"15","t":"第十五条","c":"（物品の販売等を目的とする店舗の使用人）","u":0},{"k":"16","t":"第十六条","c":"（通知義務）","u":0},{"k":"17","t":"第十七条","c":"（代理商の競業の禁止）","u":0},{"k":"18","t":"第十八条","c":"（通知を受ける権限）","u":0},{"k":"19","t":"第十九条","c":"（契約の解除）","u":0},{"k":"20","t":"第二十条","c":"（代理商の留置権）","u":0}]},{"t":"第一編　総則 第四章　事業の譲渡をした場合の競業の禁止等","a":[{"k":"21","t":"第二十一条","c":"（譲渡会社の競業の禁止）","u":0},{"k":"22","t":"第二十二条","c":"（譲渡会社の商号を使用した譲受会社の責任等）","u":0},{"k":"23","t":"第二十三条","c":"（譲受会社による債務の引受け）","u":0},{"k":"23_2","t":"第二十三条の二","c":"（詐害事業譲渡に係る譲受会社に対する債務の履行の請求）","u":0},{"k":"24","t":"第二十四条","c":"（商人との間での事業の譲渡又は譲受け）","u":0}]},{"t":"第二編　株式会社 第一章　設立","a":[{"k":"25","t":"第二十五条","c":"","u":0},{"k":"26","t":"第二十六条","c":"（定款の作成）","u":0},{"k":"27","t":"第二十七条","c":"（定款の記載又は記録事項）","u":0},{"k":"28","t":"第二十八条","c":"","u":0},{"k":"29","t":"第二十九条","c":"","u":0},{"k":"30","t":"第三十条","c":"（定款の認証）","u":0},{"k":"31","t":"第三十一条","c":"（定款の備置き及び閲覧等）","u":0},{"k":"32","t":"第三十二条","c":"（設立時発行株式に関する事項の決定）","u":0},{"k":"33","t":"第三十三条","c":"（定款の記載又は記録事項に関する検査役の選任）","u":0},{"k":"34","t":"第三十四条","c":"（出資の履行）","u":0},{"k":"35","t":"第三十五条","c":"（設立時発行株式の株主となる権利の譲渡）","u":0},{"k":"36","t":"第三十六条","c":"（設立時発行株式の株主となる権利の喪失）","u":0},{"k":"37","t":"第三十七条","c":"（発行可能株式総数の定め等）","u":0},{"k":"38","t":"第三十八条","c":"（設立時役員等の選任）","u":0},{"k":"39","t":"第三十九条","c":"","u":0},{"k":"40","t":"第四十条","c":"（設立時役員等の選任の方法）","u":0},{"k":"41","t":"第四十一条","c":"（設立時役員等の選任の方法の特則）","u":0},{"k":"42","t":"第四十二条","c":"（設立時役員等の解任）","u":0},{"k":"43","t":"第四十三条","c":"（設立時役員等の解任の方法）","u":0},{"k":"44","t":"第四十四条","c":"（設立時取締役等の解任の方法の特則）","u":0},{"k":"45","t":"第四十五条","c":"（設立時役員等の選任又は解任の効力についての特則）","u":0},{"k":"46","t":"第四十六条","c":"","u":0},{"k":"47","t":"第四十七条","c":"（設立時代表取締役の選定等）","u":0},{"k":"48","t":"第四十八条","c":"（設立時委員の選定等）","u":0},{"k":"49","t":"第四十九条","c":"（株式会社の成立）","u":0},{"k":"50","t":"第五十条","c":"（株式の引受人の権利）","u":0},{"k":"51","t":"第五十一条","c":"（引受けの無効又は取消しの制限）","u":0},{"k":"52","t":"第五十二条","c":"（出資された財産等の価額が不足する場合の責任）","u":0},{"k":"52_2","t":"第五十二条の二","c":"（出資の履行を仮装した場合の責任等）","u":0},{"k":"53","t":"第五十三条","c":"（発起人等の損害賠償責任）","u":0},{"k":"54","t":"第五十四条","c":"（発起人等の連帯責任）","u":0},{"k":"55","t":"第五十五条","c":"（責任の免除）","u":0},{"k":"56","t":"第五十六条","c":"（株式会社不成立の場合の責任）","u":0},{"k":"57","t":"第五十七条","c":"（設立時発行株式を引き受ける者の募集）","u":0},{"k":"58","t":"第五十八条","c":"（設立時募集株式に関する事項の決定）","u":0},{"k":"59","t":"第五十九条","c":"（設立時募集株式の申込み）","u":0},{"k":"60","t":"第六十条","c":"（設立時募集株式の割当て）","u":0},{"k":"61","t":"第六十一条","c":"（設立時募集株式の申込み及び割当てに関する特則）","u":0},{"k":"62","t":"第六十二条","c":"（設立時募集株式の引受け）","u":0},{"k":"63","t":"第六十三条","c":"（設立時募集株式の払込金額の払込み）","u":0},{"k":"64","t":"第六十四条","c":"（払込金の保管証明）","u":0},{"k":"65","t":"第六十五条","c":"（創立総会の招集）","u":0},{"k":"66","t":"第六十六条","c":"（創立総会の権限）","u":0},{"k":"67","t":"第六十七条","c":"（創立総会の招集の決定）","u":0},{"k":"68","t":"第六十八条","c":"（創立総会の招集の通知）","u":0},{"k":"69","t":"第六十九条","c":"（招集手続の省略）","u":0},{"k":"70","t":"第七十条","c":"（創立総会参考書類及び議決権行使書面の交付等）","u":0},{"k":"71","t":"第七十一条","c":"","u":0},{"k":"72","t":"第七十二条","c":"（議決権の数）","u":0},{"k":"73","t":"第七十三条","c":"（創立総会の決議）","u":0},{"k":"74","t":"第七十四条","c":"（議決権の代理行使）","u":0},{"k":"75","t":"第七十五条","c":"（書面による議決権の行使）","u":0},{"k":"76","t":"第七十六条","c":"（電磁的方法による議決権の行使）","u":0},{"k":"77","t":"第七十七条","c":"（議決権の不統一行使）","u":0},{"k":"78","t":"第七十八条","c":"（発起人の説明義務）","u":0},{"k":"79","t":"第七十九条","c":"（議長の権限）","u":0},{"k":"80","t":"第八十条","c":"（延期又は続行の決議）","u":0},{"k":"81","t":"第八十一条","c":"（議事録）","u":0},{"k":"82","t":"第八十二条","c":"（創立総会の決議の省略）","u":0},{"k":"83","t":"第八十三条","c":"（創立総会への報告の省略）","u":0},{"k":"84","t":"第八十四条","c":"（種類株主総会の決議を必要とする旨の定めがある場合）","u":0},{"k":"85","t":"第八十五条","c":"（種類創立総会の招集及び決議）","u":0},{"k":"86","t":"第八十六条","c":"（創立総会に関する規定の準用）","u":0},{"k":"87","t":"第八十七条","c":"","u":0},{"k":"88","t":"第八十八条","c":"（設立時取締役等の選任）","u":0},{"k":"89","t":"第八十九条","c":"（累積投票による設立時取締役の選任）","u":0},{"k":"90","t":"第九十条","c":"（種類創立総会の決議による設立時取締役等の選任）","u":0},{"k":"91","t":"第九十一条","c":"（設立時取締役等の解任）","u":0},{"k":"92","t":"第九十二条","c":"","u":0},{"k":"93","t":"第九十三条","c":"（設立時取締役等による調査）","u":0},{"k":"94","t":"第九十四条","c":"（設立時取締役等が発起人である場合の特則）","u":0},{"k":"95","t":"第九十五条","c":"（発起人による定款の変更の禁止）","u":0},{"k":"96","t":"第九十六条","c":"（創立総会における定款の変更）","u":0},{"k":"97","t":"第九十七条","c":"（設立時発行株式の引受けの取消し）","u":0},{"k":"98","t":"第九十八条","c":"（創立総会の決議による発行可能株式総数の定め）","u":0},{"k":"99","t":"第九十九条","c":"（定款の変更の手続の特則）","u":0},{"k":"100","t":"第百条","c":"","u":0},{"k":"101","t":"第百一条","c":"","u":0},{"k":"102","t":"第百二条","c":"（設立手続等の特則）","u":0},{"k":"102_2","t":"第百二条の二","c":"（払込みを仮装した設立時募集株式の引受人の責任）","u":0},{"k":"103","t":"第百三条","c":"（発起人の責任等）","u":0}]},{"t":"第二編　株式会社 第二章　株式","a":[{"k":"104","t":"第百四条","c":"（株主の責任）","u":0},{"k":"105","t":"第百五条","c":"（株主の権利）","u":0},{"k":"106","t":"第百六条","c":"（共有者による権利の行使）","u":0},{"k":"107","t":"第百七条","c":"（株式の内容についての特別の定め）","u":0},{"k":"108","t":"第百八条","c":"（異なる種類の株式）","u":0},{"k":"109","t":"第百九条","c":"（株主の平等）","u":1},{"k":"110","t":"第百十条","c":"（定款の変更の手続の特則）","u":0},{"k":"111","t":"第百十一条","c":"","u":0},{"k":"112","t":"第百十二条","c":"（取締役の選任等に関する種類株式の定款の定めの廃止の特則）","u":0},{"k":"113","t":"第百十三条","c":"（発行可能株式総数）","u":0},{"k":"114","t":"第百十四条","c":"（発行可能種類株式総数）","u":0},{"k":"115","t":"第百十五条","c":"（議決権制限株式の発行数）","u":0},{"k":"116","t":"第百十六条","c":"（反対株主の株式買取請求）","u":0},{"k":"117","t":"第百十七条","c":"（株式の価格の決定等）","u":0},{"k":"118","t":"第百十八条","c":"（新株予約権買取請求）","u":0},{"k":"119","t":"第百十九条","c":"（新株予約権の価格の決定等）","u":0},{"k":"120","t":"第百二十条","c":"（株主等の権利の行使に関する利益の供与）","u":0},{"k":"121","t":"第百二十一条","c":"（株主名簿）","u":0},{"k":"122","t":"第百二十二条","c":"（株主名簿記載事項を記載した書面の交付等）","u":0},{"k":"123","t":"第百二十三条","c":"（株主名簿管理人）","u":0},{"k":"124","t":"第百二十四条","c":"（基準日）","u":0},{"k":"125","t":"第百二十五条","c":"（株主名簿の備置き及び閲覧等）","u":0},{"k":"126","t":"第百二十六条","c":"（株主に対する通知等）","u":0},{"k":"127","t":"第百二十七条","c":"（株式の譲渡）","u":0},{"k":"128","t":"第百二十八条","c":"（株券発行会社の株式の譲渡）","u":0},{"k":"129","t":"第百二十九条","c":"（自己株式の処分に関する特則）","u":0},{"k":"130","t":"第百三十条","c":"（株式の譲渡の対抗要件）","u":0},{"k":"131","t":"第百三十一条","c":"（権利の推定等）","u":0},{"k":"132","t":"第百三十二条","c":"（株主の請求によらない株主名簿記載事項の記載又は記録）","u":0},{"k":"133","t":"第百三十三条","c":"（株主の請求による株主名簿記載事項の記載又は記録）","u":0},{"k":"134","t":"第百三十四条","c":"","u":0},{"k":"135","t":"第百三十五条","c":"（親会社株式の取得の禁止）","u":0},{"k":"136","t":"第百三十六条","c":"（株主からの承認の請求）","u":0},{"k":"137","t":"第百三十七条","c":"（株式取得者からの承認の請求）","u":0},{"k":"138","t":"第百三十八条","c":"（譲渡等承認請求の方法）","u":0},{"k":"139","t":"第百三十九条","c":"（譲渡等の承認の決定等）","u":0},{"k":"140","t":"第百四十条","c":"（株式会社又は指定買取人による買取り）","u":0},{"k":"141","t":"第百四十一条","c":"（株式会社による買取りの通知）","u":0},{"k":"142","t":"第百四十二条","c":"（指定買取人による買取りの通知）","u":0},{"k":"143","t":"第百四十三条","c":"（譲渡等承認請求の撤回）","u":0},{"k":"144","t":"第百四十四条","c":"（売買価格の決定）","u":0},{"k":"145","t":"第百四十五条","c":"（株式会社が承認をしたとみなされる場合）","u":0},{"k":"146","t":"第百四十六条","c":"（株式の質入れ）","u":0},{"k":"147","t":"第百四十七条","c":"（株式の質入れの対抗要件）","u":0},{"k":"148","t":"第百四十八条","c":"（株主名簿の記載等）","u":0},{"k":"149","t":"第百四十九条","c":"（株主名簿の記載事項を記載した書面の交付等）","u":0},{"k":"150","t":"第百五十条","c":"（登録株式質権者に対する通知等）","u":0},{"k":"151","t":"第百五十一条","c":"（株式の質入れの効果）","u":0},{"k":"152","t":"第百五十二条","c":"","u":0},{"k":"153","t":"第百五十三条","c":"","u":0},{"k":"154","t":"第百五十四条","c":"","u":0},{"k":"154_2","t":"第百五十四条の二","c":"","u":0},{"k":"155","t":"第百五十五条","c":"","u":0},{"k":"156","t":"第百五十六条","c":"（株式の取得に関する事項の決定）","u":0},{"k":"157","t":"第百五十七条","c":"（取得価格等の決定）","u":0},{"k":"158","t":"第百五十八条","c":"（株主に対する通知等）","u":0},{"k":"159","t":"第百五十九条","c":"（譲渡しの申込み）","u":0},{"k":"160","t":"第百六十条","c":"（特定の株主からの取得）","u":0},{"k":"161","t":"第百六十一条","c":"（市場価格のある株式の取得の特則）","u":0},{"k":"162","t":"第百六十二条","c":"（相続人等からの取得の特則）","u":0},{"k":"163","t":"第百六十三条","c":"（子会社からの株式の取得）","u":0},{"k":"164","t":"第百六十四条","c":"（特定の株主からの取得に関する定款の定め）","u":0},{"k":"165","t":"第百六十五条","c":"","u":0},{"k":"166","t":"第百六十六条","c":"（取得の請求）","u":0},{"k":"167","t":"第百六十七条","c":"（効力の発生）","u":0},{"k":"168","t":"第百六十八条","c":"（取得する日の決定）","u":0},{"k":"169","t":"第百六十九条","c":"（取得する株式の決定等）","u":0},{"k":"170","t":"第百七十条","c":"（効力の発生等）","u":0},{"k":"171","t":"第百七十一条","c":"（全部取得条項付種類株式の取得に関する決定）","u":0},{"k":"171_2","t":"第百七十一条の二","c":"（全部取得条項付種類株式の取得対価等に関する書面等の備置き及び閲覧等）","u":0},{"k":"171_3","t":"第百七十一条の三","c":"（全部取得条項付種類株式の取得をやめることの請求）","u":0},{"k":"172","t":"第百七十二条","c":"（裁判所に対する価格の決定の申立て）","u":0},{"k":"173","t":"第百七十三条","c":"（効力の発生）","u":0},{"k":"173_2","t":"第百七十三条の二","c":"（全部取得条項付種類株式の取得に関する書面等の備置き及び閲覧等）","u":0},{"k":"174","t":"第百七十四条","c":"（相続人等に対する売渡しの請求に関する定款の定め）","u":0},{"k":"175","t":"第百七十五条","c":"（売渡しの請求の決定）","u":0},{"k":"176","t":"第百七十六条","c":"（売渡しの請求）","u":0},{"k":"177","t":"第百七十七条","c":"（売買価格の決定）","u":0},{"k":"178","t":"第百七十八条","c":"","u":0},{"k":"179","t":"第百七十九条","c":"（株式等売渡請求）","u":0},{"k":"179_2","t":"第百七十九条の二","c":"（株式等売渡請求の方法）","u":0},{"k":"179_3","t":"第百七十九条の三","c":"（対象会社の承認）","u":0},{"k":"179_4","t":"第百七十九条の四","c":"（売渡株主等に対する通知等）","u":0},{"k":"179_5","t":"第百七十九条の五","c":"（株式等売渡請求に関する書面等の備置き及び閲覧等）","u":0},{"k":"179_6","t":"第百七十九条の六","c":"（株式等売渡請求の撤回）","u":0},{"k":"179_7","t":"第百七十九条の七","c":"（売渡株式等の取得をやめることの請求）","u":0},{"k":"179_8","t":"第百七十九条の八","c":"（売買価格の決定の申立て）","u":0},{"k":"179_9","t":"第百七十九条の九","c":"（売渡株式等の取得）","u":0},{"k":"179_10","t":"第百七十九条の十","c":"（売渡株式等の取得に関する書面等の備置き及び閲覧等）","u":0},{"k":"180","t":"第百八十条","c":"（株式の併合）","u":0},{"k":"181","t":"第百八十一条","c":"（株主に対する通知等）","u":0},{"k":"182","t":"第百八十二条","c":"（効力の発生）","u":0},{"k":"182_2","t":"第百八十二条の二","c":"（株式の併合に関する事項に関する書面等の備置き及び閲覧等）","u":0},{"k":"182_3","t":"第百八十二条の三","c":"（株式の併合をやめることの請求）","u":0},{"k":"182_4","t":"第百八十二条の四","c":"（反対株主の株式買取請求）","u":0},{"k":"182_5","t":"第百八十二条の五","c":"（株式の価格の決定等）","u":0},{"k":"182_6","t":"第百八十二条の六","c":"（株式の併合に関する書面等の備置き及び閲覧等）","u":0},{"k":"183","t":"第百八十三条","c":"（株式の分割）","u":0},{"k":"184","t":"第百八十四条","c":"（効力の発生等）","u":0},{"k":"185","t":"第百八十五条","c":"（株式無償割当て）","u":0},{"k":"186","t":"第百八十六条","c":"（株式無償割当てに関する事項の決定）","u":0},{"k":"187","t":"第百八十七条","c":"（株式無償割当ての効力の発生等）","u":0},{"k":"188","t":"第百八十八条","c":"（単元株式数）","u":0},{"k":"189","t":"第百八十九条","c":"（単元未満株式についての権利の制限等）","u":0},{"k":"190","t":"第百九十条","c":"（理由の開示）","u":0},{"k":"191","t":"第百九十一条","c":"（定款変更手続の特則）","u":0},{"k":"192","t":"第百九十二条","c":"（単元未満株式の買取りの請求）","u":0},{"k":"193","t":"第百九十三条","c":"（単元未満株式の価格の決定）","u":0},{"k":"194","t":"第百九十四条","c":"","u":0},{"k":"195","t":"第百九十五条","c":"","u":0},{"k":"196","t":"第百九十六条","c":"（株主に対する通知の省略）","u":0},{"k":"197","t":"第百九十七条","c":"（株式の競売）","u":0},{"k":"198","t":"第百九十八条","c":"（利害関係人の異議）","u":0},{"k":"199","t":"第百九十九条","c":"（募集事項の決定）","u":0},{"k":"200","t":"第二百条","c":"（募集事項の決定の委任）","u":0},{"k":"201","t":"第二百一条","c":"（公開会社における募集事項の決定の特則）","u":0},{"k":"202","t":"第二百二条","c":"（株主に株式の割当てを受ける権利を与える場合）","u":0},{"k":"202_2","t":"第二百二条の二","c":"（取締役の報酬等に係る募集事項の決定の特則）","u":0},{"k":"203","t":"第二百三条","c":"（募集株式の申込み）","u":0},{"k":"204","t":"第二百四条","c":"（募集株式の割当て）","u":0},{"k":"205","t":"第二百五条","c":"（募集株式の申込み及び割当てに関する特則）","u":0},{"k":"206","t":"第二百六条","c":"（募集株式の引受け）","u":0},{"k":"206_2","t":"第二百六条の二","c":"（公開会社における募集株式の割当て等の特則）","u":0},{"k":"207","t":"第二百七条","c":"","u":0},{"k":"208","t":"第二百八条","c":"（出資の履行）","u":0},{"k":"209","t":"第二百九条","c":"（株主となる時期等）","u":0},{"k":"210","t":"第二百十条","c":"","u":0},{"k":"211","t":"第二百十一条","c":"（引受けの無効又は取消しの制限）","u":0},{"k":"212","t":"第二百十二条","c":"（不公正な払込金額で株式を引き受けた者等の責任）","u":0},{"k":"213","t":"第二百十三条","c":"（出資された財産等の価額が不足する場合の取締役等の責任）","u":0},{"k":"213_2","t":"第二百十三条の二","c":"（出資の履行を仮装した募集株式の引受人の責任）","u":0},{"k":"213_3","t":"第二百十三条の三","c":"（出資の履行を仮装した場合の取締役等の責任）","u":0},{"k":"214","t":"第二百十四条","c":"（株券を発行する旨の定款の定め）","u":0},{"k":"215","t":"第二百十五条","c":"（株券の発行）","u":0},{"k":"216","t":"第二百十六条","c":"（株券の記載事項）","u":0},{"k":"217","t":"第二百十七条","c":"（株券不所持の申出）","u":0},{"k":"218","t":"第二百十八条","c":"（株券を発行する旨の定款の定めの廃止）","u":0},{"k":"219","t":"第二百十九条","c":"（株券の提出に関する公告等）","u":0},{"k":"220","t":"第二百二十条","c":"（株券の提出をすることができない場合）","u":0},{"k":"221","t":"第二百二十一条","c":"（株券喪失登録簿）","u":0},{"k":"222","t":"第二百二十二条","c":"（株券喪失登録簿に関する事務の委託）","u":0},{"k":"223","t":"第二百二十三条","c":"（株券喪失登録の請求）","u":0},{"k":"224","t":"第二百二十四条","c":"（名義人等に対する通知）","u":0},{"k":"225","t":"第二百二十五条","c":"（株券を所持する者による抹消の申請）","u":0},{"k":"226","t":"第二百二十六条","c":"（株券喪失登録者による抹消の申請）","u":0},{"k":"227","t":"第二百二十七条","c":"（株券を発行する旨の定款の定めを廃止した場合における株券喪失登録の抹消）","u":0},{"k":"228","t":"第二百二十八条","c":"（株券の無効）","u":0},{"k":"229","t":"第二百二十九条","c":"（異議催告手続との関係）","u":0},{"k":"230","t":"第二百三十条","c":"（株券喪失登録の効力）","u":0},{"k":"231","t":"第二百三十一条","c":"（株券喪失登録簿の備置き及び閲覧等）","u":0},{"k":"232","t":"第二百三十二条","c":"（株券喪失登録者に対する通知等）","u":0},{"k":"233","t":"第二百三十三条","c":"（適用除外）","u":0},{"k":"234","t":"第二百三十四条","c":"（一に満たない端数の処理）","u":0},{"k":"235","t":"第二百三十五条","c":"","u":0}]},{"t":"第二編　株式会社 第三章　新株予約権","a":[{"k":"236","t":"第二百三十六条","c":"（新株予約権の内容）","u":0},{"k":"237","t":"第二百三十七条","c":"（共有者による権利の行使）","u":0},{"k":"238","t":"第二百三十八条","c":"（募集事項の決定）","u":0},{"k":"239","t":"第二百三十九条","c":"（募集事項の決定の委任）","u":0},{"k":"240","t":"第二百四十条","c":"（公開会社における募集事項の決定の特則）","u":0},{"k":"241","t":"第二百四十一条","c":"（株主に新株予約権の割当てを受ける権利を与える場合）","u":0},{"k":"242","t":"第二百四十二条","c":"（募集新株予約権の申込み）","u":0},{"k":"243","t":"第二百四十三条","c":"（募集新株予約権の割当て）","u":0},{"k":"244","t":"第二百四十四条","c":"（募集新株予約権の申込み及び割当てに関する特則）","u":0},{"k":"244_2","t":"第二百四十四条の二","c":"（公開会社における募集新株予約権の割当て等の特則）","u":0},{"k":"245","t":"第二百四十五条","c":"（新株予約権者となる日）","u":0},{"k":"246","t":"第二百四十六条","c":"","u":0},{"k":"247","t":"第二百四十七条","c":"","u":0},{"k":"248","t":"第二百四十八条","c":"","u":0},{"k":"249","t":"第二百四十九条","c":"（新株予約権原簿）","u":0},{"k":"250","t":"第二百五十条","c":"（新株予約権原簿記載事項を記載した書面の交付等）","u":0},{"k":"251","t":"第二百五十一条","c":"（新株予約権原簿の管理）","u":0},{"k":"252","t":"第二百五十二条","c":"（新株予約権原簿の備置き及び閲覧等）","u":0},{"k":"253","t":"第二百五十三条","c":"（新株予約権者に対する通知等）","u":0},{"k":"254","t":"第二百五十四条","c":"（新株予約権の譲渡）","u":0},{"k":"255","t":"第二百五十五条","c":"（証券発行新株予約権の譲渡）","u":0},{"k":"256","t":"第二百五十六条","c":"（自己新株予約権の処分に関する特則）","u":0},{"k":"257","t":"第二百五十七条","c":"（新株予約権の譲渡の対抗要件）","u":0},{"k":"258","t":"第二百五十八条","c":"（権利の推定等）","u":0},{"k":"259","t":"第二百五十九条","c":"（新株予約権者の請求によらない新株予約権原簿記載事項の記載又は記録）","u":0},{"k":"260","t":"第二百六十条","c":"（新株予約権者の請求による新株予約権原簿記載事項の記載又は記録）","u":0},{"k":"261","t":"第二百六十一条","c":"","u":0},{"k":"262","t":"第二百六十二条","c":"（新株予約権者からの承認の請求）","u":0},{"k":"263","t":"第二百六十三条","c":"（新株予約権取得者からの承認の請求）","u":0},{"k":"264","t":"第二百六十四条","c":"（譲渡等承認請求の方法）","u":0},{"k":"265","t":"第二百六十五条","c":"（譲渡等の承認の決定等）","u":0},{"k":"266","t":"第二百六十六条","c":"（株式会社が承認をしたとみなされる場合）","u":0},{"k":"267","t":"第二百六十七条","c":"（新株予約権の質入れ）","u":0},{"k":"268","t":"第二百六十八条","c":"（新株予約権の質入れの対抗要件）","u":0},{"k":"269","t":"第二百六十九条","c":"（新株予約権原簿の記載等）","u":0},{"k":"270","t":"第二百七十条","c":"（新株予約権原簿の記載事項を記載した書面の交付等）","u":0},{"k":"271","t":"第二百七十一条","c":"（登録新株予約権質権者に対する通知等）","u":0},{"k":"272","t":"第二百七十二条","c":"（新株予約権の質入れの効果）","u":0},{"k":"272_2","t":"第二百七十二条の二","c":"","u":0},{"k":"273","t":"第二百七十三条","c":"（取得する日の決定）","u":0},{"k":"274","t":"第二百七十四条","c":"（取得する新株予約権の決定等）","u":0},{"k":"275","t":"第二百七十五条","c":"（効力の発生等）","u":0},{"k":"276","t":"第二百七十六条","c":"","u":0},{"k":"277","t":"第二百七十七条","c":"（新株予約権無償割当て）","u":0},{"k":"278","t":"第二百七十八条","c":"（新株予約権無償割当てに関する事項の決定）","u":0},{"k":"279","t":"第二百七十九条","c":"（新株予約権無償割当ての効力の発生等）","u":0},{"k":"280","t":"第二百八十条","c":"（新株予約権の行使）","u":0},{"k":"281","t":"第二百八十一条","c":"（新株予約権の行使に際しての払込み）","u":0},{"k":"282","t":"第二百八十二条","c":"（株主となる時期等）","u":0},{"k":"283","t":"第二百八十三条","c":"（一に満たない端数の処理）","u":0},{"k":"284","t":"第二百八十四条","c":"","u":0},{"k":"285","t":"第二百八十五条","c":"（不公正な払込金額で新株予約権を引き受けた者等の責任）","u":0},{"k":"286","t":"第二百八十六条","c":"（出資された財産等の価額が不足する場合の取締役等の責任）","u":0},{"k":"286_2","t":"第二百八十六条の二","c":"（新株予約権に係る払込み等を仮装した新株予約権者等の責任）","u":0},{"k":"286_3","t":"第二百八十六条の三","c":"（新株予約権に係る払込み等を仮装した場合の取締役等の責任）","u":0},{"k":"287","t":"第二百八十七条","c":"","u":0},{"k":"288","t":"第二百八十八条","c":"（新株予約権証券の発行）","u":0},{"k":"289","t":"第二百八十九条","c":"（新株予約権証券の記載事項）","u":0},{"k":"290","t":"第二百九十条","c":"（記名式と無記名式との間の転換）","u":0},{"k":"291","t":"第二百九十一条","c":"（新株予約権証券の喪失）","u":0},{"k":"292","t":"第二百九十二条","c":"","u":0},{"k":"293","t":"第二百九十三条","c":"（新株予約権証券の提出に関する公告等）","u":0},{"k":"294","t":"第二百九十四条","c":"（無記名式の新株予約権証券等が提出されない場合）","u":0}]},{"t":"第二編　株式会社 第四章　機関","a":[{"k":"295","t":"第二百九十五条","c":"（株主総会の権限）","u":1},{"k":"296","t":"第二百九十六条","c":"（株主総会の招集）","u":0},{"k":"297","t":"第二百九十七条","c":"（株主による招集の請求）","u":1},{"k":"298","t":"第二百九十八条","c":"（株主総会の招集の決定）","u":1},{"k":"299","t":"第二百九十九条","c":"（株主総会の招集の通知）","u":1},{"k":"300","t":"第三百条","c":"（招集手続の省略）","u":1},{"k":"301","t":"第三百一条","c":"（株主総会参考書類及び議決権行使書面の交付等）","u":0},{"k":"302","t":"第三百二条","c":"","u":0},{"k":"303","t":"第三百三条","c":"（株主提案権）","u":1},{"k":"304","t":"第三百四条","c":"","u":1},{"k":"305","t":"第三百五条","c":"","u":1},{"k":"306","t":"第三百六条","c":"（株主総会の招集手続等に関する検査役の選任）","u":0},{"k":"307","t":"第三百七条","c":"（裁判所による株主総会招集等の決定）","u":0},{"k":"308","t":"第三百八条","c":"（議決権の数）","u":0},{"k":"309","t":"第三百九条","c":"（株主総会の決議）","u":1},{"k":"310","t":"第三百十条","c":"（議決権の代理行使）","u":0},{"k":"311","t":"第三百十一条","c":"（書面による議決権の行使）","u":0},{"k":"312","t":"第三百十二条","c":"（電磁的方法による議決権の行使）","u":0},{"k":"313","t":"第三百十三条","c":"（議決権の不統一行使）","u":0},{"k":"314","t":"第三百十四条","c":"（取締役等の説明義務）","u":0},{"k":"315","t":"第三百十五条","c":"（議長の権限）","u":0},{"k":"316","t":"第三百十六条","c":"（株主総会に提出された資料等の調査）","u":0},{"k":"317","t":"第三百十七条","c":"（延期又は続行の決議）","u":0},{"k":"318","t":"第三百十八条","c":"（議事録）","u":0},{"k":"319","t":"第三百十九条","c":"（株主総会の決議の省略）","u":1},{"k":"320","t":"第三百二十条","c":"（株主総会への報告の省略）","u":0},{"k":"321","t":"第三百二十一条","c":"（種類株主総会の権限）","u":0},{"k":"322","t":"第三百二十二条","c":"（ある種類の種類株主に損害を及ぼすおそれがある場合の種類株主総会）","u":0},{"k":"323","t":"第三百二十三条","c":"（種類株主総会の決議を必要とする旨の定めがある場合）","u":0},{"k":"324","t":"第三百二十四条","c":"（種類株主総会の決議）","u":0},{"k":"325","t":"第三百二十五条","c":"（株主総会に関する規定の準用）","u":0},{"k":"325_2","t":"第三百二十五条の二","c":"（電子提供措置をとる旨の定款の定め）","u":0},{"k":"325_3","t":"第三百二十五条の三","c":"（電子提供措置）","u":0},{"k":"325_4","t":"第三百二十五条の四","c":"（株主総会の招集の通知等の特則）","u":0},{"k":"325_5","t":"第三百二十五条の五","c":"（書面交付請求）","u":0},{"k":"325_6","t":"第三百二十五条の六","c":"（電子提供措置の中断）","u":0},{"k":"325_7","t":"第三百二十五条の七","c":"（株主総会に関する規定の準用）","u":0},{"k":"326","t":"第三百二十六条","c":"（株主総会以外の機関の設置）","u":0},{"k":"327","t":"第三百二十七条","c":"（取締役会等の設置義務等）","u":1},{"k":"327_2","t":"第三百二十七条の二","c":"（社外取締役の設置義務）","u":0},{"k":"328","t":"第三百二十八条","c":"（大会社における監査役会等の設置義務）","u":0},{"k":"329","t":"第三百二十九条","c":"（選任）","u":0},{"k":"330","t":"第三百三十条","c":"（株式会社と役員等との関係）","u":0},{"k":"331","t":"第三百三十一条","c":"（取締役の資格等）","u":0},{"k":"331_2","t":"第三百三十一条の二","c":"","u":0},{"k":"332","t":"第三百三十二条","c":"（取締役の任期）","u":0},{"k":"333","t":"第三百三十三条","c":"（会計参与の資格等）","u":0},{"k":"334","t":"第三百三十四条","c":"（会計参与の任期）","u":0},{"k":"335","t":"第三百三十五条","c":"（監査役の資格等）","u":0},{"k":"336","t":"第三百三十六条","c":"（監査役の任期）","u":0},{"k":"337","t":"第三百三十七条","c":"（会計監査人の資格等）","u":0},{"k":"338","t":"第三百三十八条","c":"（会計監査人の任期）","u":0},{"k":"339","t":"第三百三十九条","c":"（解任）","u":0},{"k":"340","t":"第三百四十条","c":"（監査役等による会計監査人の解任）","u":0},{"k":"341","t":"第三百四十一条","c":"（役員の選任及び解任の株主総会の決議）","u":1},{"k":"342","t":"第三百四十二条","c":"（累積投票による取締役の選任）","u":0},{"k":"342_2","t":"第三百四十二条の二","c":"（監査等委員である取締役等の選任等についての意見の陳述）","u":0},{"k":"343","t":"第三百四十三条","c":"（監査役の選任に関する監査役の同意等）","u":0},{"k":"344","t":"第三百四十四条","c":"（会計監査人の選任等に関する議案の内容の決定）","u":0},{"k":"344_2","t":"第三百四十四条の二","c":"（監査等委員である取締役の選任に関する監査等委員会の同意等）","u":0},{"k":"345","t":"第三百四十五条","c":"（会計参与等の選任等についての意見の陳述）","u":0},{"k":"346","t":"第三百四十六条","c":"（役員等に欠員を生じた場合の措置）","u":0},{"k":"347","t":"第三百四十七条","c":"（種類株主総会における取締役又は監査役の選任等）","u":0},{"k":"348","t":"第三百四十八条","c":"（業務の執行）","u":0},{"k":"348_2","t":"第三百四十八条の二","c":"（業務の執行の社外取締役への委託）","u":0},{"k":"349","t":"第三百四十九条","c":"（株式会社の代表）","u":0},{"k":"350","t":"第三百五十条","c":"（代表者の行為についての損害賠償責任）","u":0},{"k":"351","t":"第三百五十一条","c":"（代表取締役に欠員を生じた場合の措置）","u":0},{"k":"352","t":"第三百五十二条","c":"（取締役の職務を代行する者の権限）","u":0},{"k":"353","t":"第三百五十三条","c":"（株式会社と取締役との間の訴えにおける会社の代表）","u":0},{"k":"354","t":"第三百五十四条","c":"（表見代表取締役）","u":0},{"k":"355","t":"第三百五十五条","c":"（忠実義務）","u":0},{"k":"356","t":"第三百五十六条","c":"（競業及び利益相反取引の制限）","u":0},{"k":"357","t":"第三百五十七条","c":"（取締役の報告義務）","u":0},{"k":"358","t":"第三百五十八条","c":"（業務の執行に関する検査役の選任）","u":0},{"k":"359","t":"第三百五十九条","c":"（裁判所による株主総会招集等の決定）","u":0},{"k":"360","t":"第三百六十条","c":"（株主による取締役の行為の差止め）","u":0},{"k":"361","t":"第三百六十一条","c":"（取締役の報酬等）","u":0},{"k":"362","t":"第三百六十二条","c":"（取締役会の権限等）","u":0},{"k":"363","t":"第三百六十三条","c":"（取締役会設置会社の取締役の権限）","u":0},{"k":"364","t":"第三百六十四条","c":"（取締役会設置会社と取締役との間の訴えにおける会社の代表）","u":0},{"k":"365","t":"第三百六十五条","c":"（競業及び取締役会設置会社との取引等の制限）","u":0},{"k":"366","t":"第三百六十六条","c":"（招集権者）","u":0},{"k":"367","t":"第三百六十七条","c":"（株主による招集の請求）","u":0},{"k":"368","t":"第三百六十八条","c":"（招集手続）","u":0},{"k":"369","t":"第三百六十九条","c":"（取締役会の決議）","u":0},{"k":"370","t":"第三百七十条","c":"（取締役会の決議の省略）","u":0},{"k":"371","t":"第三百七十一条","c":"（議事録等）","u":0},{"k":"372","t":"第三百七十二条","c":"（取締役会への報告の省略）","u":0},{"k":"373","t":"第三百七十三条","c":"（特別取締役による取締役会の決議）","u":0},{"k":"374","t":"第三百七十四条","c":"（会計参与の権限）","u":0},{"k":"375","t":"第三百七十五条","c":"（会計参与の報告義務）","u":0},{"k":"376","t":"第三百七十六条","c":"（取締役会への出席）","u":0},{"k":"377","t":"第三百七十七条","c":"（株主総会における意見の陳述）","u":0},{"k":"378","t":"第三百七十八条","c":"（会計参与による計算書類等の備置き等）","u":0},{"k":"379","t":"第三百七十九条","c":"（会計参与の報酬等）","u":0},{"k":"380","t":"第三百八十条","c":"（費用等の請求）","u":0},{"k":"381","t":"第三百八十一条","c":"（監査役の権限）","u":0},{"k":"382","t":"第三百八十二条","c":"（取締役への報告義務）","u":0},{"k":"383","t":"第三百八十三条","c":"（取締役会への出席義務等）","u":0},{"k":"384","t":"第三百八十四条","c":"（株主総会に対する報告義務）","u":0},{"k":"385","t":"第三百八十五条","c":"（監査役による取締役の行為の差止め）","u":0},{"k":"386","t":"第三百八十六条","c":"（監査役設置会社と取締役との間の訴えにおける会社の代表等）","u":0},{"k":"387","t":"第三百八十七条","c":"（監査役の報酬等）","u":0},{"k":"388","t":"第三百八十八条","c":"（費用等の請求）","u":0},{"k":"389","t":"第三百八十九条","c":"（定款の定めによる監査範囲の限定）","u":0},{"k":"390","t":"第三百九十条","c":"","u":0},{"k":"391","t":"第三百九十一条","c":"（招集権者）","u":0},{"k":"392","t":"第三百九十二条","c":"（招集手続）","u":0},{"k":"393","t":"第三百九十三条","c":"（監査役会の決議）","u":0},{"k":"394","t":"第三百九十四条","c":"（議事録）","u":0},{"k":"395","t":"第三百九十五条","c":"（監査役会への報告の省略）","u":0},{"k":"396","t":"第三百九十六条","c":"（会計監査人の権限等）","u":0},{"k":"397","t":"第三百九十七条","c":"（監査役に対する報告）","u":0},{"k":"398","t":"第三百九十八条","c":"（定時株主総会における会計監査人の意見の陳述）","u":0},{"k":"399","t":"第三百九十九条","c":"（会計監査人の報酬等の決定に関する監査役の関与）","u":0},{"k":"399_2","t":"第三百九十九条の二","c":"（監査等委員会の権限等）","u":0},{"k":"399_3","t":"第三百九十九条の三","c":"（監査等委員会による調査）","u":0},{"k":"399_4","t":"第三百九十九条の四","c":"（取締役会への報告義務）","u":0},{"k":"399_5","t":"第三百九十九条の五","c":"（株主総会に対する報告義務）","u":0},{"k":"399_6","t":"第三百九十九条の六","c":"（監査等委員による取締役の行為の差止め）","u":0},{"k":"399_7","t":"第三百九十九条の七","c":"（監査等委員会設置会社と取締役との間の訴えにおける会社の代表等）","u":0},{"k":"399_8","t":"第三百九十九条の八","c":"（招集権者）","u":0},{"k":"399_9","t":"第三百九十九条の九","c":"（招集手続等）","u":0},{"k":"399_10","t":"第三百九十九条の十","c":"（監査等委員会の決議）","u":0},{"k":"399_11","t":"第三百九十九条の十一","c":"（議事録）","u":0},{"k":"399_12","t":"第三百九十九条の十二","c":"（監査等委員会への報告の省略）","u":0},{"k":"399_13","t":"第三百九十九条の十三","c":"（監査等委員会設置会社の取締役会の権限）","u":0},{"k":"399_14","t":"第三百九十九条の十四","c":"（監査等委員会による取締役会の招集）","u":0},{"k":"400","t":"第四百条","c":"（委員の選定等）","u":0},{"k":"401","t":"第四百一条","c":"（委員の解職等）","u":0},{"k":"402","t":"第四百二条","c":"（執行役の選任等）","u":0},{"k":"403","t":"第四百三条","c":"（執行役の解任等）","u":0},{"k":"404","t":"第四百四条","c":"（指名委員会等の権限等）","u":0},{"k":"405","t":"第四百五条","c":"（監査委員会による調査）","u":0},{"k":"406","t":"第四百六条","c":"（取締役会への報告義務）","u":0},{"k":"407","t":"第四百七条","c":"（監査委員による執行役等の行為の差止め）","u":0},{"k":"408","t":"第四百八条","c":"（指名委員会等設置会社と執行役又は取締役との間の訴えにおける会社の代表等）","u":0},{"k":"409","t":"第四百九条","c":"（報酬委員会による報酬の決定の方法等）","u":0},{"k":"410","t":"第四百十条","c":"（招集権者）","u":0},{"k":"411","t":"第四百十一条","c":"（招集手続等）","u":0},{"k":"412","t":"第四百十二条","c":"（指名委員会等の決議）","u":0},{"k":"413","t":"第四百十三条","c":"（議事録）","u":0},{"k":"414","t":"第四百十四条","c":"（指名委員会等への報告の省略）","u":0},{"k":"415","t":"第四百十五条","c":"（指名委員会等設置会社の取締役の権限）","u":0},{"k":"416","t":"第四百十六条","c":"（指名委員会等設置会社の取締役会の権限）","u":0},{"k":"417","t":"第四百十七条","c":"（指名委員会等設置会社の取締役会の運営）","u":0},{"k":"418","t":"第四百十八条","c":"（執行役の権限）","u":0},{"k":"419","t":"第四百十九条","c":"（執行役の監査委員に対する報告義務等）","u":0},{"k":"420","t":"第四百二十条","c":"（代表執行役）","u":0},{"k":"421","t":"第四百二十一条","c":"（表見代表執行役）","u":0},{"k":"422","t":"第四百二十二条","c":"（株主による執行役の行為の差止め）","u":0},{"k":"423","t":"第四百二十三条","c":"（役員等の株式会社に対する損害賠償責任）","u":0},{"k":"424","t":"第四百二十四条","c":"（株式会社に対する損害賠償責任の免除）","u":0},{"k":"425","t":"第四百二十五条","c":"（責任の一部免除）","u":0},{"k":"426","t":"第四百二十六条","c":"（取締役等による免除に関する定款の定め）","u":0},{"k":"427","t":"第四百二十七条","c":"（責任限定契約）","u":0},{"k":"428","t":"第四百二十八条","c":"（取締役が自己のためにした取引に関する特則）","u":0},{"k":"429","t":"第四百二十九条","c":"（役員等の第三者に対する損害賠償責任）","u":0},{"k":"430","t":"第四百三十条","c":"（役員等の連帯責任）","u":0},{"k":"430_2","t":"第四百三十条の二","c":"（補償契約）","u":0},{"k":"430_3","t":"第四百三十条の三","c":"（役員等のために締結される保険契約）","u":0}]},{"t":"第二編　株式会社 第五章　計算等","a":[{"k":"431","t":"第四百三十一条","c":"","u":0},{"k":"432","t":"第四百三十二条","c":"（会計帳簿の作成及び保存）","u":0},{"k":"433","t":"第四百三十三条","c":"（会計帳簿の閲覧等の請求）","u":0},{"k":"434","t":"第四百三十四条","c":"（会計帳簿の提出命令）","u":0},{"k":"435","t":"第四百三十五条","c":"（計算書類等の作成及び保存）","u":0},{"k":"436","t":"第四百三十六条","c":"（計算書類等の監査等）","u":0},{"k":"437","t":"第四百三十七条","c":"（計算書類等の株主への提供）","u":0},{"k":"438","t":"第四百三十八条","c":"（計算書類等の定時株主総会への提出等）","u":0},{"k":"439","t":"第四百三十九条","c":"（会計監査人設置会社の特則）","u":0},{"k":"440","t":"第四百四十条","c":"（計算書類の公告）","u":0},{"k":"441","t":"第四百四十一条","c":"（臨時計算書類）","u":0},{"k":"442","t":"第四百四十二条","c":"（計算書類等の備置き及び閲覧等）","u":0},{"k":"443","t":"第四百四十三条","c":"（計算書類等の提出命令）","u":0},{"k":"444","t":"第四百四十四条","c":"","u":0},{"k":"445","t":"第四百四十五条","c":"（資本金の額及び準備金の額）","u":0},{"k":"446","t":"第四百四十六条","c":"（剰余金の額）","u":0},{"k":"447","t":"第四百四十七条","c":"（資本金の額の減少）","u":0},{"k":"448","t":"第四百四十八条","c":"（準備金の額の減少）","u":0},{"k":"449","t":"第四百四十九条","c":"（債権者の異議）","u":0},{"k":"450","t":"第四百五十条","c":"（資本金の額の増加）","u":0},{"k":"451","t":"第四百五十一条","c":"（準備金の額の増加）","u":0},{"k":"452","t":"第四百五十二条","c":"","u":0},{"k":"453","t":"第四百五十三条","c":"（株主に対する剰余金の配当）","u":0},{"k":"454","t":"第四百五十四条","c":"（剰余金の配当に関する事項の決定）","u":0},{"k":"455","t":"第四百五十五条","c":"（金銭分配請求権の行使）","u":0},{"k":"456","t":"第四百五十六条","c":"（基準株式数を定めた場合の処理）","u":0},{"k":"457","t":"第四百五十七条","c":"（配当財産の交付の方法等）","u":0},{"k":"458","t":"第四百五十八条","c":"（適用除外）","u":0},{"k":"459","t":"第四百五十九条","c":"（剰余金の配当等を取締役会が決定する旨の定款の定め）","u":0},{"k":"460","t":"第四百六十条","c":"（株主の権利の制限）","u":0},{"k":"461","t":"第四百六十一条","c":"（配当等の制限）","u":0},{"k":"462","t":"第四百六十二条","c":"（剰余金の配当等に関する責任）","u":0},{"k":"463","t":"第四百六十三条","c":"（株主に対する求償権の制限等）","u":0},{"k":"464","t":"第四百六十四条","c":"（買取請求に応じて株式を取得した場合の責任）","u":0},{"k":"465","t":"第四百六十五条","c":"（欠損が生じた場合の責任）","u":0}]},{"t":"第二編　株式会社 第六章　定款の変更","a":[{"k":"466","t":"第四百六十六条","c":"","u":0}]},{"t":"第二編　株式会社 第七章　事業の譲渡等","a":[{"k":"467","t":"第四百六十七条","c":"（事業譲渡等の承認等）","u":0},{"k":"468","t":"第四百六十八条","c":"（事業譲渡等の承認を要しない場合）","u":0},{"k":"469","t":"第四百六十九条","c":"（反対株主の株式買取請求）","u":0},{"k":"470","t":"第四百七十条","c":"（株式の価格の決定等）","u":0}]},{"t":"第二編　株式会社 第八章　解散","a":[{"k":"471","t":"第四百七十一条","c":"（解散の事由）","u":0},{"k":"472","t":"第四百七十二条","c":"（休眠会社のみなし解散）","u":0},{"k":"473","t":"第四百七十三条","c":"（株式会社の継続）","u":0},{"k":"474","t":"第四百七十四条","c":"（解散した株式会社の合併等の制限）","u":0}]},{"t":"第二編　株式会社 第九章　清算","a":[{"k":"475","t":"第四百七十五条","c":"（清算の開始原因）","u":0},{"k":"476","t":"第四百七十六条","c":"（清算株式会社の能力）","u":0},{"k":"477","t":"第四百七十七条","c":"","u":0},{"k":"478","t":"第四百七十八条","c":"（清算人の就任）","u":0},{"k":"479","t":"第四百七十九条","c":"（清算人の解任）","u":0},{"k":"480","t":"第四百八十条","c":"（監査役の退任）","u":0},{"k":"481","t":"第四百八十一条","c":"（清算人の職務）","u":0},{"k":"482","t":"第四百八十二条","c":"（業務の執行）","u":0},{"k":"483","t":"第四百八十三条","c":"（清算株式会社の代表）","u":0},{"k":"484","t":"第四百八十四条","c":"（清算株式会社についての破産手続の開始）","u":0},{"k":"485","t":"第四百八十五条","c":"（裁判所の選任する清算人の報酬）","u":0},{"k":"486","t":"第四百八十六条","c":"（清算人の清算株式会社に対する損害賠償責任）","u":0},{"k":"487","t":"第四百八十七条","c":"（清算人の第三者に対する損害賠償責任）","u":0},{"k":"488","t":"第四百八十八条","c":"（清算人及び監査役の連帯責任）","u":0},{"k":"489","t":"第四百八十九条","c":"（清算人会の権限等）","u":0},{"k":"490","t":"第四百九十条","c":"（清算人会の運営）","u":0},{"k":"491","t":"第四百九十一条","c":"","u":0},{"k":"492","t":"第四百九十二条","c":"（財産目録等の作成等）","u":0},{"k":"493","t":"第四百九十三条","c":"（財産目録等の提出命令）","u":0},{"k":"494","t":"第四百九十四条","c":"（貸借対照表等の作成及び保存）","u":0},{"k":"495","t":"第四百九十五条","c":"（貸借対照表等の監査等）","u":0},{"k":"496","t":"第四百九十六条","c":"（貸借対照表等の備置き及び閲覧等）","u":0},{"k":"497","t":"第四百九十七条","c":"（貸借対照表等の定時株主総会への提出等）","u":0},{"k":"498","t":"第四百九十八条","c":"（貸借対照表等の提出命令）","u":0},{"k":"499","t":"第四百九十九条","c":"（債権者に対する公告等）","u":0},{"k":"500","t":"第五百条","c":"（債務の弁済の制限）","u":0},{"k":"501","t":"第五百一条","c":"（条件付債権等に係る債務の弁済）","u":0},{"k":"502","t":"第五百二条","c":"（債務の弁済前における残余財産の分配の制限）","u":0},{"k":"503","t":"第五百三条","c":"（清算からの除斥）","u":0},{"k":"504","t":"第五百四条","c":"（残余財産の分配に関する事項の決定）","u":0},{"k":"505","t":"第五百五条","c":"（残余財産が金銭以外の財産である場合）","u":0},{"k":"506","t":"第五百六条","c":"（基準株式数を定めた場合の処理）","u":0},{"k":"507","t":"第五百七条","c":"","u":0},{"k":"508","t":"第五百八条","c":"","u":0},{"k":"509","t":"第五百九条","c":"","u":0},{"k":"510","t":"第五百十条","c":"（特別清算開始の原因）","u":0},{"k":"511","t":"第五百十一条","c":"（特別清算開始の申立て）","u":0},{"k":"512","t":"第五百十二条","c":"（他の手続の中止命令等）","u":0},{"k":"513","t":"第五百十三条","c":"（特別清算開始の申立ての取下げの制限）","u":0},{"k":"514","t":"第五百十四条","c":"（特別清算開始の命令）","u":0},{"k":"515","t":"第五百十五条","c":"（他の手続の中止等）","u":0},{"k":"516","t":"第五百十六条","c":"（担保権の実行の手続等の中止命令）","u":0},{"k":"517","t":"第五百十七条","c":"（相殺の禁止）","u":0},{"k":"518","t":"第五百十八条","c":"","u":0},{"k":"518_2","t":"第五百十八条の二","c":"（共助対象外国租税債権者の手続参加）","u":0},{"k":"519","t":"第五百十九条","c":"（裁判所による監督）","u":0},{"k":"520","t":"第五百二十条","c":"（裁判所による調査）","u":0},{"k":"521","t":"第五百二十一条","c":"（裁判所への財産目録等の提出）","u":0},{"k":"522","t":"第五百二十二条","c":"（調査命令）","u":0},{"k":"523","t":"第五百二十三条","c":"（清算人の公平誠実義務）","u":0},{"k":"524","t":"第五百二十四条","c":"（清算人の解任等）","u":0},{"k":"525","t":"第五百二十五条","c":"（清算人代理）","u":0},{"k":"526","t":"第五百二十六条","c":"（清算人の報酬等）","u":0},{"k":"527","t":"第五百二十七条","c":"（監督委員の選任等）","u":0},{"k":"528","t":"第五百二十八条","c":"（監督委員に対する監督等）","u":0},{"k":"529","t":"第五百二十九条","c":"（二人以上の監督委員の職務執行）","u":0},{"k":"530","t":"第五百三十条","c":"（監督委員による調査等）","u":0},{"k":"531","t":"第五百三十一条","c":"（監督委員の注意義務）","u":0},{"k":"532","t":"第五百三十二条","c":"（監督委員の報酬等）","u":0},{"k":"533","t":"第五百三十三条","c":"（調査委員の選任等）","u":0},{"k":"534","t":"第五百三十四条","c":"（監督委員に関する規定の準用）","u":0},{"k":"535","t":"第五百三十五条","c":"（清算株式会社の行為の制限）","u":0},{"k":"536","t":"第五百三十六条","c":"（事業の譲渡の制限等）","u":0},{"k":"537","t":"第五百三十七条","c":"（債務の弁済の制限）","u":0},{"k":"538","t":"第五百三十八条","c":"（換価の方法）","u":0},{"k":"539","t":"第五百三十九条","c":"（担保権者が処分をすべき期間の指定）","u":0},{"k":"540","t":"第五百四十条","c":"（清算株式会社の財産に関する保全処分）","u":0},{"k":"541","t":"第五百四十一条","c":"（株主名簿の記載等の禁止）","u":0},{"k":"542","t":"第五百四十二条","c":"（役員等の財産に対する保全処分）","u":0},{"k":"543","t":"第五百四十三条","c":"（役員等の責任の免除の禁止）","u":0},{"k":"544","t":"第五百四十四条","c":"（役員等の責任の免除の取消し）","u":0},{"k":"545","t":"第五百四十五条","c":"（役員等責任査定決定）","u":0},{"k":"546","t":"第五百四十六条","c":"（債権者集会の招集）","u":0},{"k":"547","t":"第五百四十七条","c":"（債権者による招集の請求）","u":0},{"k":"548","t":"第五百四十八条","c":"（債権者集会の招集等の決定）","u":0},{"k":"549","t":"第五百四十九条","c":"（債権者集会の招集の通知）","u":0},{"k":"550","t":"第五百五十条","c":"（債権者集会参考書類及び議決権行使書面の交付等）","u":0},{"k":"551","t":"第五百五十一条","c":"","u":0},{"k":"552","t":"第五百五十二条","c":"（債権者集会の指揮等）","u":0},{"k":"553","t":"第五百五十三条","c":"（異議を述べられた議決権の取扱い）","u":0},{"k":"554","t":"第五百五十四条","c":"（債権者集会の決議）","u":0},{"k":"555","t":"第五百五十五条","c":"（議決権の代理行使）","u":0},{"k":"556","t":"第五百五十六条","c":"（書面による議決権の行使）","u":0},{"k":"557","t":"第五百五十七条","c":"（電磁的方法による議決権の行使）","u":0},{"k":"558","t":"第五百五十八条","c":"（議決権の不統一行使）","u":0},{"k":"559","t":"第五百五十九条","c":"（担保権を有する債権者等の出席等）","u":0},{"k":"560","t":"第五百六十条","c":"（延期又は続行の決議）","u":0},{"k":"561","t":"第五百六十一条","c":"（議事録）","u":0},{"k":"562","t":"第五百六十二条","c":"（清算人の調査結果等の債権者集会に対する報告）","u":0},{"k":"563","t":"第五百六十三条","c":"（協定の申出）","u":0},{"k":"564","t":"第五百六十四条","c":"（協定の条項）","u":0},{"k":"565","t":"第五百六十五条","c":"（協定による権利の変更）","u":0},{"k":"566","t":"第五百六十六条","c":"（担保権を有する債権者等の参加）","u":0},{"k":"567","t":"第五百六十七条","c":"（協定の可決の要件）","u":0},{"k":"568","t":"第五百六十八条","c":"（協定の認可の申立て）","u":0},{"k":"569","t":"第五百六十九条","c":"（協定の認可又は不認可の決定）","u":0},{"k":"570","t":"第五百七十条","c":"（協定の効力発生の時期）","u":0},{"k":"571","t":"第五百七十一条","c":"（協定の効力範囲）","u":0},{"k":"572","t":"第五百七十二条","c":"（協定の内容の変更）","u":0},{"k":"573","t":"第五百七十三条","c":"（特別清算終結の決定）","u":0},{"k":"574","t":"第五百七十四条","c":"（破産手続開始の決定）","u":0}]},{"t":"第三編　持分会社 第一章　設立","a":[{"k":"575","t":"第五百七十五条","c":"（定款の作成）","u":0},{"k":"576","t":"第五百七十六条","c":"（定款の記載又は記録事項）","u":0},{"k":"577","t":"第五百七十七条","c":"","u":0},{"k":"578","t":"第五百七十八条","c":"（合同会社の設立時の出資の履行）","u":0},{"k":"579","t":"第五百七十九条","c":"（持分会社の成立）","u":0}]},{"t":"第三編　持分会社 第二章　社員","a":[{"k":"580","t":"第五百八十条","c":"（社員の責任）","u":0},{"k":"581","t":"第五百八十一条","c":"（社員の抗弁）","u":0},{"k":"582","t":"第五百八十二条","c":"（社員の出資に係る責任）","u":0},{"k":"583","t":"第五百八十三条","c":"（社員の責任を変更した場合の特則）","u":0},{"k":"584","t":"第五百八十四条","c":"（無限責任社員となることを許された未成年者の行為能力）","u":0},{"k":"585","t":"第五百八十五条","c":"（持分の譲渡）","u":0},{"k":"586","t":"第五百八十六条","c":"（持分の全部の譲渡をした社員の責任）","u":0},{"k":"587","t":"第五百八十七条","c":"","u":0},{"k":"588","t":"第五百八十八条","c":"（無限責任社員であると誤認させる行為等をした有限責任社員の責任）","u":0},{"k":"589","t":"第五百八十九条","c":"（社員であると誤認させる行為をした者の責任）","u":0}]},{"t":"第三編　持分会社 第三章　管理","a":[{"k":"590","t":"第五百九十条","c":"（業務の執行）","u":0},{"k":"591","t":"第五百九十一条","c":"（業務を執行する社員を定款で定めた場合）","u":0},{"k":"592","t":"第五百九十二条","c":"（社員の持分会社の業務及び財産状況に関する調査）","u":0},{"k":"593","t":"第五百九十三条","c":"（業務を執行する社員と持分会社との関係）","u":0},{"k":"594","t":"第五百九十四条","c":"（競業の禁止）","u":0},{"k":"595","t":"第五百九十五条","c":"（利益相反取引の制限）","u":0},{"k":"596","t":"第五百九十六条","c":"（業務を執行する社員の持分会社に対する損害賠償責任）","u":0},{"k":"597","t":"第五百九十七条","c":"（業務を執行する有限責任社員の第三者に対する損害賠償責任）","u":0},{"k":"598","t":"第五百九十八条","c":"（法人が業務を執行する社員である場合の特則）","u":0},{"k":"599","t":"第五百九十九条","c":"（持分会社の代表）","u":0},{"k":"600","t":"第六百条","c":"（持分会社を代表する社員等の行為についての損害賠償責任）","u":0},{"k":"601","t":"第六百一条","c":"（持分会社と社員との間の訴えにおける会社の代表）","u":0},{"k":"602","t":"第六百二条","c":"","u":0},{"k":"603","t":"第六百三条","c":"","u":0}]},{"t":"第三編　持分会社 第四章　社員の加入及び退社","a":[{"k":"604","t":"第六百四条","c":"（社員の加入）","u":0},{"k":"605","t":"第六百五条","c":"（加入した社員の責任）","u":0},{"k":"606","t":"第六百六条","c":"（任意退社）","u":0},{"k":"607","t":"第六百七条","c":"（法定退社）","u":0},{"k":"608","t":"第六百八条","c":"（相続及び合併の場合の特則）","u":0},{"k":"609","t":"第六百九条","c":"（持分の差押債権者による退社）","u":0},{"k":"610","t":"第六百十条","c":"（退社に伴う定款のみなし変更）","u":0},{"k":"611","t":"第六百十一条","c":"（退社に伴う持分の払戻し）","u":0},{"k":"612","t":"第六百十二条","c":"（退社した社員の責任）","u":0},{"k":"613","t":"第六百十三条","c":"（商号変更の請求）","u":0}]},{"t":"第三編　持分会社 第五章　計算等","a":[{"k":"614","t":"第六百十四条","c":"","u":0},{"k":"615","t":"第六百十五条","c":"（会計帳簿の作成及び保存）","u":0},{"k":"616","t":"第六百十六条","c":"（会計帳簿の提出命令）","u":0},{"k":"617","t":"第六百十七条","c":"（計算書類の作成及び保存）","u":0},{"k":"618","t":"第六百十八条","c":"（計算書類の閲覧等）","u":0},{"k":"619","t":"第六百十九条","c":"（計算書類の提出命令）","u":0},{"k":"620","t":"第六百二十条","c":"","u":0},{"k":"621","t":"第六百二十一条","c":"（利益の配当）","u":0},{"k":"622","t":"第六百二十二条","c":"（社員の損益分配の割合）","u":0},{"k":"623","t":"第六百二十三条","c":"（有限責任社員の利益の配当に関する責任）","u":0},{"k":"624","t":"第六百二十四条","c":"","u":0},{"k":"625","t":"第六百二十五条","c":"","u":0},{"k":"626","t":"第六百二十六条","c":"（出資の払戻し又は持分の払戻しを行う場合の資本金の額の減少）","u":0},{"k":"627","t":"第六百二十七条","c":"（債権者の異議）","u":0},{"k":"628","t":"第六百二十八条","c":"（利益の配当の制限）","u":0},{"k":"629","t":"第六百二十九条","c":"（利益の配当に関する責任）","u":0},{"k":"630","t":"第六百三十条","c":"（社員に対する求償権の制限等）","u":0},{"k":"631","t":"第六百三十一条","c":"（欠損が生じた場合の責任）","u":0},{"k":"632","t":"第六百三十二条","c":"（出資の払戻しの制限）","u":0},{"k":"633","t":"第六百三十三条","c":"（出資の払戻しに関する社員の責任）","u":0},{"k":"634","t":"第六百三十四条","c":"（社員に対する求償権の制限等）","u":0},{"k":"635","t":"第六百三十五条","c":"（債権者の異議）","u":0},{"k":"636","t":"第六百三十六条","c":"（業務を執行する社員の責任）","u":0}]},{"t":"第三編　持分会社 第六章　定款の変更","a":[{"k":"637","t":"第六百三十七条","c":"（定款の変更）","u":0},{"k":"638","t":"第六百三十八条","c":"（定款の変更による持分会社の種類の変更）","u":0},{"k":"639","t":"第六百三十九条","c":"（合資会社の社員の退社による定款のみなし変更）","u":0},{"k":"640","t":"第六百四十条","c":"（定款の変更時の出資の履行）","u":0}]},{"t":"第三編　持分会社 第七章　解散","a":[{"k":"641","t":"第六百四十一条","c":"（解散の事由）","u":0},{"k":"642","t":"第六百四十二条","c":"（持分会社の継続）","u":0},{"k":"643","t":"第六百四十三条","c":"（解散した持分会社の合併等の制限）","u":0}]},{"t":"第三編　持分会社 第八章　清算","a":[{"k":"644","t":"第六百四十四条","c":"（清算の開始原因）","u":0},{"k":"645","t":"第六百四十五条","c":"（清算持分会社の能力）","u":0},{"k":"646","t":"第六百四十六条","c":"（清算人の設置）","u":0},{"k":"647","t":"第六百四十七条","c":"（清算人の就任）","u":0},{"k":"648","t":"第六百四十八条","c":"（清算人の解任）","u":0},{"k":"649","t":"第六百四十九条","c":"（清算人の職務）","u":0},{"k":"650","t":"第六百五十条","c":"（業務の執行）","u":0},{"k":"651","t":"第六百五十一条","c":"（清算人と清算持分会社との関係）","u":0},{"k":"652","t":"第六百五十二条","c":"（清算人の清算持分会社に対する損害賠償責任）","u":0},{"k":"653","t":"第六百五十三条","c":"（清算人の第三者に対する損害賠償責任）","u":0},{"k":"654","t":"第六百五十四条","c":"（法人が清算人である場合の特則）","u":0},{"k":"655","t":"第六百五十五条","c":"（清算持分会社の代表）","u":0},{"k":"656","t":"第六百五十六条","c":"（清算持分会社についての破産手続の開始）","u":0},{"k":"657","t":"第六百五十七条","c":"（裁判所の選任する清算人の報酬）","u":0},{"k":"658","t":"第六百五十八条","c":"（財産目録等の作成等）","u":0},{"k":"659","t":"第六百五十九条","c":"（財産目録等の提出命令）","u":0},{"k":"660","t":"第六百六十条","c":"（債権者に対する公告等）","u":0},{"k":"661","t":"第六百六十一条","c":"（債務の弁済の制限）","u":0},{"k":"662","t":"第六百六十二条","c":"（条件付債権等に係る債務の弁済）","u":0},{"k":"663","t":"第六百六十三条","c":"（出資の履行の請求）","u":0},{"k":"664","t":"第六百六十四条","c":"（債務の弁済前における残余財産の分配の制限）","u":0},{"k":"665","t":"第六百六十五条","c":"（清算からの除斥）","u":0},{"k":"666","t":"第六百六十六条","c":"（残余財産の分配の割合）","u":0},{"k":"667","t":"第六百六十七条","c":"","u":0},{"k":"668","t":"第六百六十八条","c":"（財産の処分の方法）","u":0},{"k":"669","t":"第六百六十九条","c":"（財産目録等の作成）","u":0},{"k":"670","t":"第六百七十条","c":"（債権者の異議）","u":0},{"k":"671","t":"第六百七十一条","c":"（持分の差押債権者の同意等）","u":0},{"k":"672","t":"第六百七十二条","c":"","u":0},{"k":"673","t":"第六百七十三条","c":"","u":0},{"k":"674","t":"第六百七十四条","c":"（適用除外）","u":0},{"k":"675","t":"第六百七十五条","c":"（相続及び合併による退社の特則）","u":0}]},{"t":"第四編　社債 第一章　総則","a":[{"k":"676","t":"第六百七十六条","c":"（募集社債に関する事項の決定）","u":0},{"k":"677","t":"第六百七十七条","c":"（募集社債の申込み）","u":0},{"k":"678","t":"第六百七十八条","c":"（募集社債の割当て）","u":0},{"k":"679","t":"第六百七十九条","c":"（募集社債の申込み及び割当てに関する特則）","u":0},{"k":"680","t":"第六百八十条","c":"（募集社債の社債権者）","u":0},{"k":"681","t":"第六百八十一条","c":"（社債原簿）","u":0},{"k":"682","t":"第六百八十二条","c":"（社債原簿記載事項を記載した書面の交付等）","u":0},{"k":"683","t":"第六百八十三条","c":"（社債原簿管理人）","u":0},{"k":"684","t":"第六百八十四条","c":"（社債原簿の備置き及び閲覧等）","u":0},{"k":"685","t":"第六百八十五条","c":"（社債権者に対する通知等）","u":0},{"k":"686","t":"第六百八十六条","c":"（共有者による権利の行使）","u":0},{"k":"687","t":"第六百八十七条","c":"（社債券を発行する場合の社債の譲渡）","u":0},{"k":"688","t":"第六百八十八条","c":"（社債の譲渡の対抗要件）","u":0},{"k":"689","t":"第六百八十九条","c":"（権利の推定等）","u":0},{"k":"690","t":"第六百九十条","c":"（社債権者の請求によらない社債原簿記載事項の記載又は記録）","u":0},{"k":"691","t":"第六百九十一条","c":"（社債権者の請求による社債原簿記載事項の記載又は記録）","u":0},{"k":"692","t":"第六百九十二条","c":"（社債券を発行する場合の社債の質入れ）","u":0},{"k":"693","t":"第六百九十三条","c":"（社債の質入れの対抗要件）","u":0},{"k":"694","t":"第六百九十四条","c":"（質権に関する社債原簿の記載等）","u":0},{"k":"695","t":"第六百九十五条","c":"（質権に関する社債原簿の記載事項を記載した書面の交付等）","u":0},{"k":"695_2","t":"第六百九十五条の二","c":"（信託財産に属する社債についての対抗要件等）","u":0},{"k":"696","t":"第六百九十六条","c":"（社債券の発行）","u":0},{"k":"697","t":"第六百九十七条","c":"（社債券の記載事項）","u":0},{"k":"698","t":"第六百九十八条","c":"（記名式と無記名式との間の転換）","u":0},{"k":"699","t":"第六百九十九条","c":"（社債券の喪失）","u":0},{"k":"700","t":"第七百条","c":"（利札が欠けている場合における社債の償還）","u":0},{"k":"701","t":"第七百一条","c":"（社債の償還請求権等の消滅時効）","u":0}]},{"t":"第四編　社債 第二章　社債管理者","a":[{"k":"702","t":"第七百二条","c":"（社債管理者の設置）","u":0},{"k":"703","t":"第七百三条","c":"（社債管理者の資格）","u":0},{"k":"704","t":"第七百四条","c":"（社債管理者の義務）","u":0},{"k":"705","t":"第七百五条","c":"（社債管理者の権限等）","u":0},{"k":"706","t":"第七百六条","c":"","u":0},{"k":"707","t":"第七百七条","c":"（特別代理人の選任）","u":0},{"k":"708","t":"第七百八条","c":"（社債管理者等の行為の方式）","u":0},{"k":"709","t":"第七百九条","c":"（二以上の社債管理者がある場合の特則）","u":0},{"k":"710","t":"第七百十条","c":"（社債管理者の責任）","u":0},{"k":"711","t":"第七百十一条","c":"（社債管理者の辞任）","u":0},{"k":"712","t":"第七百十二条","c":"（社債管理者が辞任した場合の責任）","u":0},{"k":"713","t":"第七百十三条","c":"（社債管理者の解任）","u":0},{"k":"714","t":"第七百十四条","c":"（社債管理者の事務の承継）","u":0}]},{"t":"第四編　社債 第二章の二　社債管理補助者","a":[{"k":"714_2","t":"第七百十四条の二","c":"（社債管理補助者の設置）","u":0},{"k":"714_3","t":"第七百十四条の三","c":"（社債管理補助者の資格）","u":0},{"k":"714_4","t":"第七百十四条の四","c":"（社債管理補助者の権限等）","u":0},{"k":"714_5","t":"第七百十四条の五","c":"（二以上の社債管理補助者がある場合の特則）","u":0},{"k":"714_6","t":"第七百十四条の六","c":"（社債管理者等との関係）","u":0},{"k":"714_7","t":"第七百十四条の七","c":"（社債管理者に関する規定の準用）","u":0}]},{"t":"第四編　社債 第三章　社債権者集会","a":[{"k":"715","t":"第七百十五条","c":"（社債権者集会の構成）","u":0},{"k":"716","t":"第七百十六条","c":"（社債権者集会の権限）","u":0},{"k":"717","t":"第七百十七条","c":"（社債権者集会の招集）","u":0},{"k":"718","t":"第七百十八条","c":"（社債権者による招集の請求）","u":0},{"k":"719","t":"第七百十九条","c":"（社債権者集会の招集の決定）","u":0},{"k":"720","t":"第七百二十条","c":"（社債権者集会の招集の通知）","u":0},{"k":"721","t":"第七百二十一条","c":"（社債権者集会参考書類及び議決権行使書面の交付等）","u":0},{"k":"722","t":"第七百二十二条","c":"","u":0},{"k":"723","t":"第七百二十三条","c":"（議決権の額等）","u":0},{"k":"724","t":"第七百二十四条","c":"（社債権者集会の決議）","u":0},{"k":"725","t":"第七百二十五条","c":"（議決権の代理行使）","u":0},{"k":"726","t":"第七百二十六条","c":"（書面による議決権の行使）","u":0},{"k":"727","t":"第七百二十七条","c":"（電磁的方法による議決権の行使）","u":0},{"k":"728","t":"第七百二十八条","c":"（議決権の不統一行使）","u":0},{"k":"729","t":"第七百二十九条","c":"（社債発行会社の代表者の出席等）","u":0},{"k":"730","t":"第七百三十条","c":"（延期又は続行の決議）","u":0},{"k":"731","t":"第七百三十一条","c":"（議事録）","u":0},{"k":"732","t":"第七百三十二条","c":"（社債権者集会の決議の認可の申立て）","u":0},{"k":"733","t":"第七百三十三条","c":"（社債権者集会の決議の不認可）","u":0},{"k":"734","t":"第七百三十四条","c":"（社債権者集会の決議の効力）","u":0},{"k":"735","t":"第七百三十五条","c":"（社債権者集会の決議の認可又は不認可の決定の公告）","u":0},{"k":"735_2","t":"第七百三十五条の二","c":"（社債権者集会の決議の省略）","u":0},{"k":"736","t":"第七百三十六条","c":"（代表社債権者の選任等）","u":0},{"k":"737","t":"第七百三十七条","c":"（社債権者集会の決議の執行）","u":0},{"k":"738","t":"第七百三十八条","c":"（代表社債権者等の解任等）","u":0},{"k":"739","t":"第七百三十九条","c":"（社債の利息の支払等を怠ったことによる期限の利益の喪失）","u":0},{"k":"740","t":"第七百四十条","c":"（債権者の異議手続の特則）","u":0},{"k":"741","t":"第七百四十一条","c":"（社債管理者等の報酬等）","u":0},{"k":"742","t":"第七百四十二条","c":"（社債権者集会等の費用の負担）","u":0}]},{"t":"第五編　組織変更、合併、会社分割、株式交換、株式移転及び株式交付 第一章　組織変更","a":[{"k":"743","t":"第七百四十三条","c":"（組織変更計画の作成）","u":0},{"k":"744","t":"第七百四十四条","c":"（株式会社の組織変更計画）","u":0},{"k":"745","t":"第七百四十五条","c":"（株式会社の組織変更の効力の発生等）","u":0},{"k":"746","t":"第七百四十六条","c":"（持分会社の組織変更計画）","u":0},{"k":"747","t":"第七百四十七条","c":"（持分会社の組織変更の効力の発生等）","u":0}]},{"t":"第五編　組織変更、合併、会社分割、株式交換、株式移転及び株式交付 第二章　合併","a":[{"k":"748","t":"第七百四十八条","c":"（合併契約の締結）","u":0},{"k":"749","t":"第七百四十九条","c":"（株式会社が存続する吸収合併契約）","u":0},{"k":"750","t":"第七百五十条","c":"（株式会社が存続する吸収合併の効力の発生等）","u":0},{"k":"751","t":"第七百五十一条","c":"（持分会社が存続する吸収合併契約）","u":0},{"k":"752","t":"第七百五十二条","c":"（持分会社が存続する吸収合併の効力の発生等）","u":0},{"k":"753","t":"第七百五十三条","c":"（株式会社を設立する新設合併契約）","u":0},{"k":"754","t":"第七百五十四条","c":"（株式会社を設立する新設合併の効力の発生等）","u":0},{"k":"755","t":"第七百五十五条","c":"（持分会社を設立する新設合併契約）","u":0},{"k":"756","t":"第七百五十六条","c":"（持分会社を設立する新設合併の効力の発生等）","u":0}]},{"t":"第五編　組織変更、合併、会社分割、株式交換、株式移転及び株式交付 第三章　会社分割","a":[{"k":"757","t":"第七百五十七条","c":"（吸収分割契約の締結）","u":0},{"k":"758","t":"第七百五十八条","c":"（株式会社に権利義務を承継させる吸収分割契約）","u":0},{"k":"759","t":"第七百五十九条","c":"（株式会社に権利義務を承継させる吸収分割の効力の発生等）","u":0},{"k":"760","t":"第七百六十条","c":"（持分会社に権利義務を承継させる吸収分割契約）","u":0},{"k":"761","t":"第七百六十一条","c":"（持分会社に権利義務を承継させる吸収分割の効力の発生等）","u":0},{"k":"762","t":"第七百六十二条","c":"（新設分割計画の作成）","u":0},{"k":"763","t":"第七百六十三条","c":"（株式会社を設立する新設分割計画）","u":0},{"k":"764","t":"第七百六十四条","c":"（株式会社を設立する新設分割の効力の発生等）","u":0},{"k":"765","t":"第七百六十五条","c":"（持分会社を設立する新設分割計画）","u":0},{"k":"766","t":"第七百六十六条","c":"（持分会社を設立する新設分割の効力の発生等）","u":0}]},{"t":"第五編　組織変更、合併、会社分割、株式交換、株式移転及び株式交付 第四章　株式交換及び株式移転","a":[{"k":"767","t":"第七百六十七条","c":"（株式交換契約の締結）","u":0},{"k":"768","t":"第七百六十八条","c":"（株式会社に発行済株式を取得させる株式交換契約）","u":0},{"k":"769","t":"第七百六十九条","c":"（株式会社に発行済株式を取得させる株式交換の効力の発生等）","u":0},{"k":"770","t":"第七百七十条","c":"（合同会社に発行済株式を取得させる株式交換契約）","u":0},{"k":"771","t":"第七百七十一条","c":"（合同会社に発行済株式を取得させる株式交換の効力の発生等）","u":0},{"k":"772","t":"第七百七十二条","c":"（株式移転計画の作成）","u":0},{"k":"773","t":"第七百七十三条","c":"（株式移転計画）","u":0},{"k":"774","t":"第七百七十四条","c":"（株式移転の効力の発生等）","u":0}]},{"t":"第五編　組織変更、合併、会社分割、株式交換、株式移転及び株式交付 第四章の二　株式交付","a":[{"k":"774_2","t":"第七百七十四条の二","c":"（株式交付計画の作成）","u":0},{"k":"774_3","t":"第七百七十四条の三","c":"（株式交付計画）","u":0},{"k":"774_4","t":"第七百七十四条の四","c":"（株式交付子会社の株式の譲渡しの申込み）","u":0},{"k":"774_5","t":"第七百七十四条の五","c":"（株式交付親会社が譲り受ける株式交付子会社の株式の割当て）","u":0},{"k":"774_6","t":"第七百七十四条の六","c":"（株式交付子会社の株式の譲渡しの申込み及び株式交付親会社が譲り受ける株式交付子会社の株式の割当てに関する特則）","u":0},{"k":"774_7","t":"第七百七十四条の七","c":"（株式交付子会社の株式の譲渡し）","u":0},{"k":"774_8","t":"第七百七十四条の八","c":"（株式交付子会社の株式の譲渡しの無効又は取消しの制限）","u":0},{"k":"774_9","t":"第七百七十四条の九","c":"（株式交付子会社の株式の譲渡しに関する規定の準用）","u":0},{"k":"774_10","t":"第七百七十四条の十","c":"（申込みがあった株式交付子会社の株式の数が下限の数に満たない場合）","u":0},{"k":"774_11","t":"第七百七十四条の十一","c":"（株式交付の効力の発生等）","u":0}]},{"t":"第五編　組織変更、合併、会社分割、株式交換、株式移転及び株式交付 第五章　組織変更、合併、会社分割、株式交換、株式移転及び株式交付の手続","a":[{"k":"775","t":"第七百七十五条","c":"（組織変更計画に関する書面等の備置き及び閲覧等）","u":0},{"k":"776","t":"第七百七十六条","c":"（株式会社の組織変更計画の承認等）","u":0},{"k":"777","t":"第七百七十七条","c":"（新株予約権買取請求）","u":0},{"k":"778","t":"第七百七十八条","c":"（新株予約権の価格の決定等）","u":0},{"k":"779","t":"第七百七十九条","c":"（債権者の異議）","u":0},{"k":"780","t":"第七百八十条","c":"（組織変更の効力発生日の変更）","u":0},{"k":"781","t":"第七百八十一条","c":"","u":0},{"k":"782","t":"第七百八十二条","c":"（吸収合併契約等に関する書面等の備置き及び閲覧等）","u":0},{"k":"783","t":"第七百八十三条","c":"（吸収合併契約等の承認等）","u":0},{"k":"784","t":"第七百八十四条","c":"（吸収合併契約等の承認を要しない場合）","u":0},{"k":"784_2","t":"第七百八十四条の二","c":"（吸収合併等をやめることの請求）","u":0},{"k":"785","t":"第七百八十五条","c":"（反対株主の株式買取請求）","u":0},{"k":"786","t":"第七百八十六条","c":"（株式の価格の決定等）","u":0},{"k":"787","t":"第七百八十七条","c":"（新株予約権買取請求）","u":0},{"k":"788","t":"第七百八十八条","c":"（新株予約権の価格の決定等）","u":0},{"k":"789","t":"第七百八十九条","c":"（債権者の異議）","u":0},{"k":"790","t":"第七百九十条","c":"（吸収合併等の効力発生日の変更）","u":0},{"k":"791","t":"第七百九十一条","c":"（吸収分割又は株式交換に関する書面等の備置き及び閲覧等）","u":0},{"k":"792","t":"第七百九十二条","c":"（剰余金の配当等に関する特則）","u":0},{"k":"793","t":"第七百九十三条","c":"","u":0},{"k":"794","t":"第七百九十四条","c":"（吸収合併契約等に関する書面等の備置き及び閲覧等）","u":0},{"k":"795","t":"第七百九十五条","c":"（吸収合併契約等の承認等）","u":0},{"k":"796","t":"第七百九十六条","c":"（吸収合併契約等の承認を要しない場合等）","u":0},{"k":"796_2","t":"第七百九十六条の二","c":"（吸収合併等をやめることの請求）","u":0},{"k":"797","t":"第七百九十七条","c":"（反対株主の株式買取請求）","u":0},{"k":"798","t":"第七百九十八条","c":"（株式の価格の決定等）","u":0},{"k":"799","t":"第七百九十九条","c":"（債権者の異議）","u":0},{"k":"800","t":"第八百条","c":"（消滅会社等の株主等に対して交付する金銭等が存続株式会社等の親会社株式である場合の特則）","u":0},{"k":"801","t":"第八百一条","c":"（吸収合併等に関する書面等の備置き及び閲覧等）","u":0},{"k":"802","t":"第八百二条","c":"","u":0},{"k":"803","t":"第八百三条","c":"（新設合併契約等に関する書面等の備置き及び閲覧等）","u":0},{"k":"804","t":"第八百四条","c":"（新設合併契約等の承認）","u":0},{"k":"805","t":"第八百五条","c":"（新設分割計画の承認を要しない場合）","u":0},{"k":"805_2","t":"第八百五条の二","c":"（新設合併等をやめることの請求）","u":0},{"k":"806","t":"第八百六条","c":"（反対株主の株式買取請求）","u":0},{"k":"807","t":"第八百七条","c":"（株式の価格の決定等）","u":0},{"k":"808","t":"第八百八条","c":"（新株予約権買取請求）","u":0},{"k":"809","t":"第八百九条","c":"（新株予約権の価格の決定等）","u":0},{"k":"810","t":"第八百十条","c":"（債権者の異議）","u":0},{"k":"811","t":"第八百十一条","c":"（新設分割又は株式移転に関する書面等の備置き及び閲覧等）","u":0},{"k":"812","t":"第八百十二条","c":"（剰余金の配当等に関する特則）","u":0},{"k":"813","t":"第八百十三条","c":"","u":0},{"k":"814","t":"第八百十四条","c":"（株式会社の設立の特則）","u":0},{"k":"815","t":"第八百十五条","c":"（新設合併契約等に関する書面等の備置き及び閲覧等）","u":0},{"k":"816","t":"第八百十六条","c":"（持分会社の設立の特則）","u":0},{"k":"816_2","t":"第八百十六条の二","c":"（株式交付計画に関する書面等の備置き及び閲覧等）","u":0},{"k":"816_3","t":"第八百十六条の三","c":"（株式交付計画の承認等）","u":0},{"k":"816_4","t":"第八百十六条の四","c":"（株式交付計画の承認を要しない場合等）","u":0},{"k":"816_5","t":"第八百十六条の五","c":"（株式交付をやめることの請求）","u":0},{"k":"816_6","t":"第八百十六条の六","c":"（反対株主の株式買取請求）","u":0},{"k":"816_7","t":"第八百十六条の七","c":"（株式の価格の決定等）","u":0},{"k":"816_8","t":"第八百十六条の八","c":"（債権者の異議）","u":0},{"k":"816_9","t":"第八百十六条の九","c":"（株式交付の効力発生日の変更）","u":0},{"k":"816_10","t":"第八百十六条の十","c":"（株式交付に関する書面等の備置き及び閲覧等）","u":0}]},{"t":"第六編　外国会社","a":[{"k":"817","t":"第八百十七条","c":"（外国会社の日本における代表者）","u":0},{"k":"818","t":"第八百十八条","c":"（登記前の継続取引の禁止等）","u":0},{"k":"819","t":"第八百十九条","c":"（貸借対照表に相当するものの公告）","u":0},{"k":"820","t":"第八百二十条","c":"（日本に住所を有する日本における代表者の退任）","u":0},{"k":"821","t":"第八百二十一条","c":"（擬似外国会社）","u":0},{"k":"822","t":"第八百二十二条","c":"（日本にある外国会社の財産についての清算）","u":0},{"k":"823","t":"第八百二十三条","c":"（他の法律の適用関係）","u":0}]},{"t":"第七編　雑則 第一章　会社の解散命令等","a":[{"k":"824","t":"第八百二十四条","c":"（会社の解散命令）","u":0},{"k":"825","t":"第八百二十五条","c":"（会社の財産に関する保全処分）","u":0},{"k":"826","t":"第八百二十六条","c":"（官庁等の法務大臣に対する通知義務）","u":0},{"k":"827","t":"第八百二十七条","c":"","u":0}]},{"t":"第七編　雑則 第二章　訴訟","a":[{"k":"828","t":"第八百二十八条","c":"（会社の組織に関する行為の無効の訴え）","u":0},{"k":"829","t":"第八百二十九条","c":"（新株発行等の不存在の確認の訴え）","u":0},{"k":"830","t":"第八百三十条","c":"（株主総会等の決議の不存在又は無効の確認の訴え）","u":1},{"k":"831","t":"第八百三十一条","c":"（株主総会等の決議の取消しの訴え）","u":1},{"k":"832","t":"第八百三十二条","c":"（持分会社の設立の取消しの訴え）","u":0},{"k":"833","t":"第八百三十三条","c":"（会社の解散の訴え）","u":0},{"k":"834","t":"第八百三十四条","c":"（被告）","u":0},{"k":"835","t":"第八百三十五条","c":"（訴えの管轄及び移送）","u":0},{"k":"836","t":"第八百三十六条","c":"（担保提供命令）","u":0},{"k":"837","t":"第八百三十七条","c":"（弁論等の必要的併合）","u":0},{"k":"838","t":"第八百三十八条","c":"（認容判決の効力が及ぶ者の範囲）","u":0},{"k":"839","t":"第八百三十九条","c":"（無効又は取消しの判決の効力）","u":0},{"k":"840","t":"第八百四十条","c":"（新株発行の無効判決の効力）","u":0},{"k":"841","t":"第八百四十一条","c":"（自己株式の処分の無効判決の効力）","u":0},{"k":"842","t":"第八百四十二条","c":"（新株予約権発行の無効判決の効力）","u":0},{"k":"843","t":"第八百四十三条","c":"（合併又は会社分割の無効判決の効力）","u":0},{"k":"844","t":"第八百四十四条","c":"（株式交換又は株式移転の無効判決の効力）","u":0},{"k":"844_2","t":"第八百四十四条の二","c":"（株式交付の無効判決の効力）","u":0},{"k":"845","t":"第八百四十五条","c":"（持分会社の設立の無効又は取消しの判決の効力）","u":0},{"k":"846","t":"第八百四十六条","c":"（原告が敗訴した場合の損害賠償責任）","u":0},{"k":"846_2","t":"第八百四十六条の二","c":"（売渡株式等の取得の無効の訴え）","u":0},{"k":"846_3","t":"第八百四十六条の三","c":"（被告）","u":0},{"k":"846_4","t":"第八百四十六条の四","c":"（訴えの管轄）","u":0},{"k":"846_5","t":"第八百四十六条の五","c":"（担保提供命令）","u":0},{"k":"846_6","t":"第八百四十六条の六","c":"（弁論等の必要的併合）","u":0},{"k":"846_7","t":"第八百四十六条の七","c":"（認容判決の効力が及ぶ者の範囲）","u":0},{"k":"846_8","t":"第八百四十六条の八","c":"（無効の判決の効力）","u":0},{"k":"846_9","t":"第八百四十六条の九","c":"（原告が敗訴した場合の損害賠償責任）","u":0},{"k":"847","t":"第八百四十七条","c":"（株主による責任追及等の訴え）","u":0},{"k":"847_2","t":"第八百四十七条の二","c":"（旧株主による責任追及等の訴え）","u":0},{"k":"847_3","t":"第八百四十七条の三","c":"（最終完全親会社等の株主による特定責任追及の訴え）","u":0},{"k":"847_4","t":"第八百四十七条の四","c":"（責任追及等の訴えに係る訴訟費用等）","u":0},{"k":"848","t":"第八百四十八条","c":"（訴えの管轄）","u":0},{"k":"849","t":"第八百四十九条","c":"（訴訟参加）","u":0},{"k":"849_2","t":"第八百四十九条の二","c":"（和解）","u":0},{"k":"850","t":"第八百五十条","c":"","u":0},{"k":"851","t":"第八百五十一条","c":"（株主でなくなった者の訴訟追行）","u":0},{"k":"852","t":"第八百五十二条","c":"（費用等の請求）","u":0},{"k":"853","t":"第八百五十三条","c":"（再審の訴え）","u":0},{"k":"854","t":"第八百五十四条","c":"（株式会社の役員の解任の訴え）","u":0},{"k":"855","t":"第八百五十五条","c":"（被告）","u":0},{"k":"856","t":"第八百五十六条","c":"（訴えの管轄）","u":0},{"k":"857","t":"第八百五十七条","c":"（役員等の責任の免除の取消しの訴えの管轄）","u":0},{"k":"858","t":"第八百五十八条","c":"（役員等責任査定決定に対する異議の訴え）","u":0},{"k":"859","t":"第八百五十九条","c":"（持分会社の社員の除名の訴え）","u":0},{"k":"860","t":"第八百六十条","c":"（持分会社の業務を執行する社員の業務執行権又は代表権の消滅の訴え）","u":0},{"k":"861","t":"第八百六十一条","c":"（被告）","u":0},{"k":"862","t":"第八百六十二条","c":"（訴えの管轄）","u":0},{"k":"863","t":"第八百六十三条","c":"（清算持分会社の財産処分の取消しの訴え）","u":0},{"k":"864","t":"第八百六十四条","c":"（被告）","u":0},{"k":"865","t":"第八百六十五条","c":"（社債発行会社の弁済等の取消しの訴え）","u":0},{"k":"866","t":"第八百六十六条","c":"（被告）","u":0},{"k":"867","t":"第八百六十七条","c":"（訴えの管轄）","u":0}]},{"t":"第七編　雑則 第三章　非訟","a":[{"k":"868","t":"第八百六十八条","c":"（非訟事件の管轄）","u":0},{"k":"869","t":"第八百六十九条","c":"（疎明）","u":0},{"k":"870","t":"第八百七十条","c":"（陳述の聴取）","u":0},{"k":"870_2","t":"第八百七十条の二","c":"（申立書の写しの送付等）","u":0},{"k":"871","t":"第八百七十一条","c":"（理由の付記）","u":0},{"k":"872","t":"第八百七十二条","c":"（即時抗告）","u":0},{"k":"872_2","t":"第八百七十二条の二","c":"（抗告状の写しの送付等）","u":0},{"k":"873","t":"第八百七十三条","c":"（原裁判の執行停止）","u":0},{"k":"874","t":"第八百七十四条","c":"（不服申立ての制限）","u":0},{"k":"875","t":"第八百七十五条","c":"（非訟事件手続法の規定の適用除外）","u":0},{"k":"876","t":"第八百七十六条","c":"（最高裁判所規則）","u":0},{"k":"877","t":"第八百七十七条","c":"（審問等の必要的併合）","u":0},{"k":"878","t":"第八百七十八条","c":"（裁判の効力）","u":0},{"k":"879","t":"第八百七十九条","c":"（特別清算事件の管轄）","u":0},{"k":"880","t":"第八百八十条","c":"（特別清算開始後の通常清算事件の管轄及び移送）","u":0},{"k":"881","t":"第八百八十一条","c":"（疎明）","u":0},{"k":"882","t":"第八百八十二条","c":"（理由の付記）","u":0},{"k":"883","t":"第八百八十三条","c":"（裁判書の送達）","u":0},{"k":"884","t":"第八百八十四条","c":"（不服申立て）","u":0},{"k":"885","t":"第八百八十五条","c":"（公告）","u":0},{"k":"886","t":"第八百八十六条","c":"（事件に関する文書の閲覧等）","u":0},{"k":"887","t":"第八百八十七条","c":"（支障部分の閲覧等の制限）","u":0},{"k":"888","t":"第八百八十八条","c":"（特別清算開始の申立て）","u":0},{"k":"889","t":"第八百八十九条","c":"（他の手続の中止命令）","u":0},{"k":"890","t":"第八百九十条","c":"（特別清算開始の命令）","u":0},{"k":"891","t":"第八百九十一条","c":"（担保権の実行の手続等の中止命令）","u":0},{"k":"892","t":"第八百九十二条","c":"（調査命令）","u":0},{"k":"893","t":"第八百九十三条","c":"（清算人の解任及び報酬等）","u":0},{"k":"894","t":"第八百九十四条","c":"（監督委員の解任及び報酬等）","u":0},{"k":"895","t":"第八百九十五条","c":"（調査委員の解任及び報酬等）","u":0},{"k":"896","t":"第八百九十六条","c":"（事業の譲渡の許可の申立て）","u":0},{"k":"897","t":"第八百九十七条","c":"（担保権者が処分をすべき期間の指定）","u":0},{"k":"898","t":"第八百九十八条","c":"（清算株式会社の財産に関する保全処分等）","u":0},{"k":"899","t":"第八百九十九条","c":"（役員等責任査定決定）","u":0},{"k":"900","t":"第九百条","c":"（債権者集会の招集の許可の申立てについての裁判）","u":0},{"k":"901","t":"第九百一条","c":"（協定の認可又は不認可の決定）","u":0},{"k":"902","t":"第九百二条","c":"（特別清算終結の申立てについての裁判）","u":0},{"k":"903","t":"第九百三条","c":"（特別清算の手続に関する規定の準用）","u":0},{"k":"904","t":"第九百四条","c":"（法務大臣の関与）","u":0},{"k":"905","t":"第九百五条","c":"（会社の財産に関する保全処分についての特則）","u":0},{"k":"906","t":"第九百六条","c":"","u":0}]},{"t":"第七編　雑則 第四章　登記","a":[{"k":"907","t":"第九百七条","c":"（通則）","u":0},{"k":"908","t":"第九百八条","c":"（登記の効力）","u":0},{"k":"909","t":"第九百九条","c":"（変更の登記及び消滅の登記）","u":0},{"k":"910","t":"第九百十条","c":"（登記の期間）","u":0},{"k":"911","t":"第九百十一条","c":"（株式会社の設立の登記）","u":0},{"k":"912","t":"第九百十二条","c":"（合名会社の設立の登記）","u":0},{"k":"913","t":"第九百十三条","c":"（合資会社の設立の登記）","u":0},{"k":"914","t":"第九百十四条","c":"（合同会社の設立の登記）","u":0},{"k":"915","t":"第九百十五条","c":"（変更の登記）","u":0},{"k":"916","t":"第九百十六条","c":"（他の登記所の管轄区域内への本店の移転の登記）","u":0},{"k":"917","t":"第九百十七条","c":"（職務執行停止の仮処分等の登記）","u":0},{"k":"918","t":"第九百十八条","c":"（支配人の登記）","u":0},{"k":"919","t":"第九百十九条","c":"（持分会社の種類の変更の登記）","u":0},{"k":"920","t":"第九百二十条","c":"（組織変更の登記）","u":0},{"k":"921","t":"第九百二十一条","c":"（吸収合併の登記）","u":0},{"k":"922","t":"第九百二十二条","c":"（新設合併の登記）","u":0},{"k":"923","t":"第九百二十三条","c":"（吸収分割の登記）","u":0},{"k":"924","t":"第九百二十四条","c":"（新設分割の登記）","u":0},{"k":"925","t":"第九百二十五条","c":"（株式移転の登記）","u":0},{"k":"926","t":"第九百二十六条","c":"（解散の登記）","u":0},{"k":"927","t":"第九百二十七条","c":"（継続の登記）","u":0},{"k":"928","t":"第九百二十八条","c":"（清算人の登記）","u":0},{"k":"929","t":"第九百二十九条","c":"（清算結了の登記）","u":0},{"k":"930:932","t":"第九百三十条から第九百三十二条まで","c":"","u":2},{"k":"933","t":"第九百三十三条","c":"（外国会社の登記）","u":0},{"k":"934","t":"第九百三十四条","c":"（日本における代表者の選任の登記等）","u":0},{"k":"935","t":"第九百三十五条","c":"（日本における代表者の住所の移転の登記等）","u":0},{"k":"936","t":"第九百三十六条","c":"（日本における営業所の設置の登記等）","u":0},{"k":"937","t":"第九百三十七条","c":"（裁判による登記の嘱託）","u":0},{"k":"938","t":"第九百三十八条","c":"（特別清算に関する裁判による登記の嘱託）","u":0}]},{"t":"第七編　雑則 第五章　公告","a":[{"k":"939","t":"第九百三十九条","c":"（会社の公告方法）","u":0},{"k":"940","t":"第九百四十条","c":"（電子公告の公告期間等）","u":0},{"k":"941","t":"第九百四十一条","c":"（電子公告調査）","u":0},{"k":"942","t":"第九百四十二条","c":"（登録）","u":0},{"k":"943","t":"第九百四十三条","c":"（欠格事由）","u":0},{"k":"944","t":"第九百四十四条","c":"（登録基準）","u":0},{"k":"945","t":"第九百四十五条","c":"（登録の更新）","u":0},{"k":"946","t":"第九百四十六条","c":"（調査の義務等）","u":0},{"k":"947","t":"第九百四十七条","c":"（電子公告調査を行うことができない場合）","u":0},{"k":"948","t":"第九百四十八条","c":"（事業所の変更の届出）","u":0},{"k":"949","t":"第九百四十九条","c":"（業務規程）","u":0},{"k":"950","t":"第九百五十条","c":"（業務の休廃止）","u":0},{"k":"951","t":"第九百五十一条","c":"（財務諸表等の備置き及び閲覧等）","u":0},{"k":"952","t":"第九百五十二条","c":"（適合命令）","u":0},{"k":"953","t":"第九百五十三条","c":"（改善命令）","u":0},{"k":"954","t":"第九百五十四条","c":"（登録の取消し等）","u":0},{"k":"955","t":"第九百五十五条","c":"（調査記録簿等の記載等）","u":0},{"k":"956","t":"第九百五十六条","c":"（調査記録簿等の引継ぎ）","u":0},{"k":"957","t":"第九百五十七条","c":"（法務大臣による電子公告調査の業務の実施）","u":0},{"k":"958","t":"第九百五十八条","c":"（報告及び検査）","u":0},{"k":"959","t":"第九百五十九条","c":"（公示）","u":0}]},{"t":"第八編　罰則","a":[{"k":"960","t":"第九百六十条","c":"（取締役等の特別背任罪）","u":0},{"k":"961","t":"第九百六十一条","c":"（代表社債権者等の特別背任罪）","u":0},{"k":"962","t":"第九百六十二条","c":"（未遂罪）","u":0},{"k":"963","t":"第九百六十三条","c":"（会社財産を危うくする罪）","u":0},{"k":"964","t":"第九百六十四条","c":"（虚偽文書行使等の罪）","u":0},{"k":"965","t":"第九百六十五条","c":"（預合いの罪）","u":0},{"k":"966","t":"第九百六十六条","c":"（株式の超過発行の罪）","u":0},{"k":"967","t":"第九百六十七条","c":"（取締役等の贈収賄罪）","u":0},{"k":"968","t":"第九百六十八条","c":"（株主等の権利の行使に関する贈収賄罪）","u":0},{"k":"969","t":"第九百六十九条","c":"（没収及び追徴）","u":0},{"k":"970","t":"第九百七十条","c":"（株主等の権利の行使に関する利益供与の罪）","u":0},{"k":"971","t":"第九百七十一条","c":"（国外犯）","u":0},{"k":"972","t":"第九百七十二条","c":"（法人における罰則の適用）","u":0},{"k":"973","t":"第九百七十三条","c":"（業務停止命令違反の罪）","u":0},{"k":"974","t":"第九百七十四条","c":"（虚偽届出等の罪）","u":0},{"k":"975","t":"第九百七十五条","c":"（両罰規定）","u":0},{"k":"976","t":"第九百七十六条","c":"（過料に処すべき行為）","u":0},{"k":"977","t":"第九百七十七条","c":"","u":0},{"k":"978","t":"第九百七十八条","c":"","u":0},{"k":"979","t":"第九百七十九条","c":"","u":0}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+// ==== 共有ここから（別ページでも同じ部品を使う） ====
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  // '466条2項' '466条1項本文' '509条第1号' '466条の2第1項' '469条2項第1号' '469条2項ただし書' のような形。複数条が「・」で区切られることもある → 最初の条だけ見る
+  const first = String(a).split("・")[0];
+  const m = first.match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(?:第?(\d+)号((?:の\d+)*))?([イロハニホ])?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[4] ? m[4] + (m[5] || "").replace(/の/g, "_") : null, sub: m[6] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para);
+  // 号まで指定があれば、項の本文とその号だけ出す
+  if (r.item) ps = ps.filter(p => p.i.some(it => it.n === r.item));
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const list = r.item ? p.i.filter(it => it.n === r.item) : p.i;
+    const its = list.map(it => `<p class="it">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => r.sub && x.startsWith(r.sub + " ") ? `<br><span class="hit">　${esc(x)}</span>` : `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなく、このアプリの決め事（収録範囲・仕組みのページに一覧）。</p>`;
+// 凡例は最初の木の上に1回だけ出す（legend＝false で外す。kubun-prolog と同じ。2026-11-27 案A 4回目で木を結論ごとにしたため）
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+// ==== 共有ここまで ====
+
+async function boot(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const need = ["result/2", "explain/2", "heads/2", "answers/2"].filter(p => !once(`current_predicate(${p})`));
+    if (need.length) throw new Error(`Prologの読み込みが不完全です（${need.join("・")} がありません）。${errBuf.slice(-3).join(" ")}`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    renderPresets();
+    ask();
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+    $("answer").innerHTML = `<p class="loading err">エラー：${esc(e.message)}</p>`;
+  }
+}
+
+// ---- 入力 → ctx の文字 ----
+// 欄はいつも全部出し、出し消しをしない（REVIEW_RULES C5。形は kubun-prolog と同じ。2026-11-27 案A 4回目）。
+// 並びは schema.pl の ctx の引数の順（1〜44。欄の番号/2 の 公開・取締役会・投票・事柄・書面同意・通知差・出し方・省略同意・通知記載・定日・
+// 全人・全権・出権・賛人・賛権・総人・総権・定子・定母・賛子・賛母・人数・頭子・頭母・請求・行使・持権・月数・請差・遅滞・違反・同一・
+// 割子・割母・個数・月・週日・期間・総会・内容法令・内容定款・不公正・特別利害・手続違反）。
+// 前の SLOTS・updateSlots（入口ごとの欄の出し消し。前の :429–488）と、隠れた欄を 関係なし で渡す shown・buildCtx（前の :490–500）はやめた
+// （JS と Prolog の2か所に同じ見方を持っていた。前の :437 の注意書きのとおり、食い違うと「判定できません」が出た）。関係のない欄は Prolog が見ないだけ。
+// 画面の欄の並び（label の番号は CSS の counter で数える）は IDS と同じ順にしてある。並べ替えると欄の名前の「11の人たち」などの番号がずれる
+const IDS = ["koukai","torishi","touhyo","kotogara","shomen","tsuchisa","dashikata","shoryaku","kisai","teibi",
+  "zh","zv","dev","sanh","sanv","soh","sov","qn","qd","sn","sd","ninzu","hn","hd",
+  "seikyu","koshi","mochi","tsukisu","seisa","chitai","ihan","douitsu","wn","wd","kosu","tsuki","shuubi",
+  "kikan","soukai","hourei","teikan","fukousei","rigai","tetsuzuki"];
+// 数字の欄（24個）。空なら「空」、読めない値は「不正」で渡す（schema.pl の ctx_valid が 数の欄/2 と 数の形/1 で範囲と大小を見る。
+// 空を許さない欄の「空」と「不正」は「判定できませんでした」）。前の shown の整数の読み（前の :495）を残した。先頭の0は外す（07 → 7）。形は kubun-prolog の val と同じ
+const NUM_IDS = ["tsuchisa","teibi","zh","zv","dev","sanh","sanv","soh","sov","qn","qd","sn","sd","ninzu","hn","hd",
+  "mochi","tsukisu","seisa","wn","wd","kosu","tsuki","shuubi"];
+const val = id => {
+  const el = $(id), v = el.value.trim();
+  if (!NUM_IDS.includes(id)) return atom(v);
+  if (v === "") return "空";
+  return /^[0-9]{1,6}$/.test(v) ? String(parseInt(v, 10)) : "不正";
+};
+function buildCtx(){
+  return `ctx(${IDS.map(val).join(",")})`;
+}
+
+// ---- 判定と表示 ----
+const HEAD = `<div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div>`;
+const lawBtn = a => a === "@約束事" ? `<span class="yk">アプリの約束事</span>` : (a ? `<button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : "");
+const artsHTML = as => as.map(String).map(lawBtn).join(" ");
+// 断り書き（当てはめは判定しない・条文だけを読む・判例と別の法律は読まない・取得した版）は about.html の範囲の節と約束事に置く
+// （REVIEW_RULES A1・A3・A5。2026-11-27 結果の下の NOTE_HANTEI・NOTE_JOBUN・NOTE_HOKA（前の :505–507・:530–532）と、下の帯の「含みません」を移した）。
+// 頭の注意は見本の1文だけ（A3）
+
+// 段(状態, 文, 箱の条, 葉) を1段ぶんの行にする。文は答え（answers/2。段の文から末尾の「。」を外したもの）
+function stepHTML(id, title, s, ans){
+  const [st, , as] = T(s).args;
+  return `<p class="sec">${esc(title)}</p><p class="step" id="${id}" data-st="${esc(st)}">${esc(ans)}。 ${artsHTML(as)}</p>`;
+}
+
+function ask(){
+  const c = buildCtx();
+  $("qline").textContent = `?- result(${c}, R).`;
+  if (!pl) return;
+  try{
+    // 木は結論1つにつき1本（REVIEW_RULES B5）。凡例は最初の木の上に1回だけ
+    const lr = once(`explain(${c}, Lines)`);
+    const trees = lr ? lr.Lines.map(ls => ls.map(T).map(t => t.args)) : [];
+    const r = once(`result(${c}, r(Head,Steps,Arts))`);
+    if (!r){
+      // ここに来るのは、欄の値が選択肢に無いときと、数の欄が空・整数でない・枠の外（schema.pl の ctx_valid）のとき。
+      // 前の「賛成は出席以下、出席は議決権の数以下、持っている議決権は総株主の議決権以下の数にしてください」（前の :525）は、数の欄の説明に移した（A1）
+      $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">判定できませんでした</div></div><p class="hint">数の欄には、欄の下に書いた範囲の整数を入れてください。</p></div>`;
+      return;
+    }
+    const ar = once(`answers(${c}, L)`);
+    const ans = Object.fromEntries((ar ? ar.L : []).map(T).map(t => t.args));
+    const steps = r.Steps.map(T).map(t => t.args).filter(([id]) => ans[id] !== undefined);
+    // 答えが2つ以上なら箇条書き、1つなら1文のまま（REVIEW_RULES A7）。並びは止まる答えが先
+    const hr = once(`heads(${c}, L)`);
+    const hs = hr ? hr.L.map(String) : [];
+    const big = hs.length > 1 ? `<ul>${hs.map(h => `<li>${esc(h)}</li>`).join("")}</ul>` : esc(r.Head);
+    $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">${big}</div></div>
+      ${steps.map(([id, title, s], i) => stepHTML("st-" + id, `${i + 1}　${title}`, s, ans[id])).join("")}
+      <p class="sec">根拠条文</p><p class="arts" id="arts">${r.Arts.length ? artsHTML(r.Arts) : "当てはまる条文はありません。"}</p>
+      ${trees.length ? `<p class="sec">なぜそうなるか（論理の木）</p>${trees.map((ls, i) => treeHTML(ls, i === 0)).join("")}` : ""}</div>`;
+  } catch(e){ $("answer").innerHTML = `<p class="hint">エラー：${esc(e.message)}</p>`; }
+}
+
+// ---- 例（名前は起きた事実の言葉で書く。条文の文を写さず、指示語で始めない（REVIEW_RULES C2・C4））----
+function presetList(){
+  // 欄の値は DEFAULTS から変えるものだけ書く。2026-11-27 44欄で組み直した（前の例74個は入口 iri・決議の種類 kshu・招集の話 shanashi・
+  // 請求の種類 ysyu・問題 amon つきで、「普通・議決権100・出席51・賛成26」「2項・出席51・賛成34」のような欄の値と条の項の並びの名前だった）。
+  // 数と境目は前の例と同じ値にした。並びと数は前の例の順（行末の #番号 は前の template.html:548–621 の何番目か）。
+  // 前の例から足した値（44欄はいつも全部あるので、前の例が見ていなかった欄にも値が要る）：
+  //   ・決議の種類 → 4の欄の事柄：普通＝上のどれでもない、第2項＝定款を変える、第3項＝全部の株式に譲渡の承認の定めを付ける、
+  //     第4項＝株主ごとの扱いを変える定め（4項の事柄はこれだけ）、役員＝選ぶ。第2項・第3項は各号のうちの1つを選んだもの
+  //   ・第3項・第4項の13の欄（出席）：判定に使わないが、15≦13 の確かめがあるので12の欄と同じ100にした
+  //   ・第4項：1の欄を「いいえ」にした（公開会社では109条2項で「この組み合わせはありません」になるため）。16・17の欄に前の kh・kv を入れ、11・12の欄は同じ数にした
+  //   ・取締役会のない会社（前の storishi・ytorishi が「いいえ」）：1の欄を「いいえ」にした（公開会社では327条1項1号で「この組み合わせはありません」）
+  //   ・通知の形（前の shanashi が「形」・sshodaku が「いいえ」）：7の欄を「承諾なしにメールなどで」にした（前の例は出し方を聞いていなかった）
+  //   ・請求で12の欄（議決権の数）を変える例：決議の数（13・15の欄）を12の欄の51％・26％にした（12の欄は決議の分母と請求の分母を兼ねるため。約束事⑤）
+  //   ・議題・要領の例：前の ysa の既定57を29の欄に入れた。招集の例の28の欄は前の ytsuki の既定6
+  // 言い直せない例（前の #66・#67）：「重大でなく影響なし」「重大でないが影響あり」の欄（ajuu・aeikyo）は却下済みで聞かないので、
+  // 言い直すと #65 と同じ入力になる。消さずに下にコメントで残した
+  const n = (kotogara, o, a, more = {}) => ({kotogara, dev:String(o), sanv:String(a), ...more});
+  const z3 = (ah, a, more = {}) => ({kotogara:"譲渡制限", dev:"100", sanh:String(ah), sanv:String(a), ...more});
+  const z4 = (ah, a, more = {}) => ({koukai:"いいえ", kotogara:"異なる取扱い", soh:"10", sov:"100", dev:"100", sanh:String(ah), sanv:String(a), ...more});
+  const Q = (qn, qd) => ({qn:String(qn), qd:String(qd)}), S = (sn, sd) => ({sn:String(sn), sd:String(sd)});
+  const NT = {koukai:"いいえ", torishi:"いいえ"};   // 取締役会のない会社（公開会社でない）
+  // 総会を開いていない例（#23・#74）：通知の日数（6の欄）は空、出席と賛成（13〜15の欄）は空を受けないので0にする。
+  // どちらの例も5の欄か39の欄で決議・招集の段を出さないので、判定は変わらない（2026-11-27 LLMレビュー。前は既定の15・51・5・26が残り、例どうしが両立しなかった）。
+  // 7の欄（出し方）・9の欄（通知に書いたか）は選択肢に空が無いので触らない（#35・#36 も同じ）
+  const NOMEET = {tsuchisa:"", dev:"0", sanh:"0", sanv:"0"};
+  // 総会を開くよう求めた例（#39・#42・#43）：主題は297条1項の要件なので、29の欄に56以下の40を入れ、297条4項2号の「許可を得て招集できます」を出さない
+  // （29の欄が空だと、総会の日を決めた通知が発せられていないとして4項2号に当たる。#44 の4項1号・#45・#46 の境目は今のまま）
+  // 請求で12の欄を変える：決議は12の欄の51％が出席し26％が賛成して通る数にそろえる
+  const R = (seikyu, v, m, more = {}) => ({seikyu, zv:String(v), dev:String(v * 51 / 100), sanv:String(v * 26 / 100), mochi:String(m), tsukisu:"6", ...more});
+  const K = {seikyu:"招集", zv:"1000", dev:"510", sanv:"260", mochi:"100", tsukisu:"6"};   // 前の 許可 の既定（ysou 1000・ymochi 100・ytsuki 6）
+  return [
+    // 決議は通るか
+    ["上のどれでもない事柄を、議決権100のうち51が出席し、26が賛成して決めた", n("どれでもない",51,26)],   // #1
+    ["上のどれでもない事柄を、議決権100のうち51が出席し、25が賛成して決めた", n("どれでもない",51,25)],   // #2
+    ["上のどれでもない事柄を、議決権100のうち50が出席し、全部が賛成して決めた", n("どれでもない",50,50)],   // #3
+    ["定款で定足数を無くし、上のどれでもない事柄に、議決権10が出席し、6が賛成した", n("どれでもない",10,6,{qn:"0",qd:"1"})],   // #4
+    ["定款で定足数を無くし、上のどれでもない事柄に、議決権10が出席し、5が賛成した", n("どれでもない",10,5,{qn:"0",qd:"1"})],   // #5
+    ["定款を変える決議に、議決権51が出席し、34が賛成した", n("定款変更",51,34)],   // #6
+    ["定款を変える決議に、議決権51が出席し、33が賛成した", n("定款変更",51,33)],   // #7
+    ["定款で定足数を3分の1にしていて、定款を変える決議に34が出席し、23が賛成した", n("定款変更",34,23,Q(1,3))],   // #8
+    ["定款で定足数を3分の1にしていて、定款を変える決議に33が出席し、全部が賛成した", n("定款変更",33,33,Q(1,3))],   // #9
+    ["定款で定足数を4分の1にしていて、定款を変える決議に40が出席し、全部が賛成した", n("定款変更",40,40,Q(1,4))],   // #10
+    ["定款で賛成を4分の3にしていて、定款を変える決議に60が出席し、44が賛成した", n("定款変更",60,44,S(3,4))],   // #11
+    ["定款で賛成の株主を5人以上にしていて、定款を変える決議に4人が賛成した", n("定款変更",60,50,{ninzu:"5",sanh:"4"})],   // #12
+    ["定款で賛成の株主を5人以上にしていて、定款を変える決議に5人が賛成した", n("定款変更",60,50,{ninzu:"5",sanh:"5"})],   // #13
+    ["全部の株式に譲渡の承認の定めを付ける決議に、株主10人のうち5人・議決権100のうち67が賛成した", z3(5,67)],   // #14
+    ["全部の株式に譲渡の承認の定めを付ける決議に、株主10人のうち4人・議決権100のうち67が賛成した", z3(4,67)],   // #15
+    ["全部の株式に譲渡の承認の定めを付ける決議に、株主10人のうち5人・議決権100のうち66が賛成した", z3(5,66)],   // #16
+    ["株主ごとの扱いを変える定めの決議に、総株主10人のうち5人・議決権100のうち75が賛成した", z4(5,75)],   // #17
+    ["株主ごとの扱いを変える定めの決議に、総株主10人のうち5人・議決権100のうち74が賛成した", z4(5,74)],   // #18
+    ["定款で賛成を5分の4にしていて、株主ごとの扱いを変える定めの決議に、5人・議決権79が賛成した", z4(5,79,S(4,5))],   // #19
+    ["取締役を選ぶ決議に、議決権51が出席し、26が賛成した", n("選任",51,26)],   // #20
+    ["定款で定足数を3分の1にしていて、取締役を選ぶ決議に34が出席し、17が賛成した", n("選任",34,17,Q(1,3))],   // #21
+    ["定款で賛成を3分の2にしていて、取締役を選ぶ決議に60が出席し、40が賛成した", n("選任",60,40,S(2,3))],   // #22
+    ["総会を開かずに、株主の全員が提案に書面で同意した", {shomen:"はい",soukai:"開いていない",...NOMEET}],   // #23
+    // 招集の通知
+    ["公開会社で、総会の日の15日前に通知を出した", {tsuchisa:"15"}],   // #24
+    ["公開会社で、総会の日の14日前に通知を出した", {tsuchisa:"14"}],   // #25
+    ["公開会社でない、取締役会のある会社で、総会の日の8日前に通知を出した", {koukai:"いいえ",tsuchisa:"8"}],   // #26
+    ["公開会社でない、取締役会のある会社で、総会の日の7日前に通知を出した", {koukai:"いいえ",tsuchisa:"7"}],   // #27
+    ["公開会社でない会社が、書面かインターネットで議決権を行使できると決め、総会の日の8日前に通知を出した", {koukai:"いいえ",touhyo:"はい",tsuchisa:"8"}],   // #28
+    ["取締役会のない会社が、定款で通知を3日前までとし、総会の日の4日前に通知を出した", {...NT,teibi:"3",tsuchisa:"4"}],   // #29
+    ["取締役会のない会社が、定款で通知を3日前までとし、総会の日の3日前に通知を出した", {...NT,teibi:"3",tsuchisa:"3"}],   // #30
+    ["公開会社でない、取締役会のある会社が、定款で通知を3日前までとし、総会の日の4日前に通知を出した", {koukai:"いいえ",teibi:"3",tsuchisa:"4"}],   // #31
+    ["取締役会のある会社が、株主の承諾なしに、メールで通知を出した", {dashikata:"承諾なし"}],   // #32
+    ["取締役会のない会社が、書面かインターネットで議決権を行使できると決め、承諾なしにメールで通知を出した", {...NT,touhyo:"はい",dashikata:"承諾なし"}],   // #33
+    ["取締役会のない会社が、書面かインターネットでの行使を決めずに、承諾なしにメールで通知を出した", {...NT,dashikata:"承諾なし"}],   // #34
+    ["株主の全員が同意して、通知を出さずに総会を開いた", {tsuchisa:"",shoryaku:"はい"}],   // #35
+    ["書面かインターネットで議決権を行使できると決めたのに、全員の同意で通知を出さずに総会を開いた", {tsuchisa:"",shoryaku:"はい",touhyo:"はい"}],   // #36
+    ["取締役会のある会社で、通知に書いていない事柄を総会で決めた", {kisai:"いいえ"}],   // #37
+    ["取締役会のない会社で、通知に書いていない事柄を総会で決めた", {...NT,kisai:"いいえ"}],   // #38
+    // 株主の請求
+    ["議決権1000のうち30を6か月持つ株主が、取締役に総会を開くよう求めた", R("招集",1000,30,{seisa:"40"})],   // #39
+    ["議決権1000のうち29を6か月持つ株主が、取締役に総会を開くよう求めた", R("招集",1000,29)],   // #40
+    ["議決権1000のうち30を5か月持つ株主が、取締役に総会を開くよう求めた", R("招集",1000,30,{tsukisu:"5"})],   // #41
+    ["公開会社でない会社で、議決権1000のうち30を持つ株主が、総会を開くよう求めた", R("招集",1000,30,{koukai:"いいえ",seisa:"40"})],   // #42
+    ["議決権を行使できる株主の議決権900のうち27を6か月持つ株主が、総会を開くよう求めた", R("招集",900,27,{seisa:"40"})],   // #43
+    ["総会を開くよう求めた後、取締役が遅滞なく招集の手続をしない", {...K,chitai:"していない"}],   // #44
+    ["総会を開くよう求めた日の56日後を総会の日とする通知が出た", {...K,seisa:"56"}],   // #45
+    ["総会を開くよう求めた日の57日後を総会の日とする通知が出た", {...K,seisa:"57"}],   // #46
+    ["取締役会のない会社で、株主が議決権のある事柄を総会で決めるよう求めた", {...NT,seikyu:"議題"}],   // #47
+    ["取締役会のない会社で、株主が議決権の無い事柄を総会で決めるよう求めた", {...NT,seikyu:"議題",koshi:"いいえ"}],   // #48
+    ["議決権10000のうち100を持つ株主が、事柄を総会で決めるよう57日前に求めた", R("議題",10000,100,{seisa:"57"})],   // #49
+    ["議決権10000のうち99を持つ株主が、事柄を総会で決めるよう57日前に求めた", R("議題",10000,99,{seisa:"57"})],   // #50
+    ["議決権100000のうち300を持つ株主が、事柄を総会で決めるよう57日前に求めた", R("議題",100000,300,{seisa:"57"})],   // #51
+    ["議決権10000のうち100を持つ株主が、事柄を総会で決めるよう56日前に求めた", R("議題",10000,100,{seisa:"56"})],   // #52
+    ["公開会社でない会社で、議決権10000のうち100を持つ株主が、事柄を総会で決めるよう求めた", R("議題",10000,100,{koukai:"いいえ",seisa:"57"})],   // #53
+    ["議決権を行使できる株主の議決権5000のうち50を持つ株主が、事柄を総会で決めるよう求めた", R("議題",5000,50,{seisa:"57"})],   // #54
+    ["株主が総会の場で議案を出した", {seikyu:"提出"}],   // #55
+    ["株主が総会の場で、法令に違反する議案を出した", {seikyu:"提出",ihan:"はい"}],   // #56
+    ["賛成が十分の一未満だった同じ議案を、3年たたずに総会の場で出した", {seikyu:"提出",douitsu:"三年以内"}],   // #57
+    ["賛成が十分の一未満だった同じ議案を、3年たってから総会の場で出した", {seikyu:"提出",douitsu:"三年経過"}],   // #58
+    ["取締役会のない会社で、総会の57日前に、議案の要領を通知に載せるよう求めた", {...NT,seikyu:"要領",seisa:"57"}],   // #59
+    ["取締役会のない会社で、総会の56日前に、議案の要領を通知に載せるよう求めた", {...NT,seikyu:"要領",seisa:"56"}],   // #60
+    ["議決権10000のうち99を持つ株主が、議案の要領を通知に載せるよう求めた", R("要領",10000,99,{seisa:"57"})],   // #61
+    ["公開会社でない会社で、議決権10000のうち100を持つ株主が、議案の要領を通知に載せるよう求めた", R("要領",10000,100,{koukai:"いいえ",seisa:"57"})],   // #62
+    ["議決権を行使できる株主の議決権5000のうち50を持つ株主が、議案の要領を通知に載せるよう求めた", R("要領",5000,50,{seisa:"57"})],   // #63
+    ["法令に違反する議案の要領を、通知に載せるよう求めた", R("要領",1000,100,{ihan:"はい",seisa:"57"})],   // #64
+    // 決議の後
+    ["通知の日数・出し方・書いた事柄のほかに、招集の手続が法令に違反した", {tetsuzuki:"はい"}],   // #65
+    // ["招集の手続が法令違反・重大でなく影響なし", {tetsuzuki:"はい"}],   // #66 言い直せない（重大・影響の欄は却下済み。#65 と同じ入力になる）
+    // ["招集の手続が法令違反・重大でないが影響あり", {tetsuzuki:"はい"}],   // #67 言い直せない（同上）
+    ["招集の手続が法令に違反し、決議の日から3か月を過ぎた", {tetsuzuki:"はい",kikan:"過ぎた"}],   // #68
+    ["招集の手続か決議の方法が、著しく不公正だった", {fukousei:"はい"}],   // #69（前の「重大でなく影響なし」は聞かない）
+    ["決議の内容が定款に違反し、決議の日から3か月以内", {teikan:"はい"}],   // #70
+    ["特別の利害関係を持つ株主が議決権を行使して、著しく不当な決議になった", {rigai:"不当"}],   // #71
+    ["特別の利害関係を持つ株主が議決権を行使したが、著しく不当な決議ではない", {rigai:"不当でない"}],   // #72
+    ["決議の内容が法令に違反する", {hourei:"はい"}],   // #73
+    ["総会を開いていないのに、決議があったことにされている", {soukai:"開いていない",...NOMEET}],   // #74
+  ];
+}
+// 例に書いていない欄は既定に戻す（前の例の値を残すと、名前と違う入力になるため。kubun-prolog と同じ）
+// 既定は前の DEFAULTS（前の :625）の値を新しい欄に移したもの：決議は議決権100・出席51・賛成26（株主10人のうち賛成5人）、通知は差15・書面・事柄を書いた、
+// 公開会社・取締役会あり・投票なし、請求は「何もしていない」、決議の後は 3か月以内・開いた・違反なし。定款の数の欄と16・17の欄は空。
+// 既定のままで「普通の決議は通ります（309条1項）」「招集の通知は間に合います（299条1項）」「招集の通知の出し方は足りています（299条2項・299条2項第2号）」
+// 「総会は、招集の通知に書いた事柄を決議できます（309条5項・298条1項第2号）」の4つが付く見込み（画面では確かめていない）
+const DEFAULTS = {koukai:"はい",torishi:"はい",touhyo:"いいえ",kotogara:"どれでもない",shomen:"いいえ",tsuchisa:"15",dashikata:"書面",shoryaku:"いいえ",kisai:"はい",teibi:"",
+  zh:"10",zv:"100",dev:"51",sanh:"5",sanv:"26",soh:"",sov:"",qn:"",qd:"",sn:"",sd:"",ninzu:"",hn:"",hd:"",
+  seikyu:"なし",koshi:"はい",mochi:"",tsukisu:"",seisa:"",chitai:"した",ihan:"いいえ",douitsu:"なし",wn:"",wd:"",kosu:"",tsuki:"",shuubi:"",
+  kikan:"以内",soukai:"開いた",hourei:"いいえ",teikan:"いいえ",fukousei:"いいえ",rigai:"行使なし",tetsuzuki:"いいえ"};
+function setDefaults(p){
+  for (const [id, v] of Object.entries(DEFAULTS)) $(id).value = p[id] !== undefined ? String(p[id]) : v;
+}
+function applyPreset(p){
+  setDefaults(p);
+  ask();
+}
+function renderPresets(){
+  $("presets").innerHTML = presetList().map((p, i) => `<button type="button" data-preset="${i}">${esc(p[0])}</button>`).join("");
+}
+
+// 初期表示（既定の値）
+setDefaults({});
+
+document.addEventListener("change", e => { if (e.target.closest("#slots")) ask(); });
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.preset !== undefined){ applyPreset(presetList()[+b.dataset.preset][1]); $("answer").scrollIntoView?.(); }
+  else if (b.dataset.art && pl){
+    const host = b.closest(".tr") || b.closest("li") || b.parentElement, nx = host.nextElementSibling;
+    if (nx && nx.classList.contains("lawtext") && nx.dataset.for === b.dataset.art) nx.remove();
+    else { host.insertAdjacentHTML("afterend", lawHTML(b.dataset.art)); host.nextElementSibling.dataset.for = b.dataset.art; }
+  }
+});
+
+if (typeof SWIPL === "function") boot();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; $("answer").innerHTML = `<p class="loading err">Prolog（swipl-wasm）を読み込めませんでした。ページを再読み込みしてください。</p>`; }
+</script>
