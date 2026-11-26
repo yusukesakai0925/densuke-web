@@ -1,0 +1,1420 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="選挙運動のお金・物の出入りを選ぶと、選挙運動費用収支報告書のどこに書くか、報酬と人数が上限内か、法定制限額を、京都府選挙管理委員会「候補者のしおり」の文から判定します。">
+<title>この支出、どう書く？ 選挙運動費用収支報告書を候補者のしおりから引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+/* 欄の上の小見出し（お金・物の出入り／受け取ったもの／払ったもの／報酬の額と人数／選挙区）。
+   選ばせる欄ではないので番号を数えない（kubun-prolog と同じ。2026-11-26 案A）。
+   前のタブ（.tabs）・答えの行（.rows）・色の背景の結論（.verdict.ng/.ok/.q）・.scope と .quote の左の色線（E1）は、kubun の style に揃えて外した */
+.slots .slot-h{margin:0;padding:8px 10px 4px;border-bottom:2px solid var(--line);border-right:2px solid var(--line);background:var(--paper)}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+/* しおりの文の表（about）。原文は長いので折り返す */
+td.q{white-space:normal;font-family:var(--f-law);min-width:20em}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border:1px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+/* 数字の欄（数字を打つので ▼ を出さない。金額・人数・登録者数の5欄）*/
+.field.num::after{display:none}
+.field input{appearance:textfield;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 10px;min-width:0;width:100%}
+.field input:focus-visible{outline:none}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <h1>この支出、<span class="ao">どう書く？</span></h1>
+    <div class="judge-plate"><span class="jp-k">判定</span><img src="densuke_icon.svg" width="64" height="64" alt="でんすけのアイコン"><span class="jp-v">でんすけ<small>秘書AI</small></span></div>
+    <p class="lead">選挙運動のお金・物の出入りを1件選ぶと、選挙運動費用収支報告書のどこに書くか、報酬と人数が上限内か、法定制限額を、でんすけが京都府選挙管理委員会「候補者のしおり」（第51回衆議院議員総選挙・小選挙区）の文で判定します。</p>
+    <p class="caution" role="note"><b>注意</b><span>候補者のしおりの文をルールにして、論理的にそのまま演算した結果です。選挙管理委員会の判断とは異なる場合があります。<a class="aboutlink" href="about.html">収録範囲・仕組み →</a></span></p>
+  </header>
+
+  <section class="ask">
+    <div>
+      <p class="sec-h">例から選ぶ</p>
+      <div class="presets" id="presets"></div>
+    </div>
+    <!-- 欄は1回のお金・物の出入りで起きた事実を聞く14個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-26 案A。形は kubun-prolog と同じ）。
+         前のタブ（① この収入・支出はどう書く？／② この報酬・人数は上限内？）と、②の「何の上限か」（jitem）、
+         欄の出し消し（s-jbase の hidden）、選んだ値で選択肢を入れ替える fillItems・fillVals、Prolog から選択肢を引く choice_list をやめた。
+         関係のない欄は Prolog が見ないだけ（schema.pl の ctx のコメント）。
+         並びは schema.pl の ctx の引数の順（1〜14）。小見出しは選ばせる欄ではない（番号を数えない）。
+         値と選択肢の語は schema.pl の 欄の値/2・葉の語/3 と同じ。
+         前の「中身」（収入9・支出36。1つの値に誰・何・いつが入っていた）は2〜9の欄に分け（C1）、金額・人数は10〜14の数の欄にした（前の '15001円' の形の選択肢をやめた）。
+         ウェブサイト・インターネット広告は選択肢にせず、about の「載せなかったもの」に書く（決め3）。
+         頭の断りの箱（出典・「しおりでは決まらない」・まだ入っていないもの）、下の箱（しおりの文の一覧・約束事・ソース・仕組み）、
+         結果の下の「実際の法定制限額は…告示します」は about へ移した（A3・A5） -->
+    <div class="slots" id="slots">
+      <p class="sec-h slot-h full-slot">お金・物の出入り</p>
+      <div class="slot full-slot" id="s-muki"><label for="muki">陣営が</label><span class="field"><select id="muki">
+        <option value="受け取った">受け取った（ただで受けたものを含む）</option><option value="払った">払った（払う約束を含む）</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">受け取ったもの</p>
+      <div class="slot full-slot" id="s-uketori"><label for="uketori">受け取ったもの</label><span class="field"><select id="uketori">
+        <option value="寄附金">ほかの人・団体からお金をもらった</option>
+        <option value="寄附物">ほかの人・団体から物をもらった</option>
+        <option value="労務">ほかの人にただで働いてもらった</option>
+        <option value="事務所">選挙事務所をただで使わせてもらった</option>
+        <option value="自己資金">候補者本人のお金を入れた</option>
+        <option value="借入金">お金を借りた</option>
+        <option value="光熱水">電気・ガス・水道をただで使わせてもらった</option>
+        <option value="免除貸与">借金を免除してもらった・お金や物を貸してもらった</option>
+        <option value="公費負担">ポスター・ビラ・看板などの費用を京都府が業者に直接払った</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">払ったもの</p>
+      <div class="slot full-slot" id="s-shiharai"><label for="shiharai">払ったもの</label><span class="field"><select id="shiharai">
+        <option value="報酬">報酬（働いた分の日当）</option>
+        <option value="交通費">交通費（タクシー代・電車賃など）</option>
+        <option value="休泊">宿泊・休憩の費用</option>
+        <option value="湯茶">湯茶・菓子</option>
+        <option value="借上料">建物・部屋・備品の借上料</option>
+        <option value="電話架設">電話の架設費用</option>
+        <option value="電話料">電話機の借上料・電話料</option>
+        <option value="郵便料">郵便料・電報料</option>
+        <option value="保証金">臨時電話の保証金（全額返ってくる）</option>
+        <option value="印刷">ビラ・ポスター・葉書の印刷代</option>
+        <option value="作成費">立札・看板・ちょうちんの作成費</option>
+        <option value="文房具">紙・ペンなどの文房具</option>
+        <option value="光熱水費">ガス・水道・電気代</option>
+        <option value="振込手数料">振込手数料</option>
+        <option value="自動車">自動車の借上料・ガソリン代・運転者の雇料</option>
+        <option value="拡声機">自動車に備え付けた拡声機・看板を使う費用</option>
+        <option value="手数料">戸籍謄本などの手数料・税</option>
+        <option value="供託金">供託金</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-aite"><label for="aite">受け取った人・使った人</label><span class="field"><select id="aite">
+        <option value="事務員">事務員</option>
+        <option value="車上運動員">車上運動員</option>
+        <option value="手話通訳者">手話通訳者</option>
+        <option value="要約筆記者">要約筆記者</option>
+        <option value="労務者">労務者</option>
+        <option value="運動員">そのほかの運動員</option>
+        <option value="候補者">候補者本人（候補者と同じタクシーに乗った運動員を含む）</option>
+        <option value="人なし">人には払っていない（事務連絡など）</option>
+      </select></span></div>
+      <div class="slot" id="s-tatemono"><label for="tatemono">借りた建物・部屋</label><span class="field"><select id="tatemono">
+        <option value="選挙事務所">選挙事務所</option><option value="演説会場">個人演説会の会場</option><option value="自宅">候補者の自宅を選挙事務所にした</option>
+      </select></span></div>
+      <div class="slot" id="s-kuruma"><label for="kuruma">自動車</label><span class="field"><select id="kuruma">
+        <option value="法定">法定の選挙運動用自動車</option><option value="候補者用">候補者が乗る自動車</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-tsukurikata"><label for="tsukurikata">看板などを</label><span class="field"><select id="tsukurikata">
+        <option value="業者">業者に請け負わせた</option><option value="労務者">労務者を雇い材料を出して作った</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-haratta"><label for="haratta">払った人</label><span class="field"><select id="haratta">
+        <option value="候補者">候補者</option>
+        <option value="出納責任者">出納責任者</option>
+        <option value="通じた人">候補者・出納責任者と意思を通じた人</option>
+        <option value="通じない人">候補者・出納責任者と意思を通じていない人</option>
+        <option value="政党">候補者届出政党</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-jiki"><label for="jiki">いつ</label><span class="field"><select id="jiki">
+        <option value="届出前">立候補の届出より前</option>
+        <option value="期間中">届出の日から選挙期日の前日まで</option>
+        <option value="当日">選挙期日の当日</option>
+        <option value="期日後">選挙期日より後の残務整理</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">報酬の額と人数</p>
+      <div class="slot" id="s-nichigaku"><label for="nichigaku">1日の報酬（基本日額）の額（円）</label><span class="field num"><input id="nichigaku" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">0以上の整数</p></div>
+      <div class="slot" id="s-chokin"><label for="chokin">超過勤務手当の1日の額（円）</label><span class="field num"><input id="chokin" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">払っていなければ0</p></div>
+      <div class="slot" id="s-hinin"><label for="hinin">1日に報酬を払った事務員等の人数</label><span class="field num"><input id="hinin" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">事務員等＝事務員・車上運動員・手話通訳者・要約筆記者。13の欄の数まで</p></div>
+      <div class="slot" id="s-tsuushi"><label for="tsuushi">期間を通じて報酬を払った、異なる事務員等の人数</label><span class="field num"><input id="tsuushi" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">0以上の整数</p></div>
+
+      <p class="sec-h slot-h full-slot">選挙区</p>
+      <div class="slot full-slot" id="s-touroku"><label for="touroku">選挙区の選挙人名簿登録者数</label><span class="field num"><input id="touroku" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">選挙時登録日現在の数。1以上の整数</p></div>
+    </div>
+    <div class="qline" id="qline"></div>
+  </section>
+
+  <section id="answer" aria-live="polite"><p class="loading">でんすけがしおりのルール（Prolog）を読み込んでいます…</p></section>
+
+  <p class="foot techline"><span>選挙運動費用収支報告書（候補者のしおり）／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot" id="foot">京都府選挙管理委員会「候補者のしおり（第51回衆議院議員総選挙・小選挙区）」の冊子55・58〜60ページの文をルールにしたものです。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 選挙運動費用収支報告書Prolog（公職選挙法・候補者のしおり）の共通の型・欄の読み出し・成り立たない組・木の部品
+%
+% 政治資金規正法Prolog（shikin-prolog/）とは別の報告書。こちらは選挙運動費用収支報告書（出納責任者が作る）。
+% 出典は「候補者のしおり 第51回衆議院議員総選挙・小選挙区（京都府選管）」の冊子55・58〜60ページだけ。
+% 法令の原文（e-Gov）は入れていない。答えに付けるのは、しおりの冊子ページと原文の一文（原文ママ）。
+%
+% ctx(向き, 受取, 支払, 相手, 建物, 車, 作り方, 払った人, 時期, 日額, 超勤, 日の人数, 通しの人数, 登録者数)
+%   欄は1回のお金・物の出入りで起きた事実を聞く14個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-26 案A。
+%   案は ../senkyohi_form_plan_answer_1126.md の案A、決めは ../senkyohi_form_plan_decision_1126.md）。形は kubun-prolog と同じ。
+%   前は2つの問いに分け、タブで「書き方の話か上限の話か」を先に選ばせていた。①は 書き方(中身, …) で、中身（収入9・支出36）の
+%   1つの値に誰・何・いつが入っていた（C1）。②は「何の上限か」を先に選ばせ、値は '15001円' '51人' の形の原子の選択肢だった（C4）。
+%   今は中身を2〜9の欄に分け、金額・人数は10〜14の数の欄にした。ウェブサイト・インターネット広告は選択肢から消した（決め3）。
+%   引数の順は画面の欄の番号（1〜14）と同じ。画面では小見出し（お金・物の出入り／受け取ったもの／払ったもの／報酬の額と人数／選挙区）の下に並べる。
+%    1 向き     : 受け取った | 払った（陣営が：受け取った（ただで受けたものを含む）| 払った（払う約束を含む））
+%    2 受取     : 寄附金 | 寄附物 | 労務 | 事務所 | 自己資金 | 借入金 | 光熱水 | 免除貸与 | 公費負担（受け取ったもの）
+%    3 支払     : 報酬 | 交通費 | 休泊 | 湯茶 | 借上料 | 電話架設 | 電話料 | 郵便料 | 保証金 | 印刷 | 作成費 | 文房具 |
+%                 光熱水費 | 振込手数料 | 自動車 | 拡声機 | 手数料 | 供託金（払ったもの）
+%    4 相手     : 事務員 | 車上運動員 | 手話通訳者 | 要約筆記者 | 労務者 | 運動員 | 候補者 | 人なし（受け取った人・使った人。既定値は事務員＝決め9）
+%    5 建物     : 選挙事務所 | 演説会場 | 自宅（借りた建物・部屋）
+%    6 車       : 法定 | 候補者用（自動車）
+%    7 作り方   : 業者 | 労務者（看板などを）
+%    8 払った人 : 候補者 | 出納責任者 | 通じた人 | 通じない人 | 政党
+%    9 時期     : 届出前 | 期間中 | 当日 | 期日後（いつ：立候補の届出より前 | 届出の日から選挙期日の前日まで | 選挙期日の当日 | 選挙期日より後の残務整理）
+%   10 日額     : 0以上の整数（1日の報酬（基本日額）の額・円）
+%   11 超勤     : 0以上の整数（超過勤務手当の1日の額・円。払っていなければ0）
+%   12 日の人数 : 0以上の整数（その日に報酬を払った事務員等の人数）
+%   13 通しの人数 : 0以上の整数（期間を通じて報酬を払った、異なる事務員等の人数）
+%   14 登録者数 : 1以上の整数（選挙区の選挙人名簿登録者数）
+%
+%   関係のない欄（1の欄が「受け取った」のときの3〜13、「払った」のときの2、3の欄が「報酬」でないときの10〜13、
+%   「借上料」でないときの5、「自動車」でないときの6、「作成費」でないときの7）は、組み合わせなしにせず見ないだけ（kubun-prolog と同じ）。
+%   欄どうしで成り立たない組はこのファイルの 組み合わせなし/4 が返す（REVIEW_RULES C3）。
+%   数の欄が枠の外（12の欄が13の欄より多い など）のときは ctx_valid が失敗し、画面は「判定できませんでした」になる（kubun-prolog と同じ）。
+%
+% 書き方のきまり：
+%   ・「AかBのどれか」は名前のある集合にして in_group(値, 集合) で書く。集合(ID, 名前, 根拠). 要素(ID, 値).
+%       根拠：しおりから来たものは しおり(冊子ページ)、しおりにないアプリの約束事は 約束事('なぜそうしたか')
+%   ・冊子ページは数（55〜60）。PDFのページ＝冊子のページ＋5。
+%   ・段は 段(状態, 文, 箱の条, 葉のリスト)。結論ごとの段は s(画面のid, 見出し, 段)。箱の条は '冊子58' の形の原子のリスト。
+%     段の文は、末尾の「。」を外して結論の箱にも出す。段の文は本題だけを書き、払った額・人数は葉に置く（REVIEW_RULES A2）。
+%     葉は文（原子）か、木の行 t(...) そのもの（しおりの行・約束の行。このファイルの 葉の行）。
+%   ・木は t(種類, 文, 出典, 子のリスト)。種類 = ok | and | or | info。出典は '冊子58ページ' の形の原子。
+%   ・アプリの約束事の行は 出典 を '@約束事' にする。
+%   ・割合の計算は整数の掛け算だけで比べる（浮動小数点を使わない）。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+:- use_module(library(aggregate)).
+:- discontiguous 集合/3, 要素/2, 当たる/2, 区分/4, 上限/5.
+:- multifile 集合/3, 要素/2, 当たる/2, 区分/4, 上限/5.
+:- dynamic 集合/3, 要素/2, 当たる/2, 区分/4, 上限/5.
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか・数の欄が範囲か・数の欄どうしの大小。組の成り立ちは 組み合わせなし/4 で見る）----
+ctx_valid(C) :-
+    functor(C, ctx, 14),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )),
+    forall(数の欄(N, P), ( arg(N, C, V), call(P, V) )),
+    数の形(C).
+
+欄の値(1, [受け取った, 払った]).
+欄の値(2, [寄附金, 寄附物, 労務, 事務所, 自己資金, 借入金, 光熱水, 免除貸与, 公費負担]).
+欄の値(3, [報酬, 交通費, 休泊, 湯茶, 借上料, 電話架設, 電話料, 郵便料, 保証金, 印刷, 作成費, 文房具,
+           光熱水費, 振込手数料, 自動車, 拡声機, 手数料, 供託金]).
+欄の値(4, [事務員, 車上運動員, 手話通訳者, 要約筆記者, 労務者, 運動員, 候補者, 人なし]).
+欄の値(5, [選挙事務所, 演説会場, 自宅]).
+欄の値(6, [法定, 候補者用]).
+欄の値(7, [業者, 労務者]).
+欄の値(8, [候補者, 出納責任者, 通じた人, 通じない人, 政党]).
+欄の値(9, [届出前, 期間中, 当日, 期日後]).
+
+% 数の欄（空は無い。払っていない手当は0で表す）
+数の欄(10, 非負).
+数の欄(11, 非負).
+数の欄(12, 非負).
+数の欄(13, 非負).
+数の欄(14, 正).
+
+非負(N) :- integer(N), N >= 0.
+正(N) :- integer(N), N >= 1.
+
+% 数の欄どうしの大小：その日に報酬を払った人は、期間を通じて報酬を払った異なる人に入っている
+数の形(C) :-
+    欄(日の人数, C, D), 欄(通しの人数, C, T),
+    D =< T.
+
+%% ---- 欄の読み出し（番号は画面の欄の番号）----
+欄の番号(向き, 1).
+欄の番号(受取, 2).
+欄の番号(支払, 3).
+欄の番号(相手, 4).
+欄の番号(建物, 5).
+欄の番号(車, 6).
+欄の番号(作り方, 7).
+欄の番号(払った人, 8).
+欄の番号(時期, 9).
+欄の番号(日額, 10).
+欄の番号(超勤, 11).
+欄の番号(日の人数, 12).
+欄の番号(通しの人数, 13).
+欄の番号(登録者数, 14).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+%% ---- 集合 ----
+in_group(X, G) :- 要素(G, X).
+
+% 報酬の上限・人数の上限が当たる人（冊子58 人件費の（注）の「事務員等」と労務者）
+集合(事務員等, '事務員等（事務員・車上運動員・手話通訳者・要約筆記者）', しおり(58)).
+要素(事務員等, 事務員). 要素(事務員等, 車上運動員). 要素(事務員等, 手話通訳者). 要素(事務員等, 要約筆記者).
+集合(人件費の人, '人件費の報酬を受ける人（労務者・事務員・車上運動員・手話通訳者・要約筆記者）', しおり(58)).
+要素(人件費の人, 労務者). 要素(人件費の人, 事務員). 要素(人件費の人, 車上運動員). 要素(人件費の人, 手話通訳者). 要素(人件費の人, 要約筆記者).
+
+%% ---- 成り立たない組（組み合わせなし/4。REVIEW_RULES C3。案A「この組み合わせはありません」）----
+% 組み合わせなし(C, 記号, 葉のリスト, 箱の条)。rules/g_hantei.pl の 全部の段 が findall で全部集める（REVIEW_RULES 末尾「AI同士で決めた書き方」1・2）。
+%   組は ア の1つ。
+%   ア 1の欄が「払った」で、3の欄が「報酬」、4の欄が「人には払っていない」。根拠は冊子58 人件費「…に対する報酬のことです」（報酬は人に払うもの）
+% 1の欄が「受け取った」のときは3・4の欄を見ないので、組にしない（案A「ありませんにしないもの」）。
+% 3の欄が「休泊」で4の欄が「候補者本人」の組は、休泊費の定義（冊子60）で答える（しおりは候補者の宿泊を除いていない）。
+組み合わせなし(C, a, ['人件費は、労務者・事務員・車上運動員・手話通訳者・要約筆記者に対する報酬のこと。報酬は人に払うもの', X, W], ['冊子58']) :-
+    欄(向き, C, 払った), 欄(支払, C, 報酬), 欄(相手, C, 人なし),
+    区分(人件費, _, P, Q), しおりの行(P, Q, X),
+    二つ選んだ(支払, 相手, C, W).
+
+二つ選んだ(N1, N2, C, W) :-
+    欄の番号(N1, I1), 欄(N1, C, V1), 葉の語(I1, V1, W1),
+    欄の番号(N2, I2), 欄(N2, C, V2), 葉の語(I2, V2, W2),
+    format(atom(W), '~wの欄で~wを選び、~wの欄で~wを選んだ', [I1, W1, I2, W2]).
+
+%% ---- 木の葉に出す欄の値の言葉（画面の選択肢と同じ語）----
+% 葉の語(欄の番号, 値, 選択肢の語)。数の欄は 入れた/3 で書く
+葉の語(1, 受け取った, '受け取った（ただで受けたものを含む）').
+葉の語(1, 払った, '払った（払う約束を含む）').
+葉の語(2, 寄附金, 'ほかの人・団体からお金をもらった').
+葉の語(2, 寄附物, 'ほかの人・団体から物をもらった').
+葉の語(2, 労務, 'ほかの人にただで働いてもらった').
+葉の語(2, 事務所, '選挙事務所をただで使わせてもらった').
+葉の語(2, 自己資金, '候補者本人のお金を入れた').
+葉の語(2, 借入金, 'お金を借りた').
+葉の語(2, 光熱水, '電気・ガス・水道をただで使わせてもらった').
+葉の語(2, 免除貸与, '借金を免除してもらった・お金や物を貸してもらった').
+葉の語(2, 公費負担, 'ポスター・ビラ・看板などの費用を京都府が業者に直接払った').
+葉の語(3, 報酬, '報酬（働いた分の日当）').
+葉の語(3, 交通費, '交通費（タクシー代・電車賃など）').
+葉の語(3, 休泊, '宿泊・休憩の費用').
+葉の語(3, 湯茶, '湯茶・菓子').
+葉の語(3, 借上料, '建物・部屋・備品の借上料').
+葉の語(3, 電話架設, '電話の架設費用').
+葉の語(3, 電話料, '電話機の借上料・電話料').
+葉の語(3, 郵便料, '郵便料・電報料').
+葉の語(3, 保証金, '臨時電話の保証金（全額返ってくる）').
+葉の語(3, 印刷, 'ビラ・ポスター・葉書の印刷代').
+葉の語(3, 作成費, '立札・看板・ちょうちんの作成費').
+葉の語(3, 文房具, '紙・ペンなどの文房具').
+葉の語(3, 光熱水費, 'ガス・水道・電気代').
+葉の語(3, 振込手数料, '振込手数料').
+葉の語(3, 自動車, '自動車の借上料・ガソリン代・運転者の雇料').
+葉の語(3, 拡声機, '自動車に備え付けた拡声機・看板を使う費用').
+葉の語(3, 手数料, '戸籍謄本などの手数料・税').
+葉の語(3, 供託金, '供託金').
+葉の語(4, 事務員, '事務員').
+葉の語(4, 車上運動員, '車上運動員').
+葉の語(4, 手話通訳者, '手話通訳者').
+葉の語(4, 要約筆記者, '要約筆記者').
+葉の語(4, 労務者, '労務者').
+葉の語(4, 運動員, 'そのほかの運動員').
+葉の語(4, 候補者, '候補者本人（候補者と同じタクシーに乗った運動員を含む）').
+葉の語(4, 人なし, '人には払っていない（事務連絡など）').
+葉の語(5, 選挙事務所, '選挙事務所').
+葉の語(5, 演説会場, '個人演説会の会場').
+葉の語(5, 自宅, '候補者の自宅を選挙事務所にした').
+葉の語(6, 法定, '法定の選挙運動用自動車').
+葉の語(6, 候補者用, '候補者が乗る自動車').
+葉の語(7, 業者, '業者に請け負わせた').
+葉の語(7, 労務者, '労務者を雇い材料を出して作った').
+葉の語(8, 候補者, '候補者').
+葉の語(8, 出納責任者, '出納責任者').
+葉の語(8, 通じた人, '候補者・出納責任者と意思を通じた人').
+葉の語(8, 通じない人, '候補者・出納責任者と意思を通じていない人').
+葉の語(8, 政党, '候補者届出政党').
+葉の語(9, 届出前, '立候補の届出より前').
+葉の語(9, 期間中, '届出の日から選挙期日の前日まで').
+葉の語(9, 当日, '選挙期日の当日').
+葉の語(9, 期日後, '選挙期日より後の残務整理').
+
+% 入力の葉：「Nの欄で、◯◯を選んだ」。欄の名前から番号と値を引く
+選んだ(Name, C, W) :-
+    欄の番号(Name, N), 欄(Name, C, V), 葉の語(N, V, VW),
+    format(atom(W), '~wの欄で、~wを選んだ', [N, VW]).
+
+% 数の欄の葉：「Nの欄に、◯と入れた」（数は3桁ごとに「,」を入れる。kubun-prolog は ~d）
+入れた(Name, C, W) :-
+    欄の番号(Name, N), 欄(Name, C, V),
+    format(atom(W), '~wの欄に、~Dと入れた', [N, V]).
+
+%% ---- 数・金額の表記 ----
+円の表記(N, S) :- format(atom(S), '~D円', [N]).
+人の表記(N, S) :- format(atom(S), '~D人', [N]).
+page_label(P, L) :- format(atom(L), '冊子~wページ', [P]).
+箱の条(P, A) :- format(atom(A), '冊子~w', [P]).
+
+%% ---- 上限の比べ方（rules/b_jougen.pl の 上限/5 の境目）----
+% 収まる(境目, 額, 基本日額)。額・基本日額は整数（10・11の欄）。基本日額は 割合以内 でだけ使う
+% 前は '15001円' の形の原子を 円/2 で数にしてから比べていた（欄が数になったので 円/2・人/2・数/2 は消した）
+収まる(以内(Cap), N, _) :- N =< Cap.
+収まる(割合以内(Num, Den), N, Base) :- N * Den =< Base * Num.
+収まる(支給できない, N, _) :- N =:= 0.
+
+% 判定(項目, 額, 基本日額, 何の数, 結果)：項目の上限1つごとに 上限内 | 超える
+判定(Item, N, B, What, Res) :-
+    上限(Item, What, Bd, _, _),
+    ( 収まる(Bd, N, B) -> Res = 上限内 ; Res = 超える ).
+
+% 法定制限額(登録者数, 額)：登録者数 × 1人あたり ＋ 足す額。端数の単位未満の端数は、その単位に切り上げる
+% 前は登録者数を '400000人' の形の原子で受けていた（14の欄が数になったので、整数で受ける）
+法定制限額(N, L) :-
+    正(N), 制限額の式(Per, Add, Unit, _, _, _),
+    X is N * Per + Add,
+    L is ((X + Unit - 1) // Unit) * Unit.
+
+%% ---- ① 書き方 ----
+% 入力 C が当たるしおりの区分の答え。1つの入力が2つの区分に当たることもある（例：立札・看板を業者に＝広告費の定義と雑費の段の例）
+% 当たる(C, 区分) は yakusoku/naiyou.pl（アプリの読み）、区分(区分, 答え, 冊子ページ, 原文) は rules/a_keijou.pl（しおりから来たもの）
+% 前は 書き方(中身, …) で、中身の1つの値から引いていた
+書き方(C, A, P, Q) :- 当たる(C, K), 区分(K, A, P, Q).
+
+%% ---- 理由の語をつなぐ ----
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---- 木の部品 ----
+% しおりの行：「しおり：「原文」」に冊子ページを付ける（前の web.pl の keijou_explain・jougen_explain と同じ文の形）
+しおりの行(P, Q, t(ok, T, PL, [])) :- format(atom(T), 'しおり：「~w」', [Q]), page_label(P, PL).
+% 成り立つ文（起きた事実・しおりの読み）
+文(X, t(ok, X, '', [])).
+約束(X, t(ok, X, '@約束事', [])).
+% 葉の行：木の行 t(...) はそのまま、文はそのまま1行（「書き方のきまり」）
+葉の行(t(K, X, A, Cs), t(K, X, A, Cs)) :- !.
+葉の行(W, X) :- 文(W, X).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+% kubun-prolog schema.pl の すべて/4 を写した
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+% 前は web.pl にあった（kubun-prolog と同じく schema に置いた）
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_jougen.pl">% yakusoku/jougen.pl — 答えを出さない所を決めた、アプリの約束事（しおりにないもの）
+%
+%   about の「アプリの約束事」の2つ目・3つ目（1つ目は yakusoku/naiyou.pl の 当てはめの約束）。
+%   約束事の文は web/about_template.html の一覧の2行目・3行目と同じ（about は yakusoku/ から埋めず、手で同じ文を書いている）。
+%   ② しおりで選挙運動費用に入れない・会計帳簿に書かないとされた支出（冊子59・60）は、費目と報酬の上限を答えない。
+%      しおりは「選挙運動費用に算入されないもの」「会計帳簿に記載する必要はありません」と言うだけで、
+%      費目や報酬の上限を答えないとは書いていない（REVIEW_RULES D1・D2）。
+%      前は rules/g_hantei.pl:40–41 の 全部の段 が 算入しない/1（g_hantei.pl:44–45）で費目の段と報酬の段を呼ばず、木に約束事の行を出していなかった。
+%      今は判定（算入しない/1）をこのファイルに移し、木では算入の段の「入れない」の1つ目の葉の最後に出す（g_hantei.pl の 止めた約束/2）。
+%   ③ 超過勤務手当が0円なら、払っていないものとして、超過勤務手当の上限を答えない。
+%      しおりは事務員等の0円（「支給することはできません」）も労務者の0円（「１日5,000円以内」）も上限の中で、
+%      0円を払っていないと読むのは11の欄の決め（schema.pl の欄の説明「払っていなければ0」）。
+%      前は rules/b_jougen.pl:49 の 超勤の段 が11の欄の0で [] を返し、木に約束事の行を出していなかった。
+%      今は判定（超勤を払っていない/1）をこのファイルに移し、木では報酬の基本日額の段（houshu）の葉の最後に出す（b_jougen.pl の 超勤の約束/2）。
+%   2026-11-26 案A 4回目（依頼書 task_beaver_senkyohi_planA4_1126.md）。前はこのファイルの中身は空で、②の選択肢を置いていた（1回目に消した。
+%   前の中身は agents/beaver/workspace/senkyohi_planA1_before_1126/yakusoku/jougen.pl）。
+
+%% ---- ② 選挙運動費用に入れない支出 ----
+% 算入の段に 入れない の段があるか。無名変数だけで「有るか」を見るので memberchk（REVIEW_RULES 末尾「AI同士で決めた書き方」1）
+算入しない(L2) :- memberchk(s(_, _, 段(入れない, _, _, _)), L2).
+
+算入しないの約束(X) :-
+    約束('しおりで選挙運動費用に入れない・会計帳簿に書かないとされた支出（冊子59・60）は、費目と報酬の上限を答えない', X).
+
+%% ---- ③ 超過勤務手当が0円 ----
+超勤を払っていない(C) :- 欄(超勤, C, 0).
+
+超勤なしの約束(X) :-
+    約束('超過勤務手当が0円なら、払っていないものとして、超過勤務手当の上限を答えない', X).
+</script>
+<script type="text/prolog" data-name="yakusoku_naiyou.pl">% yakusoku/naiyou.pl — 入力の欄の値が、しおりのどの文に当たるか（しおりにない、アプリの約束事）
+%   当たる(ctx, 区分)：区分は rules/a_keijou.pl の 区分/4 の1つ目。1つの入力が2つ以上の区分に当たってよい（rules が findall で全部集める）。
+%   欄の値は、しおり（冊子58〜60）の文に例として出てくるものだけを並べた（schema.pl の 欄の値）。例に無いものを当てない。
+%   2026-11-26 案A：前は 選択肢(収入の中身, 値, 説明)・選択肢(支出の中身, 値, 説明) の45個の値ごとに 当たる(中身, 区分) を書いていた。
+%   今は2〜9の欄の値の組から区分を引く。前の中身45個（ウェブ広告を除く44個）との対応は
+%   agents/beaver/workspace/senkyohi_planA1_1126_progress.md の対応表。ウェブサイト・インターネット広告（前の 広告か雑費か）は消した（決め3）。
+%   欄の値は1つに決まっていて、入っているかを見るだけなので memberchk（REVIEW_RULES 末尾「AI同士で決めた書き方」1）。
+%   1の欄が「受け取った」なら2の欄だけ、「払った」なら3〜9の欄だけを見る。
+
+%% ---------- 受け取ったもの（2の欄。冊子58 ②・（注）） ----------
+当たる(C, 寄附の種別) :-
+    欄(向き, C, 受け取った), 欄(受取, C, X), memberchk(X, [寄附金, 寄附物, 労務, 事務所]).
+当たる(C, その他の収入の種別) :-
+    欄(向き, C, 受け取った), 欄(受取, C, X), memberchk(X, [自己資金, 借入金]).
+当たる(C, 財産上の利益) :-
+    欄(向き, C, 受け取った), 欄(受取, C, X), memberchk(X, [光熱水, 免除貸与]).
+当たる(C, 公費負担分) :-
+    欄(向き, C, 受け取った), 欄(受取, C, 公費負担).
+
+%% ---------- 払ったもの（3〜7の欄。冊子58〜60 ③ 支出費目） ----------
+% 報酬：4の欄で人件費か、候補者・運動員の報酬かが分かれる（冊子58）。4の欄が「人には払っていない」の組は schema の 組み合わせなし ア
+当たる(C, 人件費) :-
+    払った(C, 報酬), 欄(相手, C, P), in_group(P, 人件費の人).
+当たる(C, 候補者の報酬) :-
+    払った(C, 報酬), 欄(相手, C, 候補者).
+当たる(C, 運動員の報酬) :-
+    払った(C, 報酬), 欄(相手, C, 運動員).
+% 交通費（冊子58 人件費の括弧書き・冊子59 エ）
+当たる(C, 交通費) :-
+    払った(C, 交通費), 欄(相手, C, P), P \== 候補者.
+当たる(C, 事務員等への実費) :-
+    払った(C, 交通費), 欄(相手, C, P), in_group(P, 人件費の人).
+当たる(C, 候補者の交通費) :-
+    払った(C, 交通費), 欄(相手, C, 候補者).
+% 家屋費（冊子59 イ）：借上料は5の欄で分かれる。電話の架設費用は選挙事務所費の例
+当たる(C, 選挙事務所費) :-
+    払った(C, 借上料), 欄(建物, C, 選挙事務所).
+当たる(C, 集合会場費等) :-
+    払った(C, 借上料), 欄(建物, C, 演説会場).
+当たる(C, 候補者の自宅) :-
+    払った(C, 借上料), 欄(建物, C, 自宅).
+当たる(C, 選挙事務所費) :-
+    払った(C, 電話架設).
+% 通信費（冊子59 ウ）
+当たる(C, 通信費) :-
+    払った(C, X), memberchk(X, [電話料, 郵便料]).
+当たる(C, 電話の保証金) :-
+    払った(C, 保証金).
+% 選挙運動用自動車（冊子59 エの（注）③・冊子60 ④エ・ウ）：6の欄で分かれる
+当たる(C, 選挙運動用自動車) :-
+    払った(C, 自動車), 欄(車, C, 法定).
+当たる(C, 除外エ) :-
+    払った(C, 自動車), 欄(車, C, 法定).
+当たる(C, 除外ウ) :-
+    払った(C, 自動車), 欄(車, C, 候補者用).
+当たる(C, '自動車の拡声機・看板') :-
+    払った(C, 拡声機).
+% 印刷費・広告費・文具費・食糧費・休泊費・雑費（冊子59 オ〜ク・冊子60 ケ・コ）：作成費は7の欄で分かれる
+当たる(C, 印刷費) :- 払った(C, 印刷).
+当たる(C, 広告費) :- 払った(C, 作成費), 欄(作り方, C, 業者).
+当たる(C, 看板を業者に) :- 払った(C, 作成費), 欄(作り方, C, 業者).
+当たる(C, 看板を労務者に) :- 払った(C, 作成費), 欄(作り方, C, 労務者).
+当たる(C, 文具費) :- 払った(C, 文房具).
+当たる(C, 食糧費) :- 払った(C, 湯茶).
+当たる(C, 休泊費) :- 払った(C, 休泊).
+当たる(C, 雑費) :- 払った(C, X), memberchk(X, [光熱水費, 振込手数料]).
+% 選挙運動費用に算入されないもの（冊子60 ④カ・ク）：3の欄で決まる
+当たる(C, 除外カ) :- 払った(C, 手数料).
+当たる(C, 除外ク) :- 払った(C, 供託金).
+
+%% ---------- 払った人・いつ（8・9の欄。冊子60 ④ア・イ・オ・キ） ----------
+% 3の欄が何でも当たる。前は「立候補準備で、意思を通じずに他の人がした支出」のように、誰が・いつを1つの中身に入れていた（C1）
+% ア：立候補準備（届出より前）に、候補者・出納責任者でも、意思を通じた人でもない人がした支出。
+%     候補者届出政党がした支出は キ で答える（ア・イには当てない）
+当たる(C, 除外ア) :-
+    欄(向き, C, 払った), 欄(払った人, C, 通じない人), 欄(時期, C, 届出前).
+% イ：立候補の届出後に、候補者・出納責任者と意思を通じずにした支出（届出の日から後は全部「届出後」）
+当たる(C, 除外イ) :-
+    欄(向き, C, 払った), 欄(払った人, C, 通じない人), 欄(時期, C, T), memberchk(T, [期間中, 当日, 期日後]).
+% オ：選挙の期日後の残務整理の支出（9の欄の「選挙期日より後の残務整理」）
+当たる(C, 除外オ) :-
+    欄(向き, C, 払った), 欄(時期, C, 期日後).
+% キ：候補者届出政党が行う選挙運動の支出
+当たる(C, 除外キ) :-
+    欄(向き, C, 払った), 欄(払った人, C, 政党).
+
+% 1の欄が「払った」で、3の欄が X
+払った(C, X) :- 欄(向き, C, 払った), 欄(支払, C, X).
+
+%% ---------- 木に出す約束事の行 ----------
+% 「選んだ欄の値が、しおりの文の例に当たる」はアプリの読み（前の web.pl の keijou_explain の「「中身」は、この文に当たる」@約束事 と同じ役目）。
+% rules/a_keijou.pl の段が、しおりの行の後ろの葉に置く。
+% 文は web/about_template.html の約束事の一覧の1行目と同じ（2026-11-26 案A 5回目。前は「しおりのこの文の例」で、about に出すと「この文」の指す先が無かった。REVIEW_RULES A6）
+当てはめの約束(X) :-
+    約束('選んだ欄の値が、しおりの文の例に当たるかは、このアプリの読み', X).
+</script>
+<script type="text/prolog" data-name="rules_a_keijou.pl">% rules/a_keijou.pl — ① 帳簿に入れるか・どの欄に書くか（しおり 冊子57〜60ページ「60 収支報告書の作成要領」）
+%   区分(区分, 答え, 冊子ページ, 原文).  原文はしおりの書き起こし（agents/tanuki/…/shiori_pages/p0NN.md）からの原文ママの抜き出し。
+%     書き起こしの右端が切れている行は、切れる前までだけを使った（NOTES.md 2026-10-19「照らした行」）。
+%   どの欄の値がどの区分に当たるかは yakusoku/naiyou.pl の 当たる/2（アプリの読み）。
+%
+%   段は3つの述語：収入の段・算入の段・費目の段（rules/g_hantei.pl の 全部の段 が呼ぶ）。
+%     収入の段 は1の欄が「受け取った」のとき、算入の段・費目の段 は「払った」のとき。費目の段 は、算入の段が 入れない を答えたら呼ばれない。
+%     id と状態：shubetsu（書く）・shunyu（収入に入る）・keijou（入れない）／sannyu・choubo（入れない）／himoku（書く）・kaokuhi（入れない）・jinkenhi（含まれない）・undouin（超える）。
+%   2026-11-26 案A。前は web.pl の keijou_rows・keijou_explain が 書き方(中身, …) の答えを1行ずつ並べ、
+%   木は「「中身」の書き方」を根にした1本だった（REVIEW_RULES B5）。今は当たった区分を答えの種類ごとに1段にまとめる
+%   （同じ答えに2つの区分が当たるとき＝立札を業者に（冊子59・60）、法定の選挙運動用自動車（冊子59・60）は1段で、箱の条を2つ付ける）。
+%   前の 決まらない(何が) の区分は段にしない（決め2。箱に「決まらない」を出さない）。決まらない所は 決まらない点/4（このファイルの末尾）に
+%   残し、about（3回目）の「しおりだけで決まらなかった点」に使う。judge は 決まらない点 を読まない。
+%   ウェブサイト・インターネット広告に当てていた 広告か雑費か は、当たる入力が無くなったので消した（決め3）。
+%   段の文には、画面の上で指す先の無い指示語（その・この・当該 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+%   原文の「この費用」「その借上料」（冊子59 候補者の自宅）は葉のしおりの行にだけ置く。
+
+%% ---------- 段（rules/g_hantei.pl の 全部の段 が呼ぶ） ----------
+収入の段(C, L) :- 区分の段(収入, C, L).
+算入の段(C, L) :- 区分の段(算入, C, L).
+費目の段(C, L) :- 区分の段(費目, C, L).
+
+% 区分の段(段の組, C, 段のリスト)：C が当たる区分を findall で全部集め（1つの入力が2つ以上の区分に当たってよい）、
+% 答えの鍵ごとに1段にまとめる。鍵の並びは当たった順（yakusoku/naiyou.pl の 当たる/2 の順）。
+% 鍵は1つに決まらないので member で並べる（REVIEW_RULES 末尾「AI同士で決めた書き方」1）
+区分の段(G, C, L) :-
+    findall(Key-h(K, P, Q), ( 当たる(C, K), 区分(K, A, P, Q), 段の鍵(K, A, Key), 鍵の組(Key, G0), G0 == G ), Hs),
+    findall(Key, member(Key-_, Hs), Ks0), list_to_set(Ks0, Ks),
+    findall(S, ( member(Key, Ks), 鍵の段(Key, C, Hs, S) ), L).
+
+% 段の鍵(区分, 答え, 鍵)：ふつうは答えそのもの。人件費の括弧書き（事務員等への実費・冊子58）は段にせず、
+% 交通費の段の葉と箱の条に足す（案A「段の出し方」の3。交通費の区分と必ず一緒に当たる：naiyou.pl の 交通費 と 事務員等への実費）
+段の鍵(事務員等への実費, _, 費目(交通費)) :- !.
+段の鍵(_, A, A).
+
+% 鍵の組(鍵, 段の組)。知らない鍵は止める（黙って段から落とさない。組の番号 と同じ形）
+鍵の組(種別(_), 収入) :- !.
+鍵の組(収入に入る, 収入) :- !.
+鍵の組(入れない(収入), 収入) :- !.
+鍵の組(入れない(選挙運動費用), 算入) :- !.
+鍵の組(入れない(会計帳簿), 算入) :- !.
+鍵の組(費目(_), 費目) :- !.
+鍵の組(費目(_, _), 費目) :- !.
+鍵の組(分ける(_), 費目) :- !.
+鍵の組(入れない(家屋費), 費目) :- !.
+鍵の組(人件費でない, 費目) :- !.
+鍵の組(運動員に報酬なし, 費目) :- !.
+鍵の組(Key, _) :- throw(知らない答え(Key)).
+
+% 鍵の段：1つの鍵に当たった区分のしおりの行（冊子ページ順）→ 当てはめの約束 → 当てはめで見た欄の値
+鍵の段(Key, C, Hs, s(Id, Head, 段(St, T, As, Ls))) :-
+    鍵の答え(Key, Id, Head, St, T),
+    findall(h(K, P, Q), member(Key-h(K, P, Q), Hs), Hk),
+    findall(P, member(h(_, P, _), Hk), Ps0), sort(Ps0, Ps),
+    maplist(箱の条, Ps, As),
+    findall(X, ( member(P, Ps), member(h(_, P, Q), Hk), しおりの行(P, Q, X) ), Xs0), list_to_set(Xs0, Xs),
+    当てはめの約束(Y),
+    findall(I-N, ( member(h(K, _, _), Hk), 区分の欄(K, C, Ns), member(N, Ns), 欄の番号(N, I) ), INs0), sort(INs0, INs),
+    findall(W, ( member(_-N, INs), 選んだ(N, C, W) ), Ws),
+    append([Xs, [Y], Ws], Ls).
+
+% 鍵の答え(鍵, id, 見出し, 状態, 段の文)。状態は rules/g_hantei.pl の 組の番号 にあるものだけ
+% 「収入の部」「支出の部」は冊子58の見出しの語（前の web.pl は「収入簿」「支出簿」と書いていた。しおりに無い語なので直した）
+鍵の答え(種別(W), shubetsu, '収入の種別', 書く, T) :- !,
+    format(atom(T), '収入の部の「種別」欄に「~w」と書きます。', [W]).
+鍵の答え(収入に入る, shunyu, '収入に入るか', 収入に入る, '財産上の利益として、収入に入ります。') :- !.
+鍵の答え(入れない(収入), keijou, '収入に計上するか', 入れない, '収入には計上しません。') :- !.
+鍵の答え(入れない(選挙運動費用), sannyu, '選挙運動費用に入れるか', 入れない, '選挙運動費用に入れません。') :- !.
+鍵の答え(入れない(会計帳簿), choubo, '会計帳簿に書くか', 入れない, '会計帳簿に書く必要はありません。') :- !.
+鍵の答え(費目(F), himoku, '支出の部の費目', 書く, T) :- !,
+    format(atom(T), '支出の部の費目「~w」に書きます。', [F]).
+鍵の答え(費目(F, X), himoku, '支出の部の費目', 書く, T) :- !,
+    format(atom(T), '支出の部の費目「~w」の「~w」に書きます。', [F, X]).
+鍵の答え(分ける(Ps), himoku, '支出の部の費目', 書く, T) :- !,
+    findall(S, ( member(W-F, Ps), format(atom(S), '~wは「~w」', [W, F]) ), Ss),
+    atomic_list_concat(Ss, '、', S0),
+    format(atom(T), '~wに分けて書きます。', [S0]).
+% 候補者の自宅を選挙事務所にした借上料（冊子59「この費用に含まれません」）。決め3で 入れない（組の番号の1番）
+鍵の答え(入れない(家屋費), kaokuhi, '家屋費に入れるか', 入れない, '費目「家屋費」に入れません。') :- !.
+% 候補者本人への報酬（冊子58）
+鍵の答え(人件費でない, jinkenhi, '人件費に入れるか', 含まれない, '報酬は費目「人件費」に入れません。') :- !.
+% そのほかの運動員への報酬（冊子58「実費弁償…に限って支給される」）。報酬は払えないので、事務員等の超過勤務手当
+% （rules/b_jougen.pl の 支給できない文）と同じ 超える（止まる答え）にする。前は 人件費でない で候補者本人と同じ文を出し、
+% 「別の費目に書けば払ってよい」と読めた（2026-11-26 でんすけの LLMレビュー・例22）
+鍵の答え(運動員に報酬なし, undouin, '運動員に報酬を払えるか', 超える, 'そのほかの運動員には報酬を払えません（払えるのは実費弁償だけです）。') :- !.
+鍵の答え(Key, _, _, _, _) :- throw(知らない答え(Key)).
+
+% 区分の欄(区分, C, 欄名のリスト)：yakusoku/naiyou.pl の 当たる/2 がその区分で見る欄（木の葉に「Nの欄で、◯◯を選んだ」と出す）。
+% 区分は1つに決まっているので memberchk（REVIEW_RULES 末尾「AI同士で決めた書き方」1）。知らない区分は止める
+区分の欄(K, _, [向き, 受取]) :- memberchk(K, [寄附の種別, その他の収入の種別, 財産上の利益, 公費負担分]), !.
+区分の欄(選挙事務所費, C, [向き, 支払]) :- 欄(支払, C, 電話架設), !.
+区分の欄(K, _, [向き, 支払, 相手]) :- memberchk(K, [人件費, 候補者の報酬, 運動員の報酬, 交通費, 事務員等への実費, 候補者の交通費]), !.
+区分の欄(K, _, [向き, 支払, 建物]) :- memberchk(K, [選挙事務所費, 集合会場費等, 候補者の自宅]), !.
+区分の欄(K, _, [向き, 支払, 車]) :- memberchk(K, [選挙運動用自動車, 除外エ, 除外ウ]), !.
+区分の欄(K, _, [向き, 支払, 作り方]) :- memberchk(K, [広告費, 看板を業者に, 看板を労務者に]), !.
+区分の欄(K, _, [向き, 支払]) :-
+    memberchk(K, [通信費, 電話の保証金, '自動車の拡声機・看板', 印刷費, 文具費, 食糧費, 休泊費, 雑費, 除外カ, 除外ク]), !.
+区分の欄(K, _, [向き, 払った人, 時期]) :- memberchk(K, [除外ア, 除外イ]), !.
+区分の欄(除外オ, _, [向き, 時期]) :- !.
+区分の欄(除外キ, _, [向き, 払った人]) :- !.
+区分の欄(K, _, _) :- throw(知らない区分(K)).
+
+%% ---------- 支出費目（冊子58〜60「③ 支出費目」ア〜コ） ----------
+集合(費目, '支出費目', しおり(58)).
+要素(費目, 人件費). 要素(費目, 家屋費). 要素(費目, 通信費). 要素(費目, 交通費). 要素(費目, 印刷費).
+要素(費目, 広告費). 要素(費目, 文具費). 要素(費目, 食糧費). 要素(費目, 休泊費). 要素(費目, 雑費).
+
+集合(家屋費の内訳, '家屋費（選挙事務所費と集合会場費等とに区分）', しおり(59)).
+要素(家屋費の内訳, 選挙事務所費). 要素(家屋費の内訳, 集合会場費等).
+
+%% ---------- 収入の部：種別（冊子58 ②） ----------
+区分(寄附の種別, 種別(寄附), 58,
+    '「寄附」は、金銭及び金銭以外の寄附（例えば、労務の無償提供、選挙事務所の無償提供等）のすべてを').
+区分(その他の収入の種別, 種別('その他の収入'), 58,
+    '「その他の収入」は、候補者の自己資金及び借入金等寄附以外のものすべてを記載してください。').
+% 有体物でない財産上の利益：収入には入るが、寄附かその他の収入かは、しおりの例（労務・選挙事務所の無償提供）に無い（決まらない点/4）
+区分(財産上の利益, 収入に入る, 58,
+    '収入となるのは、必ずしも有体物に限っていませんから、電気、ガス、水道等を無料で使用したとき、債務の免除、金銭や物品の貸与、労務の無償提供等も財産上の利益となります。').
+区分(公費負担分, 入れない(収入), 58,
+    'なお、供託物が没収されなかった候補者についての選挙運動用自動車の使用費並びに選挙運動用通常葉書、選挙運動用ビラ、選挙事務所用立札・看板の類、選挙運動用自動車等取付用立札・看板の類、選挙運動用ポスター（個人演説会告知用ポスターを含む。）及び個人演説会場用立札・看板の類作成費の公費負担分は、京都府が直接契約業者等に支払いますので、収入には計上しないでください。').
+
+%% ---------- 支出の部：ア 人件費（冊子58） ----------
+区分(人件費, 費目(人件費), 58,
+    '労務者、選挙運動のために使用した事務員及び専ら法第 141 条（自動車、船舶及び拡声機の使用）の規定により選挙運動のために使用される自動車又は船舶の上における選挙運動のために使用する者（いわゆる車上運動員）、専ら手話通訳のために使用する者（いわゆる手話通訳者）及び専ら要約筆記のために使用する者（いわゆる要約筆記者）に対する報酬のことです。').
+区分(事務員等への実費, 人件費でない, 58,
+    '（これらの人に対して支給した交通費、食糧費等は、それぞれ支出費目の交通費、食糧費等であって、人件費には含まれません。）').
+区分(候補者の報酬, 人件費でない, 58, '候 補 者　－　自己の選挙であるから人件費に含まれません。').
+区分(運動員の報酬, 運動員に報酬なし, 58, '運 動 員　－　実費弁償（交通費、宿泊料、弁当料、茶菓料）に限って支給されるので、人件費に含まれません。').
+
+%% ---------- イ 家屋費（冊子59） ----------
+区分(選挙事務所費, 費目(家屋費, 選挙事務所費), 59, '選挙事務所費は、事務所自体や机など備品の借上料及び電話架設費用等').
+区分(集合会場費等, 費目(家屋費, 集合会場費等), 59, '集合会場費等は、備品の借上げを含んだ個人演説会の借上料等').
+区分(候補者の自宅, 入れない(家屋費), 59, '候補者の自宅を選挙事務所にした場合は、その借上料はこの費用に含まれません。').
+
+%% ---------- ウ 通信費（冊子59） ----------
+区分(通信費, 費目(通信費), 59, '電話機の借上料及び電話料、事務連絡用の郵便料及び電報料等').
+区分(電話の保証金, 入れない(会計帳簿), 59,
+    '西日本電信電話㈱では臨時電話を架設する際、電話架設費のほかに、電話１本につき保証金を徴収し、期間終了後直ちに全額返還する取扱いをしていますが、この場合は、その保証金は選挙運動に要した支出として会計帳簿に記載する必要はありません。').
+
+%% ---------- エ 交通費（冊子59） ----------
+区分(交通費, 費目(交通費), 59, '事務連絡用等のタクシー代、選挙運動員、事務員、労務者等に対して実費弁償した交通費').
+区分(候補者の交通費, 入れない(選挙運動費用), 59,
+    '候補者の交通費は、選挙運動の費用には算入されませんので、候補者と運動員がタクシーを利用したような場合は、運動員は便乗したものと解されますので、費用に算入する必要はありません。').
+区分(選挙運動用自動車, 入れない(選挙運動費用), 59,
+    '選挙運動用自動車及び船舶を使用するために要した支出（例えば、借上料、ガソリン代、オイル代、修繕代、タイヤ代、運転者の雇料、超過勤務手当、宿泊料及び食事料）は、選挙運動のための支出とみなされませんから、ここに記載する必要はありません。').
+区分('自動車の拡声機・看板', 費目(広告費), 59,
+    'なお、拡声機又は看板が選挙運動用自動車に備え付けられている場合にあっては、当該拡声機又は看板を使用するために要した支出は広告費に記載する必要があります。').
+
+%% ---------- オ 印刷費・カ 広告費・キ 文具費・ク 食糧費（冊子59） ----------
+区分(印刷費, 費目(印刷費), 59, '選挙運動のために使用するビラ、ポスター及び葉書の印刷費等').
+区分(広告費, 費目(広告費), 59, '選挙事務所及び選挙運動用自動車等に掲示する立札、看板、ちょうちん等の作成費').
+区分(文具費, 費目(文具費), 59, '紙、ペンその他選挙運動のために使用した文房具費等').
+区分(食糧費, 費目(食糧費), 59, '湯茶及びこれに伴い通常用いられる程度の菓子に要する経費').
+
+%% ---------- ケ 休泊費・コ 雑費（冊子60） ----------
+区分(休泊費, 費目(休泊費), 60, '休憩及び宿泊に要した費用等').
+区分(雑費, 費目(雑費), 60, 'ア～ケ以外の諸費で、ガス、水道、電気代等の光熱水費等及び各種の振込手数料等').
+区分(看板を業者に, 費目(広告費), 60,
+    'このほか、例えば、看板類を作成する場合、業者に請け負わせたときは広告費に入りますが、労務者を雇い材料を提供して作成したときは、労務者に要した費用は人件費に、ペンキ代等は文具費に、材料費は雑費として計上してください。').
+区分(看板を労務者に, 分ける(['労務者に要した費用'-人件費, 'ペンキ代等'-文具費, '材料費'-雑費]), 60,
+    'このほか、例えば、看板類を作成する場合、業者に請け負わせたときは広告費に入りますが、労務者を雇い材料を提供して作成したときは、労務者に要した費用は人件費に、ペンキ代等は文具費に、材料費は雑費として計上してください。').
+
+%% ---------- ④ 選挙運動費用に算入されないもの（冊子60 ア〜ク） ----------
+集合(算入されないもの, '選挙運動費用に算入されないもの', しおり(60)).
+要素(算入されないもの, 除外ア). 要素(算入されないもの, 除外イ). 要素(算入されないもの, 除外ウ). 要素(算入されないもの, 除外エ).
+要素(算入されないもの, 除外オ). 要素(算入されないもの, 除外カ). 要素(算入されないもの, 除外キ). 要素(算入されないもの, 除外ク).
+
+区分(除外ア, 入れない(選挙運動費用), 60, 'ア　立候補準備のために要した支出で、候補者若しくは出納責任者となった者のした支出又はその者と意思を通じてした支出以外のもの').
+区分(除外イ, 入れない(選挙運動費用), 60, 'イ　立候補の届出後、候補者又は出納責任者と意思を通じてした支出以外のもの').
+区分(除外ウ, 入れない(選挙運動費用), 60, 'ウ　候補者が乗用する自動車等のために要した支出').
+区分(除外エ, 入れない(選挙運動費用), 60, 'エ　法定の選挙運動用自動車を使用するために要した支出（拡声機の借上料及び選挙運動用自動車に取り付けて使用する文書図画に要する費用を除く。）').
+区分(除外オ, 入れない(選挙運動費用), 60, 'オ　選挙の期日後において選挙運動の残務整理のために要した支出').
+区分(除外カ, 入れない(選挙運動費用), 60, 'カ　選挙運動に関して支払う国又は地方公共団体の租税又は手数料（戸籍謄本等の発行手数料など）').
+区分(除外キ, 入れない(選挙運動費用), 60, 'キ　候補者届出政党が行う選挙運動のために要した支出（当該団体の政治資金収支報告書に記載が必要です。）').
+区分(除外ク, 入れない(選挙運動費用), 60, 'ク　供託金').
+
+%% ---------- しおりだけで決まらない点（about の「しおりだけで決まらなかった点」に使う。judge は読まない） ----------
+% 決まらない点(区分, 何が決まらないか, 冊子ページ, 原文)。前は 区分(区分, 決まらない(何が), …) で、答えの1つとして箱に出していた（決め2）。
+% 原文は同じ区分の 区分/4 の原文と同じなので、shiori_quotes（web.pl）には足さない。
+% 前の 広告か雑費か（ウェブサイト・インターネット広告）は、選択肢から消したので about の「載せなかったもの」に置く（決め3）
+決まらない点(財産上の利益, '種別（「寄附」か「その他の収入」か）', 58,
+    '「寄附」は、金銭及び金銭以外の寄附（例えば、労務の無償提供、選挙事務所の無償提供等）のすべてを').
+決まらない点(候補者の報酬, '人件費でないなら、どの費目に入れるか・入れないか', 58, '候 補 者　－　自己の選挙であるから人件費に含まれません。').
+決まらない点(運動員の報酬, '実費弁償を超える報酬をどう書くか（しおりは、運動員には実費弁償に限って支給されるとだけ書いている）', 58,
+    '運 動 員　－　実費弁償（交通費、宿泊料、弁当料、茶菓料）に限って支給されるので、人件費に含まれません。').
+決まらない点(候補者の自宅, '家屋費以外の費目に入れるか・選挙運動費用に入れないのか', 59, '候補者の自宅を選挙事務所にした場合は、その借上料はこの費用に含まれません。').
+</script>
+<script type="text/prolog" data-name="rules_b_jougen.pl">% rules/b_jougen.pl — ② 金額・人数の上限（しおり 冊子58ページ「ア 人件費」の（注）、冊子55ページ「58 選挙運動に関する支出金額の制限」）
+%   上限(項目, 何の数, 境目, 冊子ページ, 原文).
+%     境目 = 以内(数)            数が この値以下なら上限内（しおりの「以内」「まで」）
+%          | 割合以内(分子, 分母)  超過勤務手当 × 分母 ≦ 基本日額 × 分子 なら上限内（「基本日額の５割以内」＝1/2）
+%          | 支給できない         0円なら上限内、1円でも払えば超える
+%   原文はしおりの書き起こし（shiori_pages/p063.md・p060.md）からの原文ママの抜き出し。
+%
+%   段は2つの述語：報酬の段・法定制限額の段（rules/g_hantei.pl の 全部の段 が呼ぶ）。
+%     報酬の段 は1の欄が「払った」・3の欄が「報酬」・4の欄が人件費の人（労務者・事務員等）のときだけ段を返し、ほかは []。
+%       id：houshu（報酬の基本日額）・chokin（事務員等の超過勤務手当）・chokin_gaku・chokin_wari（労務者の超過勤務手当の1日の額・基本日額に対する割合）・
+%       ninzu_hi・ninzu_tsushi（事務員等の人数）。状態は 上限内 | 超える（schema.pl の 判定/5）。
+%       11の欄（超過勤務手当）が0なら払っていないので、超過勤務手当の段は出さない（schema.pl の欄の説明「払っていなければ0」）。
+%       0を払っていないと読むのはアプリの約束事③（yakusoku/jougen.pl）で、木では基本日額の段の葉の最後に約束事の行を出す（4回目）。
+%     法定制限額の段 はいつも1段（id seigen・状態 計算）。法定制限額は計算だけで、支出の総額とは比べない（決め6）。
+%   2026-11-26 案A。前は「何の上限か」（項目）を先に選ばせ、web.pl の jougen_rows・jougen_explain が項目1つの答えを出していた（C4）。
+%   今は3・4の欄から項目を引く（報酬の項目/2）。上限/5 の値・制限額の式/6 は前のまま変えていない（決め「値は今のものをそのまま使う」）。
+%   段の文は本題だけを書き、払った額・人数は葉に置く（REVIEW_RULES A2）。上限の額はしおりの値なので段の文に書く。
+%   段の文には、画面の上で指す先の無い指示語（その・この・当該 など）を置かない（REVIEW_RULES A6）。
+%   原文の「当該選挙区内の当該選挙時登録日現在…」（冊子55）は葉のしおりの行にだけ置く。
+
+%% ---------- 報酬の段 ----------
+報酬の段(C, L) :-
+    欄(向き, C, 払った), 欄(支払, C, 報酬), 欄(相手, C, P), in_group(P, 人件費の人), !,
+    日額の段(P, C, L1),
+    超勤の段(P, C, L2),
+    人数の段(P, C, L3),
+    append([L1, L2, L3], L).
+報酬の段(_, []).
+
+% 報酬の項目(4の欄, 上限/5 の項目)
+報酬の項目(事務員, '事務員の報酬').
+報酬の項目(車上運動員, '車上運動員の報酬').
+報酬の項目(手話通訳者, '手話通訳者の報酬').
+報酬の項目(要約筆記者, '要約筆記者の報酬').
+報酬の項目(労務者, '労務者の報酬').
+
+% 報酬の基本日額（10の欄）。11の欄が0なら、葉の最後にアプリの約束事③の行を置く（超勤の約束/2）
+日額の段(P, C, [s(houshu, '報酬の基本日額', 段(St, T, [A], Ls))]) :-
+    報酬の項目(P, Item),
+    上限(Item, What, 以内(Cap), Pg, Q),
+    欄(日額, C, D),
+    判定(Item, D, 0, What, St),
+    円の表記(Cap, SC),
+    上限の文(St, Item, '1日の上限', SC, T),
+    額の葉(St, '基本日額', D, Cap, 円の表記, N),
+    箱の条(Pg, A), しおりの行(Pg, Q, X),
+    選んだ(支払, C, W3), 選んだ(相手, C, W4), 入れた(日額, C, W10),
+    超勤の約束(C, Ys),
+    append([X, W3, W4, W10, N], Ys, Ls).
+
+% 超過勤務手当（11の欄）。0なら払っていないので段を出さない。0を払っていないと読むのはアプリの約束事③
+% （yakusoku/jougen.pl の 超勤を払っていない/1。4回目の依頼書。REVIEW_RULES D1）。
+% 約束事の行は、超過勤務手当の段が無いので、報酬の段でいつも出る基本日額の段の葉に置く（超勤の約束/2。事務員等・労務者のどちらも1行）
+超勤の段(_, C, []) :- 超勤を払っていない(C), !.
+% 事務員等：1円でも払えば超える（上限/5 の 支給できない。収まるのは0円だけで、0円は上の節で段を出さない）
+超勤の段(P, C, [s(chokin, '事務員等の超過勤務手当', 段(St, T, [A], [X, W3, W4, W11]))]) :-
+    in_group(P, 事務員等), !,
+    Item = '事務員等の超過勤務手当',
+    上限(Item, What, 支給できない, Pg, Q),
+    欄(超勤, C, N),
+    判定(Item, N, 0, What, St),
+    支給できない文(St, T),
+    箱の条(Pg, A), しおりの行(Pg, Q, X),
+    選んだ(支払, C, W3), 選んだ(相手, C, W4), 入れた(超勤, C, W11).
+% 労務者：1日の額と、基本日額に対する割合の2段（上限/5 の行ごとに1段。並びは b_jougen.pl の行の順）
+超勤の段(労務者, C, L) :-
+    Item = '労務者の超過勤務手当',
+    findall(S, ( 上限(Item, What, Bd, Pg, Q), 労務者の超勤の段(Item, What, Bd, Pg, Q, C, S) ), L).
+
+% 超勤の約束(C, 約束事の行のリスト)：11の欄が0なら約束事③の行を1つ（日額の段 の葉の最後に足す）
+超勤の約束(C, [Y]) :- 超勤を払っていない(C), !, 超勤なしの約束(Y).
+超勤の約束(_, []).
+
+労務者の超勤の段(Item, What, 以内(Cap), Pg, Q, C, s(chokin_gaku, '労務者の超過勤務手当の1日の額', 段(St, T, [A], [X, W3, W4, W11, N]))) :-
+    欄(超勤, C, V),
+    判定(Item, V, 0, What, St),
+    円の表記(Cap, SC),
+    上限の文(St, '労務者の超過勤務手当', '1日の上限', SC, T),
+    額の葉(St, '超過勤務手当', V, Cap, 円の表記, N),
+    箱の条(Pg, A), しおりの行(Pg, Q, X),
+    選んだ(支払, C, W3), 選んだ(相手, C, W4), 入れた(超勤, C, W11).
+労務者の超勤の段(Item, What, 割合以内(Num, Den), Pg, Q, C, s(chokin_wari, '労務者の超過勤務手当と基本日額', 段(St, T, [A], [X, W3, W4, W10, W11, N]))) :-
+    欄(超勤, C, V), 欄(日額, C, B),
+    判定(Item, V, B, What, St),
+    割合の語(Num, Den, R),
+    format(atom(Cap), '基本日額の~w', [R]),
+    上限の文(St, '労務者の超過勤務手当', '', Cap, T),
+    割合の葉(St, V, B, Num, Den, R, N),
+    箱の条(Pg, A), しおりの行(Pg, Q, X),
+    選んだ(支払, C, W3), 選んだ(相手, C, W4), 入れた(日額, C, W10), 入れた(超勤, C, W11).
+
+% 事務員等の人数（12・13の欄）。労務者は人数の上限に入らない（冊子58「事務員等」）
+人数の段(P, C, L) :-
+    in_group(P, 事務員等), !,
+    findall(S, ( member(Item-F-Id-Head-Who, [
+                    '事務員等の人数（1日）'-日の人数-ninzu_hi-'1日の事務員等の人数'-'1日に報酬を払った事務員等の人数',
+                    '事務員等の人数（期間を通じて）'-通しの人数-ninzu_tsushi-'期間を通じた事務員等の人数'-'期間を通じて報酬を払った異なる事務員等の人数']),
+                 人数の1段(Item, F, Id, Head, Who, C, S) ), L).
+人数の段(_, _, []).
+
+人数の1段(Item, F, Id, Head, Who, C, s(Id, Head, 段(St, T, [A], [X, W3, W4, Wn, N]))) :-
+    上限(Item, What, 以内(Cap), Pg, Q),
+    欄(F, C, V),
+    判定(Item, V, 0, What, St),
+    人の表記(Cap, SC),
+    上限の文(St, Who, '上限', SC, T),
+    額の葉(St, '人数', V, Cap, 人の表記, N),
+    箱の条(Pg, A), しおりの行(Pg, Q, X),
+    選んだ(支払, C, W3), 選んだ(相手, C, W4), 入れた(F, C, Wn).
+
+%% ---- 段の文・葉 ----
+% 上限の文(状態, 主語, 上限の語, 上限の値, 文)。上限の語が空なら「上限の値を」のまま（基本日額の5割）
+上限の文(超える, Who, Lim, SC, T) :- !, format(atom(T), '~wが、~w~wを超えています。', [Who, Lim, SC]).
+上限の文(上限内, Who, Lim, SC, T) :- !, format(atom(T), '~wは、~w~w以内です。', [Who, Lim, SC]).
+
+支給できない文(超える, '事務員等には超過勤務手当を払えません。').
+
+% 額の葉(状態, 何の額, 入れた数, 上限, 表記の述語, 文)：「基本日額は15,001円で、上限15,000円を1円超える」
+額の葉(超える, What, V, Cap, F, N) :- !,
+    Gap is V - Cap, call(F, V, SV), call(F, Cap, SC), call(F, Gap, SG),
+    format(atom(N), '~wは~wで、上限~wを~w超える', [What, SV, SC, SG]).
+額の葉(上限内, What, V, Cap, F, N) :-
+    call(F, V, SV), call(F, Cap, SC),
+    format(atom(N), '~wは~wで、上限~w以内', [What, SV, SC]).
+
+% 割合の語(分子, 分母, 語)：1/2 → 「5割」（割にならない割合は「◯分の◯」）
+割合の語(Num, Den, R) :- 0 =:= (Num * 10) mod Den, !, W is Num * 10 // Den, format(atom(R), '~w割', [W]).
+割合の語(Num, Den, R) :- format(atom(R), '~w分の~w', [Den, Num]).
+
+% 割合の葉：「基本日額10,000円の5割は5,000円で、超過勤務手当5,001円は5割を超える」。割り切れないときは「◯円と2分の1円」
+割合の葉(St, V, B, Num, Den, R, N) :-
+    M is B * Num, Q is M // Den, Rm is M mod Den,
+    円の表記(Q, SQ0),
+    ( Rm =:= 0 -> SQ = SQ0 ; format(atom(SQ), '~wと~w分の~w円', [SQ0, Den, Rm]) ),
+    円の表記(B, SB), 円の表記(V, SV),
+    ( St == 超える -> Tail = 'を超える' ; Tail = '以内' ),
+    format(atom(N), '基本日額~wの~wは~wで、超過勤務手当~wは~w~w', [SB, R, SQ, SV, R, Tail]).
+
+%% ---------- 法定制限額の段（14の欄。冊子55）----------
+% 「法定制限額は25,100,100円です」。式と端数の扱いは葉に置く
+法定制限額の段(C, [s(seigen, '法定制限額', 段(計算, T, [A], [X1, X2, W14, N]))]) :-
+    欄(登録者数, C, R),
+    法定制限額(R, L),
+    制限額の式(Per, Add, Unit, Pg, Q1, Q2),
+    円の表記(L, SL),
+    format(atom(T), '法定制限額は~wです。', [SL]),
+    X is R * Per + Add,
+    人の表記(R, SR), 円の表記(Per, SP), 円の表記(Add, SA), 円の表記(X, SX), 円の表記(Unit, SU),
+    (   X =:= L
+    ->  format(atom(N), '~w×~w＋~w＝~w', [SR, SP, SA, SX])
+    ;   format(atom(N), '~w×~w＋~w＝~wで、~w未満の端数を~wにして~w', [SR, SP, SA, SX, SU, SU, SL]) ),
+    箱の条(Pg, A),
+    しおりの行(Pg, Q1, X1), しおりの行(Pg, Q2, X2),
+    入れた(登録者数, C, W14).
+
+%% ---------- 報酬の基本日額（冊子58） ----------
+上限('事務員の報酬', '報酬（基本日額）', 以内(15000), 58,
+    '報酬（基本日額　事務員：１日15,000円以内、車上運動員：１日20,000円以内、手話通訳者：１日20,000円以内、要約筆記者：１日20,000円以内）').
+上限('車上運動員の報酬', '報酬（基本日額）', 以内(20000), 58,
+    '報酬（基本日額　事務員：１日15,000円以内、車上運動員：１日20,000円以内、手話通訳者：１日20,000円以内、要約筆記者：１日20,000円以内）').
+上限('手話通訳者の報酬', '報酬（基本日額）', 以内(20000), 58,
+    '報酬（基本日額　事務員：１日15,000円以内、車上運動員：１日20,000円以内、手話通訳者：１日20,000円以内、要約筆記者：１日20,000円以内）').
+上限('要約筆記者の報酬', '報酬（基本日額）', 以内(20000), 58,
+    '報酬（基本日額　事務員：１日15,000円以内、車上運動員：１日20,000円以内、手話通訳者：１日20,000円以内、要約筆記者：１日20,000円以内）').
+上限('労務者の報酬', '報酬（基本日額）', 以内(10000), 58, '労 務 者　－　報酬（基本日額　１日10,000円以内）').
+
+%% ---------- 超過勤務手当（冊子58） ----------
+% 労務者：1日の額と、基本日額に対する割合の両方を満たす
+上限('労務者の超過勤務手当', '超過勤務手当（1日）', 以内(5000), 58, '超過勤務手当（１日5,000円以内。ただし、基本日額の５割以内）').
+上限('労務者の超過勤務手当', '超過勤務手当（基本日額に対する割合）', 割合以内(1, 2), 58, '超過勤務手当（１日5,000円以内。ただし、基本日額の５割以内）').
+% 事務員等（事務員・車上運動員・手話通訳者・要約筆記者）
+上限('事務員等の超過勤務手当', '超過勤務手当', 支給できない, 58, 'また、事務員等には超過勤務手当を支給することはできません。').
+
+%% ---------- 事務員等の人数（冊子58） ----------
+上限('事務員等の人数（1日）', '1日に使う事務員等の人数', 以内(50), 58, '人数に制限あり（１日50人以内）　・・・・・　異なる者の使用は期間を通じて250人まで').
+上限('事務員等の人数（期間を通じて）', '期間を通じて使う異なる事務員等の人数', 以内(250), 58, '人数に制限あり（１日50人以内）　・・・・・　異なる者の使用は期間を通じて250人まで').
+
+%% ---------- 法定制限額（冊子55） ----------
+% 制限額の式(1人あたりの額, 足す額, 端数の単位, 冊子ページ, 原文の式, 原文の注)
+制限額の式(15, 19100000, 100, 55,
+    '当該選挙区内の当該選挙時登録日現在選挙人名簿登録者数×15円＋1,910万円',
+    '（注）100円未満の端数があるときはその端数は100円とする。').
+</script>
+<script type="text/prolog" data-name="rules_g_hantei.pl">% rules/g_hantei.pl — 段を束ねて見出し・根拠（冊子ページ）・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠の冊子ページ), Trees)
+%     段 = 段(状態, 文, 箱の条, 葉のリスト)　結論ごとの段 = s(画面のid, 見出し, 段)
+%     段は mujun_a（schema の 組み合わせなし）と、rules/a_keijou.pl・rules/b_jougen.pl が返す段。
+%   形は kubun-prolog の g_hantei.pl と同じ（2026-11-26 案A。案は ../senkyohi_form_plan_answer_1126.md の「段の出し方」）。
+%   前は g_hantei.pl が無く、web.pl の keijou_rows・keijou_explain（①）と jougen_rows・jougen_explain（②）が別々に答えを作り、
+%   ①の木は「「中身」の書き方」を根にした1本に全部の答えをぶら下げていた（REVIEW_RULES B5）。
+%   今は段ごとに状態を持ち、状態を全部名前で書き、知らない状態は throw で止める。
+%   「しおりでは決まらない」は段にしない（決め2。about の「しおりだけで決まらなかった点」に書く）。
+%   段の文には、画面の上で指す先の無い指示語（その・この・当該 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+
+%% ---- judge ----
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    Steps \== [],
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 成り立たない組があれば、その組だけを段にする（REVIEW_RULES C3。ほかの段は出さない）。
+% 組は findall で全部集め、組ごとに1段にする（id は mujun_a。REVIEW_RULES 末尾「AI同士で決めた書き方」1・2）。
+% 無ければ1回のお金・物の出入りで起きた事実を、同じ入力で全部の段に当てる（REVIEW_RULES C4・C5）。並びは案A「段の出し方」の順
+% （収入 → 算入 → 費目 → 報酬の上限・超過勤務手当・人数 → 法定制限額）で、そのあと 当たった答えを先に（止まる答えを先に）。
+% 1の欄が「受け取った」なら収入の段だけ、「払った」なら算入・費目・報酬の段を呼ぶ。法定制限額の段はどちらでも呼ぶ（案A「段の出し方」の5）。
+% 算入の段が「選挙運動費用に入れません」などの 入れない を答えたら、費目の段は呼ばない（案A「段の出し方」の2。kubun の 欠けた手続 と同じ止め方）。
+% 報酬の段（rules/b_jougen.pl）は3・4の欄で自分の段かを見て、当たらなければ [] を返す。期間の段は足さない（決め4）。
+% 同じ述語を別のファイルに分けて書くと後の読み込みで消えるので、まとめはここに1つだけ置く
+全部の段(C, Steps) :-
+    findall(s(Id, 'この組み合わせはありません', 段(組み合わせなし, 'この組み合わせはありません。', As, Ws)),
+            ( 組み合わせなし(C, K, Ws, As), atom_concat(mujun_, K, Id) ), Steps),
+    Steps \== [], !.
+全部の段(C, Steps) :-
+    ( 欄(向き, C, 受け取った) ->
+        収入の段(C, L1), L2 = [], L3 = [], L4 = []
+    ;   L1 = [],
+        算入の段(C, L20),
+        % 入れない なら報酬の段も呼ばない（費目の段と同じ扱い。2回目の依頼書の決め1）。
+        % 呼ばないのはアプリの約束事②（yakusoku/jougen.pl の 算入しない/1。4回目の依頼書。REVIEW_RULES D1）なので、木に約束事の行を出す
+        ( 算入しない(L20) -> 止めた約束(L20, L2), L3 = [], L4 = [] ; L2 = L20, 費目の段(C, L3), 報酬の段(C, L4) ) ),
+    法定制限額の段(C, L5),
+    append([L1, L2, L3, L4, L5], L0),
+    当たった答えを先に(L0, Steps).
+
+% 止めた約束(算入の段, 約束事の行を足した算入の段)：入れない の1つ目の段の葉の最後に約束事②の行を足す
+% （入れない の段が2つ＝選挙運動費用と会計帳簿のときも、約束事の行は1つだけにする。kubun の 決議の約束 が訴えの段の葉の最後に足すのと同じ置き方）。
+% 1つ目で止めるので、append で前から探して ! で切る
+止めた約束(L20, L2) :-
+    append(Pre, [s(Id, H, 段(入れない, T, As, Ls)) | Post], L20), !,
+    算入しないの約束(Y),
+    append(Ls, [Y], Ls1),
+    append(Pre, [s(Id, H, 段(入れない, T, As, Ls1)) | Post], L2).
+
+%% ---- 並べ方 ----
+% 並びは ①止まる答え ②当たった答え。kubun の ③答えを支える文・④「当たりません」に当たる段は案Aでは無い
+% （人件費の括弧書きは段にせず交通費の段の葉に置くため。案A「組の番号」）。番号が同じ段は 全部の段 の順のまま。
+% 組の番号 は番号を空のまま呼んで後で比べる。番号を束ねて呼ぶと頭に合わず、最後の throw の節に落ちて止まる（kubun と同じ）
+当たった答えを先に([], []) :- !.
+当たった答えを先に(L0, L) :-
+    findall(S, ( member(N, [1, 2]), member(S, L0), S = s(_, _, 段(St, _, _, _)), 組の番号(St, M), M =:= N ), L).
+
+% 組の番号(状態, 1=止まる答え | 2=当たった答え)。
+% 状態は全部名前で書き、知らない状態は止める（agents/dog/rules.md:97。kubun-prolog g_hantei.pl の 組の番号 の形、状態は案A「組の番号」）。
+% 補足 の行は作らない（依頼書「決まったこと」）
+組の番号(組み合わせなし, 1) :- !.   % ア
+組の番号(入れない, 1) :- !.         % 算入の段（冊子59・60）・収入の段（公費負担分・冊子58）・費目の段（家屋費に入れない・冊子59）
+組の番号(超える, 1) :- !.           % 報酬・超過勤務手当・人数・そのほかの運動員に報酬は払えない（冊子58）
+組の番号(書く, 2) :- !.             % 収入の段（種別）・費目の段（費目・家屋費の内訳・分ける）
+組の番号(含まれない, 2) :- !.       % 人件費に入れない（候補者本人・冊子58。そのほかの運動員は 超える）
+組の番号(収入に入る, 2) :- !.       % 財産上の利益（冊子58）
+組の番号(上限内, 2) :- !.           % 報酬・超過勤務手当・人数（冊子58）
+組の番号(計算, 2) :- !.             % 法定制限額（冊子55）
+組の番号(St, _) :- throw(知らない状態(St)).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、段の文だけを出す（REVIEW_RULES A1・A2。入力の言い直し・「しおりでは決まりません」・払った額を付けない）。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(_, Steps, Ws) :-
+    findall(W, ( member(s(_, _, S), Steps), 問いの答え(S, W) ), Ws).
+
+% 答えの文に箱の条（冊子ページ）を（）で付ける。条の無い段は付けない（「（）」を画面に出さない）
+問いの答え(S, W) :-
+    S = 段(_, _, As, _),
+    答え(S, W0),
+    ( As == [] -> W = W0 ; 条の表記(As, A), format(atom(W), '~w（~w）', [W0, A]) ).
+
+% 節の文：答えの文（条を付けない）
+節の文(_, S, W) :- 答え(S, W).
+
+% 答え(段, 答えの文)：段の文の末尾の「。」を外す。
+答え(段(_, M, _, _), W) :-
+    ( atom_concat(M0, '。', M) -> W = M0 ; W = M ).
+
+%% ---- 根拠（冊子ページ） ----
+% 段の順に並べ、重複は1つに。名前は kubun と同じ 根拠条文 のまま（画面の r(Head, Steps, Arts) の3つ目）
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As, _), Ss), member(A, As) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5。結論をつないだ行と「次のすべてが成り立つ」の根は置かない）。
+% 並びは結論の箱と同じ。一番上の行は結論の箱の文で、その下に葉（しおりの行・起きた事実・払った額・約束事）を置く。
+% kubun の 段の約束（当たらない の段に約束事②を足す）は、当たらない の状態が無いので写していない
+木(_, Steps, Trees) :-
+    findall(T, ( member(s(_, _, S), Steps), 段の木(S, T) ), Trees).
+
+段の木(S, t(K, W, '', Cs)) :-
+    S = 段(St, _, _, Fs),
+    問いの答え(S, W),
+    maplist(葉の行, Fs, Kids),
+    すべて(W, '', Kids, t(_, W, _, Cs)),
+    印(St, K).
+
+% 止まった段（組の番号の1番）は info、そのほか（2番）は ok（木ごとに、その段で決める）
+% kubun は1番と4番を memberchk で info にしていた。4番が無いので1番だけを =:= で比べる
+印(St, K) :- 組の番号(St, N), ( N =:= 1 -> K = info ; K = ok ).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は kubun-prolog の web.pl と同じ（2026-11-26 案A）。
+%   前は ① keijou_rows・keijou_explain と ② jougen_rows・jougen_explain の2組で、欄の選択肢は choice_list で画面に渡していた。
+%   今は1つの ctx から全部の段を出し、木を結論ごとに1本にした（B5）。「この組み合わせはありません」も段の1つにした（rules/g_hantei.pl の 全部の段）。
+%   欄の選択肢は画面に直書きし（kubun と同じ）、choice_list は消した。木を平らにする ex_flat は schema.pl に移した。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+
+%% =====================================================================
+%% ルールにしたしおりの文の一覧（about の「使ったしおりの文」）：q(冊子ページ, 原文) のリスト（ページ順・重複なし）
+%%   前は判定ページの下の欄に出していた（REVIEW_RULES A5 で about へ移す。about は3回目）
+%% =====================================================================
+shiori_quotes(L) :-
+    findall(q(P, Q), 区分(_, _, P, Q), L1),
+    findall(q(P, Q), 上限(_, _, _, P, Q), L2),
+    findall(q(P, Q), ( 制限額の式(_, _, _, P, Q1, Q2), member(Q, [Q1, Q2]) ), L3),
+    append([L1, L2, L3], L0), sort(L0, L).
+</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+// ==== 共有ここから（別ページでも同じ部品を使う） ====
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 根拠の木 ----------
+// 出典は「冊子58ページ」の形（しおりの冊子ページ）。法令の原文は入れていないので、kubun の条文の原文を開くボタン（lawHTML・parseArt）は写さず、
+// 冊子ページは押せない札にする（しおりの原文は木の葉に「しおり：「…」」で出ている）
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、上の行になります。<span class="yk">アプリの約束事</span>＝しおりの文ではなく、このアプリの決め事（収録範囲・仕組みのページに一覧）。</p>`;
+// 凡例は最初の木の上に1回だけ出す（legend＝false で外す。kubun-prolog と同じ。2026-11-26 案Aで木を結論ごとにしたため）
+// 「または」の節は rules に無いので、凡例からオレンジの線を外した（B3）。描き方の or の分岐は kubun のまま残した
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <span class="law">${esc(a)}</span>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+// ==== 共有ここまで ====
+
+async function boot(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const need = ["result/2", "explain/2", "heads/2", "answers/2"].filter(p => !once(`current_predicate(${p})`));
+    if (need.length) throw new Error(`Prologの読み込みが不完全です（${need.join("・")} がありません）。${errBuf.slice(-3).join(" ")}`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    renderPresets();
+    ask();
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+    $("answer").innerHTML = `<p class="loading err">エラー：${esc(e.message)}</p>`;
+  }
+}
+
+// ---- 入力 → ctx の文字 ----
+// 欄はいつも全部出し、出し消しをしない（REVIEW_RULES C5。形は kubun-prolog と同じ。2026-11-26 案A）。
+// 並びは schema.pl の ctx の引数の順（1〜14）。前の choice_list で選択肢を引く boot（前の :242–253）、fillItems・fillVals（前の :262–271）、
+// タブの showTab（前の :327–331）はやめた。関係のない欄は Prolog が見ないだけ。
+const IDS = ["muki","uketori","shiharai","aite","tatemono","kuruma","tsukurikata","haratta","jiki",
+  "nichigaku","chokin","hinin","tsuushi","touroku"];
+// 数字の欄（5個）。空なら「空」、読めない値は「不正」で渡す（schema.pl の ctx_valid が 数の欄/2 と 数の形/1 で範囲と大小を見る。
+// 「空」と「不正」は整数でないので「判定できませんでした」）。先頭の0は外す（07 → 7）。形は kubun-prolog の val と同じ。
+// 桁は kubun の6桁までを9桁までにした（14の選挙人名簿登録者数が6桁を超えることがあるため）
+const NUM_IDS = ["nichigaku","chokin","hinin","tsuushi","touroku"];
+const val = id => {
+  const el = $(id), v = el.value.trim();
+  if (!NUM_IDS.includes(id)) return atom(v);
+  if (v === "") return "空";
+  return /^[0-9]{1,9}$/.test(v) ? String(parseInt(v, 10)) : "不正";
+};
+function buildCtx(){
+  return `ctx(${IDS.map(val).join(",")})`;
+}
+
+// ---- 判定と表示 ----
+const HEAD = `<div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div>`;
+// 箱の条は「冊子58」の形。押して開く原文が無いので、押せない札にする（上の 根拠の木 のコメント）
+const lawBtn = a => a === "@約束事" ? `<span class="yk">アプリの約束事</span>` : (a ? `<span class="law">${esc(a)}</span>` : "");
+const artsHTML = as => as.map(String).map(lawBtn).join(" ");
+// 断り書き（出典は冊子55・58〜60だけ・条文と総務省の解釈と判例は入れていない・政治資金収支報告書とは別・まだ入っていないもの・
+// しおりだけで決まらない点・実際の法定制限額は告示される）は about.html の範囲の節と「載せなかったもの」に置く
+// （REVIEW_RULES A1・A3・A5。2026-11-26 前の頭の .scope（前の :101–105）と結果の下の告示の文（前の :323）を移した）。頭の注意は見本の1文だけ（A3）。
+
+// 段(状態, 文, 箱の条, 葉) を1段ぶんの行にする。文は答え（answers/2。段の文から末尾の「。」を外したもの）
+function stepHTML(id, title, s, ans){
+  const [st, , as] = T(s).args;
+  return `<p class="sec">${esc(title)}</p><p class="step" id="${id}" data-st="${esc(st)}">${esc(ans)}。 ${artsHTML(as)}</p>`;
+}
+
+function ask(){
+  const c = buildCtx();
+  $("qline").textContent = `?- result(${c}, R).`;
+  if (!pl) return;
+  try{
+    // 木は結論1つにつき1本（REVIEW_RULES B5）。凡例は最初の木の上に1回だけ
+    const lr = once(`explain(${c}, Lines)`);
+    const trees = lr ? lr.Lines.map(ls => ls.map(T).map(t => t.args)) : [];
+    const r = once(`result(${c}, r(Head,Steps,Arts))`);
+    if (!r){
+      // ここに来るのは、欄の値が選択肢に無いときと、数の欄が空・整数でない・枠の外（12の欄が13の欄より多い。schema.pl の ctx_valid）のとき
+      $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">判定できませんでした</div></div><p class="hint">数の欄には、欄の下に書いた範囲の整数を入れてください。</p></div>`;
+      return;
+    }
+    const ar = once(`answers(${c}, L)`);
+    const ans = Object.fromEntries((ar ? ar.L : []).map(T).map(t => t.args));
+    const steps = r.Steps.map(T).map(t => t.args).filter(([id]) => ans[id] !== undefined);
+    // 答えが2つ以上なら箇条書き、1つなら1文のまま（REVIEW_RULES A7）。並びは止まる答えが先
+    const hr = once(`heads(${c}, L)`);
+    const hs = hr ? hr.L.map(String) : [];
+    const big = hs.length > 1 ? `<ul>${hs.map(h => `<li>${esc(h)}</li>`).join("")}</ul>` : esc(r.Head);
+    $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">${big}</div></div>
+      ${steps.map(([id, title, s], i) => stepHTML("st-" + id, `${i + 1}　${title}`, s, ans[id])).join("")}
+      <p class="sec">根拠（しおりの冊子ページ）</p><p class="arts" id="arts">${r.Arts.length ? artsHTML(r.Arts) : "当てはまるしおりの文はありません。"}</p>
+      ${trees.length ? `<p class="sec">なぜそうなるか（論理の木）</p>${trees.map((ls, i) => treeHTML(ls, i === 0)).join("")}` : ""}</div>`;
+  } catch(e){ $("answer").innerHTML = `<p class="hint">エラー：${esc(e.message)}</p>`; }
+}
+
+// ---- 例（名前は起きた事実の言葉で書く。しおりの文を写さず、指示語で始めない（REVIEW_RULES C2・C4））----
+function presetList(){
+  // 欄の値は DEFAULTS から変えるものだけ書く。2026-11-26 14欄で組み直した（前の例は①5個・②5個で、
+  // 「看板を労務者に作らせた」「ウェブ広告（しおりに無い）」「事務員に1日15,001円」のように、タブごとに中身1つか上限の項目1つを選ぶ形だった）。
+  // 並びと値は 2回目の確かめ（agents/beaver/workspace/senkyohi_planA2_check.mjs）の前の中身44個・境目7つ・ありません1つと同じ。
+  // 前の中身「ウェブサイト・インターネット広告の費用」の例は消した（決め3）
+  const R = {muki:"受け取った"};
+  return [
+    // 受け取ったもの
+    ["ほかの人からお金をもらった", {...R, uketori:"寄附金"}],
+    ["ほかの人から物をもらった", {...R, uketori:"寄附物"}],
+    ["ほかの人にただで働いてもらった", {...R, uketori:"労務"}],
+    ["選挙事務所をただで使わせてもらった", {...R, uketori:"事務所"}],
+    ["候補者本人のお金を入れた", {...R, uketori:"自己資金"}],
+    ["お金を借りた", {...R, uketori:"借入金"}],
+    ["電気・ガス・水道をただで使わせてもらった", {...R, uketori:"光熱水"}],
+    ["借金を免除してもらった", {...R, uketori:"免除貸与"}],
+    ["ポスターの費用を京都府が業者に直接払った", {...R, uketori:"公費負担"}],
+    // 報酬
+    ["事務員に1日15,000円の報酬を払った", {}],
+    ["事務員に1日15,001円の報酬を払った", {nichigaku:"15001"}],
+    ["事務員に超過勤務手当を1日1円払った", {chokin:"1"}],
+    ["車上運動員に1日20,000円の報酬を払った", {aite:"車上運動員", nichigaku:"20000"}],
+    ["手話通訳者に1日20,000円の報酬を払った", {aite:"手話通訳者", nichigaku:"20000"}],
+    ["要約筆記者に1日20,000円の報酬を払った", {aite:"要約筆記者", nichigaku:"20000"}],
+    ["労務者に1日10,000円の報酬を払った", {aite:"労務者", nichigaku:"10000"}],
+    ["労務者に基本日額10,000円と超過勤務手当5,000円を払った", {aite:"労務者", nichigaku:"10000", chokin:"5000"}],
+    ["労務者に基本日額10,000円と超過勤務手当5,001円を払った", {aite:"労務者", nichigaku:"10000", chokin:"5001"}],
+    ["労務者に基本日額7,999円と超過勤務手当4,000円を払った", {aite:"労務者", nichigaku:"7999", chokin:"4000"}],
+    ["1日に51人、期間を通じて251人の事務員に報酬を払った", {hinin:"51", tsuushi:"251"}],
+    ["候補者本人に報酬を払った", {aite:"候補者"}],
+    ["そのほかの運動員に報酬を払った", {aite:"運動員"}],
+    ["報酬を払ったが、人には払っていない", {aite:"人なし"}],
+    ["候補者・出納責任者と意思を通じていない人が、事務員に1日15,001円の報酬を払った", {haratta:"通じない人", nichigaku:"15001"}],
+    // 家屋費・通信費
+    ["選挙事務所を借りた", {shiharai:"借上料", tatemono:"選挙事務所"}],
+    ["選挙事務所に電話を架設した", {shiharai:"電話架設"}],
+    ["個人演説会の会場を借りた", {shiharai:"借上料", tatemono:"演説会場"}],
+    ["候補者の自宅を選挙事務所にして、借上料を払った", {shiharai:"借上料", tatemono:"自宅"}],
+    ["電話料を払った", {shiharai:"電話料"}],
+    ["郵便料を払った", {shiharai:"郵便料"}],
+    ["臨時電話の保証金を払った", {shiharai:"保証金"}],
+    // 交通費・自動車
+    ["事務連絡にタクシーを使った", {shiharai:"交通費", aite:"人なし"}],
+    ["事務員に交通費を実費で払った", {shiharai:"交通費"}],
+    ["労務者に交通費を実費で払った", {shiharai:"交通費", aite:"労務者"}],
+    ["候補者本人がタクシーに乗った", {shiharai:"交通費", aite:"候補者"}],
+    ["法定の選挙運動用自動車を借りた", {shiharai:"自動車", kuruma:"法定"}],
+    ["候補者が乗る自動車を借りた", {shiharai:"自動車", kuruma:"候補者用"}],
+    ["選挙運動用自動車に備え付けた拡声機を使った", {shiharai:"拡声機"}],
+    // 印刷費〜雑費
+    ["ビラを印刷した", {shiharai:"印刷"}],
+    ["看板を業者に作らせた", {shiharai:"作成費", tsukurikata:"業者"}],
+    ["労務者を雇い材料を出して看板を作った", {shiharai:"作成費", tsukurikata:"労務者"}],
+    ["文房具を買った", {shiharai:"文房具"}],
+    ["湯茶と菓子を出した", {shiharai:"湯茶"}],
+    ["宿泊費を払った", {shiharai:"休泊"}],
+    ["電気代を払った", {shiharai:"光熱水費"}],
+    ["振込手数料を払った", {shiharai:"振込手数料"}],
+    // 選挙運動費用に入れないもの
+    ["立候補の届出より前に、候補者・出納責任者と意思を通じていない人がビラを印刷した", {shiharai:"印刷", haratta:"通じない人", jiki:"届出前"}],
+    ["届出の日から選挙期日の前日までに、候補者・出納責任者と意思を通じていない人がビラを印刷した", {shiharai:"印刷", haratta:"通じない人"}],
+    ["選挙期日より後の残務整理で、郵便料を払った", {shiharai:"郵便料", jiki:"期日後"}],
+    ["戸籍謄本の手数料を払った", {shiharai:"手数料"}],
+    ["候補者届出政党がビラを印刷した", {shiharai:"印刷", haratta:"政党"}],
+    ["供託金を納めた", {shiharai:"供託金"}],
+    // 法定制限額
+    ["選挙人名簿登録者数が400,001人の選挙区で、お金をもらった", {...R, uketori:"寄附金", touroku:"400001"}],
+  ];
+}
+// 例に書いていない欄は既定に戻す（前の例の値を残すと、名前と違う入力になるため。kubun-prolog と同じ）
+// 既定は2回目の確かめ（senkyohi_planA2_check.mjs の base）と同じ。4の欄は「事務員」（決め9）。
+// 既定のままで「支出の部の費目「人件費」に書きます」「事務員の報酬は、1日の上限15,000円以内です」・人数の2つ・「法定制限額は25,100,000円です」の5つが付く
+// （2回目の確かめの「事務員の報酬」の行。画面では確かめていない）
+const DEFAULTS = {muki:"払った",uketori:"寄附金",shiharai:"報酬",aite:"事務員",tatemono:"選挙事務所",kuruma:"法定",tsukurikata:"業者",
+  haratta:"候補者",jiki:"期間中",nichigaku:"15000",chokin:"0",hinin:"1",tsuushi:"1",touroku:"400000"};
+function setDefaults(p){
+  for (const [id, v] of Object.entries(DEFAULTS)) $(id).value = p[id] !== undefined ? String(p[id]) : v;
+}
+function applyPreset(p){
+  setDefaults(p);
+  ask();
+}
+function renderPresets(){
+  $("presets").innerHTML = presetList().map((p, i) => `<button type="button" data-preset="${i}">${esc(p[0])}</button>`).join("");
+}
+
+// 初期表示（既定の値）
+setDefaults({});
+
+document.addEventListener("change", e => { if (e.target.closest("#slots")) ask(); });
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.preset !== undefined){ applyPreset(presetList()[+b.dataset.preset][1]); $("answer").scrollIntoView?.(); }
+});
+
+if (typeof SWIPL === "function") boot();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; $("answer").innerHTML = `<p class="loading err">Prolog（swipl-wasm）を読み込めませんでした。ページを再読み込みしてください。</p>`; }
+</script>
