@@ -1,0 +1,1953 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="マンションの集会を誰が開けるか、通知は足りているか、決議は通るか、工事や規約の変更をできるか、困った住人に何を求められるかを、建物の区分所有等に関する法律の条文から判定します。">
+<title>マンションの決議を逆から引く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 見た目の方針：道路交通法版（自転車の青切符）・公選法版と同じ書式感に統一。
+   色は 墨・青・赤 の3つ（論理の木の かつ=青／または=橙 はそのまま）。角丸なし・影なし・罫線で区切る。 */
+:root{
+  --bg:#f3f1ea; --paper:#fbfaf6; --ink:#141414; --muted:#5b5a55; --line:#141414; --hair:#cfccc2; --soft:#e7e4da;
+  --blue:#1c3f94; --red:#c4161c; --q-soft:#dfe5f3;
+  --and:#1f5fb4; --or:#d0650a; --yk:#6b5a1e; --field:#fff;
+  --ok:#1e7344; --ng:#c4161c;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-law:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101112; --paper:#17191b; --ink:#ecebe6; --muted:#a3a29c; --line:#ecebe6; --hair:#34373a; --soft:#222528;
+  --blue:#7d9cf0; --red:#ff6b62; --q-soft:#1d2840;
+  --and:#7fb0f0; --or:#f2a65a; --yk:#d8c27a; --field:#0b0c0d;
+  --ok:#6fcf98; --ng:#f0867c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;margin:0}
+body::before{content:"";display:block;height:8px;background:linear-gradient(90deg,var(--blue) 0 33.4%,var(--ink) 33.4% 66.7%,var(--red) 66.7%)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:22px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+h1{font-family:var(--f-body);margin:0}
+p{margin:0}
+.hint{color:var(--muted);font-size:.84rem}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* ── 頭 ── */
+.mast{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 28px;border-bottom:3px solid var(--line);padding-bottom:18px}
+h1{grid-column:1;grid-row:1;font-size:clamp(2.4rem,9vw,4.8rem);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1 .ao{color:var(--blue);display:inline-block}
+.lead{grid-column:1;margin-top:14px;font-size:1rem;font-weight:700}
+.judge-plate{grid-column:2;grid-row:1 / span 2;align-self:end;display:grid;grid-template-columns:auto auto;align-items:center;border:2px solid var(--line);background:var(--paper)}
+.judge-plate .jp-k{grid-column:1 / -1;font-size:.7rem;letter-spacing:.3em;padding:2px 8px;background:var(--ink);color:var(--paper)}
+.judge-plate img{width:64px;height:64px;object-fit:contain;border-right:1px solid var(--line);display:block}
+.judge-plate .jp-v{padding:0 14px;font-weight:700;font-size:1.15rem;line-height:1.3}
+.judge-plate .jp-v small{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.caution{grid-column:1 / -1;margin-top:16px;display:flex;border:1.5px solid var(--red);background:var(--paper);font-size:.88rem;line-height:1.6}
+.caution b{flex:0 0 auto;background:var(--red);color:#fff;padding:8px 12px;letter-spacing:.2em;display:flex;align-items:center}
+.caution span{padding:8px 12px}
+.caution .aboutlink{margin-left:.6em;font-weight:700;white-space:nowrap}
+@media (max-width:640px){
+  .mast{grid-template-columns:minmax(0,1fr)}
+  .judge-plate{grid-column:1;grid-row:auto;justify-self:start;margin-top:14px}
+}
+.techline{display:flex;flex-wrap:wrap;gap:4px 16px;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;border-top:1px solid var(--line);padding-top:8px}
+.loading{color:var(--muted);font-size:.9rem;border:2px dashed var(--hair);padding:18px}
+.loading.err{color:var(--red);border-color:var(--red)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;background:var(--muted)}
+.status.ready i{background:var(--blue)} .status.err i{background:var(--red)}
+.status.err{color:var(--red)}
+
+/* ── 入力 ── */
+.ask{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.sec-h{font-size:.74rem;font-family:var(--f-mono);letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--line);border-left:2px solid var(--line);background:var(--paper);counter-reset:slot}
+@media (max-width:600px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0;background:var(--soft);border-right:2px solid var(--line);border-bottom:2px solid var(--line);counter-increment:slot}
+.slot label{font-size:.78rem;font-weight:700;color:var(--ink);padding:6px 10px 0;letter-spacing:.04em}
+.slot label::before{content:counter(slot) "　";font-family:var(--f-mono);font-weight:500;color:var(--muted)}
+.field{position:relative;display:block;margin:4px 10px 6px;border:2px solid var(--line);background:var(--field);min-width:0}
+.field::after{content:"▼";position:absolute;top:0;right:0;bottom:0;width:2.3rem;display:flex;align-items:center;justify-content:center;font-size:.72rem;background:var(--ink);color:var(--paper);pointer-events:none}
+.field select{appearance:none;-webkit-appearance:none;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 2.9rem 7px 10px;min-width:0;width:100%;cursor:pointer;text-overflow:ellipsis}
+.field select:focus-visible{outline:none}
+.field:hover{border-color:var(--blue)} .field:hover::after{background:var(--blue);color:#fff}
+.field:focus-within{outline:3px solid var(--blue);outline-offset:1px}
+.field select option,.field select optgroup{background:var(--paper);color:var(--ink)}
+/* 欄の上の小見出し（建物と区分所有者／集会の開き方／招集の通知／決める事柄／出席と賛成／特別の影響／専有部分の工事／
+   一部の人だけが使う共用部分／相手のしたこと）。選ばせる欄ではないので番号を数えない（akiya-prolog と同じ。2026-11-26 案A）。
+   前の .step.off（判定していない段の色）・.flow・NOTE_* の枠（tokurei）・.disclaimer-inline・pre の左線は、akiya の style に揃えて外した */
+.slots .slot-h{margin:0;padding:8px 10px 4px;border-bottom:2px solid var(--line);border-right:2px solid var(--line);background:var(--paper)}
+.slot .desc{font-size:.74rem;line-height:1.45;color:var(--muted);padding:0 10px 8px}
+.full-slot{grid-column:1 / -1}
+.presets{display:flex;flex-wrap:wrap}
+.presets button{font:inherit;font-size:.86rem;cursor:pointer;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--hair);padding:7px 0;margin-right:22px;text-align:left}
+.presets button::before{content:"→ ";color:var(--blue);font-weight:700}
+.presets button:hover{color:var(--blue)}
+.qline{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding:6px 0;border-top:1px dashed var(--hair);overflow-x:auto;white-space:nowrap}
+
+/* ── 判定 ── */
+.verdict{display:grid;gap:10px;border:2px solid var(--line);background:var(--paper);padding:0 18px 18px}
+.vhead{margin:0 -18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch;border-bottom:2px solid var(--line);background:var(--ink);color:var(--paper)}
+.densuke-bubble{display:flex;align-items:center;border-right:2px solid var(--line);background:var(--paper)}
+.densuke-bubble img{flex:0 0 auto;width:56px;height:56px;object-fit:contain;display:block}
+.densuke-bubble .bubble-label{font-weight:700;font-size:.78rem;color:var(--ink);padding:0 12px 0 4px;white-space:nowrap}
+.vhead .big{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:clamp(1.1rem,3.5vw,1.6rem);line-height:1.3}
+.vhead .big ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
+.law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
+button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
+button.law:hover{border-color:var(--blue)}
+.sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
+.arts{line-height:2}
+.tree{margin-top:6px;font-size:.88rem}
+.tree .tr{display:flex;align-items:stretch}
+.tree .pc{flex:0 0 1.15em;position:relative}
+.tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
+.tree .pc.rl::before{bottom:auto;height:.95em}
+.tree .pc.rt::after,.tree .pc.rl::after{content:"";position:absolute;left:1.35em;top:.95em;width:.5em;border-top:1.5px solid var(--muted);opacity:.6}
+.tree .m{flex:0 0 auto;font-weight:700;min-width:1.2em;text-align:right;padding-top:2px}
+.tree .m.ok{color:var(--ok)} .tree .m.info{color:var(--muted)}
+.tree .t{flex:1 1 auto;min-width:10em;overflow-wrap:anywhere;padding:2px 0 3px 3px}
+.tree .t.top{font-weight:700}
+.tree-wrap{overflow-x:auto;padding-bottom:4px}
+.conn{display:block;margin-top:2px;font-size:.8rem;color:var(--muted);font-weight:400}
+.tree .pc.o-and::before,.tree .pc.o-and::after{border-color:var(--and);border-width:2.5px;opacity:1}
+.tree .pc.o-or::before,.tree .pc.o-or::after{border-color:var(--or);border-width:2.5px;opacity:1}
+.c-and{color:var(--and)} .c-or{color:var(--or)}
+.sw{display:inline-block;width:1.4em;height:0;vertical-align:middle;margin:0 3px 0 6px}
+.sw.and{border-top:2.5px solid var(--and)} .sw.or{border-top:2.5px solid var(--or)}
+.m.and,.m.or{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 6px;white-space:nowrap}
+.m.and{color:var(--and);border:2px solid var(--and)} .m.or{color:var(--or);border:2px solid var(--or)}
+.tree .t.and,.tree .t.or{color:var(--muted);font-size:.84rem}
+.legend{font-size:.8rem;color:var(--muted);margin:4px 0 2px}
+.lawtext{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--f-law);font-size:.88rem;line-height:1.85;margin:4px 0 6px}
+.lawtext h4{margin:0 0 4px;font-size:.9rem}
+.lawtext p{margin:0 0 4px}
+.lawtext .hint{font-family:var(--f-body)}
+.lawtext .hit{background:var(--q-soft);box-shadow:inset 3px 0 0 var(--blue)}
+.lawtext .it{padding-left:1.2em}
+.yk{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.5;padding:0 7px;white-space:nowrap;vertical-align:middle;color:var(--yk);border:1.5px dashed var(--yk)}
+
+/* ── 付録（about.html 共通スタイル）── */
+.appendix{display:grid;border-top:3px solid var(--line)}
+details.box{border-bottom:1px solid var(--line)}
+details.box[open]{padding-bottom:16px}
+details.box > summary{cursor:pointer;font-weight:700;list-style:none;padding:12px 0;display:flex;gap:12px;align-items:baseline}
+details.box > summary::-webkit-details-marker{display:none}
+details.box > summary::before{content:"＋";font-family:var(--f-mono);color:var(--blue);flex:0 0 auto}
+details.box[open] > summary::before{content:"－"}
+summary{cursor:pointer;font-weight:700}
+.scope{font-size:.86rem;line-height:1.75;display:grid;gap:8px;max-width:76ch}
+.scope a{color:var(--blue);overflow-wrap:anywhere}
+.cover-ch{margin-top:10px}
+.cover-ch h4{margin:0 0 4px;font-size:.84rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.cover-ch h4 span{font-weight:400;color:var(--muted);font-size:.78rem}
+.cells{display:flex;flex-wrap:wrap;gap:2px}
+.cell{display:inline-block;width:13px;height:13px;border:1px solid var(--hair);background:var(--paper);vertical-align:middle;cursor:pointer;padding:0}
+.cell.u1{background:var(--blue);border-color:var(--blue)}
+.cell.u2{background:repeating-linear-gradient(45deg,var(--soft),var(--soft) 2px,var(--paper) 2px,var(--paper) 4px)}
+.cover-total{font-weight:700;margin-top:6px}
+#cover-pick{margin-top:8px}
+.srcfile{margin-top:6px}
+.srcfile summary{font-weight:400;font-family:var(--f-mono);font-size:.84rem}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:.85rem;width:100%;border-top:2px solid var(--line)}
+th,td{padding:5px 8px;border-bottom:1px solid var(--hair);text-align:left;white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-weight:400;font-size:.78rem}
+textarea{width:100%;min-height:4rem;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:8px;margin-top:8px}
+pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border:1px solid var(--line);padding:10px;overflow:auto;max-height:24rem;margin:8px 0 0;white-space:pre-wrap;word-break:break-all}
+.btn{font:inherit;font-size:.85rem;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:4px 16px;font-weight:700;margin-top:6px}
+.foot{font-size:.78rem;color:var(--muted);max-width:76ch}
+
+/* ── 別ページ about.html ── */
+.wrap.about{max-width:1040px;grid-template-columns:minmax(0,1fr)}
+.mast.sub{display:block}
+.mast.sub h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.15;margin-top:6px}
+.mast.sub .lead{margin-top:10px}
+.backlink{font-size:.88rem;font-weight:700}
+.backlink a{text-decoration:none;border-bottom:1px solid currentColor}
+/* 数字の欄（数字を打つので ▼ を出さない。人数・議決権・割合・月数の21欄）*/
+.field.num::after{display:none}
+.field input{appearance:textfield;font:inherit;font-size:1rem;font-weight:700;line-height:1.4;color:var(--ink);background:transparent;border:0;border-radius:0;padding:7px 10px;min-width:0;width:100%}
+.field input:focus-visible{outline:none}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <h1>マンションの決議を<span class="ao">逆から引く</span></h1>
+    <div class="judge-plate"><span class="jp-k">判定</span><img src="densuke_icon.svg" width="64" height="64" alt="でんすけのアイコン"><span class="jp-v">でんすけ<small>秘書AI</small></span></div>
+    <p class="lead">マンションの集会について、誰が開けるか、招集の通知は足りているか、決議は通るか、工事や規約の変更をできるか、困った住人に何を求められるかを、でんすけが建物の区分所有等に関する法律（区分所有法）の条文で判定します。</p>
+    <p class="caution" role="note"><b>注意</b><span>条文をルールにして、論理的にそのまま演算した結果です。裁判所の判断とは異なる場合があります。<a class="aboutlink" href="about.html">収録範囲・仕組み →</a></span></p>
+  </header>
+
+  <section class="ask">
+    <div>
+      <p class="sec-h">例から選ぶ</p>
+      <div class="presets" id="presets"></div>
+    </div>
+    <!-- 欄は1回の集会で起きた事実を聞く42個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-26 案A。形は akiya-prolog と同じ）。
+         前の入口「どの話か」（iri）と集会の「どの話か」（shanashi）、欄の出し消し（SLOTS・updateSlots）、
+         隠れた欄を 関係なし で渡す shown・buildCtx をやめた。関係のない欄は Prolog が見ないだけ（schema.pl の ctx のコメント）。
+         並びは schema.pl の ctx の引数の順（1〜42）。小見出しは選ばせる欄ではない（番号を数えない）。
+         値と選択肢の語は schema.pl の 欄の値/2・葉の語/3 と同じ（「（あなたの考え）」「（調べた結果）」は画面だけに付ける）。
+         区分所有者の数・議決権の総数（kh・kv と sh・sv）は1・2の欄に、決議の種類・工事・請求の中身（kshu・ckoji・ykubun・ysenyu）は18の欄に、
+         招集の仕方（ssha・skanri・shanashi）は5・6の欄に、特別の影響と承諾（ceikyo・cshodaku・reikyo・rshodaku）は29の欄にまとめた（C1）。
+         規約で割合を決めたか（sgen・kqr・ksr）と一部共用部分か（richibu）は欄にせず、数の欄を空にして「決めていない」を表す。
+         建替えか（state）・特別の定数か（stoku）・決議があるか（yketsugi）・訴えるか（yuttae）・同意の集会か（sdois）は欄にせず、18・6の欄と決議の数から決める。
+         13・14の欄は日数の数の欄（sday・snd・sni2）を3択にした（決め2）。18の「形や働きを大きく変える工事」には例を入れない（決め3）。
+         欄名・選択肢から条番号と条文の写し（「会議の目的たる事項及び議案の要領」「形状又は効用の著しい変更」「第62条第2項の各号に当たるか」など）を外した（C2）。
+         欄の説明の断り（判定しません 8つ・数え方は条に書いていません 2つ）と、結果の下の NOTE_HANTEI・NOTE_JOBUN・NOTE_HOKA・note-betsu、
+         下の帯の「含みません」は about へ移す（A3・A5。about は5回目）。前の 判定できませんでした の下の入力の注意は、数の欄の説明に移した（A1） -->
+    <div class="slots" id="slots">
+      <p class="sec-h slot-h full-slot">建物と区分所有者</p>
+      <div class="slot" id="s-zh"><label for="zh">区分所有者の数</label><span class="field num"><input id="zh" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">1以上の整数</p></div>
+      <div class="slot" id="s-zv"><label for="zv">議決権の総数</label><span class="field num"><input id="zv" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">1以上の整数</p></div>
+      <div class="slot" id="s-jh"><label for="jh">所在が分からず、裁判所の裁判で議決権を失った区分所有者の数</label><span class="field num"><input id="jh" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">裁判＝38条の2の裁判。1の欄より少ない数（いなければ0）</p></div>
+      <div class="slot" id="s-jv"><label for="jv">3の人たちの議決権の数</label><span class="field num"><input id="jv" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">2の欄より少ない数（いなければ0）</p></div>
+      <div class="slot full-slot" id="s-kanrisha"><label for="kanrisha">管理者</label><span class="field"><select id="kanrisha">
+        <option value="いる">いる</option><option value="いない">いない</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">集会の開き方</p>
+      <div class="slot full-slot" id="s-hirakikata"><label for="hirakikata">集会を</label><span class="field"><select id="hirakikata">
+        <option value="管理者">管理者が招集した</option><option value="区分所有者">区分所有者が、管理者に請求しないで招集した</option><option value="請求">区分所有者が、管理者に招集を請求した</option><option value="省略">招集の手続をしないで開いた</option><option value="書面">開かずに、書面か電磁的方法で決めようとした</option>
+      </select></span></div>
+      <div class="slot" id="s-seih"><label for="seih">招集した（請求した）区分所有者の数</label><span class="field num"><input id="seih" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">1の欄から3の欄を引いた数まで</p></div>
+      <div class="slot" id="s-seiv"><label for="seiv">7の人たちの議決権の数</label><span class="field num"><input id="seiv" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">2の欄から4の欄を引いた数まで</p></div>
+      <div class="slot" id="s-gn"><label for="gn">招集・請求に要る人数の割合を規約で決めた分子（決めていなければ空）</label><span class="field num"><input id="gn" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">9と10の欄は、両方とも空か、両方とも数。分子は分母以下</p></div>
+      <div class="slot" id="s-gd"><label for="gd">9の割合の分母（決めていなければ空）</label><span class="field num"><input id="gd" type="number" min="1" step="1" inputmode="numeric"></span></div>
+      <div class="slot full-slot" id="s-tsuchi"><label for="tsuchi">請求の日から2週間以内に、管理者の招集の通知が</label><span class="field"><select id="tsuchi">
+        <option value="出ない">出なかった</option><option value="以内">出て、会日は請求の日から4週間以内</option><option value="後">出たが、会日は請求の日から4週間より後</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-zenin"><label for="zenin">区分所有者（議決権を失った人を除く）全員が</label><span class="field"><select id="zenin">
+        <option value="なし">そろって認めたことは無い</option><option value="省略">招集の手続を省くことに同意した</option><option value="承諾">書面か電磁的方法で決めることを承諾した</option><option value="合意">決める事柄に、書面か電磁的方法で合意した</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">招集の通知</p>
+      <div class="slot full-slot" id="s-jiki"><label for="jiki">通知を発した時期</label><span class="field"><select id="jiki">
+        <option value="二月より前">会日の2か月より前</option><option value="一週から二月">会日の1週間前から2か月前まで</option><option value="一週より後">会日の1週間前より後</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-nobi"><label for="nobi">規約で通知の期間を</label><span class="field"><select id="nobi">
+        <option value="伸ばしていない">伸ばしていない</option><option value="期間より前">伸ばしていて、伸ばした期間より前に発した</option><option value="期間に足りない">伸ばしているが、伸ばした期間に足りない</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-yoryo"><label for="yoryo">通知に、決める事柄を</label><span class="field"><select id="yoryo">
+        <option value="案まで">書き、案の中身も書いた</option><option value="事柄だけ">書いたが、案の中身は書いていない</option><option value="書いていない">書いていない</option>
+      </select></span></div>
+      <div class="slot" id="s-setsumei"><label for="setsumei">建替えを決めるとき、会日の1か月前までに説明会を</label><span class="field"><select id="setsumei">
+        <option value="開いた">開いた</option><option value="開いていない">開いていない</option>
+      </select></span></div>
+      <div class="slot" id="s-jikou"><label for="jikou">規約に「通知していない事柄も決められる」と</label><span class="field"><select id="jikou">
+        <option value="書いてある">書いてある</option><option value="書いていない">書いていない</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">決める事柄</p>
+      <div class="slot full-slot" id="s-kotogara"><label for="kotogara">集会で決める事柄</label><span class="field"><select id="kotogara">
+        <option value="変更">共用部分の形や働きを大きく変える工事（あなたの考え）</option>
+        <option value="瑕疵">共用部分の形や働きを大きく変える工事のうち、設備の傷みで人の権利を害するおそれを除くか、高齢者・障害者の移動の負担を軽くするためのもの</option>
+        <option value="管理">形や働きを大きく変えない工事・修繕</option>
+        <option value="保存">壊れた所を元に戻すなど今の状態を保つこと（あなたの考え）</option>
+        <option value="保険">共用部分の損害保険の契約</option>
+        <option value="規約">規約を作る・変える・なくす</option>
+        <option value="普通">そのほかの事柄（管理者を選ぶ など）</option>
+        <option value="停止">困った区分所有者・占有者に、行為をやめるよう求める（訴えない）</option>
+        <option value="停止の訴え">困った区分所有者・占有者に、行為をやめるよう訴えて求める</option>
+        <option value="使用禁止">困った区分所有者に、専有部分を使わせないよう訴える</option>
+        <option value="競売">困った区分所有者の区分所有権の競売を訴える</option>
+        <option value="引渡し">困った占有者の契約を解いて、部屋の引渡しを訴える</option>
+        <option value="建替え">建物を取り壊して建て替える</option>
+      </select></span><p class="desc">専有部分＝区分所有者が持つ部屋。共用部分＝廊下・階段・外壁など、部屋の外の建物の部分</p></div>
+      <div class="slot full-slot" id="s-go"><label for="go">建て替える建物は（調べた結果）</label><span class="field"><select id="go">
+        <option value="なし">どれにも当たらない</option>
+        <option value="第一号">地震に対する安全性が、法務大臣の基準に合っていない</option>
+        <option value="第二号">火災に対する安全性が、法務大臣の基準に合っていない</option>
+        <option value="第三号">外壁や外装材がはがれて落ち、周りに危害を生じるおそれがある（法務大臣の基準）</option>
+        <option value="第四号">給水・排水の配管が傷み、衛生上ひどく有害になるおそれがある（法務大臣の基準）</option>
+        <option value="第五号">高齢者・障害者の移動のしやすさが、法務大臣の基準に合っていない</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-kanrikiyaku"><label for="kanrikiyaku">規約に「共用部分の管理は規約で決める」と</label><span class="field"><select id="kanrikiyaku">
+        <option value="書いてある">書いてある</option><option value="書いていない">書いていない</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">出席と賛成</p>
+      <div class="slot" id="s-deh"><label for="deh">出席した区分所有者の数</label><span class="field num"><input id="deh" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">書面・代理人・電磁的方法で議決権を使った人も出席に数える（39条2項・3項）。1の欄から3の欄を引いた数まで</p></div>
+      <div class="slot" id="s-dev"><label for="dev">21の人たちの議決権の数</label><span class="field num"><input id="dev" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">2の欄から4の欄を引いた数まで</p></div>
+      <div class="slot" id="s-sanh"><label for="sanh">賛成した区分所有者の数</label><span class="field num"><input id="sanh" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">21の欄の数まで</p></div>
+      <div class="slot" id="s-sanv"><label for="sanv">23の人たちの議決権の数</label><span class="field num"><input id="sanv" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">22の欄の数まで</p></div>
+      <div class="slot" id="s-qn"><label for="qn">出席に要る割合を規約で決めた分子（決めていなければ空）</label><span class="field num"><input id="qn" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">25と26の欄は、両方とも空か、両方とも数。分子は分母以下</p></div>
+      <div class="slot" id="s-qd"><label for="qd">25の割合の分母（決めていなければ空）</label><span class="field num"><input id="qd" type="number" min="1" step="1" inputmode="numeric"></span></div>
+      <div class="slot" id="s-sn"><label for="sn">賛成に要る割合を規約で決めた分子（決めていなければ空）</label><span class="field num"><input id="sn" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">27と28の欄は、両方とも空か、両方とも数。分子は分母以下</p></div>
+      <div class="slot" id="s-sd"><label for="sd">27の割合の分母（決めていなければ空）</label><span class="field num"><input id="sd" type="number" min="1" step="1" inputmode="numeric"></span></div>
+
+      <p class="sec-h slot-h full-slot">特別の影響</p>
+      <div class="slot full-slot" id="s-eikyo"><label for="eikyo">決める事柄で、ある区分所有者の専有部分の使い方か権利が、ほかの人より大きく損なわれる（あなたの考え）</label><span class="field"><select id="eikyo">
+        <option value="いない">ほかの人より大きく損なわれる人はいない</option><option value="承諾">ほかの人より大きく損なわれる人がいて、承諾した</option><option value="承諾なし">ほかの人より大きく損なわれる人がいて、承諾していない</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">専有部分の工事</p>
+      <div class="slot full-slot" id="s-senyu"><label for="senyu">共用部分の工事に伴って、専有部分の工事も一緒に決めるか</label><span class="field"><select id="senyu">
+        <option value="決めない">決めない</option><option value="規約あり">決め、規約に特別の定めがある</option><option value="規約なし">決めるが、規約に特別の定めはない</option>
+      </select></span></div>
+
+      <p class="sec-h slot-h full-slot">一部の人だけが使う共用部分</p>
+      <div class="slot" id="s-ichih"><label for="ichih">一部の区分所有者だけが使う共用部分の事柄を、全員の規約で決めるとき、共用部分を使う区分所有者の数（全員の規約でなければ空）</label><span class="field num"><input id="ichih" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">議決権を失った人を除く。31〜34の欄は、4つとも空か、4つとも数。31の欄は1の欄から3の欄を引いた数まで</p></div>
+      <div class="slot" id="s-ichiv"><label for="ichiv">31の人たちの議決権の数（全員の規約でなければ空）</label><span class="field num"><input id="ichiv" type="number" min="1" step="1" inputmode="numeric"></span><p class="desc">2の欄から4の欄を引いた数まで</p></div>
+      <div class="slot" id="s-hanh"><label for="hanh">31の人たちのうち、反対した区分所有者の数（全員の規約でなければ空）</label><span class="field num"><input id="hanh" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">31の欄の数まで</p></div>
+      <div class="slot" id="s-hanv"><label for="hanv">33の人たちの議決権の数（全員の規約でなければ空）</label><span class="field num"><input id="hanv" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">32の欄の数まで</p></div>
+
+      <p class="sec-h slot-h full-slot">相手のしたこと</p>
+      <div class="slot full-slot" id="s-aite"><label for="aite">相手は</label><span class="field"><select id="aite">
+        <option value="区分所有者">区分所有者</option><option value="占有者">占有者（部屋を借りて住んでいる人など）</option>
+      </select></span><p class="desc">占有者＝区分所有者ではなく、部屋を使っている人</p></div>
+      <div class="slot full-slot" id="s-koui"><label for="koui">相手は、建物の保存に有害なことや、建物の使い方で区分所有者みんなの利益に反すること（共同の利益に反する行為）を（あなたの考え）</label><span class="field"><select id="koui">
+        <option value="した">共同の利益に反する行為をした</option><option value="おそれ">共同の利益に反する行為をするおそれがある</option><option value="なし">共同の利益に反する行為をしていない</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-shogai"><label for="shogai">36の行為のせいで、共同生活の障害が（あなたの考え）</label><span class="field"><select id="shogai">
+        <option value="ひどい">ひどい</option><option value="ひどくない">ひどくない</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-konnan"><label for="konnan">行為をやめるよう求めるなど、ほかのやり方で（あなたの考え）</label><span class="field"><select id="konnan">
+        <option value="難しい">ほかのやり方では、障害を除いて共同生活を保つのが難しい</option><option value="ほかで足りる">ほかのやり方で足りる</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-benmei"><label for="benmei">決議の前に、相手に言い分を述べる機会（弁明の機会）を</label><span class="field"><select id="benmei">
+        <option value="与えた">与えた</option><option value="与えていない">与えていない</option>
+      </select></span></div>
+      <div class="slot full-slot" id="s-dare"><label for="dare">訴えるのは</label><span class="field"><select id="dare">
+        <option value="全員">他の区分所有者の全員か管理組合法人</option><option value="管理者">管理者</option><option value="指定">集会で指定された区分所有者</option><option value="それ以外">それ以外の人</option>
+      </select></span></div>
+      <div class="slot" id="s-tsuki"><label for="tsuki">競売を認める判決が確定してからの月数（判決がまだなら空）</label><span class="field num"><input id="tsuki" type="number" min="0" step="1" inputmode="numeric"></span><p class="desc">0以上の整数</p></div>
+      <div class="slot" id="s-kaiuke"><label for="kaiuke">競売で買い受けを申し出るのは</label><span class="field"><select id="kaiuke">
+        <option value="本人">競売にかけられた区分所有者本人か、本人の計算で買い受ける人</option><option value="それ以外">それ以外の人</option>
+      </select></span></div>
+    </div>
+    <div class="qline" id="qline"></div>
+  </section>
+
+  <section id="answer" aria-live="polite"><p class="loading">でんすけが条文のルール（Prolog）を読み込んでいます…</p></section>
+
+  <p class="foot techline"><span>建物の区分所有等に関する法律（マンションの決議）／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中…</span></span></p>
+  <p class="foot" id="foot">e-Gov法令検索の建物の区分所有等に関する法律（昭和三十七年法律第六十九号）の本則の原文から、第6条、第17条、第18条、第31条、第34条〜第37条、第38条の2、第39条、第45条、第57条〜第60条、第62条をルールにしたものです。条文は2026年11月3日までに取得した版で、それ以後の改正と、公布済みで施行前の改正は読んでいません。</p>
+</div>
+
+<script type="text/prolog" data-name="schema.pl">% schema.pl — 建物の区分所有等に関する法律のProlog 共通の型・欄の読み出し・成り立たない組・木の部品
+%
+% ctx(全人, 全権, 除人, 除権, 管理者, 開き方, 請人, 請権, 減子, 減母, 通知, 全員, 時期, 伸長, 要領, 説明会, 事項の規約,
+%     事柄, 号, 管理の規約, 出人, 出権, 賛人, 賛権, 定子, 定母, 賛子, 賛母, 影響, 専有, 一部人, 一部権, 反人, 反権,
+%     相手, 行為, 障害, 困難, 弁明, 誰, 月数, 買受)
+%   欄は1回の集会で起きた事実を聞く42個で、いつも全部を出す（REVIEW_RULES C4・C5。2026-11-26 案A。
+%   案は ../kubun_form_plan_answer_1126.md の案A、決めは ../kubun_form_plan_decision_1126.md）。形は akiya-prolog と同じ。
+%   前は ctx(入口, 詳細) で、入口（決議 | 集会 | 工事 | 規約 | 請求）を先に選ばせ、集会の中でも「話」（招集 | 請求 | 通知 | 省略 | 事項 | 書面）を
+%   選ばせていた。画面が欄を出し消しして、隠れた欄を 関係なし で渡していた（形OK/2 が欄の並びを入口ごとに直書きしていた）。
+%   今は使わない欄を判定で見ないだけにした。
+%   区分所有者の数・議決権の総数（決議と集会で2回聞いていた）は1・2の欄に、招集の仕方（話・招集者）は6の欄に、
+%   決議の種類・工事・請求の中身は18の欄に、特別の影響と承諾（工事と規約で2組）は29の欄にまとめた（案A「まとめる欄」・C1）。
+%   規約で割合を決めたか（規約減・定規約・賛規約）と一部共用部分か（一部）は欄にせず、数の欄を空にして「決めていない」を表す。
+%   建替えか（建替）・法律に特別の定数があるか・決議があるか・訴えるか・同意で開いた集会か は欄にせず、18・6の欄と決議の数から決める。
+%   引数の順は画面の欄の番号（1〜42）と同じ。画面では小見出し（建物と区分所有者／集会の開き方／招集の通知／決める事柄／
+%   出席と賛成／特別の影響／専有部分の工事／一部の人だけが使う共用部分／相手のしたこと）の下に並べる。
+%    1 全人     : 1以上の整数（区分所有者の数）
+%    2 全権     : 1以上の整数（議決権の総数）
+%    3 除人     : 0以上の整数（所在が分からず、38条の2の裁判で議決権を失った区分所有者の数）
+%    4 除権     : 0以上の整数（3の人たちの議決権の数）
+%    5 管理者   : いる | いない
+%    6 開き方   : 管理者 | 区分所有者 | 請求 | 省略 | 書面（集会を：管理者が招集した | 区分所有者が、管理者に請求しないで招集した |
+%                 区分所有者が、管理者に招集を請求した | 招集の手続をしないで開いた | 開かずに、書面か電磁的方法で決めようとした）
+%    7 請人     : 0以上の整数（招集した・請求した区分所有者の数）
+%    8 請権     : 0以上の整数（7の人たちの議決権の数）
+%    9 減子・10 減母 : 空 | 1以上の整数（招集・請求に要る割合を規約で決めた分子・分母。決めていなければ空）
+%   11 通知     : 出ない | 以内 | 後（請求の日から2週間以内に、管理者の招集の通知が：出なかった | 出て、会日は請求の日から4週間以内 |
+%                 出たが、会日は請求の日から4週間より後）
+%   12 全員     : なし | 省略 | 承諾 | 合意（区分所有者全員が：そろって認めたことは無い | 招集の手続を省くことに同意した |
+%                 書面か電磁的方法で決めることを承諾した | 決める事柄に、書面か電磁的方法で合意した）
+%   13 時期     : 二月より前 | 一週から二月 | 一週より後（通知を発した時期：会日の2か月より前 | 会日の1週間前から2か月前まで | 会日の1週間前より後）
+%   14 伸長     : 伸ばしていない | 期間より前 | 期間に足りない（規約で通知の期間を）
+%   15 要領     : 案まで | 事柄だけ | 書いていない（通知に、決める事柄を：書き、案の中身も書いた | 書いたが、案の中身は書いていない | 書いていない）
+%   16 説明会   : 開いた | 開いていない（建替えを決めるとき、会日の1か月前までに）
+%   17 事項の規約 : 書いてある | 書いていない（規約に「通知していない事柄も決められる」と）
+%   18 事柄     : 変更 | 瑕疵 | 管理 | 保存 | 保険 | 規約 | 普通 | 停止 | 停止の訴え | 使用禁止 | 競売 | 引渡し | 建替え（集会で決める事柄）
+%   19 号       : なし | 第一号 | 第二号 | 第三号 | 第四号 | 第五号（建て替える建物が当たる62条2項の号。調べた結果）
+%   20 管理の規約 : 書いてある | 書いていない（規約に「共用部分の管理は規約で決める」と）
+%   21 出人・22 出権 : 0以上の整数（出席した区分所有者の数と議決権。書面・代理人で議決権を使った人を含む）
+%   23 賛人・24 賛権 : 0以上の整数（賛成した区分所有者の数と議決権）
+%   25 定子・26 定母 : 空 | 1以上の整数（出席に要る割合を規約で決めた分子・分母）
+%   27 賛子・28 賛母 : 空 | 1以上の整数（賛成に要る割合を規約で決めた分子・分母）
+%   29 影響     : いない | 承諾 | 承諾なし（専有部分の使い方か権利が、ほかの人より大きく損なわれる人が。あなたの考え）
+%   30 専有     : 決めない | 規約あり | 規約なし（共用部分の工事に伴って、専有部分の工事も一緒に決めるか）
+%   31 一部人・32 一部権 : 空 | 1以上の整数（一部共用部分を使う区分所有者の数と議決権。全員の規約でなければ空）
+%   33 反人・34 反権 : 空 | 0以上の整数（31の人たちのうち反対した数と議決権）
+%   35 相手     : 区分所有者 | 占有者
+%   36 行為     : した | おそれ | なし（共同の利益に反する行為を。あなたの考え）
+%   37 障害     : ひどい | ひどくない（共同生活の障害が。あなたの考え）
+%   38 困難     : 難しい | ほかで足りる（ほかのやり方で、障害を除いて共同生活を保つのが。あなたの考え）
+%   39 弁明     : 与えた | 与えていない（決議の前に、弁明の機会を）
+%   40 誰       : 全員 | 管理者 | 指定 | それ以外（訴えるのは）
+%   41 月数     : 空 | 0以上の整数（競売を認める判決が確定してからの月数。判決がまだなら空）
+%   42 買受     : 本人 | それ以外（競売で買い受けを申し出るのは）
+%
+%   関係のない欄（18の欄が「保存」「停止」のときの5〜17・21〜28、6の欄が「請求」でないときの11、
+%   6の欄が「区分所有者」「請求」でないときの7〜10、6の欄が「省略」「書面」でないときの12、6の欄が「省略」「書面」のときの13〜16、
+%   18の欄が「建替え」でないときの16・19、工事でないときの20・30、工事でも規約でもないときの29、「規約」でないときの31〜34、
+%   訴え（停止・停止の訴え・使用禁止・競売・引渡し）でないときの35〜42、「競売」でないときの41・42）は、
+%   組み合わせなしにせず見ないだけ（akiya-prolog と同じ）。欄どうしで成り立たない組はこのファイルの 組み合わせなし/4 が返す（REVIEW_RULES C3）。
+%   数の欄が枠の外（賛成が出席より多い・出席が議決権を失った人を除いた全員より多い・割合の分子と分母の片方だけ空 など）のときは
+%   ctx_valid が失敗し、画面は「判定できませんでした」になる（前の 数の組・定数の組・一部の組 と同じ確かめ。mimoto-prolog の空の数の欄と同じ）。
+%
+% 書き方のきまり：
+%   ・条番号は '17条1項' '36条' '38条の2第2項' '62条2項第1号' のような原子。
+%     ただし書・前段・後段は原文の表の行にせず、文の中に書く（表は項か号まで）。
+%   ・ルールの中で範囲の外の条を、原子の先頭に条番号を置く形で書かない。書くと build.py が使う条に数え、画面に中身が埋まる。
+%   ・段は 段(状態, 文, 箱の条, 葉のリスト)。結論ごとの段は s(画面のid, 見出し, 段)。段の文は、末尾の「。」を外して結論の箱にも出す。
+%     段の文は本題だけを書き、入力の言い直しと数の不足は葉に置く（REVIEW_RULES A2。葉は論理の木にだけ出る）。
+%     葉は文（原子）か、木の行 t(...) そのもの（規定・約束の行。schema の 葉の行）。
+%     前は 段(状態, 文, 条のリスト) の3つで、木は条の原文と約束事①②だけだった（入力の葉が無かった）。
+%   ・木は t(種類, 文, 条, 子のリスト)。種類 = ok | and | or | info
+%   ・アプリの約束事の行は 条 を '@約束事' にする。
+%   ・割合の計算は整数の掛け算だけで比べる（浮動小数点を使わない）。
+
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+
+%% ---- ctx の妥当性確認（値が欄の選択肢にあるか・数の欄が範囲か・数の欄どうしの大小。組の成り立ちは 組み合わせなし/4 で見る）----
+ctx_valid(C) :-
+    functor(C, ctx, 42),
+    forall(欄の値(N, Vs), ( arg(N, C, V), memberchk(V, Vs) )),
+    forall(数の欄(N, P), ( arg(N, C, V), call(P, V) )),
+    数の形(C).
+
+欄の値(5, [いる, いない]).
+欄の値(6, [管理者, 区分所有者, 請求, 省略, 書面]).
+欄の値(11, [出ない, 以内, 後]).
+欄の値(12, [なし, 省略, 承諾, 合意]).
+欄の値(13, [二月より前, 一週から二月, 一週より後]).
+欄の値(14, [伸ばしていない, 期間より前, 期間に足りない]).
+欄の値(15, [案まで, 事柄だけ, 書いていない]).
+欄の値(16, [開いた, 開いていない]).
+欄の値(17, [書いてある, 書いていない]).
+欄の値(18, [変更, 瑕疵, 管理, 保存, 保険, 規約, 普通, 停止, 停止の訴え, 使用禁止, 競売, 引渡し, 建替え]).
+欄の値(19, [なし, 第一号, 第二号, 第三号, 第四号, 第五号]).
+欄の値(20, [書いてある, 書いていない]).
+欄の値(29, [いない, 承諾, 承諾なし]).
+欄の値(30, [決めない, 規約あり, 規約なし]).
+欄の値(35, [区分所有者, 占有者]).
+欄の値(36, [した, おそれ, なし]).
+欄の値(37, [ひどい, ひどくない]).
+欄の値(38, [難しい, ほかで足りる]).
+欄の値(39, [与えた, 与えていない]).
+欄の値(40, [全員, 管理者, 指定, それ以外]).
+欄の値(42, [本人, それ以外]).
+
+% 数の欄（整数か空）。前の 正/1・非負/1 を残し、空を足した（mimoto-prolog の 年の値か空 と同じ形）
+数の欄(1, 正).
+数の欄(2, 正).
+数の欄(3, 非負).
+数の欄(4, 非負).
+数の欄(7, 非負).
+数の欄(8, 非負).
+数の欄(9, 正か空).
+数の欄(10, 正か空).
+数の欄(21, 非負).
+数の欄(22, 非負).
+数の欄(23, 非負).
+数の欄(24, 非負).
+数の欄(25, 正か空).
+数の欄(26, 正か空).
+数の欄(27, 正か空).
+数の欄(28, 正か空).
+数の欄(31, 正か空).
+数の欄(32, 正か空).
+数の欄(33, 非負か空).
+数の欄(34, 非負か空).
+数の欄(41, 非負か空).
+
+非負(N) :- integer(N), N >= 0.
+正(N) :- integer(N), N >= 1.
+正か空(空) :- !.
+正か空(N) :- 正(N).
+非負か空(空) :- !.
+非負か空(N) :- 非負(N).
+
+% 数の欄どうしの大小（前の 数の組 :85-89・定数の組 :114-116・割合の形 :96・一部の組 :136-137 を1つにした）。
+% 分母は議決権を失った人（3・4の欄）を除いた数（38条の2。前は集会の入口で、除いた後の数を別の欄 sh・sv で聞いていた）
+数の形(C) :-
+    欄(全人, C, H), 欄(全権, C, V), 欄(除人, C, EH), 欄(除権, C, EV),
+    EH < H, EV < V,
+    DH is H - EH, DV is V - EV,
+    欄(請人, C, RH), 欄(請権, C, RV), RH =< DH, RV =< DV,
+    欄(出人, C, OH), 欄(出権, C, OV), OH =< DH, OV =< DV,
+    欄(賛人, C, AH), 欄(賛権, C, AV), AH =< OH, AV =< OV,
+    割合か空(減子, 減母, C),
+    割合か空(定子, 定母, C),
+    割合か空(賛子, 賛母, C),
+    一部の形(DH, DV, C).
+
+% 分子と分母は両方空（規約で決めていない）か、両方が数で分子が分母以下。片方だけ空は判定できない
+割合か空(N1, N2, C) :-
+    欄(N1, C, A), 欄(N2, C, B),
+    ( A == 空, B == 空 -> true ; 割合の形(A, B) ).
+
+割合の形(N, D) :- 正(N), 正(D), N =< D.
+
+% 31〜34の欄は4つとも空（全員の規約ではない）か、4つとも数
+一部の形(DH, DV, C) :-
+    欄(一部人, C, H), 欄(一部権, C, V), 欄(反人, C, RH), 欄(反権, C, RV),
+    ( H == 空, V == 空, RH == 空, RV == 空 -> true
+    ; 正(H), 正(V), 非負(RH), 非負(RV), RH =< H, RV =< V, H =< DH, V =< DV ).
+
+%% ---- 欄の読み出し（番号は画面の欄の番号）----
+欄の番号(全人, 1).
+欄の番号(全権, 2).
+欄の番号(除人, 3).
+欄の番号(除権, 4).
+欄の番号(管理者, 5).
+欄の番号(開き方, 6).
+欄の番号(請人, 7).
+欄の番号(請権, 8).
+欄の番号(減子, 9).
+欄の番号(減母, 10).
+欄の番号(通知, 11).
+欄の番号(全員, 12).
+欄の番号(時期, 13).
+欄の番号(伸長, 14).
+欄の番号(要領, 15).
+欄の番号(説明会, 16).
+欄の番号(事項の規約, 17).
+欄の番号(事柄, 18).
+欄の番号(号, 19).
+欄の番号(管理の規約, 20).
+欄の番号(出人, 21).
+欄の番号(出権, 22).
+欄の番号(賛人, 23).
+欄の番号(賛権, 24).
+欄の番号(定子, 25).
+欄の番号(定母, 26).
+欄の番号(賛子, 27).
+欄の番号(賛母, 28).
+欄の番号(影響, 29).
+欄の番号(専有, 30).
+欄の番号(一部人, 31).
+欄の番号(一部権, 32).
+欄の番号(反人, 33).
+欄の番号(反権, 34).
+欄の番号(相手, 35).
+欄の番号(行為, 36).
+欄の番号(障害, 37).
+欄の番号(困難, 38).
+欄の番号(弁明, 39).
+欄の番号(誰, 40).
+欄の番号(月数, 41).
+欄の番号(買受, 42).
+
+欄(Name, C, V) :- 欄の番号(Name, N), !, arg(N, C, V).
+
+%% ---- 成り立たない組（組み合わせなし/4。REVIEW_RULES C3。案A「この組み合わせはありません」）----
+% 組み合わせなし(C, 記号, 葉のリスト, 箱の条)。rules/g_hantei.pl の 全部の段 が findall で全部集める（REVIEW_RULES 末尾「AI同士で決めた書き方」1・2）。
+%   組は ア〜オ の5つ。ア・イ は5と6の欄、ウ・エ は18と35の欄、オ は13と14の欄なので、ア か イ と、ウ か エ と、オ が同時に当たれば段を並べる。
+%   ア 5の欄が「いない」で、6の欄が「管理者が招集した」。根拠は34条1項・34条5項（管理者がいないときに招集するのは区分所有者）
+%   イ 5の欄が「いない」で、6の欄が「管理者に招集を請求した」。根拠は34条3項（請求の相手は管理者）
+%   ウ 35の欄が「占有者」で、18の欄が「専有部分を使わせないよう訴える」か「区分所有権の競売を訴える」。根拠は58条1項・59条1項（相手は区分所有者）
+%   エ 35の欄が「区分所有者」で、18の欄が「契約を解いて、部屋の引渡しを訴える」。根拠は60条1項（相手は占有者）
+%   オ 14の欄が「伸ばしていて、伸ばした期間より前に発した」で、13の欄が、建替えでなければ「会日の1週間前より後」、
+%      建替えなら「会日の2か月前より後」（一週から二月・一週より後）。根拠は35条1項・62条6項（規約でできるのは期間の伸長だけなので、
+%      伸ばした期間より前に発した通知は、1週間前・2か月前より前に発している）。14の欄の「伸ばした期間」は、建替えでなければ35条1項ただし書、
+%      建替えなら62条6項ただし書の期間（c_shukai.pl の 通知の条件 と同じ読み）なので、建替えのときは35条1項の組を出さない。
+%      前は組にせず、c_shukai.pl の 通知の欠け が13の欄の欠けとして「足りない」を返していた（4回目の戻りの「食い違い」・5回目の決め1）
+% 組は18・6の欄が集会の要らない事柄・開き方でも先に見る（ア と同じ。13・14の欄はいつも画面に出ているので、成り立たない組はそのまま出す）。
+% 36の欄が「していない」で18の欄が訴え、6の欄が「省略」で12の欄が「無い」、6の欄が「書面」で12の欄が承諾も合意も無い、の組は
+% 起きうる事実なので、ありませんにせず段の答えで出す（案A「ありませんにしないもの」）。
+組み合わせなし(C, a, ['管理者がいないときは、管理者が集会を招集することはない。管理者がいないときは、区分所有者が集会を招集する', W], ['34条1項', '34条5項']) :-
+    欄(管理者, C, いない), 欄(開き方, C, 管理者),
+    二つ選んだ(管理者, 開き方, C, W).
+組み合わせなし(C, i, ['集会の招集の請求は、管理者に対してするもの。管理者がいないときは、区分所有者が集会を招集する', W], ['34条3項']) :-
+    欄(管理者, C, いない), 欄(開き方, C, 請求),
+    二つ選んだ(管理者, 開き方, C, W).
+組み合わせなし(C, u, ['専有部分の使用の禁止と、区分所有権の競売を訴えで求める相手は、区分所有者', W], ['58条1項', '59条1項']) :-
+    欄(相手, C, 占有者), 欄(事柄, C, K), memberchk(K, [使用禁止, 競売]),
+    二つ選んだ(事柄, 相手, C, W).
+組み合わせなし(C, e, ['契約の解除と専有部分の引渡しを訴えで求める相手は、占有者', W], ['60条1項']) :-
+    欄(相手, C, 区分所有者), 欄(事柄, C, 引渡し),
+    二つ選んだ(事柄, 相手, C, W).
+組み合わせなし(C, o, ['規約でできるのは、会日の1週間前という通知の期間を伸ばすことだけ。伸ばした期間より前に発した通知は、会日の1週間前より前に発している', W], ['35条1項']) :-
+    欄(事柄, C, K), K \== 建替え,
+    欄(時期, C, 一週より後), 欄(伸長, C, 期間より前),
+    二つ選んだ(時期, 伸長, C, W).
+組み合わせなし(C, o, ['建替え決議の集会で規約でできるのは、会日の2か月前という通知の期間を伸ばすことだけ。伸ばした期間より前に発した通知は、会日の2か月前より前に発している', W], ['62条6項']) :-
+    欄(事柄, C, 建替え),
+    欄(時期, C, T), memberchk(T, [一週から二月, 一週より後]), 欄(伸長, C, 期間より前),
+    二つ選んだ(時期, 伸長, C, W).
+
+二つ選んだ(N1, N2, C, W) :-
+    欄の番号(N1, I1), 欄(N1, C, V1), 葉の語(I1, V1, W1),
+    欄の番号(N2, I2), 欄(N2, C, V2), 葉の語(I2, V2, W2),
+    format(atom(W), '~wの欄で~wを選び、~wの欄で~wを選んだ', [I1, W1, I2, W2]).
+
+%% ---- 木の葉に出す欄の値の言葉（画面の選択肢と同じ語。「（あなたの考え）」「（調べた結果）」は付けない）----
+% 葉の語(欄の番号, 値, 選択肢の語)。数の欄は 入れた/3 で書く
+葉の語(5, いる, 'いる').
+葉の語(5, いない, 'いない').
+葉の語(6, 管理者, '管理者が招集した').
+葉の語(6, 区分所有者, '区分所有者が、管理者に請求しないで招集した').
+葉の語(6, 請求, '区分所有者が、管理者に招集を請求した').
+葉の語(6, 省略, '招集の手続をしないで開いた').
+葉の語(6, 書面, '開かずに、書面か電磁的方法で決めようとした').
+葉の語(11, 出ない, '出なかった').
+葉の語(11, 以内, '出て、会日は請求の日から4週間以内').
+葉の語(11, 後, '出たが、会日は請求の日から4週間より後').
+葉の語(12, なし, 'そろって認めたことは無い').
+葉の語(12, 省略, '招集の手続を省くことに同意した').
+葉の語(12, 承諾, '書面か電磁的方法で決めることを承諾した').
+葉の語(12, 合意, '決める事柄に、書面か電磁的方法で合意した').
+葉の語(13, 二月より前, '会日の2か月より前').
+葉の語(13, 一週から二月, '会日の1週間前から2か月前まで').
+葉の語(13, 一週より後, '会日の1週間前より後').
+葉の語(14, 伸ばしていない, '伸ばしていない').
+葉の語(14, 期間より前, '伸ばしていて、伸ばした期間より前に発した').
+葉の語(14, 期間に足りない, '伸ばしているが、伸ばした期間に足りない').
+葉の語(15, 案まで, '書き、案の中身も書いた').
+葉の語(15, 事柄だけ, '書いたが、案の中身は書いていない').
+葉の語(15, 書いていない, '書いていない').
+葉の語(16, 開いた, '開いた').
+葉の語(16, 開いていない, '開いていない').
+葉の語(17, 書いてある, '書いてある').
+葉の語(17, 書いていない, '書いていない').
+葉の語(18, 変更, '共用部分の形や働きを大きく変える工事').
+葉の語(18, 瑕疵, '共用部分の形や働きを大きく変える工事のうち、設備の傷みで人の権利を害するおそれを除くか、高齢者・障害者の移動の負担を軽くするためのもの').
+葉の語(18, 管理, '形や働きを大きく変えない工事・修繕').
+葉の語(18, 保存, '壊れた所を元に戻すなど今の状態を保つこと').
+葉の語(18, 保険, '共用部分の損害保険の契約').
+葉の語(18, 規約, '規約を作る・変える・なくす').
+葉の語(18, 普通, 'そのほかの事柄（管理者を選ぶ など）').
+葉の語(18, 停止, '困った区分所有者・占有者に、行為をやめるよう求める（訴えない）').
+葉の語(18, 停止の訴え, '困った区分所有者・占有者に、行為をやめるよう訴えて求める').
+葉の語(18, 使用禁止, '困った区分所有者に、専有部分を使わせないよう訴える').
+葉の語(18, 競売, '困った区分所有者の区分所有権の競売を訴える').
+葉の語(18, 引渡し, '困った占有者の契約を解いて、部屋の引渡しを訴える').
+葉の語(18, 建替え, '建物を取り壊して建て替える').
+葉の語(19, なし, 'どれにも当たらない').
+葉の語(19, 第一号, '地震に対する安全性が、法務大臣の基準に合っていない').
+葉の語(19, 第二号, '火災に対する安全性が、法務大臣の基準に合っていない').
+葉の語(19, 第三号, '外壁や外装材がはがれて落ち、周りに危害を生じるおそれがある（法務大臣の基準）').
+葉の語(19, 第四号, '給水・排水の配管が傷み、衛生上ひどく有害になるおそれがある（法務大臣の基準）').
+葉の語(19, 第五号, '高齢者・障害者の移動のしやすさが、法務大臣の基準に合っていない').
+葉の語(20, 書いてある, '書いてある').
+葉の語(20, 書いていない, '書いていない').
+葉の語(29, いない, 'ほかの人より大きく損なわれる人はいない').
+葉の語(29, 承諾, 'ほかの人より大きく損なわれる人がいて、承諾した').
+葉の語(29, 承諾なし, 'ほかの人より大きく損なわれる人がいて、承諾していない').
+葉の語(30, 決めない, '決めない').
+葉の語(30, 規約あり, '決め、規約に特別の定めがある').
+葉の語(30, 規約なし, '決めるが、規約に特別の定めはない').
+葉の語(35, 区分所有者, '区分所有者').
+葉の語(35, 占有者, '占有者（部屋を借りて住んでいる人など）').
+葉の語(36, した, '共同の利益に反する行為をした').
+葉の語(36, おそれ, '共同の利益に反する行為をするおそれがある').
+葉の語(36, なし, '共同の利益に反する行為をしていない').
+葉の語(37, ひどい, 'ひどい').
+葉の語(37, ひどくない, 'ひどくない').
+葉の語(38, 難しい, 'ほかのやり方では、障害を除いて共同生活を保つのが難しい').
+葉の語(38, ほかで足りる, 'ほかのやり方で足りる').
+葉の語(39, 与えた, '与えた').
+葉の語(39, 与えていない, '与えていない').
+葉の語(40, 全員, '他の区分所有者の全員か管理組合法人').
+葉の語(40, 管理者, '管理者').
+葉の語(40, 指定, '集会で指定された区分所有者').
+葉の語(40, それ以外, 'それ以外の人').
+葉の語(42, 本人, '競売にかけられた区分所有者本人か、本人の計算で買い受ける人').
+葉の語(42, それ以外, 'それ以外の人').
+
+% 入力の葉：「Nの欄で、◯◯を選んだ」。欄の名前から番号と値を引く
+選んだ(Name, C, W) :-
+    欄の番号(Name, N), 欄(Name, C, V), 葉の語(N, V, VW),
+    format(atom(W), '~wの欄で、~wを選んだ', [N, VW]).
+
+% 数の欄の葉：「Nの欄に、◯と入れた」「Nの欄を空にした」
+入れた(Name, C, W) :-
+    欄の番号(Name, N), 欄(Name, C, V),
+    ( V == 空 -> format(atom(W), '~wの欄を空にした', [N])
+    ; format(atom(W), '~wの欄に、~dと入れた', [N, V]) ).
+
+%% ---- 割合の計算（整数の掛け算だけ）----
+%  割合は 過半 か r(分子, 分母, 語)
+満たす(過半, V, D) :- V * 2 > D.
+満たす(r(A, B, _), V, D) :- V * B >= D * A.
+
+必要数(過半, D, N) :- N is D // 2 + 1.
+必要数(r(A, B, _), D, N) :- N is (D * A + B - 1) // B.
+
+割合の語(過半, 過半数).
+割合の語(r(_, _, W), W).
+
+%% ---- 理由の語をつなぐ ----
+% 前は rules/g_hantei.pl にあり、重複を消していなかった（akiya-prolog schema.pl と同じ形にした）
+条の表記(As, S) :- list_to_set(As, As1), atomic_list_concat(As1, '・', S).
+
+%% ---- 木の部品 ----
+規定(Art, W, t(ok, T, Art, [])) :- format(atom(T), '規定：~w', [W]).
+原文規定(Art, X) :- 原文(Art, W), 規定(Art, W, X).
+% 成り立つ文（起きた事実・条文の読み）
+文(X, t(ok, X, '', [])).
+約束(X, t(ok, X, '@約束事', [])).
+% 葉の行：木の行 t(...) はそのまま、文はそのまま1行（schema の「書き方のきまり」）
+葉の行(t(K, X, A, Cs), t(K, X, A, Cs)) :- !.
+葉の行(W, X) :- 文(W, X).
+% 子が無ければ文だけの行、子が1つなら「かつ」の節を置かず、その子を直に下げる（「下の1つがすべて成り立つ必要がある」を出さない。REVIEW_RULES B6）
+% 前は子が1つでも「次のすべてが成り立つ」の節を作っていた（前の :180。akiya-prolog schema.pl の すべて/4 を写した）
+すべて(Title, Art, [], t(ok, Title, Art, [])) :- !.
+すべて(Title, Art, [X], t(ok, Title, Art, [X])) :- !.
+すべて(Title, Art, Kids, t(ok, Title, Art, [t(and, '次のすべてが成り立つ', '', Kids)])).
+
+%% ---- 木を平らにする ----
+ex_flat(t(K, X, Ar, Cs), D, [n(D, K, X, Ar) | Ls]) :-
+    D1 is D + 1, ex_flat_list(Cs, D1, Ls).
+ex_flat_list([], _, []).
+ex_flat_list([C|Cs], D, Ls) :-
+    ex_flat(C, D, L1), ex_flat_list(Cs, D, L2), append(L1, L2, Ls).
+</script>
+<script type="text/prolog" data-name="yakusoku_kihon.pl">% yakusoku/kihon.pl — アプリの約束事（建物の区分所有等に関する法律の条文にないもの）
+%
+%   ② 「当たりません」は、その条に当たらないと言うだけで、反対の結論を言うものではない。
+%   ③ 集会を開かずに決めるとき、区分所有者全員の承諾（45条1項）だけでは、57条〜60条の「集会の決議」があったとは扱わない。
+%      45条1項は書面か電磁的方法で決議を「することができる」と言うだけで、決議が通ったかは賛成の数で決まるが、
+%      このアプリは6の欄が「書面」のときに賛成の数を聞かない（2026-11-26 5回目の決め2。REVIEW_RULES D1）。
+%      前は rules/f_seikyu.pl の 決議が通る/1 が約束事の印を付けずに、承諾のとき決議が無いとして答えていた。
+%      木では、訴えの段の葉の最後に約束事の行として出す（f_seikyu.pl の 決議の約束/2）。
+%   ④ 集会を開けない・招集できない組（36条「開けません」・34条1項「請求しないで招集できません」・34条5項・34条3項「できません」）では、
+%      57条〜60条の「集会の決議」が通らなかったと扱う。36条・34条は「招集できない」と言うだけで、そのまま開いた集会の決議がどうなるか
+%      （無効か・取り消せるか）は書いていない（2026-11-26 6回目の決め1。REVIEW_RULES D1）。
+%      前は rules/f_seikyu.pl の 決議が通る/1 が b_ketsugi の数だけで答え、開けない組でも「訴えで請求できます」を出していた。
+%      木では、③と同じく訴えの段の葉の最後に出す（f_seikyu.pl の 決議の約束/2。組の判定は g_hantei.pl の 手続が欠けた/2。前は 開けない招集/1）。
+%   ⑤ 手続の要件が欠けた組（35条1項の通知が足りない・62条6項8項の通知と説明会が足りない・37条1項で決議できない・58条3項の弁明の機会が無い）では、
+%      決議の数の段を出さず、57条〜60条の「集会の決議」が通らなかったと扱う。これらの条は手続を定めるだけで、手続が欠けたままの決議がどうなるか
+%      （無効か・取り消せるか）は書いていない（2026-11-26 LLMレビューの直しの決め1〜3。REVIEW_RULES D1）。
+%      前は決議の数の段を呼び、通知が足りない組でも「決議は通ります」を同じ結論の箱に並べていた。
+%      木では、④と同じく訴えの段の葉の最後に出す。④と⑤の両方に当たる組は④だけを出す（g_hantei.pl の 欠けた手続/5）。
+%
+%   前の①（「形状又は効用の著しい変更」「特別の影響」「保存行為」「共同の利益に反する」「障害が著しい」「他の方法によつては…困難」
+%   「第62条第2項の基準」は判定しない）は消した（2026-11-26 案A）。評価の語は画面の欄で「（あなたの考え）」「（調べた結果）」として聞くため。
+%   番号は②のまま残した（about の約束事の並びは、about を直す回に合わせる）。
+
+場面外の約束(X) :-
+    約束('「当たりません」は、その条に当たらないと言うだけで、反対の結論を言うものではない', X).
+
+書面の承諾の約束(X) :-
+    約束('45条1項は、区分所有者全員の承諾があれば書面か電磁的方法で決議できると言うだけなので、賛成の数を聞いていないこのアプリでは、承諾だけで集会の決議があったとは扱わない', X).
+
+開けない集会の約束(X) :-
+    約束('36条・34条は招集できないと言うだけで、そのまま開いた集会の決議がどうなるかは書いていないので、このアプリでは決議が通らなかったと扱う', X).
+
+手続の欠けた集会の約束(X) :-
+    約束('35条1項・37条1項・58条3項・62条6項・62条8項は手続を定めるだけで、手続の要件が欠けたままの決議がどうなるかは書いていないので、このアプリでは決議の数を判定せず、決議が通らなかったと扱う', X).
+</script>
+<script type="text/prolog" data-name="rules_a_genbun.pl">% rules/a_genbun.pl — 判定に使う条文の原文（law/kubun.xml の本則のまま）
+%
+%   原文(条, 文)。test/page_test.mjs が XML を別に読み、全行が一字一句一致するかを確かめる。
+%   2文ある項は続けて1行にする（build.py の text() と同じ）。
+%   振り仮名（瑕疵かし）の Rt は落とす。「つ」「よつて」「あつて」は原文のまま。
+
+原文('6条1項', '区分所有者は、建物の保存に有害な行為その他建物の管理又は使用に関し区分所有者の共同の利益に反する行為をしてはならない。').
+原文('6条3項', '第一項の規定は、区分所有者以外の専有部分の占有者（以下「占有者」という。）に準用する。').
+原文('17条1項', '共用部分の変更（その形状又は効用の著しい変更を伴わないものを除く。第五項において同じ。）は、集会において、区分所有者（議決権を有しないものを除く。以下この項及び第三項において同じ。）の過半数（これを上回る割合を規約で定めた場合にあつては、その割合以上）の者であつて議決権の過半数（これを上回る割合を規約で定めた場合にあつては、その割合以上）を有するものが出席し、出席した区分所有者及びその議決権の各四分の三（これを下回る割合（二分の一を超える割合に限る。）を規約で定めた場合にあつては、その割合）以上の多数による決議で決する。').
+原文('17条2項', '前項の場合において、共用部分の変更が専有部分の使用に特別の影響を及ぼすべきときは、その専有部分の所有者の承諾を得なければならない。').
+原文('17条3項', '第一項の決議により共用部分の変更をする場合において、規約に特別の定めがあるときは、当該共用部分の変更に伴い必要となる専有部分の保存行為又は専有部分の性質を変えない範囲内においてその利用若しくは改良を目的とする行為（次項及び次条第四項において「専有部分の保存行為等」という。）は、集会において、区分所有者の過半数（これを上回る割合を規約で定めた場合にあつては、その割合以上）の者であつて議決権の過半数（これを上回る割合を規約で定めた場合にあつては、その割合以上）を有するものが出席し、出席した区分所有者及びその議決権の各四分の三（これを下回る割合（二分の一を超える割合に限る。）を規約で定めた場合にあつては、その割合）以上の多数による決議で決することができる。').
+原文('17条5項', '共用部分の設置若しくは保存に瑕疵があることによつて他人の権利若しくは法律上保護される利益が侵害され、若しくは侵害されるおそれがある場合におけるその瑕疵の除去に関して必要となる共用部分の変更又は高齢者、障害者等（高齢者、障害者等の移動等の円滑化の促進に関する法律（平成十八年法律第九十一号）第二条第一号に規定する高齢者、障害者等をいう。）の移動若しくは施設の利用に係る身体の負担を軽減することにより、その移動上若しくは施設の利用上の利便性及び安全性を向上させるために必要となる共用部分の変更についての第一項及び第三項の規定の適用については、これらの規定中「四分の三」とあるのは、「三分の二」とする。').
+原文('18条1項', '共用部分の管理に関する事項は、前条の場合を除いて、集会の決議で決する。ただし、保存行為は、各共有者がすることができる。').
+原文('18条2項', '前項の規定は、規約で別段の定めをすることを妨げない。').
+原文('18条3項', '前条第二項の規定は、第一項本文の場合に準用する。').
+原文('18条4項', '第一項本文の決議により共用部分の管理をする場合において、規約に特別の定めがあるときは、当該共用部分の管理に伴い必要となる専有部分の保存行為等は、集会の決議で決することができる。').
+原文('18条6項', '共用部分につき損害保険契約をすることは、共用部分の管理に関する事項とみなす。').
+原文('31条1項', '規約の設定、変更又は廃止は、集会において、区分所有者（議決権を有しないものを除く。以下この項前段において同じ。）の過半数（これを上回る割合を規約で定めた場合にあつては、その割合以上）の者であつて議決権の過半数（これを上回る割合を規約で定めた場合にあつては、その割合以上）を有するものが出席し、出席した区分所有者及びその議決権の各四分の三以上の多数による決議によつてする。この場合において、規約の設定、変更又は廃止が一部の区分所有者の権利に特別の影響を及ぼすべきときは、その承諾を得なければならない。').
+原文('31条2項', '前条第二項に規定する事項についての区分所有者全員の規約の設定、変更又は廃止は、当該一部共用部分を共用すべき区分所有者（議決権を有しないものを除く。）の四分の一を超える者又はその議決権の四分の一を超える議決権を有する者が反対したときは、することができない。').
+原文('34条1項', '集会は、管理者が招集する。').
+原文('34条3項', '区分所有者（議決権を有しないものを除く。第五項において同じ。）の五分の一以上の者であつて議決権の五分の一以上を有するものは、管理者に対し、会議の目的たる事項を示して、集会の招集を請求することができる。ただし、この定数は、規約で減ずることができる。').
+原文('34条4項', '前項の規定による請求がされた場合において、二週間以内にその請求の日から四週間以内の日を会日とする集会の招集の通知が発せられなかつたときは、その請求をした区分所有者は、集会を招集することができる。').
+原文('34条5項', '管理者がないときは、区分所有者の五分の一以上の者であつて議決権の五分の一以上を有するものは、集会を招集することができる。ただし、この定数は、規約で減ずることができる。').
+原文('35条1項', '集会の招集の通知は、会日より少なくとも一週間前に、会議の目的たる事項及び議案の要領を示して、各区分所有者（議決権を有しないものを除く。）に発しなければならない。ただし、この期間は、規約で伸長することができる。').
+原文('36条', '集会は、区分所有者（議決権を有しないものを除く。）全員の同意があるときは、招集の手続を経ないで開くことができる。').
+原文('37条1項', '集会においては、第三十五条の規定によりあらかじめ通知した事項についてのみ、決議をすることができる。').
+原文('37条2項', '前項の規定は、この法律に集会の決議につき特別の定数が定められている事項を除いて、規約で別段の定めをすることを妨げない。').
+原文('37条3項', '前二項の規定は、前条の規定による集会には適用しない。').
+原文('38条の2第2項', '前項の裁判により所在等不明区分所有者であるとされた者は、前条の規定にかかわらず、集会における議決権（当該裁判に係る建物が滅失したときは、当該建物に係る敷地利用権を有する者又は当該建物の附属施設（これに関する権利を含む。）の共有持分を有する者が開く集会における議決権）を有しない。').
+原文('39条1項', '集会の議事は、この法律又は規約に別段の定めがない限り、出席した区分所有者（議決権を有しないものを除く。）及びその議決権の各過半数で決する。').
+原文('39条2項', '議決権は、書面又は代理人によつても行使することができる。この場合において、書面又は代理人によつて議決権を行使した区分所有者の数は出席した区分所有者の数に、当該議決権の数は出席した区分所有者の議決権の数に、それぞれ算入する。').
+原文('45条1項', 'この法律又は規約により集会において決議をすべき場合において、区分所有者（議決権を有しないものを除く。次項において同じ。）全員の承諾があるときは、書面又は電磁的方法による決議をすることができる。ただし、電磁的方法による決議に係る区分所有者の承諾については、法務省令で定めるところによらなければならない。').
+原文('45条2項', 'この法律又は規約により集会において決議すべきものとされた事項については、区分所有者全員の書面又は電磁的方法による合意があつたときは、書面又は電磁的方法による決議があつたものとみなす。').
+原文('45条3項', 'この法律又は規約により集会において決議すべきものとされた事項についての書面又は電磁的方法による決議は、集会の決議と同一の効力を有する。').
+原文('57条1項', '区分所有者が第六条第一項に規定する行為をした場合又はその行為をするおそれがある場合には、他の区分所有者の全員又は管理組合法人は、区分所有者の共同の利益のため、その行為を停止し、その行為の結果を除去し、又はその行為を予防するため必要な措置を執ることを請求することができる。').
+原文('57条2項', '前項の規定に基づき訴訟を提起するには、集会の決議によらなければならない。').
+原文('57条3項', '管理者又は集会において指定された区分所有者は、集会の決議により、第一項の他の区分所有者の全員のために、前項に規定する訴訟を提起することができる。').
+原文('57条4項', '前三項の規定は、占有者が第六条第三項において準用する同条第一項に規定する行為をした場合及びその行為をするおそれがある場合に準用する。').
+原文('58条1項', '前条第一項に規定する場合において、第六条第一項に規定する行為による区分所有者の共同生活上の障害が著しく、前条第一項に規定する請求によつてはその障害を除去して共用部分の利用の確保その他の区分所有者の共同生活の維持を図ることが困難であるときは、他の区分所有者の全員又は管理組合法人は、集会の決議に基づき、訴えをもつて、相当の期間の当該行為に係る区分所有者による専有部分の使用の禁止を請求することができる。').
+原文('58条2項', '前項の決議は、集会において、区分所有者（議決権を有しないものを除く。以下この項において同じ。）の過半数（これを上回る割合を規約で定めた場合にあつては、その割合以上）の者であつて議決権の過半数（これを上回る割合を規約で定めた場合にあつては、その割合以上）を有するものが出席し、出席した区分所有者及びその議決権の各四分の三以上の多数でする。').
+原文('58条3項', '第一項の決議をするには、あらかじめ、当該区分所有者に対し、弁明する機会を与えなければならない。').
+原文('58条4項', '前条第三項の規定は、第一項の訴えの提起に準用する。').
+原文('59条1項', '第五十七条第一項に規定する場合において、第六条第一項に規定する行為による区分所有者の共同生活上の障害が著しく、他の方法によつてはその障害を除去して共用部分の利用の確保その他の区分所有者の共同生活の維持を図ることが困難であるときは、他の区分所有者の全員又は管理組合法人は、集会の決議に基づき、訴えをもつて、当該行為に係る区分所有者の区分所有権及び敷地利用権の競売を請求することができる。').
+原文('59条2項', '第五十七条第三項の規定は前項の訴えの提起に、前条第二項及び第三項の規定は前項の決議に準用する。').
+原文('59条3項', '第一項の規定による判決に基づく競売の申立ては、その判決が確定した日から六月を経過したときは、することができない。').
+原文('59条4項', '前項の競売においては、競売を申し立てられた区分所有者又はその者の計算において買い受けようとする者は、買受けの申出をすることができない。').
+原文('60条1項', '第五十七条第四項に規定する場合において、第六条第三項において準用する同条第一項に規定する行為による区分所有者の共同生活上の障害が著しく、他の方法によつてはその障害を除去して共用部分の利用の確保その他の区分所有者の共同生活の維持を図ることが困難であるときは、区分所有者の全員又は管理組合法人は、集会の決議に基づき、訴えをもつて、当該行為に係る占有者が占有する専有部分の使用又は収益を目的とする契約の解除及びその専有部分の引渡しを請求することができる。').
+原文('60条2項', '第五十七条第三項の規定は前項の訴えの提起に、第五十八条第二項及び第三項の規定は前項の決議に準用する。').
+原文('62条1項', '集会においては、区分所有者（議決権を有しないものを除く。）及び議決権の各五分の四以上の多数で、建物を取り壊し、かつ、当該建物の敷地若しくはその一部の土地又は当該建物の敷地の全部若しくは一部を含む土地に新たに建物を建築する旨の決議（以下「建替え決議」という。）をすることができる。').
+原文('62条2項', '建物が次の各号のいずれかに該当する場合における前項の規定の適用については、同項中「五分の四」とあるのは、「四分の三」とする。').
+原文('62条2項第1号', '地震に対する安全性に係る建築基準法（昭和二十五年法律第二百一号）又はこれに基づく命令若しくは条例の規定に準ずるものとして法務大臣が定める基準に適合していないとき。').
+原文('62条2項第2号', '火災に対する安全性に係る建築基準法又はこれに基づく命令若しくは条例の規定に準ずるものとして法務大臣が定める基準に適合していないとき。').
+原文('62条2項第3号', '外壁、外装材その他これらに類する建物の部分が剝離し、落下することにより周辺に危害を生ずるおそれがあるものとして法務大臣が定める基準に該当するとき。').
+原文('62条2項第4号', '給水、排水その他の配管設備（その改修に関する工事を行うことが著しく困難なものとして法務省令で定めるものに限る。）の損傷、腐食その他の劣化により著しく衛生上有害となるおそれがあるものとして法務大臣が定める基準に該当するとき。').
+原文('62条2項第5号', '高齢者、障害者等の移動等の円滑化の促進に関する法律第十四条第五項に規定する建築物移動等円滑化基準に準ずるものとして法務大臣が定める基準に適合していないとき。').
+原文('62条6項', '建替え決議を会議の目的とする集会を招集するときは、第三十五条第一項の通知は、同項の規定にかかわらず、当該集会の会日より少なくとも二月前に発しなければならない。ただし、この期間は、規約で伸長することができる。').
+原文('62条8項', '第六項の集会を招集した者は、当該集会の会日より少なくとも一月前までに、当該招集の際に通知すべき事項について区分所有者に対し説明を行うための説明会を開催しなければならない。').
+</script>
+<script type="text/prolog" data-name="rules_b_ketsugi.pl">% rules/b_ketsugi.pl — 決議の数（17条1項・5項、18条1項・6項、31条1項、38条の2、39条1項、57条2項、58条2項、59条2項、60条2項、62条1項・2項）
+%
+%   段は1：kekka（決議は通るか）。g_hantei.pl の 全部の段 が、18の欄が「保存」「停止」でないときに呼ぶ。
+%   2026-11-26 案A。前は入口「この人数で決議は通るか」の中で決議の種類（種類）を選ばせ、分母の段（bunbo）・書面と代理の出席の段（shusseki）・
+%   読みの段（yomi_*）を補足の段として並べていた。今は18の欄から決議の種類を引き、分母と数の不足は葉に置き、箱は「通ります／通りません」だけにした（A1・A2）。
+%   書面と代理の出席（39条2項）は21の欄の説明へ、読みの段は about の読み (b)・(c)・(d)・(g)・(h)・(l) へ移した（案A「段の出し方」の3）。
+%   計算は schema.pl の 満たす/3（整数の掛け算）だけで比べる。頭数と議決権は別々に判定する。
+%   分母：定足数は議決権を失った人（3・4の欄。38条の2）を除いた全員。賛成は出席者。建替えだけ賛成の分母が全員（62条1項に出席の定足数が無いため。読み (c)）。
+%   第38条の2の裁判で議決権を失った人は、人数からも議決権の総数からも引く（読み (d)）。
+%   損害保険の契約は18条6項で共用部分の管理とみなすので、管理と同じ過半数で数える。行為の停止などの訴訟の決議（57条2項）は普通の決議で数える（読み (f)）。
+%   6の欄が「開かずに、書面か電磁的方法で決めようとした」ときは集会を開かないので、数を見ない（45条の段は c_shukai.pl。案A「段の出し方」の2）。
+%   18の欄が「管理」「保険」で20の欄が「書いてある」ときは18条2項で規約の定めによるので、数を見ない（d_koji.pl の kimeru_kiyaku が答える）。
+%   段の文には、画面の上で指す先の無い指示語（その・これを・当該・同項・前項 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+
+決議の段(C, []) :- 決議を数えない(C), !.
+決議の段(C, [s(kekka, '決議は通るか', 段(St, T, As, Ls))]) :-
+    決議の答え(C, St, As, Ls),
+    欄(事柄, C, K), 決議の語(K, Name),
+    決議の文(St, Name, T).
+
+決議を数えない(C) :- 欄(開き方, C, 書面), !.
+決議を数えない(C) :- 欄(事柄, C, K), 規約で決める事柄(K), 欄(管理の規約, C, 書いてある).
+
+規約で決める事柄(管理).
+規約で決める事柄(保険).
+
+決議の文(通る, Name, T) :- format(atom(T), '~wは通ります。', [Name]).
+決議の文(通らない, Name, T) :- format(atom(T), '~wは通りません。', [Name]).
+
+% 決議の答え(C, 通る | 通らない, 箱の条, 葉)。f_seikyu.pl の 決議が通る/1 からも呼ぶ
+決議の答え(C, St, As, Ls) :-
+    欄(事柄, C, K),
+    欄(全人, C, H), 欄(全権, C, V), 欄(除人, C, EH), 欄(除権, C, EV),
+    欄(出人, C, OH), 欄(出権, C, OV), 欄(賛人, C, AH), 欄(賛権, C, AV),
+    DH is H - EH, DV is V - EV,
+    賛成の割合(K, C, RA),
+    定足の割合(K, C, RQ),
+    賛成の分母(K, DH, DV, OH, OV, SH, SV),
+    定足の不足(RQ, DH, DV, OH, OV, Q),
+    賛成の不足(RA, SH, SV, AH, AV, Sa),
+    append(Q, Sa, Fs),
+    (   Fs == []
+    ->  St = 通る,
+        足りた出席の文(RQ, DH, DV, OH, OV, Q1),
+        足りた賛成の文(RA, SH, SV, AH, AV, S1),
+        append(Q1, [S1], Ns)
+    ;   St = 通らない, Ns = Fs ),
+    条の組(K, C, EH, EV, As),
+    原文の葉(As, Rs),
+    数の入力(K, C, EH, EV, Ws),
+    分母の文(K, RQ, DH, DV, OH, OV, Bun),
+    append([Rs, Ws, Ns, [Bun]], Ls).
+
+% 箱の文の主語（条文の語「瑕疵の除去」「形状又は効用の著しい変更」を使わない。REVIEW_RULES C2）
+決議の語(変更, '共用部分の変更の決議').
+決議の語(瑕疵, '共用部分の変更の決議').
+決議の語(管理, '共用部分の管理の決議').
+決議の語(保険, '損害保険契約の決議').
+決議の語(規約, '規約の設定・変更・廃止の決議').
+決議の語(普通, '決議').
+決議の語(停止の訴え, '行為の停止などの訴訟を起こす決議').
+決議の語(使用禁止, '専有部分の使用の禁止を訴える決議').
+決議の語(競売, '区分所有権の競売を訴える決議').
+決議の語(引渡し, '契約の解除と引渡しを訴える決議').
+決議の語(建替え, '建替え決議').
+
+% 出席の定足数がある決議（17条1項・31条1項・58条2項。59条2項・60条2項は58条2項を準用）。K は18の欄の値で1つに決まっている
+定足がある(K) :- memberchk(K, [変更, 瑕疵, 規約, 使用禁止, 競売, 引渡し]).
+
+%% ---- 割合 ----
+賛成の割合(変更, C, R) :- 第17条の賛成(r(3, 4, 四分の三), C, R).
+賛成の割合(瑕疵, C, R) :- 第17条の賛成(r(2, 3, 三分の二), C, R).
+賛成の割合(管理, _, 過半).
+賛成の割合(保険, _, 過半).
+賛成の割合(普通, _, 過半).
+賛成の割合(停止の訴え, _, 過半).
+賛成の割合(規約, _, r(3, 4, 四分の三)).
+賛成の割合(使用禁止, _, r(3, 4, 四分の三)).
+賛成の割合(競売, _, r(3, 4, 四分の三)).
+賛成の割合(引渡し, _, r(3, 4, 四分の三)).
+賛成の割合(建替え, C, r(3, 4, 四分の三)) :- 欄(号, C, G), G \== なし, !.
+賛成の割合(建替え, _, r(4, 5, 五分の四)).
+
+% 27・28の欄（規約の賛成の割合）は「基準を下回り、二分の一を超える」ときだけ使う（17条1項の括弧書き。17条5項の読み替えの後は三分の二が基準。読み (b)・(g)）
+% 前は 賛規約（はい | いいえ）の欄で聞いていた。今は27の欄が空なら規約で決めていない
+第17条の賛成(Base, C, r(N, D, W)) :-
+    欄(賛子, C, N), integer(N), 欄(賛母, C, D),
+    Base = r(A, B, _),
+    N * 2 > D, N * B < A * D, !,
+    format(atom(W), '規約の~w分の~w', [D, N]).
+第17条の賛成(Base, _, Base).
+
+% 25・26の欄（規約の出席の割合）は「過半数を上回る」ときだけ使う（17条1項・31条1項・58条2項の括弧書き。読み (h)）
+定足の割合(K, _, なし) :- \+ 定足がある(K), !.
+定足の割合(_, C, r(N, D, W)) :-
+    欄(定子, C, N), integer(N), 欄(定母, C, D),
+    N * 2 > D, !,
+    format(atom(W), '規約の~w分の~w', [D, N]).
+定足の割合(_, _, 過半).
+
+賛成の分母(建替え, DH, DV, _, _, DH, DV) :- !.
+賛成の分母(_, _, _, OH, OV, OH, OV).
+
+%% ---- 足りない分（葉）----
+定足の不足(なし, _, _, _, _, []) :- !.
+定足の不足(R, DH, DV, OH, OV, L) :-
+    不足の人('出席した区分所有者', R, OH, DH, L1),
+    不足の権('出席した区分所有者の議決権', R, OV, DV, L2),
+    append(L1, L2, L).
+
+賛成の不足(R, SH, SV, AH, AV, L) :-
+    不足の人('賛成した区分所有者', R, AH, SH, L1),
+    不足の権('賛成した区分所有者の議決権', R, AV, SV, L2),
+    append(L1, L2, L).
+
+% 不足の人・不足の権 は c_shukai.pl の 定数の答え（34条3項・5項）からも呼ぶ
+不足の人(_, R, Has, D, []) :- 満たす(R, Has, D), !.
+不足の人(Label, R, Has, D, [T]) :-
+    必要数(R, D, Need), Gap is Need - Has,
+    format(atom(T), '~wは~w人で、必要な~w人に~w人足りない', [Label, Has, Need, Gap]).
+不足の権(_, R, Has, D, []) :- 満たす(R, Has, D), !.
+不足の権(Label, R, Has, D, [T]) :-
+    必要数(R, D, Need), Gap is Need - Has,
+    format(atom(T), '~wは~wで、必要な~wに~w足りない', [Label, Has, Need, Gap]).
+
+%% ---- 足りた数（葉）----
+足りた出席の文(なし, _, _, _, _, []) :- !.
+足りた出席の文(R, DH, DV, OH, OV, [T]) :-
+    必要数(R, DH, NH), 必要数(R, DV, NV), 割合の語(R, W),
+    format(atom(T), '出席は~w人・議決権~wで、~w（必要な~w人・議決権~w）に足りている', [OH, OV, W, NH, NV]).
+
+足りた賛成の文(R, SH, SV, AH, AV, T) :-
+    必要数(R, SH, NH), 必要数(R, SV, NV), 割合の語(R, W),
+    format(atom(T), '賛成は~w人・議決権~wで、~w（必要な~w人・議決権~w）に足りている', [AH, AV, W, NH, NV]).
+
+%% ---- 分母（葉）----
+分母の文(建替え, _, DH, DV, _, _, T) :- !,
+    format(atom(T), '賛成の分母は出席者ではなく、議決権を失った人を除いた区分所有者~w人と議決権~w', [DH, DV]).
+分母の文(_, なし, _, _, OH, OV, T) :- !,
+    format(atom(T), '賛成の分母は出席した区分所有者~w人と議決権~wで、出席の定足数は無い', [OH, OV]).
+分母の文(_, _, DH, DV, OH, OV, T) :-
+    format(atom(T), '出席の分母は議決権を失った人を除いた区分所有者~w人と議決権~wで、賛成の分母は出席した区分所有者~w人と議決権~w', [DH, DV, OH, OV]).
+
+%% ---- 入力の葉 ----
+% 使った数の欄だけを並べる。3・4の欄は0でないときだけ、25〜28の欄は空でなく、その決議で使う割合のときだけ
+数の入力(K, C, EH, EV, Ws) :-
+    選んだ(事柄, C, W18),
+    入れた(全人, C, W1), 入れた(全権, C, W2),
+    ( ( EH > 0 ; EV > 0 ) -> 入れた(除人, C, W3), 入れた(除権, C, W4), Ex = [W3, W4] ; Ex = [] ),
+    ( K == 建替え -> 選んだ(号, C, W19), Os = [W19] ; 入れた(出人, C, W21), 入れた(出権, C, W22), Os = [W21, W22] ),
+    入れた(賛人, C, W23), 入れた(賛権, C, W24),
+    割合の入力(定子, 定母, C, 定足がある(K), Qs),
+    割合の入力(賛子, 賛母, C, memberchk(K, [変更, 瑕疵]), Ss),
+    append([[W18, W1, W2], Ex, Os, [W23, W24], Qs, Ss], Ws).
+
+割合の入力(N1, N2, C, Cond, [W1, W2]) :-
+    欄(N1, C, A), integer(A), call(Cond), !,
+    入れた(N1, C, W1), 入れた(N2, C, W2).
+割合の入力(_, _, _, _, []).
+
+%% ---- 条 ----
+条の組(K, C, EH, EV, As) :-
+    基の条(K, C, As0),
+    ( ( EH > 0 ; EV > 0 ) -> append(As0, ['38条の2第2項'], As) ; As = As0 ).
+
+基の条(変更, _, ['17条1項']).
+基の条(瑕疵, _, ['17条1項', '17条5項']).
+基の条(管理, _, ['18条1項', '39条1項']).
+基の条(保険, _, ['18条6項', '18条1項', '39条1項']).
+基の条(普通, _, ['39条1項']).
+基の条(停止の訴え, _, ['57条2項', '39条1項']).
+基の条(規約, _, ['31条1項']).
+基の条(使用禁止, _, ['58条2項']).
+基の条(競売, _, ['59条2項', '58条2項']).
+基の条(引渡し, _, ['60条2項', '58条2項']).
+基の条(建替え, C, As) :- 欄(号, C, G), 号の条(G, As).
+
+号の条(なし, ['62条1項']).
+号の条(第一号, ['62条1項', '62条2項', '62条2項第1号']).
+号の条(第二号, ['62条1項', '62条2項', '62条2項第2号']).
+号の条(第三号, ['62条1項', '62条2項', '62条2項第3号']).
+号の条(第四号, ['62条1項', '62条2項', '62条2項第4号']).
+号の条(第五号, ['62条1項', '62条2項', '62条2項第5号']).
+
+%% ---- 条の原文の葉（rules/c〜f からも呼ぶ。同じ述語を別のファイルに書くと後の読み込みで消えるので、ここに1つだけ置く）----
+原文の葉(As, Rs) :- list_to_set(As, As1), maplist(原文規定, As1, Rs).
+</script>
+<script type="text/prolog" data-name="rules_c_shukai.pl">% rules/c_shukai.pl — 集会の招集・通知・決議できる事柄（34条1項・3項〜5項、35条1項、36条、37条、45条、62条6項・8項）
+%
+%   段は3つの述語から出す（g_hantei.pl の 全部の段 が、18の欄が「保存」「停止」でないときに呼ぶ）。
+%     招集の段/2：6の欄で shoshu（34条1項・5項）・shoshu_seikyu（34条3項）・shoshu_go（34条4項）・shoryaku（36条）・shomen（45条）
+%     通知の段/2：tsuchi（35条1項）か tsuchi_tatekae（18の欄が建替え。62条6項・8項）。6の欄が「省略」「書面」なら出さない
+%     事項の段/2：jiko（37条1項〜3項）。6の欄が「書面」、または「省略」で36条の同意が無いなら出さない
+%   2026-11-26 案A。前は入口「集会を開けるか」の中で「話」（招集 | 請求 | 通知 | 省略 | 事項 | 書面）を選ばせ、選んだ話の段だけを出していた（C4）。
+%   今は5〜17の欄と18の欄から同じ入力で当てる。前の 招集の段/3（34条5項の文を作る述語）は 定数の答え/6 に名前を変えた（g_hantei が呼ぶ 招集の段/2 と分ける）。
+%   段の id は段ごとに分けた（前の seikyu は f_seikyu.pl の57条1項と重なっていた。34条3項は shoshu_seikyu、34条4項は shoshu_go）。
+%   前の段の文の「〜ので」「入力の『会日の何日前に発したか』を…比べています」と数の不足は葉へ移し（A2）、
+%   読みの段（yomi_niishuu・yomi_yonshuu・yomi_gensu・yomi_nobi・kazoe）と断りの段（tuika「62条7項…は判定していません」・shorei「法務省令は読んでいません」）は
+%   about の読み (a)・(e)・(i)・(j) と範囲の節へ移した（A5・案A「段の出し方」の3）。
+%   前の (k)（管理者がいるときに区分所有者がそのまま招集する場合は34条4項へ案内する）の案内の文は、同じページで34条4項を答えるので外した。
+%   13・14の欄は日数でなく、会日の1週間前・2か月前を境にした3択で聞く（決め2）。規約で伸ばした期間に足りないときも足りない。
+%   段の文には、画面の上で指す先の無い指示語（その・これを・当該・同項・前項 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+
+%% ---- 招集（6の欄で分ける）----
+招集の段(C, L) :- 欄(開き方, C, W), 開き方の段(W, C, L).
+
+% 管理者が招集した（5の欄が「いない」の組は schema の 組み合わせなし ア で先に止まる）
+開き方の段(管理者, C, [s(shoshu, '誰が招集できるか', 段(できる, '管理者は集会を招集できます。', ['34条1項'], [R, W5, W6]))]) :-
+    原文規定('34条1項', R), 選んだ(管理者, C, W5), 選んだ(開き方, C, W6).
+% 区分所有者が、管理者に請求しないで招集した
+開き方の段(区分所有者, C, [s(shoshu, '誰が招集できるか', 段(できない, '区分所有者は、管理者に請求しないで集会を招集できません。', ['34条1項'], [R, W5, W6]))]) :-
+    欄(管理者, C, いる), !,
+    原文規定('34条1項', R), 選んだ(管理者, C, W5), 選んだ(開き方, C, W6).
+開き方の段(区分所有者, C, [s(shoshu, '誰が招集できるか', S)]) :-
+    定数の答え(C, '34条5項', '招集した区分所有者', '区分所有者は集会を招集できます。', '区分所有者は集会を招集できません。', S).
+% 区分所有者が、管理者に招集を請求した（5の欄が「いない」の組は 組み合わせなし イ で先に止まる）。
+% 34条3項の請求ができるときだけ、34条4項（請求の後に区分所有者が招集できるか）を出す
+開き方の段(請求, C, L) :-
+    定数の答え(C, '34条3項', '請求した区分所有者', '区分所有者は、管理者に集会の招集を請求できます。', '区分所有者は、管理者に集会の招集を請求できません。', S3),
+    S3 = 段(St3, _, _, _),
+    (   St3 == できる
+    ->  請求後の段(C, S4),
+        L = [s(shoshu_seikyu, '管理者への請求', S3), s(shoshu_go, '請求した区分所有者の招集', S4)]
+    ;   L = [s(shoshu_seikyu, '管理者への請求', S3)] ).
+% 招集の手続をしないで開いた（36条）
+開き方の段(省略, C, [s(shoryaku, '招集の手続を経ないで開くこと', 段(St, T, ['36条'], [R, W6, W12]))]) :-
+    原文規定('36条', R), 選んだ(開き方, C, W6), 選んだ(全員, C, W12),
+    (   欄(全員, C, 省略)
+    ->  St = できる, T = '招集の手続を経ないで集会を開けます。'
+    ;   St = できない, T = '招集の手続を経ないで集会を開けません。' ).
+% 開かずに、書面か電磁的方法で決めようとした（45条）
+開き方の段(書面, C, [s(shomen, '集会を開かずに決めること', 段(St, T, As, Ls))]) :-
+    欄(全員, C, V),
+    書面の答え(V, St, T, As),
+    原文の葉(As, Rs), 選んだ(開き方, C, W6), 選んだ(全員, C, W12),
+    append(Rs, [W6, W12], Ls).
+
+書面の答え(承諾, できる, '書面か電磁的方法で決議でき、集会の決議と同じ効力があります。', ['45条1項', '45条3項']) :- !.
+書面の答え(合意, できる, '書面か電磁的方法による決議があったとみなされ、集会の決議と同じ効力があります。', ['45条2項', '45条3項']) :- !.
+書面の答え(_, できない, '集会を開かずに決めることはできません。', ['45条1項', '45条2項']).
+
+% 34条3項・5項の定数（五分の一以上。9・10の欄で規約が減じた割合があればそれ）。分母は議決権を失った人を除いた数
+% 定数の答え(C, 条, 葉の主語, できるの文, できないの文, 段)
+定数の答え(C, Art, Who, Yes, No, 段(St, T, [Art], Ls)) :-
+    欄(全人, C, H), 欄(全権, C, V), 欄(除人, C, EH), 欄(除権, C, EV),
+    欄(請人, C, RH), 欄(請権, C, RV),
+    DH is H - EH, DV is V - EV,
+    定数の割合(C, R),
+    format(atom(WR), '~wの議決権', [Who]),
+    不足の人(Who, R, RH, DH, F1),
+    不足の権(WR, R, RV, DV, F2),
+    append(F1, F2, Fs),
+    ( Fs == [] -> St = できる, T = Yes ; St = できない, T = No ),
+    割合の語(R, RW), 必要数(R, DH, NH), 必要数(R, DV, NV),
+    format(atom(Need), '定数は~w以上で、必要なのは区分所有者~w人・議決権~w', [RW, NH, NV]),
+    原文規定(Art, A),
+    選んだ(管理者, C, W5), 選んだ(開き方, C, W6),
+    入れた(全人, C, W1), 入れた(全権, C, W2),
+    ( ( EH > 0 ; EV > 0 ) -> 入れた(除人, C, W3), 入れた(除権, C, W4), Ex = [W3, W4] ; Ex = [] ),
+    入れた(請人, C, W7), 入れた(請権, C, W8),
+    ( 欄(減子, C, N9), integer(N9) -> 入れた(減子, C, W9), 入れた(減母, C, W10), Gs = [W9, W10] ; Gs = [] ),
+    append([[A, W5, W6, W1, W2], Ex, [W7, W8], Gs, [Need], Fs], Ls).
+
+% 規約で減じた割合は、五分の一より小さいときだけ使う（34条3項・5項ただし書。読み (j)）
+定数の割合(C, r(N, D, W)) :-
+    欄(減子, C, N), integer(N), 欄(減母, C, D),
+    N * 5 < D, !,
+    format(atom(W), '規約の~w分の~w', [D, N]).
+定数の割合(_, r(1, 5, 五分の一)).
+
+% 34条4項。11の欄が「出たが、会日は請求の日から4週間より後」も招集できる（読み (e)）
+請求後の段(C, 段(St, T, ['34条4項'], [R, W11])) :-
+    原文規定('34条4項', R), 選んだ(通知, C, W11),
+    (   欄(通知, C, 以内)
+    ->  St = できない, T = '請求をした区分所有者は、集会を招集できません。'
+    ;   St = できる, T = '請求をした区分所有者は、集会を招集できます。' ).
+
+%% ---- 通知（35条1項・62条6項・8項）----
+通知の段(C, []) :- 欄(開き方, C, W), 通知の要らない開き方(W), !.
+通知の段(C, [s(tsuchi_tatekae, '建替え決議の集会の通知', 段(St, T, ['62条6項', '62条8項', '35条1項'], Ls))]) :-
+    欄(事柄, C, 建替え), !,
+    通知の欠け(建替え, C, St, Ws),
+    建替え通知の文(St, T),
+    原文の葉(['62条6項', '62条8項', '35条1項'], Rs),
+    append(Rs, Ws, Ls).
+通知の段(C, [s(tsuchi, '招集の通知', 段(St, T, ['35条1項'], [R | Ws]))]) :-
+    通知の欠け(普通, C, St, Ws),
+    通知の文(St, T),
+    原文規定('35条1項', R).
+
+通知の要らない開き方(省略).
+通知の要らない開き方(書面).
+
+% 通知の条件(種類, 欄-足りる値のリスト)。13の欄は会日の1週間前（35条1項）か2か月前（62条6項）が境。
+% 14の欄の「伸ばした期間」は、建替えでないときは35条1項ただし書、建替えのときは62条6項ただし書の期間（決め2）
+% 14の欄が「期間より前」なのに13の欄が1週間前（建替えは2か月前）より後の組は起こらないので、schema の 組み合わせなし オ が先に止め、
+% ここには来ない（5回目の決め1。前はここで13の欄の欠けとして「足りない」を返していた）
+通知の条件(普通, 時期, [二月より前, 一週から二月]).
+通知の条件(普通, 伸長, [伸ばしていない, 期間より前]).
+通知の条件(普通, 要領, [案まで]).
+通知の条件(建替え, 時期, [二月より前]).
+通知の条件(建替え, 伸長, [伸ばしていない, 期間より前]).
+通知の条件(建替え, 説明会, [開いた]).
+通知の条件(建替え, 要領, [案まで]).
+
+% 欠けた条件があれば 足りない で欠けた欄だけを葉に、無ければ 足りる で全部の欄を葉に。V は欄の値で1つに決まっているので memberchk
+通知の欠け(K, C, St, Ws) :-
+    findall(W, ( 通知の条件(K, N, Vs), 欄(N, C, V), \+ memberchk(V, Vs), 選んだ(N, C, W) ), Fs),
+    (   Fs == []
+    ->  St = 足りる, findall(W, ( 通知の条件(K, N, _), 選んだ(N, C, W) ), Ws)
+    ;   St = 足りない, Ws = Fs ).
+
+通知の文(足りる, '招集の通知は足りています。').
+通知の文(足りない, '招集の通知は足りません。').
+建替え通知の文(足りる, '建替え決議の集会の通知と説明会は足りています。').
+建替え通知の文(足りない, '建替え決議の集会の通知と説明会は足りません。').
+
+%% ---- 決議できる事柄（37条）----
+事項の段(C, []) :- 欄(開き方, C, 書面), !.
+事項の段(C, L) :-
+    欄(開き方, C, 省略), !,
+    (   欄(全員, C, 省略)
+    ->  原文規定('37条3項', R), 選んだ(開き方, C, W6), 選んだ(全員, C, W12),
+        L = [s(jiko, '決議できる事柄', 段(制限なし, '集会は、通知していない事柄も決議できます。', ['37条3項'], [R, W6, W12]))]
+    ;   L = [] ).
+事項の段(C, [s(jiko, '決議できる事柄', 段(St, T, As, Ls))]) :-
+    欄(要領, C, Y), 欄(事項の規約, C, B), 欄(事柄, C, K),
+    事項の答え(Y, B, K, St, T, As, Ns),
+    原文の葉(As, Rs),
+    findall(W, ( member(N, Ns), 選んだ(N, C, W) ), Ws),
+    append(Rs, Ws, Ls).
+
+% 事項の答え(15の欄, 17の欄, 18の欄, 状態, 文, 箱の条, 葉に出す欄)。
+% 37条2項の「この法律に集会の決議につき特別の定数が定められている事項」は18の欄から決める（案A「評価語の聞き方」の最後）
+事項の答え(Y, _, _, できる, '集会は、通知した事柄を決議できます。', ['37条1項'], [要領]) :-
+    Y \== 書いていない, !.
+事項の答え(_, 書いていない, _, できない, '集会は、通知していない事柄を決議できません。', ['37条1項'], [要領, 事項の規約]) :- !.
+事項の答え(_, _, K, できない, '集会は、通知していない事柄を決議できません。', ['37条1項', '37条2項'], [要領, 事項の規約, 事柄]) :-
+    特別の定数(K), !.
+事項の答え(_, _, _, できる, '集会は、通知していない事柄も決議できます。', ['37条2項'], [要領, 事項の規約, 事柄]).
+
+% 法律に決議の定数が書いてある事柄（17条1項・31条1項・58条2項・59条2項・60条2項・62条1項）。
+% 管理・保険（18条1項）、普通（39条1項）、停止の訴え（57条2項）には書いていない
+特別の定数(変更).
+特別の定数(瑕疵).
+特別の定数(規約).
+特別の定数(使用禁止).
+特別の定数(競売).
+特別の定数(引渡し).
+特別の定数(建替え).
+</script>
+<script type="text/prolog" data-name="rules_d_koji.pl">% rules/d_koji.pl — 共用部分の工事・管理（17条2項・3項、18条1項〜4項・6項）
+%
+%   段は5：kimeru_kiyaku（18条2項）・kimeru_hozon（18条1項ただし書）・kimeru_hoken（18条6項）・eikyo_koji（17条2項・18条3項）・senyu（17条3項・18条4項）。
+%   g_hantei.pl の 全部の段 がいつも呼ぶ。18の欄が工事・管理の5つ（変更 | 瑕疵 | 管理 | 保存 | 保険）でなければ [] を返す。
+%   2026-11-26 案A。前は入口「共用部分の工事を誰が決めるか」の中で工事の種類（工事）を選ばせ、決議の割合は入口1へ案内していた（annai_henko・annai_kanri）。
+%   今は決議の数を b_ketsugi.pl の kekka が同じページで答えるので、変更・管理の「集会の決議で決します」の段（前の kimeru の 決する）と案内の段は外した。
+%   18条6項（保険）は「管理に関する事項とみなす」を答える段として 決する を残した（案A「4 組の番号」）。
+%   前の id kimeru（4か所）と eikyo（e_kiyaku.pl と重なっていた）は段ごとに分けた。状態 規約 は 規約による にした（決め5）。
+%   「規約の中身は読んでいません」の断りは about へ移した（A5）。29の欄（特別の影響）は工事と規約で1つの欄にした（C1）。
+%   保険に30の欄（専有部分の工事も一緒に決める）が付くときは、18条6項で管理とみなすので18条4項を当てる（決め6。読みとして about に1行）。
+%   段の文には、画面の上で指す先の無い指示語（その・これを・当該・同項・前項 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+
+工事の段(C, L) :- 欄(事柄, C, K), 工事の事柄(K, G), !, 工事の答え(K, G, C, L).
+工事の段(_, []).
+
+% 工事の事柄(18の欄, 17条の工事か18条の管理か)
+工事の事柄(変更, 変更).
+工事の事柄(瑕疵, 変更).
+工事の事柄(管理, 管理).
+工事の事柄(保存, 管理).
+工事の事柄(保険, 管理).
+
+% 20の欄が「書いてある」と、18条1項（保存行為のただし書を含む）は18条2項で規約の定めによる
+工事の答え(K, 管理, C, [s(kimeru_kiyaku, '規約の定め', 段(規約による, T, As, Ls))]) :-
+    欄(管理の規約, C, 書いてある), !,
+    規約の文(K, T, As),
+    原文の葉(['18条1項' | As], Rs), 選んだ(事柄, C, W18), 選んだ(管理の規約, C, W20),
+    append(Rs, [W18, W20], Ls).
+工事の答え(保存, _, C, [s(kimeru_hozon, '保存行為', 段(できる, '保存行為は、集会の決議によらず、各共有者ができます。', ['18条1項'], [R, W18, W20]))]) :- !,
+    原文規定('18条1項', R), 選んだ(事柄, C, W18), 選んだ(管理の規約, C, W20).
+工事の答え(保険, 管理, C, [s(kimeru_hoken, '損害保険契約', 段(決する, '損害保険契約は共用部分の管理とみなされ、集会の決議で決します。', ['18条6項', '18条1項'], [R6, R1, W18])) | L]) :- !,
+    原文規定('18条6項', R6), 原文規定('18条1項', R1), 選んだ(事柄, C, W18),
+    影響の段(管理, C, E), 専有の段(管理, C, Sn), append(E, Sn, L).
+工事の答え(_, G, C, L) :-
+    影響の段(G, C, E), 専有の段(G, C, Sn), append(E, Sn, L).
+
+規約の文(管理, '共用部分の管理は、規約の定めによります。', ['18条2項']).
+規約の文(保存, '保存行為は、規約の定めによります。', ['18条2項']).
+規約の文(保険, '損害保険契約は共用部分の管理とみなされ、規約の定めによります。', ['18条6項', '18条2項']).
+
+%% ---- 専有部分の使い方に特別の影響（17条2項・18条3項）----
+% 29の欄が「いない」なら段を出さない
+影響の段(_, C, []) :- 欄(影響, C, いない), !.
+影響の段(G, C, [s(eikyo_koji, '専有部分の所有者の承諾', 段(St, T, As, Ls))]) :-
+    影響の条(G, As, Name),
+    (   欄(影響, C, 承諾)
+    ->  St = 足りる, T = '専有部分の所有者の承諾は足りています。'
+    ;   St = できない, format(atom(T), '~wはできません。', [Name]) ),
+    原文の葉(As, Rs), 選んだ(影響, C, W29),
+    append(Rs, [W29], Ls).
+
+影響の条(変更, ['17条2項'], '共用部分の変更').
+影響の条(管理, ['18条3項', '17条2項'], '共用部分の管理').
+
+%% ---- 専有部分の工事を一緒に決める（17条3項・18条4項）----
+% 30の欄が「決めない」なら段を出さない
+専有の段(_, C, []) :- 欄(専有, C, 決めない), !.
+専有の段(G, C, [s(senyu, '専有部分の工事', 段(St, T, [Art], [R, W30]))]) :-
+    専有の条(G, Art, Name),
+    (   欄(専有, C, 規約あり)
+    ->  St = できる, format(atom(T), '専有部分の工事も、~wと一緒に決議できます。', [Name])
+    ;   St = できない, format(atom(T), '専有部分の工事は、~wと一緒には決議できません。', [Name]) ),
+    原文規定(Art, R), 選んだ(専有, C, W30).
+
+専有の条(変更, '17条3項', '共用部分の変更').
+専有の条(管理, '18条4項', '共用部分の管理').
+</script>
+<script type="text/prolog" data-name="rules_e_kiyaku.pl">% rules/e_kiyaku.pl — 規約の設定・変更・廃止の承諾と反対（31条1項後段・31条2項）
+%
+%   段は2：eikyo_kiyaku（31条1項後段）・ichibu（31条2項）。g_hantei.pl の 全部の段 がいつも呼ぶ。18の欄が「規約」でなければ [] を返す。
+%   2026-11-26 案A。前は入口「規約を変えられるか」の中で承諾と反対だけを見て、賛成の割合は入口1へ案内していた（annai_kiyaku）。
+%   今は賛成の割合を b_ketsugi.pl の kekka が同じページで答えるので、案内の段は外した。
+%   前は承諾と反対のどちらにも当たらないとき「承諾と反対の条件では止まりません」の段を出していた。今は29の欄が「いない」で31〜34の欄が空なら段を出さない
+%   （ほかの段の答えと重なる文を足さない。REVIEW_RULES B6 と同じ向き）。
+%   前の id eikyo は d_koji.pl と重なっていたので eikyo_kiyaku にした。29の欄（特別の影響）は工事と規約で1つの欄にした（C1）。
+%   31条2項は四分の一を「超える」で判定する。ちょうど四分の一の反対では止まらない。分母は31・32の欄（議決権を失った人を除いた数）。
+%   段の文には、画面の上で指す先の無い指示語（その・これを・当該・同項・前項 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+
+規約の段(C, L) :-
+    欄(事柄, C, 規約), !,
+    承諾の段(C, E),
+    反対の段(C, B),
+    append(E, B, L).
+規約の段(_, []).
+
+%% ---- 権利に特別の影響（31条1項後段）----
+承諾の段(C, []) :- 欄(影響, C, いない), !.
+承諾の段(C, [s(eikyo_kiyaku, '権利に特別の影響を受ける区分所有者の承諾', 段(St, T, ['31条1項'], [R, W29]))]) :-
+    原文規定('31条1項', R), 選んだ(影響, C, W29),
+    (   欄(影響, C, 承諾)
+    ->  St = 足りる, T = '権利に特別の影響を受ける区分所有者の承諾は足りています。'
+    ;   St = できない, T = '規約の設定・変更・廃止はできません。' ).
+
+%% ---- 一部共用部分を使う区分所有者の反対（31条2項）----
+% 31〜34の欄は4つとも空か4つとも数（schema の 一部の形）。空なら全員の規約で一部共用部分の事柄を決める話ではない
+反対の段(C, []) :- 欄(一部人, C, 空), !.
+反対の段(C, [s(ichibu, '一部共用部分を使う区分所有者の反対', 段(St, T, ['31条2項'], Ls))]) :-
+    欄(一部人, C, H), 欄(一部権, C, V), 欄(反人, C, RH), 欄(反権, C, RV),
+    超えた反対(H, RH, V, RV, Fs),
+    (   Fs == []
+    ->  St = 止まらない,
+        T = '一部共用部分を使う区分所有者の反対では、規約の設定・変更・廃止は止まりません。',
+        format(atom(N), '反対した区分所有者は~w人・議決権~wで、どちらも~w人・議決権~wの四分の一を超えていない', [RH, RV, H, V]),
+        Ns = [N]
+    ;   St = できない,
+        T = '一部共用部分の事柄についての全員の規約の設定・変更・廃止はできません。',
+        Ns = Fs ),
+    原文規定('31条2項', R),
+    入れた(一部人, C, W31), 入れた(一部権, C, W32), 入れた(反人, C, W33), 入れた(反権, C, W34),
+    append([R, W31, W32, W33, W34], Ns, Ls).
+
+超えた反対(H, RH, V, RV, Fs) :-
+    ( RH * 4 > H -> format(atom(A), '反対した区分所有者は~w人で、~w人の四分の一を超えている', [RH, H]), L1 = [A] ; L1 = [] ),
+    ( RV * 4 > V -> format(atom(B), '反対した区分所有者の議決権は~wで、議決権~wの四分の一を超えている', [RV, V]), L2 = [B] ; L2 = [] ),
+    append(L1, L2, Fs).
+</script>
+<script type="text/prolog" data-name="rules_f_seikyu.pl">% rules/f_seikyu.pl — 共同の利益に反する行為への請求と訴え（6条1項・3項、57条〜60条）
+%
+%   段は8：koui（6条の行為が無い）・teishi_seikyu（57条1項）・teishi_sosho（57条2項・3項）・uttae_shiyo（58条）・uttae_keibai（59条1項・2項）・
+%   uttae_hikiwatashi（60条）・moshitate（59条3項）・kaiuke（59条4項）。g_hantei.pl の 全部の段 がいつも呼ぶ。
+%   18の欄が訴えの5つ（停止 | 停止の訴え | 使用禁止 | 競売 | 引渡し）でなければ [] を返す。
+%   2026-11-26 案A。前は入口「何を請求できるか」の中で相手（区分所有者 | 占有者）ごとに中身（区分中身・占有中身）を選ばせ、
+%   集会の決議があるか（決議）・訴えるか（訴え）を別の欄で聞き、決議の割合は入口1へ案内していた（annai_*）。
+%   今は18と35〜42の欄から同じ入力で当てる。57条〜60条の「集会の決議に基づき」「集会の決議によらなければならない」は、
+%   b_ketsugi.pl の 決議の答え が「通る」かで答える（案A「段の出し方」の2・D4）。6の欄が「開かずに、書面か電磁的方法で決めようとした」ときは、
+%   12の欄が「決める事柄に、書面か電磁的方法で合意した」なら決議があったとみなす（45条2項）。それ以外は決議が無いとして答える。
+%   12の欄が「承諾した」（45条1項）のときに決議が無いとするのは条文に無いアプリの約束事③（yakusoku/kihon.pl）なので、
+%   訴えの段の葉の最後に約束事の行を足す（決議の約束/2。5回目の決め2・REVIEW_RULES D1。前は約束事の印が無かった）。
+%   招集の段が集会を開けない・招集できないと答える組で決議が通らなかったとするのも、条文に無いアプリの約束事④（6回目の決め1）なので、
+%   同じく訴えの段の葉の最後に足す。手続の要件（35条1項・37条1項・58条3項・62条6項・8項）が欠けた組も同じく約束事⑤（LLMレビューの直し）。
+%   前は欠けた条件の1つ目で答えていた。今は欠けた条件を全部葉に並べ、箱は「請求できます／できません」だけにした（A1・A2。akiya-prolog の 空家等の段 と同じ形）。
+%   前の id seikyu は c_shukai.pl の34条3項と重なっていたので teishi_seikyu にした。訴えの段は中身ごとに id を分けた。
+%   前の段の文の「〜という入力でないので」「〜という入力なので」は葉へ移した（A2）。「当該区分所有者」「その専有部分」「その決議」は名詞で書いた（A6）。
+%   57条2項の決議の割合は同条に無いので普通の決議と読む（読み (f)。b_ketsugi.pl が数える）。案内の段（annai_*）・月の数え方の段（tsuki）は about へ移した。
+%   占有者への請求者は、60条1項に合わせて「区分所有者の全員か管理組合法人」と読む（読み (m)）。
+%   段の文には、画面の上で指す先の無い指示語（その・これを・当該・同項・前項 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+
+訴えの段(C, L) :-
+    欄(事柄, C, K), 訴えの事柄(K), !,
+    欄(相手, C, A),
+    訴えの答え(K, A, C, L0),
+    判決の後の段(K, C, L1),
+    append(L0, L1, L).
+訴えの段(_, []).
+
+訴えの事柄(停止).
+訴えの事柄(停止の訴え).
+訴えの事柄(使用禁止).
+訴えの事柄(競売).
+訴えの事柄(引渡し).
+
+三つの訴え(使用禁止).
+三つの訴え(競売).
+三つの訴え(引渡し).
+
+%% ---- 6条の行為が無い ----
+訴えの答え(K, A, C, [s(koui, '共同の利益に反する行為', 段(当たらない, T, As, Ls))]) :-
+    欄(行為, C, なし), !,
+    場面の文(K, T), 行為の条(K, A, As),
+    原文の葉(As, Rs), 選んだ(相手, C, W35), 選んだ(行為, C, W36),
+    append(Rs, [W35, W36], Ls).
+%% ---- 行為の停止・結果の除去・予防の請求（57条1項・4項。訴えない）----
+訴えの答え(停止, A, C, [s(teishi_seikyu, '行為の停止などの請求', 段(できる, T, As, Ls))]) :- !,
+    全員の語(A, Who),
+    format(atom(T), '~wは、行為の停止・結果の除去・予防の措置を請求できます。', [Who]),
+    停止の条(A, As),
+    原文の葉(As, Rs), 選んだ(相手, C, W35), 選んだ(行為, C, W36),
+    append(Rs, [W35, W36], Ls).
+%% ---- 訴え（57条2項・3項、58条、59条1項・2項、60条）----
+訴えの答え(K, A, C, [s(Id, Head, 段(St, T, As, Ls))]) :-
+    訴えの見出し(K, Id, Head),
+    findall(W-Xs, 欠け(K, C, W, Xs), Fs),
+    訴えの条(K, B, Q, Bm, P, Z),
+    占有者の条(K, A, Ex),
+    (   Fs \== []
+    ->  St = できない, できないの文(K, T),
+        findall(X, ( member(_-Xs1, Fs), member(X, Xs1) ), Fa),
+        append([B, Fa, Ex], As0),
+        findall(W, member(W-_, Fs), Ws0),
+        選んだ(相手, C, W35), 選んだ(行為, C, W36),
+        決議の約束(C, Ys),
+        append([W35, W36 | Ws0], Ys, Ws)
+    ;   St = できる,
+        欄(誰, C, D), 主語(D, A, S), できるの文(K, S, T),
+        ( D == 全員 -> Ps = Z ; Ps = P ),
+        append([B, Q, Bm, Ps, Ex], As0),
+        訴えの入力(K, C, Ws) ),
+    list_to_set(As0, As),
+    原文の葉(As, Rs),
+    append(Rs, Ws, Ls).
+
+場面の文(停止, '行為の停止などの請求の場面に当たりません。').
+場面の文(停止の訴え, '行為の停止などの請求の場面に当たりません。').
+場面の文(使用禁止, '専有部分の使用の禁止の請求の場面に当たりません。').
+場面の文(競売, '区分所有権の競売の請求の場面に当たりません。').
+場面の文(引渡し, '契約の解除と引渡しの請求の場面に当たりません。').
+
+行為の条(停止, A, As) :- !, 停止の条(A, As).
+行為の条(停止の訴え, A, As) :- !, 停止の条(A, As).
+行為の条(使用禁止, _, ['58条1項', '6条1項']).
+行為の条(競売, _, ['59条1項', '6条1項']).
+行為の条(引渡し, _, ['60条1項', '6条3項', '6条1項']).
+
+停止の条(区分所有者, ['57条1項', '6条1項']).
+停止の条(占有者, ['57条4項', '57条1項', '6条3項', '6条1項']).
+
+% 57条1項の請求者。占有者には57条4項の準用で、60条1項に合わせて「区分所有者の全員」と読む（読み (m)）
+全員の語(区分所有者, '他の区分所有者の全員か管理組合法人').
+全員の語(占有者, '区分所有者の全員か管理組合法人').
+全員だけの語(区分所有者, '他の区分所有者の全員').
+全員だけの語(占有者, '区分所有者の全員').
+
+% 40の欄で箱の文の主語を決める（それ以外 は 欠け で先に できない になる）
+主語(全員, A, S) :- 全員の語(A, W), format(atom(S), '~wは、', [W]).
+主語(管理者, A, S) :- 全員だけの語(A, W), format(atom(S), '管理者は、~wのために、', [W]).
+主語(指定, A, S) :- 全員だけの語(A, W), format(atom(S), '集会で指定された区分所有者は、~wのために、', [W]).
+
+訴えの見出し(停止の訴え, teishi_sosho, '行為の停止などの訴訟').
+訴えの見出し(使用禁止, uttae_shiyo, '専有部分の使用の禁止の請求').
+訴えの見出し(競売, uttae_keibai, '区分所有権の競売の請求').
+訴えの見出し(引渡し, uttae_hikiwatashi, '契約の解除と引渡しの請求').
+
+できないの文(停止の訴え, '行為の停止などの訴訟は起こせません。').
+できないの文(使用禁止, '訴えで、専有部分の使用の禁止を請求できません。').
+できないの文(競売, '訴えで、区分所有権と敷地利用権の競売を請求できません。').
+できないの文(引渡し, '訴えで、占有者の契約の解除と専有部分の引渡しを請求できません。').
+
+できるの文(停止の訴え, S, T) :- format(atom(T), '~w行為の停止などの訴訟を起こせます。', [S]).
+できるの文(使用禁止, S, T) :- format(atom(T), '~w訴えで、専有部分の使用の禁止を請求できます。', [S]).
+できるの文(競売, S, T) :- format(atom(T), '~w訴えで、区分所有権と敷地利用権の競売を請求できます。', [S]).
+できるの文(引渡し, S, T) :- format(atom(T), '~w訴えで、占有者の契約の解除と専有部分の引渡しを請求できます。', [S]).
+
+% 訴えの条(18の欄, 基の条, 決議の条, 弁明の条, 訴える人の条（管理者・指定）, 訴える人の条（全員）)
+訴えの条(停止の訴え, ['57条2項'], [], [], ['57条3項'], ['57条1項']).
+訴えの条(使用禁止, ['58条1項'], ['58条2項'], ['58条3項'], ['58条4項', '57条3項'], []).
+訴えの条(競売, ['59条1項'], ['59条2項', '58条2項'], ['59条2項', '58条3項'], ['59条2項', '57条3項'], []).
+訴えの条(引渡し, ['60条1項'], ['60条2項', '58条2項'], ['60条2項', '58条3項'], ['60条2項', '57条3項'], []).
+
+占有者の条(停止の訴え, 占有者, ['57条4項']) :- !.
+占有者の条(_, _, []).
+
+% 欠けた条件（葉, 足す条）。37〜39の欄は58条〜60条だけ（57条2項の訴訟には障害・困難・弁明の条件が無い）
+欠け(K, C, W, []) :- 三つの訴え(K), 欄(障害, C, ひどくない), 選んだ(障害, C, W).
+欠け(K, C, W, []) :- 三つの訴え(K), 欄(困難, C, ほかで足りる), 選んだ(困難, C, W).
+欠け(K, C, W, As) :- 三つの訴え(K), 欄(弁明, C, 与えていない), 選んだ(弁明, C, W), 訴えの条(K, _, _, As, _, _).
+欠け(K, C, W, As) :- \+ 決議が通る(C), 決議の葉(C, W), 訴えの条(K, _, As, _, _, _).
+欠け(K, C, W, As) :- 欄(誰, C, それ以外), 選んだ(誰, C, W), 訴えの条(K, _, _, _, As1, As2), append(As1, As2, As).
+
+% できるときの入力の葉
+訴えの入力(K, C, Ws) :-
+    選んだ(相手, C, W35), 選んだ(行為, C, W36),
+    ( 三つの訴え(K) -> 選んだ(障害, C, W37), 選んだ(困難, C, W38), 選んだ(弁明, C, W39), Ms = [W37, W38, W39] ; Ms = [] ),
+    決議の葉(C, WQ), 選んだ(誰, C, W40),
+    append([[W35, W36], Ms, [WQ, W40]], Ws).
+
+%% ---- 集会の決議 ----
+% 招集の段が集会を開けない・招集できないと答える組と、手続の要件が欠けた組（g_hantei.pl の 手続が欠けた/2）では、決議が通らなかったとして答える。
+% 36条・34条は「招集できない」と言うだけで、そのまま開いた集会の決議がどうなるかは書いていないので、アプリの約束事④（6回目の決め1。REVIEW_RULES D1）。
+% 35条1項・37条1項・58条3項・62条6項・8項も手続を定めるだけで、手続が欠けた決議がどうなるかは書いていないので、アプリの約束事⑤（LLMレビューの直し）。
+% 前は b_ketsugi の 決議の答え を直に呼び、開けない組でも数が足りれば「訴えで請求できます」を出していた（5回目の戻りの「決めてほしい点」）。
+% 手続が欠けた組の判定は前の 開けない招集/1（招集の段だけ）から 手続が欠けた/2 にした。
+% 6の欄が「書面」なら45条2項の全員の合意があるときだけ決議があったとみなす。それ以外は b_ketsugi.pl の 決議の答え で数える。
+% 12の欄が「承諾」で失敗するのはアプリの約束事③（下の 決議の約束/2 が木に出す）
+決議が通る(C) :- 手続が欠けた(C, _), !, fail.
+決議が通る(C) :- 欄(開き方, C, 書面), !, 欄(全員, C, 合意).
+決議が通る(C) :- 決議の答え(C, 通る, _, _).
+
+% 約束事④の行（開けない組）・約束事⑤の行（手続の要件が欠けた組）と約束事③の行（6の欄が「書面」で12の欄が「承諾」のとき）。
+% 決議が無いのが条文で決まる組＝合意も承諾も無い・数が足りない には足さない。
+% 6の欄が「書面」なら招集の段は shomen なので、④と③は重ならない。⑤と③が重なる組（書面・承諾で39の欄が「与えていない」）は⑤を出す（行を1つにする）
+決議の約束(C, [Y]) :- 手続が欠けた(C, K), !, 欠けた手続の約束(K, Y).
+決議の約束(C, [Y]) :- 欄(開き方, C, 書面), 欄(全員, C, 承諾), !, 書面の承諾の約束(Y).
+決議の約束(_, []).
+
+欠けた手続の約束(開けない, Y) :- 開けない集会の約束(Y).
+欠けた手続の約束(欠けた, Y) :- 手続の欠けた集会の約束(Y).
+
+決議の葉(C, '集会を開けないので、集会の決議は通っていない') :- 手続が欠けた(C, 開けない), !.
+決議の葉(C, '手続の要件が欠けているので、集会の決議は通っていない') :- 手続が欠けた(C, 欠けた), !.
+決議の葉(C, W) :-
+    欄(開き方, C, 書面), !,
+    ( 欄(全員, C, 合意) -> W = '区分所有者全員が、書面か電磁的方法で合意した' ; W = '書面か電磁的方法による区分所有者全員の合意は無い' ).
+決議の葉(C, W) :-
+    ( 決議が通る(C) -> W = '集会の決議が通った' ; W = '集会の決議が通っていない' ).
+
+%% ---- 判決の後（59条3項・4項。18の欄が「競売」で41の欄が空でないとき）----
+判決の後の段(競売, C, [s(moshitate, '競売の申立ての期間', 段(St1, T1, ['59条3項'], [R3, W41, N1])),
+                     s(kaiuke, '買受けの申出', 段(St2, T2, ['59条4項'], [R4, W42]))]) :-
+    欄(月数, C, M), integer(M), !,
+    原文規定('59条3項', R3), 入れた(月数, C, W41),
+    (   M =< 6
+    ->  St1 = できる, T1 = '競売の申立てはまだできます。',
+        format(atom(N1), '判決が確定した日から~wか月で、6か月を過ぎていない', [M])
+    ;   St1 = できない, T1 = '競売の申立てはできません。',
+        format(atom(N1), '判決が確定した日から~wか月で、6か月を過ぎた', [M]) ),
+    原文規定('59条4項', R4), 選んだ(買受, C, W42),
+    (   欄(買受, C, 本人)
+    ->  St2 = できない, T2 = '競売にかけられた区分所有者本人と、本人の計算で買い受ける人は、買受けの申出ができません。'
+    ;   St2 = 当たらない, T2 = '買受けの申出の制限には当たりません。' ).
+判決の後の段(_, _, []).
+</script>
+<script type="text/prolog" data-name="rules_g_hantei.pl">% rules/g_hantei.pl — 段を束ねて見出し・根拠条文・論理の木を作る
+%
+%   judge(ctx(...), r(見出し, 段のリスト, 根拠条文), Trees)
+%     段 = 段(状態, 文, 箱の条, 葉のリスト)　結論ごとの段 = s(画面のid, 見出し, 段)
+%     段は mujun_a・mujun_i・mujun_u・mujun_e・mujun_o（schema の 組み合わせなし）と、rules/b〜f が返す段（id は段ごとに分ける。
+%     前の seikyu は c_shukai.pl と f_seikyu.pl で、eikyo は d_koji.pl と e_kiyaku.pl で重なっていた。案A「段の id の重なり」）
+%   形は akiya-prolog の g_hantei.pl と同じ（2026-11-26 案A）。組の番号/2 と 印/2 は oyako-prolog の g_hantei.pl の形。
+%   前は 入口の段/3 が入口1つの段だけを返し、見出し/1 は全部の段の答えを1段落につなぎ（A7）、組の番号は 止まる状態 が1・
+%   足りる・止まらない が3・当たらない が4で、ほかは受け皿の 組の番号(_, 2). で2番になっていた（書き損じても黙って2番）。
+%   木は全部を「次のすべてが成り立つ」の下にぶら下げた1本で、全部の段にアプリの約束事①を付けていた（B5・A5）。
+%   補足 の段（22か所）は木と見出しから外して段にだけ出していた。
+%   今は段ごとに状態を持ち、状態を全部名前で書き、知らない状態は throw で止める。補足 は状態から消した（決め・案A「段の出し方」の3）。
+%   止まる状態/1 と 止まった段がある/1 は消し、印/2 にした。約束事①は yakusoku/kihon.pl から消した。
+%   段の文には、画面の上で指す先の無い指示語（その・これを・当該・同項・前項 など）を置かず、指すものを名詞で書く（REVIEW_RULES A6）。
+
+%% ---- judge ----
+judge(C, r(Head, Steps, Arts), Trees) :-
+    ctx_valid(C),
+    全部の段(C, Steps),
+    Steps \== [],
+    見出し(C, Steps, Head),
+    findall(S, member(s(_, _, S), Steps), Ss),
+    根拠条文(Ss, Arts),
+    木(C, Steps, Trees).
+
+% 成り立たない組があれば、その組だけを段にする（REVIEW_RULES C3。ほかの段は出さない）。
+% 組は findall で全部集め、組ごとに1段にする（id は mujun_a〜mujun_o。REVIEW_RULES 末尾「AI同士で決めた書き方」1・2）。
+% 無ければ1回の集会で起きた事実を、同じ入力で全部の段に当てる（REVIEW_RULES C4・C5）。並びは案A「段の出し方」の順
+% （招集 → 通知 → 決議できる事項 → 決議の数 → 工事 → 規約 → 訴え）で、そのあと 当たった答えを先に（止まる答えを先に）。
+% 18の欄が「今の状態を保つこと」（18条1項ただし書）か「やめるよう求める（訴えない）」（57条1項）のときは集会の決議が要らないので、
+% 集会の段（招集・通知・事項・決議の数）を呼ばない（案A「段の出し方」の1）。工事・規約・訴えの段は18の欄で自分の段かを見て、当たらなければ [] を返す。
+% 集会を開けない・招集できないと答えたとき（36条「開けません」・34条1項「請求しないで招集できません」・34条5項・34条3項「できません」）は、
+% 決議の数の段（kekka）を呼ばない。開けない集会の「決議は通ります」を結論の箱に並べないため（REVIEW_RULES A。5回目の決め3）。
+% 34条4項の「請求をした区分所有者は招集できません」は、管理者が招集するので集会はあり、決議の数の段を出す。
+% 前は招集の段の答えにかかわらず決議の段を呼んでいた（4回目の戻りの「条文からは決まらない」g_hantei.pl:38–43）
+% 同じ組では、訴えの段も「集会の決議が通った」と扱わない（f_seikyu.pl の 決議が通る。アプリの約束事④。6回目の決め1）
+% 手続の要件が欠けた組（35条1項の通知が足りない・62条6項8項の通知と説明会が足りない・37条1項で決議できない・58条3項の弁明の機会が無い）も、
+% 同じく決議の数の段を呼ばず、訴えの段も「集会の決議が通った」と扱わない（アプリの約束事⑤。2026-11-26 LLMレビューの直しの決め1〜3）。
+% 前は通知が足りない・決議できない組でも「決議は通ります」を同じ箱に並べ、初めて読む人には決議が有効に通ったと読めた（REVIEW_RULES A）
+% 同じ述語を別のファイルに分けて書くと後の読み込みで消えるので、まとめはここに1つだけ置く
+全部の段(C, Steps) :-
+    findall(s(Id, 'この組み合わせはありません', 段(組み合わせなし, 'この組み合わせはありません。', As, Ws)),
+            ( 組み合わせなし(C, K, Ws, As), atom_concat(mujun_, K, Id) ), Steps),
+    Steps \== [], !.
+全部の段(C, Steps) :-
+    ( 集会が要る(C) ->
+        招集の段(C, L1),
+        通知の段(C, L2),
+        事項の段(C, L3),
+        ( 欠けた手続(C, L1, L2, L3, _) -> L4 = [] ; 決議の段(C, L4) )   % 前は 集会を開けない(L1) だけを見ていた
+    ; L1 = [], L2 = [], L3 = [], L4 = [] ),
+    工事の段(C, L5),
+    規約の段(C, L6),
+    訴えの段(C, L7),
+    append([L1, L2, L3, L4, L5, L6, L7], L0),
+    当たった答えを先に(L0, Steps).
+
+% 集会の決議が要る事柄か。18の欄の値は1つに決まっていて、入っているかを見るだけなので memberchk（REVIEW_RULES 末尾「AI同士で決めた書き方」1）
+集会が要る(C) :- 欄(事柄, C, K), \+ memberchk(K, [保存, 停止]).
+
+% 招集の段に、集会を開けない・招集できないと答えた段があるか。段は候補を並べるので member、id は member で決まった後に入っているかを見るので memberchk
+% （REVIEW_RULES 末尾「AI同士で決めた書き方」1）。shoshu_go（34条4項）と shomen（45条。決議の数はもともと見ない）は入れない
+集会を開けない(L1) :-
+    member(s(Id, _, 段(できない, _, _, _)), L1),
+    memberchk(Id, [shoshu, shoshu_seikyu, shoryaku]), !.
+
+% 欠けた手続(C, 招集の段, 通知の段, 事項の段, 種類)：決議の数の段を呼ばない組か。種類は 開けない（約束事④）か 欠けた（約束事⑤）。
+% 両方に当たる組は 開けない で答える（約束事の行を1つにする）。段は候補を並べるので member、
+% 欠けた段/2 は id と状態が member で決まった後に引くので1つに決まる
+欠けた手続(_, L1, _, _, 開けない) :- 集会を開けない(L1), !.
+欠けた手続(_, _, L2, L3, 欠けた) :-
+    append(L2, L3, L), member(s(Id, _, 段(St, _, _, _)), L), 欠けた段(Id, St), !.
+% 58条3項の弁明の機会は段にしていない（訴えの段の 欠け が葉に出す）ので、欄で見る。39の欄は三つの訴えのときだけ見る
+欠けた手続(C, _, _, _, 欠けた) :-
+    欄(事柄, C, K), 三つの訴え(K), 欄(弁明, C, 与えていない), !.
+
+欠けた段(tsuchi, 足りない).            % 35条1項
+欠けた段(tsuchi_tatekae, 足りない).    % 62条6項・8項・35条1項
+欠けた段(jiko, できない).              % 37条1項
+
+% 入力 C が、決議の数の段を呼ばない組か（f_seikyu.pl の 決議が通る・決議の約束・決議の葉 が呼ぶ。約束事④⑤。6回目の決め1）。
+% 判定は上の 欠けた手続/5 の1つだけにして、決議の段を外す所と訴えの段で答えが割れないようにした。前は 開けない招集/1 で、招集の段だけを見ていた。
+% 段は 全部の段 の中でも作るので2回作るが、段の値は入力だけで決まり、引数を増やさずに済む（訴えの段/2 の形を変えない）。
+% 集会が要らない事柄（保存・停止）は決議の数の段をもともと呼ばないので、当てない。
+% 種類は空のまま 欠けた手続 を呼んで後で比べる（束ねて呼ぶと、開けない組で 欠けた を聞いたとき2つ目の節に進んで当たってしまう）
+手続が欠けた(C, Kind) :-
+    集会が要る(C),
+    招集の段(C, L1), 通知の段(C, L2), 事項の段(C, L3),
+    欠けた手続(C, L1, L2, L3, K0),
+    Kind = K0.
+
+%% ---- 並べ方 ----
+% 並びは ①止まる答え ②当たった答え ③答えを支える文（止まらないので聞いた答えの後ろ） ④「当たりません」の文
+% ①②が無いときは「当たりません」が聞いた答えなので、③より前に出す（前の kubun の 当たった答えを先に と同じ並べ方。形は akiya-prolog）
+% 組の番号 は番号を空のまま呼んで後で比べる。番号を束ねて呼ぶと頭に合わず、最後の throw の節に落ちて止まる（sorin-prolog 2026-11-22 22:50 run_cases。akiya と同じ）
+当たった答えを先に([], []) :- !.
+当たった答えを先に(L0, L) :-
+    ( member(s(_, _, 段(St0, _, _, _)), L0), 組の番号(St0, N0), N0 =< 2 -> Order = [1, 2, 3, 4] ; Order = [4, 3] ),
+    findall(S, ( member(N, Order), member(S, L0), S = s(_, _, 段(St, _, _, _)), 組の番号(St, M), M =:= N ), L).
+
+% 組の番号(状態, 1=止まる答え | 2=当たった答え | 3=答えを支える文 | 4=当たりません)。
+% 状態は全部名前で書き、知らない状態は止める（agents/dog/rules.md:97。akiya-prolog は :96 と書いているが、今の :96 は REVIEW_RULES を読む行。oyako-prolog g_hantei.pl の 組の番号 の形で、状態は案A「4 組の番号」）
+% 前の 規約（18条2項）は 規約による に、適用なし（37条3項）は 制限なし に名前を変えた（決め5）。
+% 前の受け皿 組の番号(_, 2). で2番になっていた 通る・できる・決する・規約・適用なし は、名前で2番に書いた。補足 は段ごと消した
+組の番号(組み合わせなし, 1) :- !.   % ア〜エ
+組の番号(通らない, 1) :- !.         % 決議の数
+組の番号(できない, 1) :- !.         % 招集・36条・45条・37条・17条2項・31条・57条〜60条
+組の番号(足りない, 1) :- !.         % 35条1項・62条6項8項
+組の番号(通る, 2) :- !.             % 決議の数
+組の番号(できる, 2) :- !.           % 招集・36条・45条・37条・17条3項・18条1項ただし書・57条〜60条
+組の番号(決する, 2) :- !.           % 18条6項（保険）
+組の番号(規約による, 2) :- !.       % 18条2項
+組の番号(制限なし, 2) :- !.         % 37条3項
+組の番号(足りる, 3) :- !.           % 35条1項・62条6項8項・17条2項・18条3項・31条1項後段（承諾あり）
+組の番号(止まらない, 3) :- !.       % 31条2項
+組の番号(当たらない, 4) :- !.       % 6条1項・3項・59条4項
+組の番号(St, _) :- throw(知らない状態(St)).
+
+%% ---- 見出し（結論の箱）と節の文 ----
+% 結論の箱と番号つきの節には、段の文だけを出す（REVIEW_RULES A1・A2。入力の言い直し・「判定しません」・数の不足を付けない）。
+見出し(C, Steps, H) :-
+    見出しの文(C, Steps, Ws),
+    atomic_list_concat(Ws, '。', H).
+
+% 結論の箱の答えを1つずつのリストで返す（2つ以上なら画面で箇条書きにする。REVIEW_RULES A7。web.pl の heads/2 から呼ぶ）
+見出しの文(_, Steps, Ws) :-
+    findall(W, ( member(s(_, _, S), Steps), 問いの答え(S, W) ), Ws).
+
+% 答えの文に箱の条を（）で付ける。条の無い段は付けない（「（）」を画面に出さない）
+問いの答え(S, W) :-
+    S = 段(_, _, As, _),
+    答え(S, W0),
+    ( As == [] -> W = W0 ; 条の表記(As, A), format(atom(W), '~w（~w）', [W0, A]) ).
+
+% 節の文：答えの文（条を付けない）
+節の文(_, S, W) :- 答え(S, W).
+
+% 答え(段, 答えの文)：段の文の末尾の「。」を外す。
+答え(段(_, M, _, _), W) :-
+    ( atom_concat(M0, '。', M) -> W = M0 ; W = M ).
+
+%% ---- 根拠条文 ----
+% 段の順に並べ、重複は1つに
+根拠条文(Ss, Arts) :-
+    findall(A, ( member(段(_, _, As, _), Ss), member(A, As) ), All),
+    list_to_set(All, Arts).
+
+%% ---- 論理の木 ----
+% 結論1つにつき木1本のリストを返す（REVIEW_RULES B5。結論をつないだ行と「次のすべてが成り立つ」の根は置かない）。
+% 並びは結論の箱と同じ。一番上の行は結論の箱の文で、その下に葉（規定の行・起きた事実・数の不足・約束事）を置く。
+木(_, Steps, Trees) :-
+    findall(T, ( member(s(_, _, S), Steps), 段の木(S, T) ), Trees).
+
+% 当たらない の段には約束事②（「当たりません」は反対の結論を言うものではない）を葉の最後に足す（前の 段の約束/2 の②。①は消した）
+段の木(S, t(K, W, '', Cs)) :-
+    S = 段(St, _, _, Fs),
+    問いの答え(S, W),
+    段の約束(St, Ys),
+    append(Fs, Ys, Fs1),
+    maplist(葉の行, Fs1, Kids),
+    すべて(W, '', Kids, t(_, W, _, Cs)),
+    印(St, K).
+
+段の約束(当たらない, [Y]) :- !, 場面外の約束(Y).
+段の約束(_, []).
+
+% 止まった段（組の番号の1番）と当たりません（4番）は info、そのほか（2番・3番）は ok（木ごとに、その段で決める）
+% 前の 止まった段がある/1 も、当たらない と 止まる状態 のときに info にしていた。番号は1つに決まっていて、入っているかを見るだけなので memberchk
+印(St, K) :- 組の番号(St, N), ( memberchk(N, [1, 4]) -> K = info ; K = ok ).
+</script>
+<script type="text/prolog" data-name="web.pl">% web.pl — Webアプリから呼ぶための補助（表示しやすい形で返す）
+%   judge/3 の結果（r(...) + 木）をフラット化して画面に渡す。形は akiya-prolog の web.pl と同じ（2026-11-26 案A）。
+%   前は result・explain の2つで、explain は木1本を平らにしていた。
+%   今は木を結論ごとに1本にし（B5）、「この組み合わせはありません」も段の1つにした（rules/g_hantei.pl の 全部の段）。
+
+%% ---- 判定本体 ----
+result(C, R) :- judge(C, R, _), !.
+
+%% ---- 結論の箱の答え（1つずつのリスト。2つ以上なら画面で箇条書きにする。REVIEW_RULES A7）----
+heads(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    見出しの文(C, Steps, L).
+
+%% ---- 番号つきの節に出す短い答え（段のid-文）----
+answers(C, L) :-
+    judge(C, r(_, Steps, _), _), !,
+    findall(Id-W, ( member(s(Id, _, S), Steps), 節の文(Id, S, W) ), L).
+
+%% ---- 木（結論1つにつき1本。木ごとにフラット化したリストのリスト。REVIEW_RULES B5）----
+explain(C, Ls) :-
+    judge(C, _, Trees), !,
+    findall(Lines, ( member(T, Trees), ex_flat(T, 0, Lines) ), Ls).
+</script>
+<script type="application/json" id="law">{"6":{"t":"第六条","c":"（区分所有者の権利義務等）","p":[{"n":"1","s":"区分所有者は、建物の保存に有害な行為その他建物の管理又は使用に関し区分所有者の共同の利益に反する行為をしてはならない。","i":[]},{"n":"2","s":"区分所有者は、その専有部分又は共用部分を保存し、又は改良するため必要な範囲内において、他の区分所有者の専有部分若しくは自己の所有に属しない共用部分を使用し、又は自らこれらを保存することを請求することができる。この場合において、他の区分所有者が損害を受けたときは、その償金を支払わなければならない。","i":[]},{"n":"3","s":"第一項の規定は、区分所有者以外の専有部分の占有者（以下「占有者」という。）に準用する。","i":[]},{"n":"4","s":"民法（明治二十九年法律第八十九号）第二百六十四条の八及び第二百六十四条の十四の規定は、専有部分及び共用部分には適用しない。","i":[]}]},"17":{"t":"第十七条","c":"（共用部分の変更）","p":[{"n":"1","s":"共用部分の変更（その形状又は効用の著しい変更を伴わないものを除く。第五項において同じ。）は、集会において、区分所有者（議決権を有しないものを除く。以下この項及び第三項において同じ。）の過半数（これを上回る割合を規約で定めた場合にあつては、その割合以上）の者であつて議決権の過半数（これを上回る割合を規約で定めた場合にあつては、その割合以上）を有するものが出席し、出席した区分所有者及びその議決権の各四分の三（これを下回る割合（二分の一を超える割合に限る。）を規約で定めた場合にあつては、その割合）以上の多数による決議で決する。","i":[]},{"n":"2","s":"前項の場合において、共用部分の変更が専有部分の使用に特別の影響を及ぼすべきときは、その専有部分の所有者の承諾を得なければならない。","i":[]},{"n":"3","s":"第一項の決議により共用部分の変更をする場合において、規約に特別の定めがあるときは、当該共用部分の変更に伴い必要となる専有部分の保存行為又は専有部分の性質を変えない範囲内においてその利用若しくは改良を目的とする行為（次項及び次条第四項において「専有部分の保存行為等」という。）は、集会において、区分所有者の過半数（これを上回る割合を規約で定めた場合にあつては、その割合以上）の者であつて議決権の過半数（これを上回る割合を規約で定めた場合にあつては、その割合以上）を有するものが出席し、出席した区分所有者及びその議決権の各四分の三（これを下回る割合（二分の一を超える割合に限る。）を規約で定めた場合にあつては、その割合）以上の多数による決議で決することができる。","i":[]},{"n":"4","s":"前項の決議をする場合において、専有部分の保存行為等の態様又は費用の分担に関する事項を定めるときは、決議の対象となる専有部分の区分所有者の利用状況、当該専有部分の保存行為等について区分所有者が支払つた対価その他の事情を考慮して、区分所有者間の利害の衡平が図られるようにしなければならない。","i":[]},{"n":"5","s":"共用部分の設置若しくは保存に瑕疵があることによつて他人の権利若しくは法律上保護される利益が侵害され、若しくは侵害されるおそれがある場合におけるその瑕疵の除去に関して必要となる共用部分の変更又は高齢者、障害者等（高齢者、障害者等の移動等の円滑化の促進に関する法律（平成十八年法律第九十一号）第二条第一号に規定する高齢者、障害者等をいう。）の移動若しくは施設の利用に係る身体の負担を軽減することにより、その移動上若しくは施設の利用上の利便性及び安全性を向上させるために必要となる共用部分の変更についての第一項及び第三項の規定の適用については、これらの規定中「四分の三」とあるのは、「三分の二」とする。","i":[]}]},"18":{"t":"第十八条","c":"（共用部分の管理）","p":[{"n":"1","s":"共用部分の管理に関する事項は、前条の場合を除いて、集会の決議で決する。ただし、保存行為は、各共有者がすることができる。","i":[]},{"n":"2","s":"前項の規定は、規約で別段の定めをすることを妨げない。","i":[]},{"n":"3","s":"前条第二項の規定は、第一項本文の場合に準用する。","i":[]},{"n":"4","s":"第一項本文の決議により共用部分の管理をする場合において、規約に特別の定めがあるときは、当該共用部分の管理に伴い必要となる専有部分の保存行為等は、集会の決議で決することができる。","i":[]},{"n":"5","s":"前条第四項の規定は、前項の決議について準用する。","i":[]},{"n":"6","s":"共用部分につき損害保険契約をすることは、共用部分の管理に関する事項とみなす。","i":[]}]},"31":{"t":"第三十一条","c":"（規約の設定、変更及び廃止）","p":[{"n":"1","s":"規約の設定、変更又は廃止は、集会において、区分所有者（議決権を有しないものを除く。以下この項前段において同じ。）の過半数（これを上回る割合を規約で定めた場合にあつては、その割合以上）の者であつて議決権の過半数（これを上回る割合を規約で定めた場合にあつては、その割合以上）を有するものが出席し、出席した区分所有者及びその議決権の各四分の三以上の多数による決議によつてする。この場合において、規約の設定、変更又は廃止が一部の区分所有者の権利に特別の影響を及ぼすべきときは、その承諾を得なければならない。","i":[]},{"n":"2","s":"前条第二項に規定する事項についての区分所有者全員の規約の設定、変更又は廃止は、当該一部共用部分を共用すべき区分所有者（議決権を有しないものを除く。）の四分の一を超える者又はその議決権の四分の一を超える議決権を有する者が反対したときは、することができない。","i":[]}]},"34":{"t":"第三十四条","c":"（集会の招集）","p":[{"n":"1","s":"集会は、管理者が招集する。","i":[]},{"n":"2","s":"管理者は、少なくとも毎年一回集会を招集しなければならない。","i":[]},{"n":"3","s":"区分所有者（議決権を有しないものを除く。第五項において同じ。）の五分の一以上の者であつて議決権の五分の一以上を有するものは、管理者に対し、会議の目的たる事項を示して、集会の招集を請求することができる。ただし、この定数は、規約で減ずることができる。","i":[]},{"n":"4","s":"前項の規定による請求がされた場合において、二週間以内にその請求の日から四週間以内の日を会日とする集会の招集の通知が発せられなかつたときは、その請求をした区分所有者は、集会を招集することができる。","i":[]},{"n":"5","s":"管理者がないときは、区分所有者の五分の一以上の者であつて議決権の五分の一以上を有するものは、集会を招集することができる。ただし、この定数は、規約で減ずることができる。","i":[]}]},"35":{"t":"第三十五条","c":"（招集の通知）","p":[{"n":"1","s":"集会の招集の通知は、会日より少なくとも一週間前に、会議の目的たる事項及び議案の要領を示して、各区分所有者（議決権を有しないものを除く。）に発しなければならない。ただし、この期間は、規約で伸長することができる。","i":[]},{"n":"2","s":"専有部分が数人の共有に属するときは、前項の通知は、第四十条の規定により定められた議決権を行使すべき者（その者がないときは、共有者の一人）にすれば足りる。","i":[]},{"n":"3","s":"第一項の通知は、区分所有者が管理者に対して通知を受けるべき場所を通知したときはその場所に、これを通知しなかつたときは区分所有者の所有する専有部分が所在する場所にあててすれば足りる。この場合には、同項の通知は、通常それが到達すべき時に到達したものとみなす。","i":[]},{"n":"4","s":"建物内に住所を有する区分所有者又は前項の通知を受けるべき場所を通知しない区分所有者に対する第一項の通知は、規約に特別の定めがあるときは、建物内の見やすい場所に掲示してすることができる。この場合には、同項の通知は、その掲示をした時に到達したものとみなす。","i":[]}]},"36":{"t":"第三十六条","c":"（招集手続の省略）","p":[{"n":"1","s":"集会は、区分所有者（議決権を有しないものを除く。）全員の同意があるときは、招集の手続を経ないで開くことができる。","i":[]}]},"37":{"t":"第三十七条","c":"（決議事項の制限）","p":[{"n":"1","s":"集会においては、第三十五条の規定によりあらかじめ通知した事項についてのみ、決議をすることができる。","i":[]},{"n":"2","s":"前項の規定は、この法律に集会の決議につき特別の定数が定められている事項を除いて、規約で別段の定めをすることを妨げない。","i":[]},{"n":"3","s":"前二項の規定は、前条の規定による集会には適用しない。","i":[]}]},"38_2":{"t":"第三十八条の二","c":"（所在等不明区分所有者の除外）","p":[{"n":"1","s":"裁判所は、区分所有者を知ることができず、又はその所在を知ることができないときは、当該区分所有者（次項において「所在等不明区分所有者」という。）以外の区分所有者（以下この項及び第三項において「一般区分所有者」という。）又は管理者の請求により、一般区分所有者による集会の決議をすることができる旨の裁判をすることができる。","i":[]},{"n":"2","s":"前項の裁判により所在等不明区分所有者であるとされた者は、前条の規定にかかわらず、集会における議決権（当該裁判に係る建物が滅失したときは、当該建物に係る敷地利用権を有する者又は当該建物の附属施設（これに関する権利を含む。）の共有持分を有する者が開く集会における議決権）を有しない。","i":[]},{"n":"3","s":"一般区分所有者の請求により第一項の裁判があつたときは、当該一般区分所有者は、遅滞なく、管理者にその旨を通知しなければならない。ただし、管理者がないときは、その旨を建物内の見やすい場所に掲示しなければならない。","i":[]}]},"39":{"t":"第三十九条","c":"（議事）","p":[{"n":"1","s":"集会の議事は、この法律又は規約に別段の定めがない限り、出席した区分所有者（議決権を有しないものを除く。）及びその議決権の各過半数で決する。","i":[]},{"n":"2","s":"議決権は、書面又は代理人によつても行使することができる。この場合において、書面又は代理人によつて議決権を行使した区分所有者の数は出席した区分所有者の数に、当該議決権の数は出席した区分所有者の議決権の数に、それぞれ算入する。","i":[]},{"n":"3","s":"区分所有者は、規約又は集会の決議により、前項の規定による書面による議決権の行使に代えて、電磁的方法によつて議決権を行使することができる。この場合においては、電磁的方法による議決権の行使を書面による議決権の行使とみなして、同項後段の規定を適用する。","i":[]}]},"45":{"t":"第四十五条","c":"（書面又は電磁的方法による決議）","p":[{"n":"1","s":"この法律又は規約により集会において決議をすべき場合において、区分所有者（議決権を有しないものを除く。次項において同じ。）全員の承諾があるときは、書面又は電磁的方法による決議をすることができる。ただし、電磁的方法による決議に係る区分所有者の承諾については、法務省令で定めるところによらなければならない。","i":[]},{"n":"2","s":"この法律又は規約により集会において決議すべきものとされた事項については、区分所有者全員の書面又は電磁的方法による合意があつたときは、書面又は電磁的方法による決議があつたものとみなす。","i":[]},{"n":"3","s":"この法律又は規約により集会において決議すべきものとされた事項についての書面又は電磁的方法による決議は、集会の決議と同一の効力を有する。","i":[]},{"n":"4","s":"第三十三条の規定は、書面又は電磁的方法による決議に係る書面並びに第一項及び第二項の電磁的方法が行われる場合に当該電磁的方法により作成される電磁的記録について準用する。","i":[]},{"n":"5","s":"集会に関する規定は、書面又は電磁的方法による決議について準用する。","i":[]}]},"57":{"t":"第五十七条","c":"（共同の利益に反する行為の停止等の請求）","p":[{"n":"1","s":"区分所有者が第六条第一項に規定する行為をした場合又はその行為をするおそれがある場合には、他の区分所有者の全員又は管理組合法人は、区分所有者の共同の利益のため、その行為を停止し、その行為の結果を除去し、又はその行為を予防するため必要な措置を執ることを請求することができる。","i":[]},{"n":"2","s":"前項の規定に基づき訴訟を提起するには、集会の決議によらなければならない。","i":[]},{"n":"3","s":"管理者又は集会において指定された区分所有者は、集会の決議により、第一項の他の区分所有者の全員のために、前項に規定する訴訟を提起することができる。","i":[]},{"n":"4","s":"前三項の規定は、占有者が第六条第三項において準用する同条第一項に規定する行為をした場合及びその行為をするおそれがある場合に準用する。","i":[]}]},"58":{"t":"第五十八条","c":"（使用禁止の請求）","p":[{"n":"1","s":"前条第一項に規定する場合において、第六条第一項に規定する行為による区分所有者の共同生活上の障害が著しく、前条第一項に規定する請求によつてはその障害を除去して共用部分の利用の確保その他の区分所有者の共同生活の維持を図ることが困難であるときは、他の区分所有者の全員又は管理組合法人は、集会の決議に基づき、訴えをもつて、相当の期間の当該行為に係る区分所有者による専有部分の使用の禁止を請求することができる。","i":[]},{"n":"2","s":"前項の決議は、集会において、区分所有者（議決権を有しないものを除く。以下この項において同じ。）の過半数（これを上回る割合を規約で定めた場合にあつては、その割合以上）の者であつて議決権の過半数（これを上回る割合を規約で定めた場合にあつては、その割合以上）を有するものが出席し、出席した区分所有者及びその議決権の各四分の三以上の多数でする。","i":[]},{"n":"3","s":"第一項の決議をするには、あらかじめ、当該区分所有者に対し、弁明する機会を与えなければならない。","i":[]},{"n":"4","s":"前条第三項の規定は、第一項の訴えの提起に準用する。","i":[]}]},"59":{"t":"第五十九条","c":"（区分所有権の競売の請求）","p":[{"n":"1","s":"第五十七条第一項に規定する場合において、第六条第一項に規定する行為による区分所有者の共同生活上の障害が著しく、他の方法によつてはその障害を除去して共用部分の利用の確保その他の区分所有者の共同生活の維持を図ることが困難であるときは、他の区分所有者の全員又は管理組合法人は、集会の決議に基づき、訴えをもつて、当該行為に係る区分所有者の区分所有権及び敷地利用権の競売を請求することができる。","i":[]},{"n":"2","s":"第五十七条第三項の規定は前項の訴えの提起に、前条第二項及び第三項の規定は前項の決議に準用する。","i":[]},{"n":"3","s":"第一項の規定による判決に基づく競売の申立ては、その判決が確定した日から六月を経過したときは、することができない。","i":[]},{"n":"4","s":"前項の競売においては、競売を申し立てられた区分所有者又はその者の計算において買い受けようとする者は、買受けの申出をすることができない。","i":[]}]},"60":{"t":"第六十条","c":"（占有者に対する引渡し請求）","p":[{"n":"1","s":"第五十七条第四項に規定する場合において、第六条第三項において準用する同条第一項に規定する行為による区分所有者の共同生活上の障害が著しく、他の方法によつてはその障害を除去して共用部分の利用の確保その他の区分所有者の共同生活の維持を図ることが困難であるときは、区分所有者の全員又は管理組合法人は、集会の決議に基づき、訴えをもつて、当該行為に係る占有者が占有する専有部分の使用又は収益を目的とする契約の解除及びその専有部分の引渡しを請求することができる。","i":[]},{"n":"2","s":"第五十七条第三項の規定は前項の訴えの提起に、第五十八条第二項及び第三項の規定は前項の決議に準用する。","i":[]},{"n":"3","s":"第一項の規定による判決に基づき専有部分の引渡しを受けた者は、遅滞なく、その専有部分を占有する権原を有する者にこれを引き渡さなければならない。","i":[]}]},"62":{"t":"第六十二条","c":"（建替え決議）","p":[{"n":"1","s":"集会においては、区分所有者（議決権を有しないものを除く。）及び議決権の各五分の四以上の多数で、建物を取り壊し、かつ、当該建物の敷地若しくはその一部の土地又は当該建物の敷地の全部若しくは一部を含む土地に新たに建物を建築する旨の決議（以下「建替え決議」という。）をすることができる。","i":[]},{"n":"2","s":"建物が次の各号のいずれかに該当する場合における前項の規定の適用については、同項中「五分の四」とあるのは、「四分の三」とする。","i":[{"n":"1","t":"一","s":"地震に対する安全性に係る建築基準法（昭和二十五年法律第二百一号）又はこれに基づく命令若しくは条例の規定に準ずるものとして法務大臣が定める基準に適合していないとき。","sub":[]},{"n":"2","t":"二","s":"火災に対する安全性に係る建築基準法又はこれに基づく命令若しくは条例の規定に準ずるものとして法務大臣が定める基準に適合していないとき。","sub":[]},{"n":"3","t":"三","s":"外壁、外装材その他これらに類する建物の部分が剝離し、落下することにより周辺に危害を生ずるおそれがあるものとして法務大臣が定める基準に該当するとき。","sub":[]},{"n":"4","t":"四","s":"給水、排水その他の配管設備（その改修に関する工事を行うことが著しく困難なものとして法務省令で定めるものに限る。）の損傷、腐食その他の劣化により著しく衛生上有害となるおそれがあるものとして法務大臣が定める基準に該当するとき。","sub":[]},{"n":"5","t":"五","s":"高齢者、障害者等の移動等の円滑化の促進に関する法律第十四条第五項に規定する建築物移動等円滑化基準に準ずるものとして法務大臣が定める基準に適合していないとき。","sub":[]}]},{"n":"3","s":"法務大臣は、前項各号の基準を定め、又はこれを変更するときは、あらかじめ、国土交通大臣と協議するものとする。","i":[]},{"n":"4","s":"建替え決議においては、次の事項を定めなければならない。","i":[{"n":"1","t":"一","s":"新たに建築する建物（以下この項において「再建建物」という。）の設計の概要","sub":[]},{"n":"2","t":"二","s":"建物の取壊し及び再建建物の建築に要する費用の概算額","sub":[]},{"n":"3","t":"三","s":"前号に規定する費用の分担に関する事項","sub":[]},{"n":"4","t":"四","s":"再建建物の区分所有権の帰属に関する事項","sub":[]}]},{"n":"5","s":"前項第三号及び第四号の事項は、各区分所有者の衡平を害しないように定めなければならない。","i":[]},{"n":"6","s":"建替え決議を会議の目的とする集会を招集するときは、第三十五条第一項の通知は、同項の規定にかかわらず、当該集会の会日より少なくとも二月前に発しなければならない。ただし、この期間は、規約で伸長することができる。","i":[]},{"n":"7","s":"前項に規定する場合において、第三十五条第一項の通知をするときは、会議の目的たる事項及び議案の要領のほか、次の事項をも通知しなければならない。","i":[{"n":"1","t":"一","s":"建物の建替えを必要とする理由","sub":[]},{"n":"2","t":"二","s":"建物の建替えをしないとした場合における当該建物の効用の維持又は回復（建物が通常有すべき効用の確保を含む。）をするのに要する費用の額及びその内訳","sub":[]},{"n":"3","t":"三","s":"建物の修繕に関する計画が定められているときは、当該計画の内容","sub":[]},{"n":"4","t":"四","s":"建物につき修繕積立金として積み立てられている金額","sub":[]}]},{"n":"8","s":"第六項の集会を招集した者は、当該集会の会日より少なくとも一月前までに、当該招集の際に通知すべき事項について区分所有者に対し説明を行うための説明会を開催しなければならない。","i":[]},{"n":"9","s":"第三十五条及び第三十六条の規定は、前項の説明会の開催について準用する。","i":[]},{"n":"10","s":"前条第六項の規定は、建替え決議をした集会の議事録について準用する。","i":[]}]}}</script>
+<script type="application/json" id="cover-data">[{"t":"第一章　建物の区分所有 第一節　総則","a":[{"k":"1","t":"第一条","c":"（建物の区分所有）","u":0},{"k":"2","t":"第二条","c":"（定義）","u":0},{"k":"3","t":"第三条","c":"（区分所有者の団体）","u":0},{"k":"4","t":"第四条","c":"（共用部分）","u":0},{"k":"5","t":"第五条","c":"（規約による建物の敷地）","u":0},{"k":"5_2","t":"第五条の二","c":"（区分所有者の責務）","u":0},{"k":"6","t":"第六条","c":"（区分所有者の権利義務等）","u":1},{"k":"6_2","t":"第六条の二","c":"（国内管理人）","u":0},{"k":"7","t":"第七条","c":"（先取特権）","u":0},{"k":"8","t":"第八条","c":"（特定承継人の責任）","u":0},{"k":"9","t":"第九条","c":"（建物の設置又は保存の瑕疵に関する推定）","u":0},{"k":"10","t":"第十条","c":"（区分所有権売渡請求権）","u":0}]},{"t":"第一章　建物の区分所有 第二節　共用部分等","a":[{"k":"11","t":"第十一条","c":"（共用部分の共有関係）","u":0},{"k":"12","t":"第十二条","c":"","u":0},{"k":"13","t":"第十三条","c":"（共用部分の使用）","u":0},{"k":"14","t":"第十四条","c":"（共用部分の持分の割合）","u":0},{"k":"15","t":"第十五条","c":"（共用部分の持分の処分）","u":0},{"k":"16","t":"第十六条","c":"（一部共用部分の管理）","u":0},{"k":"17","t":"第十七条","c":"（共用部分の変更）","u":1},{"k":"18","t":"第十八条","c":"（共用部分の管理）","u":1},{"k":"19","t":"第十九条","c":"（共用部分の負担及び利益収取）","u":0},{"k":"20","t":"第二十条","c":"（管理所有者の権限）","u":0},{"k":"21","t":"第二十一条","c":"（共用部分に関する規定の準用）","u":0}]},{"t":"第一章　建物の区分所有 第三節　敷地利用権","a":[{"k":"22","t":"第二十二条","c":"（分離処分の禁止）","u":0},{"k":"23","t":"第二十三条","c":"（分離処分の無効の主張の制限）","u":0},{"k":"24","t":"第二十四条","c":"（民法第二百五十五条の適用除外）","u":0}]},{"t":"第一章　建物の区分所有 第四節　管理者","a":[{"k":"25","t":"第二十五条","c":"（選任及び解任）","u":0},{"k":"26","t":"第二十六条","c":"（権限）","u":0},{"k":"27","t":"第二十七条","c":"（管理所有）","u":0},{"k":"28","t":"第二十八条","c":"（委任の規定の準用）","u":0},{"k":"29","t":"第二十九条","c":"（区分所有者の責任等）","u":0}]},{"t":"第一章　建物の区分所有 第五節　規約及び集会","a":[{"k":"30","t":"第三十条","c":"（規約事項）","u":0},{"k":"31","t":"第三十一条","c":"（規約の設定、変更及び廃止）","u":1},{"k":"32","t":"第三十二条","c":"（公正証書による規約の設定）","u":0},{"k":"33","t":"第三十三条","c":"（規約の保管及び閲覧）","u":0},{"k":"34","t":"第三十四条","c":"（集会の招集）","u":1},{"k":"35","t":"第三十五条","c":"（招集の通知）","u":1},{"k":"36","t":"第三十六条","c":"（招集手続の省略）","u":1},{"k":"37","t":"第三十七条","c":"（決議事項の制限）","u":1},{"k":"38","t":"第三十八条","c":"（議決権）","u":0},{"k":"38_2","t":"第三十八条の二","c":"（所在等不明区分所有者の除外）","u":1},{"k":"39","t":"第三十九条","c":"（議事）","u":1},{"k":"40","t":"第四十条","c":"（議決権行使者の指定）","u":0},{"k":"41","t":"第四十一条","c":"（議長）","u":0},{"k":"42","t":"第四十二条","c":"（議事録）","u":0},{"k":"43","t":"第四十三条","c":"（事務の報告）","u":0},{"k":"44","t":"第四十四条","c":"（占有者の意見陳述権）","u":0},{"k":"45","t":"第四十五条","c":"（書面又は電磁的方法による決議）","u":1},{"k":"46","t":"第四十六条","c":"（規約及び集会の決議の効力）","u":0}]},{"t":"第一章　建物の区分所有 第六節　所有者不明専有部分管理命令","a":[{"k":"46_2","t":"第四十六条の二","c":"（所有者不明専有部分管理命令）","u":0},{"k":"46_3","t":"第四十六条の三","c":"（所有者不明専有部分管理人の権限）","u":0},{"k":"46_4","t":"第四十六条の四","c":"（所有者不明専有部分等に関する訴えの取扱い）","u":0},{"k":"46_5","t":"第四十六条の五","c":"（所有者不明専有部分管理人の義務）","u":0},{"k":"46_6","t":"第四十六条の六","c":"（所有者不明専有部分管理人の解任及び辞任）","u":0},{"k":"46_7","t":"第四十六条の七","c":"（所有者不明専有部分管理人の報酬等）","u":0}]},{"t":"第一章　建物の区分所有 第七節　管理不全専有部分管理命令及び管理不全共用部分管理命令","a":[{"k":"46_8","t":"第四十六条の八","c":"（管理不全専有部分管理命令）","u":0},{"k":"46_9","t":"第四十六条の九","c":"（管理不全専有部分管理人の権限）","u":0},{"k":"46_10","t":"第四十六条の十","c":"（管理不全専有部分管理人の義務）","u":0},{"k":"46_11","t":"第四十六条の十一","c":"（管理不全専有部分管理人の解任及び辞任）","u":0},{"k":"46_12","t":"第四十六条の十二","c":"（管理不全専有部分管理人の報酬等）","u":0},{"k":"46_13","t":"第四十六条の十三","c":"（管理不全共用部分管理命令）","u":0},{"k":"46_14","t":"第四十六条の十四","c":"（管理不全共用部分管理人の権限等）","u":0}]},{"t":"第一章　建物の区分所有 第八節　管理組合法人","a":[{"k":"47","t":"第四十七条","c":"（成立等）","u":0},{"k":"48","t":"第四十八条","c":"（名称）","u":0},{"k":"48_2","t":"第四十八条の二","c":"（財産目録及び区分所有者名簿）","u":0},{"k":"49","t":"第四十九条","c":"（理事）","u":0},{"k":"49_2","t":"第四十九条の二","c":"（理事の代理権）","u":0},{"k":"49_3","t":"第四十九条の三","c":"（理事の代理行為の委任）","u":0},{"k":"49_4","t":"第四十九条の四","c":"（仮理事）","u":0},{"k":"50","t":"第五十条","c":"（監事）","u":0},{"k":"51","t":"第五十一条","c":"（監事の代表権）","u":0},{"k":"52","t":"第五十二条","c":"（事務の執行）","u":0},{"k":"52_2","t":"第五十二条の二","c":"（区分所有権等の取得）","u":0},{"k":"53","t":"第五十三条","c":"（区分所有者の責任）","u":0},{"k":"54","t":"第五十四条","c":"（特定承継人の責任）","u":0},{"k":"55","t":"第五十五条","c":"（解散）","u":0},{"k":"55_2","t":"第五十五条の二","c":"（清算中の管理組合法人の能力）","u":0},{"k":"55_3","t":"第五十五条の三","c":"（清算人）","u":0},{"k":"55_4","t":"第五十五条の四","c":"（裁判所による清算人の選任）","u":0},{"k":"55_5","t":"第五十五条の五","c":"（清算人の解任）","u":0},{"k":"55_6","t":"第五十五条の六","c":"（清算人の職務及び権限）","u":0},{"k":"55_7","t":"第五十五条の七","c":"（債権の申出の催告等）","u":0},{"k":"55_8","t":"第五十五条の八","c":"（期間経過後の債権の申出）","u":0},{"k":"55_9","t":"第五十五条の九","c":"（清算中の管理組合法人についての破産手続の開始）","u":0},{"k":"56","t":"第五十六条","c":"（残余財産の帰属）","u":0},{"k":"56_2","t":"第五十六条の二","c":"（裁判所による監督）","u":0},{"k":"56_3","t":"第五十六条の三","c":"（解散及び清算の監督等に関する事件の管轄）","u":0},{"k":"56_4","t":"第五十六条の四","c":"（不服申立ての制限）","u":0},{"k":"56_5","t":"第五十六条の五","c":"（裁判所の選任する清算人の報酬）","u":0},{"k":"56_6","t":"第五十六条の六","c":"","u":2},{"k":"56_7","t":"第五十六条の七","c":"（検査役の選任）","u":0}]},{"t":"第一章　建物の区分所有 第九節　義務違反者に対する措置","a":[{"k":"57","t":"第五十七条","c":"（共同の利益に反する行為の停止等の請求）","u":1},{"k":"58","t":"第五十八条","c":"（使用禁止の請求）","u":1},{"k":"59","t":"第五十九条","c":"（区分所有権の競売の請求）","u":1},{"k":"60","t":"第六十条","c":"（占有者に対する引渡し請求）","u":1}]},{"t":"第一章　建物の区分所有 第十節　復旧及び建替え等","a":[{"k":"61","t":"第六十一条","c":"（建物の一部が滅失した場合の復旧等）","u":0},{"k":"62","t":"第六十二条","c":"（建替え決議）","u":1},{"k":"63","t":"第六十三条","c":"（区分所有権等の売渡し請求等）","u":0},{"k":"64","t":"第六十四条","c":"（建替えに関する合意）","u":0},{"k":"64_2","t":"第六十四条の二","c":"（賃貸借の終了請求）","u":0},{"k":"64_3","t":"第六十四条の三","c":"（使用貸借の終了請求）","u":0},{"k":"64_4","t":"第六十四条の四","c":"（配偶者居住権の消滅請求）","u":0},{"k":"64_5","t":"第六十四条の五","c":"（建物更新決議）","u":0},{"k":"64_6","t":"第六十四条の六","c":"（建物敷地売却決議）","u":0},{"k":"64_7","t":"第六十四条の七","c":"（建物取壊し敷地売却決議）","u":0},{"k":"64_8","t":"第六十四条の八","c":"（取壊し決議）","u":0}]},{"t":"第二章　団地","a":[{"k":"65","t":"第六十五条","c":"（団地建物所有者の団体）","u":0},{"k":"66","t":"第六十六条","c":"（建物の区分所有に関する規定の準用）","u":0},{"k":"67","t":"第六十七条","c":"（団地共用部分）","u":0},{"k":"68","t":"第六十八条","c":"（規約の設定の特例）","u":0},{"k":"69","t":"第六十九条","c":"（団地内の建物の建替え承認決議）","u":0},{"k":"70","t":"第七十条","c":"（団地内の建物の一括建替え決議）","u":0},{"k":"71","t":"第七十一条","c":"（団地内建物敷地売却決議）","u":0}]},{"t":"第三章　建物が滅失した場合における措置 第一節　専有部分のある建物が滅失した場合における措置","a":[{"k":"72","t":"第七十二条","c":"（敷地共有者等の集会等）","u":0},{"k":"73","t":"第七十三条","c":"（集会等に関する規定の準用）","u":0},{"k":"74","t":"第七十四条","c":"（招集の通知に関する特例）","u":0},{"k":"75","t":"第七十五条","c":"（再建決議）","u":0},{"k":"76","t":"第七十六条","c":"（敷地売却決議）","u":0},{"k":"77","t":"第七十七条","c":"（敷地共有持分等に係る土地等の分割請求に関する特例）","u":0}]},{"t":"第三章　建物が滅失した場合における措置 第二節　団地内の建物が滅失した場合における措置","a":[{"k":"78","t":"第七十八条","c":"（団地建物所有者等の集会等）","u":0},{"k":"79","t":"第七十九条","c":"（集会等に関する規定の準用）","u":0},{"k":"80","t":"第八十条","c":"（招集の通知に関する特例）","u":0},{"k":"81","t":"第八十一条","c":"（団地内の建物が滅失した場合における再建承認決議）","u":0},{"k":"82","t":"第八十二条","c":"（団地内の建物が滅失した場合における建替え承認決議）","u":0},{"k":"83","t":"第八十三条","c":"（団地内の建物が滅失した場合における建替え再建承認決議）","u":0},{"k":"84","t":"第八十四条","c":"（団地内の建物が滅失した場合における一括建替え等決議）","u":0},{"k":"85","t":"第八十五条","c":"（団地内の全部の建物が滅失した場合における一括敷地売却決議）","u":0}]},{"t":"第四章　所在等不明区分所有者等の除外等に関する裁判手続","a":[{"k":"86","t":"第八十六条","c":"（所在等不明区分所有者等の除外に関する裁判）","u":0},{"k":"87","t":"第八十七条","c":"（所有者不明専有部分管理命令）","u":0},{"k":"88","t":"第八十八条","c":"（管理不全専有部分管理命令及び管理不全共用部分管理命令）","u":0},{"k":"89","t":"第八十九条","c":"（非訟事件手続法の適用除外）","u":0},{"k":"90","t":"第九十条","c":"（最高裁判所規則）","u":0}]},{"t":"第五章　罰則","a":[{"k":"91","t":"第九十一条","c":"","u":0},{"k":"92","t":"第九十二条","c":"","u":0}]}]</script>
+<script src="https://cdn.jsdelivr.net/npm/swipl-wasm@8.2.1/dist/swipl/swipl-bundle.js"></script>
+<script>
+// ==== 共有ここから（別ページでも同じ部品を使う） ====
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let pl = null;
+const errBuf = [];
+
+function T(x){
+  if (x && typeof x === "object" && x.$t === "t"){
+    const k = typeof x.functor === "string" ? x.functor : Object.keys(x).find(k => k !== "$t" && k !== "functor");
+    return { f: k, args: x[k][0] };
+  }
+  return x;
+}
+const atom = a => "'" + String(a).replace(/\\/g,"\\\\").replace(/'/g,"\\'") + "'";
+function once(q){ const r = pl.prolog.query(q).once(); if (r && r.error) throw new Error(r.message); return r && r.$tag === "bindings" ? r : null; }
+
+// ---------- 条文と根拠の木 ----------
+let LAW = {};
+try{ LAW = JSON.parse(document.getElementById("law").textContent); }catch(e){}
+function parseArt(a){
+  // '466条2項' '466条1項本文' '509条第1号' '466条の2第1項' '469条2項第1号' '469条2項ただし書' のような形。複数条が「・」で区切られることもある → 最初の条だけ見る
+  const first = String(a).split("・")[0];
+  const m = first.match(/^(\d+)条((?:の\d+)*)(?:第?(\d+)項)?(?:第?(\d+)号((?:の\d+)*))?([イロハニホ])?/);
+  if (!m) return null;
+  return { key: m[1] + m[2].replace(/の/g, "_"), para: m[3] || null, item: m[4] ? m[4] + (m[5] || "").replace(/の/g, "_") : null, sub: m[6] || null };
+}
+function lawHTML(a){
+  const r = parseArt(a), art = r && LAW[r.key];
+  if (!art) return `<div class="lawtext"><p class="hint">この条文の原文は収録していません（${esc(a)}）。</p></div>`;
+  let ps = art.p;
+  if (r.para) ps = ps.filter(p => p.n === r.para);
+  // 号まで指定があれば、項の本文とその号だけ出す
+  if (r.item) ps = ps.filter(p => p.i.some(it => it.n === r.item));
+  const body = ps.map(p => {
+    const head = art.p.length > 1 ? `第${p.n}項　` : "";
+    const list = r.item ? p.i.filter(it => it.n === r.item) : p.i;
+    const its = list.map(it => `<p class="it">${esc(it.t)}　${esc(it.s)}${it.sub.map(x => r.sub && x.startsWith(r.sub + " ") ? `<br><span class="hit">　${esc(x)}</span>` : `<br>　${esc(x)}`).join("")}</p>`).join("");
+    return `<p>${esc(head + p.s)}</p>${its}`;
+  }).join("");
+  return `<div class="lawtext"><h4>${esc(art.t)}${esc(art.c)}</h4>${body}</div>`;
+}
+const MARK = { ok: "◯", info: "・", and: "かつ", or: "または" };
+const LEGEND = `<p class="legend">読み方：下の行が上の行の理由です。<span class="sw and"></span><b class="c-and">青い線</b>＝下の行が全部そろって、<span class="sw or"></span><b class="c-or">オレンジの線</b>＝下の行のどれか1つで、上の行になります。<span class="yk">アプリの約束事</span>＝条文ではなく、このアプリの決め事（収録範囲・仕組みのページに一覧）。</p>`;
+// 凡例は最初の木の上に1回だけ出す（legend＝false で外す。akiya-prolog と同じ。2026-11-26 案Aで木を結論ごとにしたため）
+function treeHTML(lines, legend = true){
+  const root = [], st = [{ d: -1, c: root }];
+  for (const l of lines){
+    while (st[st.length - 1].d >= l[0]) st.pop();
+    const n = { l, c: [] }; st[st.length - 1].c.push(n); st.push({ d: l[0], c: n.c });
+  }
+  const fold = ns => ns.map(n => {
+    if (n.c.length === 1 && ["and","or"].includes(n.c[0].l[1]) && !["and","or"].includes(n.l[1])){ n.conn = n.c[0].l; n.op = n.c[0].l[1]; n.c = n.c[0].c; }
+    else if (["and","or"].includes(n.l[1])) n.op = n.l[1];
+    else if (n.c.length === 1) n.op = "and";
+    n.c = fold(n.c); return n;
+  });
+  const rows = [];
+  const walk = (ns, rails, op) => ns.forEach((n, i) => {
+    const last = i === ns.length - 1;
+    rows.push({ n, cells: rails.length ? [...rails.slice(1), { k: last ? "l" : "t", op }] : [] });
+    walk(n.c, [...rails, { k: last ? "e" : "v", op }], n.op);
+  });
+  walk(fold(root), [], null);
+  const conn = (c, n) => {
+    if (!c) return "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]);
+    const msg = !title.startsWith("次の") ? title
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
+    return `<span class="conn c-${c[1]}">${esc(msg)}</span>`;
+  };
+  return (legend ? LEGEND : "") + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
+    const [d, k0, t, a] = n.l;
+    const k = k0;
+    return `<div class="tr">${cells.map(c => `<span class="pc r${c.k} o-${c.op || "none"}"></span>`).join("")}${cells.length ? `<span class="m"></span>` : `<span class="m ${k}">${MARK[k] ?? ""}</span>`}<span class="t ${k}${cells.length ? "" : " top"}">${esc(t)}${a === "@約束事" ? ` <span class="yk">アプリの約束事</span>` : a ? ` <button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : ""}${conn(n.conn, n)}</span></div>`;
+  }).join("") + `</div></div>`;
+}
+// ==== 共有ここまで ====
+
+async function boot(){
+  try{
+    pl = await SWIPL({ arguments: ["-q"], print: () => {}, printErr: s => errBuf.push(s) });
+    const files = [...document.querySelectorAll("script[type='text/prolog']")];
+    for (const f of files) pl.FS.writeFile("/" + f.dataset.name, f.textContent);
+    for (const f of files) once(`consult('/${f.dataset.name}')`);
+    const need = ["result/2", "explain/2", "heads/2", "answers/2"].filter(p => !once(`current_predicate(${p})`));
+    if (need.length) throw new Error(`Prologの読み込みが不完全です（${need.join("・")} がありません）。${errBuf.slice(-3).join(" ")}`);
+    const v = once("current_prolog_flag(version, V)").V;
+    $("status").classList.add("ready");
+    $("status").querySelector("span").textContent = `SWI-Prolog ${Math.floor(v/10000)}.${Math.floor(v/100)%100}.${v%100} が動作中`;
+    renderPresets();
+    ask();
+  } catch(e){
+    $("status").classList.add("err"); $("status").querySelector("span").textContent = "エラー：" + e.message;
+    $("answer").innerHTML = `<p class="loading err">エラー：${esc(e.message)}</p>`;
+  }
+}
+
+// ---- 入力 → ctx の文字 ----
+// 欄はいつも全部出し、出し消しをしない（REVIEW_RULES C5。形は akiya-prolog と同じ。2026-11-26 案A）。
+// 並びは schema.pl の ctx の引数の順（1〜42）。前の SLOTS・updateSlots（入口ごとの欄の出し消し。前の :463–514）と、
+// 隠れた欄を 関係なし で渡す shown・buildCtx（前の :516–526）はやめた（JS と Prolog の2か所に同じ見方を持っていた）。関係のない欄は Prolog が見ないだけ。
+const IDS = ["zh","zv","jh","jv","kanrisha","hirakikata","seih","seiv","gn","gd","tsuchi","zenin","jiki","nobi","yoryo","setsumei","jikou",
+  "kotogara","go","kanrikiyaku","deh","dev","sanh","sanv","qn","qd","sn","sd","eikyo","senyu","ichih","ichiv","hanh","hanv",
+  "aite","koui","shogai","konnan","benmei","dare","tsuki","kaiuke"];
+// 数字の欄（21個）。空なら「空」、読めない値は「不正」で渡す（schema.pl の ctx_valid が 数の欄/2 と 数の形/1 で範囲と大小を見る。
+// 空を許さない欄の「空」と「不正」は「判定できませんでした」）。前の shown の整数の読み（前の :521）を残した。先頭の0は外す（07 → 7）。形は mimoto-prolog の val と同じ
+const NUM_IDS = ["zh","zv","jh","jv","seih","seiv","gn","gd","deh","dev","sanh","sanv","qn","qd","sn","sd","ichih","ichiv","hanh","hanv","tsuki"];
+const val = id => {
+  const el = $(id), v = el.value.trim();
+  if (!NUM_IDS.includes(id)) return atom(v);
+  if (v === "") return "空";
+  return /^[0-9]{1,6}$/.test(v) ? String(parseInt(v, 10)) : "不正";
+};
+function buildCtx(){
+  return `ctx(${IDS.map(val).join(",")})`;
+}
+
+// ---- 判定と表示 ----
+const HEAD = `<div class="densuke-bubble"><img src="densuke_icon.svg" width="56" height="56" alt="でんすけ"><span class="bubble-label">でんすけの判定</span></div>`;
+const lawBtn = a => a === "@約束事" ? `<span class="yk">アプリの約束事</span>` : (a ? `<button type="button" class="law" data-art="${esc(a)}">${esc(a)}</button>` : "");
+const artsHTML = as => as.map(String).map(lawBtn).join(" ");
+// 断り書き（当てはめは判定しない・条文だけを読む・判例と別の法律は読まない・共有の一般の決まりは共有のページ・取得した版）は
+// about.html の範囲の節と約束事に置く（REVIEW_RULES A1・A3・A5。2026-11-26 結果の下の NOTE_HANTEI・NOTE_JOBUN・NOTE_HOKA・note-betsu（前の :531–533・:560–563）と
+// 段の「判定していません」「読んでいません」、補足の段、下の帯の「含みません」を移した）。頭の注意は見本の1文だけ（A3）。
+// 入口3〜5の案内の段から入口1へ移るボタン（前の GOTO :535・:541・:680）は、同じページで決議の数を答えるのでやめた（案A「段の出し方」の3）
+
+// 段(状態, 文, 箱の条, 葉) を1段ぶんの行にする。文は答え（answers/2。段の文から末尾の「。」を外したもの）
+function stepHTML(id, title, s, ans){
+  const [st, , as] = T(s).args;
+  return `<p class="sec">${esc(title)}</p><p class="step" id="${id}" data-st="${esc(st)}">${esc(ans)}。 ${artsHTML(as)}</p>`;
+}
+
+function ask(){
+  const c = buildCtx();
+  $("qline").textContent = `?- result(${c}, R).`;
+  if (!pl) return;
+  try{
+    // 木は結論1つにつき1本（REVIEW_RULES B5）。凡例は最初の木の上に1回だけ
+    const lr = once(`explain(${c}, Lines)`);
+    const trees = lr ? lr.Lines.map(ls => ls.map(T).map(t => t.args)) : [];
+    const r = once(`result(${c}, r(Head,Steps,Arts))`);
+    if (!r){
+      // ここに来るのは、欄の値が選択肢に無いときと、数の欄が空・整数でない・枠の外（schema.pl の ctx_valid）のとき。
+      // 前の「賛成は出席以下、出席は議決権を有しない者を除いた全員以下…」の入力の注意（前の :555）は、数の欄の説明に移した（A1）
+      $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">判定できませんでした</div></div><p class="hint">数の欄には、欄の下に書いた範囲の整数を入れてください。</p></div>`;
+      return;
+    }
+    const ar = once(`answers(${c}, L)`);
+    const ans = Object.fromEntries((ar ? ar.L : []).map(T).map(t => t.args));
+    const steps = r.Steps.map(T).map(t => t.args).filter(([id]) => ans[id] !== undefined);
+    // 答えが2つ以上なら箇条書き、1つなら1文のまま（REVIEW_RULES A7）。並びは止まる答えが先
+    const hr = once(`heads(${c}, L)`);
+    const hs = hr ? hr.L.map(String) : [];
+    const big = hs.length > 1 ? `<ul>${hs.map(h => `<li>${esc(h)}</li>`).join("")}</ul>` : esc(r.Head);
+    $("answer").innerHTML = `<div class="verdict"><div class="vhead">${HEAD}<div class="big">${big}</div></div>
+      ${steps.map(([id, title, s], i) => stepHTML("st-" + id, `${i + 1}　${title}`, s, ans[id])).join("")}
+      <p class="sec">根拠条文</p><p class="arts" id="arts">${r.Arts.length ? artsHTML(r.Arts) : "当てはまる条文はありません。"}</p>
+      ${trees.length ? `<p class="sec">なぜそうなるか（論理の木）</p>${trees.map((ls, i) => treeHTML(ls, i === 0)).join("")}` : ""}</div>`;
+  } catch(e){ $("answer").innerHTML = `<p class="hint">エラー：${esc(e.message)}</p>`; }
+}
+
+// ---- 例（名前は起きた事実の言葉で書く。条文の文を写さず、指示語で始めない（REVIEW_RULES C2・C4））----
+function presetList(){
+  // 欄の値は DEFAULTS から変えるものだけ書く。2026-11-26 42欄で組み直した（前の例82個は入口 iri・集会の話 shanashi つきで、
+  // 「瑕疵の除去の変更」「著しい変更」「保存行為」「変更が専有部分に特別の影響」「通知していない事項・特別の定数の事項」のような
+  // 条文の語と、「変更・100人・出席51・賛成39」のような欄の値の並びの名前だった）。数は区分所有者100人・議決権100（1人1個）を既定にし、
+  // 境目の数（4分の3 で出席51なら賛成39と38 など）は前の例と同じ値にした。
+  // 18の「形や働きを大きく変える工事」には例の工事の名前を入れない（決め3）
+  const v = (kotogara, o, a, more = {}) => ({kotogara, deh:String(o), dev:String(o), sanh:String(a), sanv:String(a), ...more});
+  const T2 = {jiki:"二月より前"};   // 建替えの集会は、会日の2か月より前に通知を出したことにそろえる（62条4項）
+  const W = {koui:"した"};
+  return [
+    // 集会の開き方
+    ["管理者が集会を招集し、管理者を選び直す", {}],
+    ["管理者がいるのに、区分所有者が管理者に頼まず集会を招集した", {hirakikata:"区分所有者"}],
+    ["管理者がいないので、区分所有者20人が集会を招集した", {kanrisha:"いない",hirakikata:"区分所有者"}],
+    ["管理者がいないので、区分所有者19人が集会を招集した", {kanrisha:"いない",hirakikata:"区分所有者",seih:"19",seiv:"19"}],
+    ["管理者がいないのに、管理者が招集したことになっている", {kanrisha:"いない"}],
+    ["管理者に招集を頼んだが、2週間たっても通知が出ない", {hirakikata:"請求"}],
+    ["管理者に招集を頼み、4週間以内の日を会日とする通知が出た", {hirakikata:"請求",tsuchi:"以内"}],
+    ["管理者に招集を頼んだが、会日が4週間より後の通知が出た", {hirakikata:"請求",tsuchi:"後"}],
+    ["規約で10分の1と決めていて、10人で管理者に招集を頼んだ", {hirakikata:"請求",seih:"10",seiv:"10",gn:"1",gd:"10"}],
+    ["全員が同意して、招集の手続をせずに集会を開いた", {hirakikata:"省略",zenin:"省略"}],
+    ["全員の同意が無いまま、招集の手続をせずに集会を開いた", {hirakikata:"省略"}],
+    ["全員が承諾して、集会を開かずに書面で決める", {hirakikata:"書面",zenin:"承諾"}],
+    ["集会を開かず、決める事柄に全員が書面で合意した", {hirakikata:"書面",zenin:"合意"}],
+    ["全員の承諾が無いまま、集会を開かずに書面で決めようとした", {hirakikata:"書面"}],
+    // 招集の通知
+    ["会日の5日前に通知を出した", {jiki:"一週より後"}],
+    ["規約で通知の期間を伸ばしているのに、伸ばした期間に足りない", {nobi:"期間に足りない"}],
+    ["通知に、決める事柄は書いたが、案の中身を書かなかった", {yoryo:"事柄だけ"}],
+    ["通知に書いていない事柄を、集会で決めた", {yoryo:"書いていない"}],
+    ["通知に書いていない事柄を決めた。規約に、決めてよいと書いてある", {yoryo:"書いていない",jikou:"書いてある"}],
+    ["通知に書いていない規約の変更を決めた。規約に、決めてよいと書いてある", v("規約",51,39,{yoryo:"書いていない",jikou:"書いてある"})],
+    ["全員の同意で開いた集会で、通知に書いていない事柄を決めた", {hirakikata:"省略",zenin:"省略",yoryo:"書いていない"}],
+    // 出席と賛成
+    ["形や働きを大きく変える工事に、出席51人のうち39人が賛成", v("変更",51,39)],
+    ["形や働きを大きく変える工事に、出席51人のうち38人が賛成", v("変更",51,38)],
+    ["形や働きを大きく変える工事に、出席50人の全員が賛成", v("変更",50,50)],
+    // 7・8の欄は前は 2人・議決権20 で、人数と議決権が食い違って見えた（LLMレビューの直しの決め4。管理者の招集なので判定には響かない）
+    ["10人で議決権100の建物で、工事に8人が賛成したが、賛成の議決権は70", {zh:"10",zv:"100",seih:"2",seiv:"2",...v("変更",10,8),dev:"100",sanv:"70"}],
+    ["10人で議決権100の建物で、工事に7人が賛成し、賛成の議決権は80", {zh:"10",zv:"100",seih:"2",seiv:"20",...v("変更",10,7),dev:"100",sanv:"80"}],
+    ["傷んだ設備の危険を除く工事に、出席51人のうち34人が賛成", v("瑕疵",51,34)],
+    ["傷んだ設備の危険を除く工事に、出席51人のうち33人が賛成", v("瑕疵",51,33)],
+    ["規約で賛成を5分の3にしていて、工事に出席51人のうち31人が賛成", v("変更",51,31,{sn:"3",sd:"5"})],
+    ["規約で賛成を5分の3にしていて、工事に出席51人のうち30人が賛成", v("変更",51,30,{sn:"3",sd:"5"})],
+    ["規約で賛成を2分の1にしていて、工事に出席51人のうち30人が賛成", v("変更",51,30,{sn:"1",sd:"2"})],
+    ["規約で出席を3分の2にしていて、工事の集会に66人が出席し全員が賛成", v("変更",66,66,{qn:"2",qd:"3"})],
+    ["規約で出席を3分の2にしていて、工事の集会に67人が出席し全員が賛成", v("変更",67,67,{qn:"2",qd:"3"})],
+    ["形や働きを大きく変えない修繕に、出席50人のうち26人が賛成", v("管理",50,26)],
+    ["形や働きを大きく変えない修繕に、出席50人のうち25人が賛成", v("管理",50,25)],
+    ["管理者を選ぶ集会に、100人のうち10人が出席し、6人が賛成", v("普通",10,6)],
+    ["規約を変える集会に、出席51人のうち39人が賛成", v("規約",51,39)],
+    ["規約を変える集会に、出席51人のうち38人が賛成", v("規約",51,38)],
+    // 建替え
+    ["建て替える集会に100人が出席し、80人が賛成", v("建替え",100,80,T2)],
+    ["建て替える集会に100人が出席し、79人が賛成", v("建替え",100,79,T2)],
+    ["建て替える集会に85人が出席し、80人が賛成", v("建替え",85,80,T2)],
+    ["建て替える集会に79人が出席し、全員が賛成", v("建替え",79,79,T2)],
+    ["地震に弱い建物を建て替える集会で、75人が賛成", v("建替え",100,75,{...T2,go:"第一号"})],
+    ["地震に弱い建物を建て替える集会で、74人が賛成", v("建替え",100,74,{...T2,go:"第一号"})],
+    ["火事に弱い建物を建て替える集会で、75人が賛成", v("建替え",100,75,{...T2,go:"第二号"})],
+    ["外壁がはがれ落ちるおそれのある建物を建て替える集会で、75人が賛成", v("建替え",100,75,{...T2,go:"第三号"})],
+    ["配管が傷んだ建物を建て替える集会で、75人が賛成", v("建替え",100,75,{...T2,go:"第四号"})],
+    ["高齢者が動きにくい建物を建て替える集会で、75人が賛成", v("建替え",100,75,{...T2,go:"第五号"})],
+    ["所在の分からない10人を裁判で外し、建て替える集会で72人が賛成", v("建替え",90,72,{...T2,jh:"10",jv:"10"})],
+    ["所在の分からない10人を裁判で外し、建て替える集会で71人が賛成", v("建替え",90,71,{...T2,jh:"10",jv:"10"})],
+    ["建て替える集会の通知を、会日の1か月半前に出した", v("建替え",100,80)],
+    ["建て替える集会の前に、説明会を開かなかった", v("建替え",100,80,{...T2,setsumei:"開いていない"})],
+    // 工事
+    ["壊れた所を元に戻す", {kotogara:"保存"}],
+    ["形や働きを大きく変えない修繕を、規約で決めると書いてある", {kotogara:"管理",kanrikiyaku:"書いてある"}],
+    ["共用部分の損害保険に入る", {kotogara:"保険"}],
+    ["工事で、ある部屋の使い方が大きく損なわれ、持ち主が承諾していない", v("変更",51,39,{eikyo:"承諾なし"})],
+    ["工事で、ある部屋の使い方が大きく損なわれ、持ち主が承諾した", v("変更",51,39,{eikyo:"承諾"})],
+    ["修繕で、ある部屋の使い方が大きく損なわれ、持ち主が承諾していない", v("管理",51,26,{eikyo:"承諾なし"})],
+    ["工事と一緒に部屋の中の工事も決める。規約に定めがある", v("変更",51,39,{senyu:"規約あり"})],
+    ["工事と一緒に部屋の中の工事も決める。規約に定めは無い", v("変更",51,39,{senyu:"規約なし"})],
+    ["修繕と一緒に部屋の中の工事も決める。規約に定めがある", v("管理",51,26,{senyu:"規約あり"})],
+    ["損害保険と一緒に部屋の中の工事も決める。規約に定めがある", {kotogara:"保険",senyu:"規約あり"}],
+    // 規約
+    ["規約を変えると、ある人の権利が大きく損なわれ、本人が承諾していない", v("規約",51,39,{eikyo:"承諾なし"})],
+    ["一部の人だけが使う共用部分の規約を変える。使う20人のうち6人が反対", v("規約",51,39,{ichih:"20",ichiv:"20",hanh:"6",hanv:"6"})],
+    ["一部の人だけが使う共用部分の規約を変える。使う20人のうち5人が反対", v("規約",51,39,{ichih:"20",ichiv:"20",hanh:"5",hanv:"5"})],
+    // 前は「使う人の議決権100のうち26が反対」で、反対した人0人に議決権26があり、使う20人の議決権100が建物全体の100と同じだった（決め5）。
+    // 今は議決権の総数140（使う20人で40・ほかの80人で100）、出席51人・議決権85、賛成39人・議決権64（四分の三は64＝85×3/4を切り上げ）。
+    // 反対3人は4分の1（5人）を超えないが、議決権12は40の4分の1（10）を超えるので、31条2項でできない（結論は前と同じ）
+    ["一部の人だけが使う共用部分の規約を変える。使う20人（議決権40）のうち3人（議決権12）が反対", v("規約",51,39,{zv:"140",dev:"85",sanv:"64",ichih:"20",ichiv:"40",hanh:"3",hanv:"12"})],
+    // 困った住人
+    ["迷惑な行いをした区分所有者に、やめるよう求める", {kotogara:"停止",...W}],
+    ["迷惑な行いをするおそれのある区分所有者に、やめるよう求める", {kotogara:"停止",koui:"おそれ"}],
+    ["迷惑な行いをした、部屋を借りている人に、やめるよう求める", {kotogara:"停止",...W,aite:"占有者"}],
+    ["迷惑な行いをした区分所有者に、管理者がやめるよう訴える", {kotogara:"停止の訴え",...W}],
+    ["迷惑な行いをやめるよう訴える集会で、出席51人のうち25人が賛成", v("停止の訴え",51,25,W)],
+    ["迷惑な行いをしていない区分所有者に、やめるよう訴える", {kotogara:"停止の訴え"}],
+    ["迷惑な行いをやめるよう、決められていない人が訴える", {kotogara:"停止の訴え",...W,dare:"それ以外"}],
+    ["部屋を使わせないよう訴える集会で、出席51人のうち39人が賛成", v("使用禁止",51,39,W)],
+    ["部屋を使わせないよう訴える前に、言い分を聞いていない", v("使用禁止",51,39,{...W,benmei:"与えていない"})],
+    ["やめるよう求めれば足りるのに、部屋を使わせないよう訴える", v("使用禁止",51,39,{...W,konnan:"ほかで足りる"})],
+    ["障害はひどくないが、部屋を使わせないよう訴える", v("使用禁止",51,39,{...W,shogai:"ひどくない"})],
+    ["部屋を使わせないよう、集会で指定された区分所有者が訴える", v("使用禁止",51,39,{...W,dare:"指定"})],
+    ["部屋を貸している区分所有者でなく、借りている人に、部屋を使わせないよう訴える", v("使用禁止",51,39,{...W,aite:"占有者"})],
+    ["区分所有権の競売を訴える集会で、出席51人のうち39人が賛成", v("競売",51,39,W)],
+    ["区分所有権の競売を訴える集会で、出席51人のうち38人が賛成", v("競売",51,38,W)],
+    ["競売を認める判決が確定して6か月", v("競売",51,39,{...W,tsuki:"6"})],
+    ["競売を認める判決が確定して7か月", v("競売",51,39,{...W,tsuki:"7"})],
+    ["競売にかけられた本人が、買い受けを申し出た", v("競売",51,39,{...W,tsuki:"3",kaiuke:"本人"})],
+    ["部屋を借りている人に、契約を解いて部屋を引き渡すよう訴える", v("引渡し",51,39,{...W,aite:"占有者"})],
+    ["部屋の持ち主に、契約を解いて部屋を引き渡すよう訴える", v("引渡し",51,39,W)],
+  ];
+}
+// 例に書いていない欄は既定に戻す（前の例の値を残すと、名前と違う入力になるため。akiya-prolog と同じ）
+// 既定は案A「全組合せの数」の既定（7・8の欄は案に無いので、1の欄100人の5分の1の20にした）。既定のままで「管理者は集会を招集できます（34条1項）」
+// 「招集の通知は足りています（35条1項）」「集会は、通知した事柄を決議できます（37条1項）」「決議は通ります（39条1項）」の4つが付く見込み（画面では確かめていない）
+const DEFAULTS = {zh:"100",zv:"100",jh:"0",jv:"0",kanrisha:"いる",hirakikata:"管理者",seih:"20",seiv:"20",gn:"",gd:"",tsuchi:"出ない",zenin:"なし",
+  jiki:"一週から二月",nobi:"伸ばしていない",yoryo:"案まで",setsumei:"開いた",jikou:"書いていない",kotogara:"普通",go:"なし",kanrikiyaku:"書いていない",
+  deh:"51",dev:"51",sanh:"26",sanv:"26",qn:"",qd:"",sn:"",sd:"",eikyo:"いない",senyu:"決めない",ichih:"",ichiv:"",hanh:"",hanv:"",
+  aite:"区分所有者",koui:"なし",shogai:"ひどい",konnan:"難しい",benmei:"与えた",dare:"管理者",tsuki:"",kaiuke:"それ以外"};
+function setDefaults(p){
+  for (const [id, v] of Object.entries(DEFAULTS)) $(id).value = p[id] !== undefined ? String(p[id]) : v;
+}
+function applyPreset(p){
+  setDefaults(p);
+  ask();
+}
+function renderPresets(){
+  $("presets").innerHTML = presetList().map((p, i) => `<button type="button" data-preset="${i}">${esc(p[0])}</button>`).join("");
+}
+
+// 初期表示（既定の値）
+setDefaults({});
+
+document.addEventListener("change", e => { if (e.target.closest("#slots")) ask(); });
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.preset !== undefined){ applyPreset(presetList()[+b.dataset.preset][1]); $("answer").scrollIntoView?.(); }
+  else if (b.dataset.art && pl){
+    const host = b.closest(".tr") || b.closest("li") || b.parentElement, nx = host.nextElementSibling;
+    if (nx && nx.classList.contains("lawtext") && nx.dataset.for === b.dataset.art) nx.remove();
+    else { host.insertAdjacentHTML("afterend", lawHTML(b.dataset.art)); host.nextElementSibling.dataset.for = b.dataset.art; }
+  }
+});
+
+if (typeof SWIPL === "function") boot();
+else { $("status").classList.add("err"); $("status").querySelector("span").textContent = "Prolog（swipl-wasm）を読み込めませんでした。"; $("answer").innerHTML = `<p class="loading err">Prolog（swipl-wasm）を読み込めませんでした。ページを再読み込みしてください。</p>`; }
+</script>
