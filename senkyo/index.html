@@ -115,12 +115,16 @@ h1 .ao{color:var(--blue)}
 .vhead .big,.vhead .count{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
 .vhead .big{font-size:clamp(1.3rem,4.4vw,2rem);line-height:1.25}
 .vhead .count{font-size:1rem}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
 .law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
 button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
 button.law:hover{border-color:var(--blue)}
 .sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
 .pen{font-size:.86rem}
-.tree{margin-top:6px;font-size:.88rem;min-width:22em}
+.tree{margin-top:6px;font-size:.88rem}
 .tree .tr{display:flex;align-items:stretch}
 .tree .pc{flex:0 0 1.15em;position:relative}
 .tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
@@ -245,7 +249,7 @@ pre{font-family:var(--f-mono);font-size:.76rem;background:var(--paper);border-le
   <section id="answer" aria-live="polite"><p class="loading">でんすけが条文のルール（Prolog・約6MB）を読み込んでいます…</p></section>
 
   <p class="foot techline"><span>公職選挙法 ／ Prolog</span><span class="status" id="status"><i></i><span>Prologを読み込み中（約6MB）…</span></span></p>
-  <p class="foot" id="foot">e-Gov法令検索の公職選挙法（昭和二十五年法律第百号）の原文から、行為を禁止する規定をルールにしたものです。判例は「選挙運動」の定義（最高裁判所 昭和53年1月26日判決）だけを使っています。それ以外の判例・法律の解釈・選挙管理委員会の運用は含みません。実際の判断は選挙管理委員会に確認してください。</p>
+  <p class="foot" id="foot">e-Gov法令検索の公職選挙法（昭和二十五年法律第百号）の原文から、行為を禁止する規定をルールにしたものです。判例は「選挙運動」の定義（最高裁判所 昭和53年1月26日判決）だけを使っています。それ以外の判例・法律の解釈・選挙管理委員会の運用は含みません。公職選挙法の条文は2026年10月5日までに取得した版で、それ以後の改正と、公布済みで施行前の改正は読んでいません。実際の判断は選挙管理委員会に確認してください。</p>
 </div>
 
 <script src="data.js"></script>
@@ -320,10 +324,10 @@ function treeHTML(lines){
   walk(fold(root), [], null);
   const conn = (c, n) => {
     if (!c) return "";
-    const k = n.c.length, title = String(c[2]), tail = title.includes("—") ? " — " + title.split("—").pop().trim() : "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]), tail = title.includes("—") ? " — " + title.split("—").pop().trim() : "";
     const msg = c[1] === "in" ? title.replace("次の一覧", `下の${k}個の一覧`).replace("」の一覧", `」の一覧（下の${k}個）`)
-      : !title.startsWith("次の") ? title.replace("次のどれか", `下の${k}つのどれか`)
-      : c[1] === "and" ? `下の${k}つがすべて成り立つ必要がある` : `下の${k}つのうちどれか1つが成り立てばよい`;
+      : !title.startsWith("次の") ? title.replace("次のどれか", `下の${tsu}のどれか`)
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
     return `<span class="conn c-${c[1]}">${esc(msg + tail)}</span>`;
   };
   return LEGEND + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
@@ -505,7 +509,7 @@ function ask(){
 document.addEventListener("change", e => { if (["actor","time","elec","act"].includes(e.target.id)){ actFilter = ""; limit = 60; ask(); } });
 document.addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b || !pl) return;
-  if (b.dataset.preset){ const p = presetList()[+b.dataset.preset]; actFilter = p[3] || ""; set(p[1], p[2]); }
+  if (b.dataset.preset){ const p = presetList()[+b.dataset.preset]; actFilter = p[3] || ""; set(p[1], p[2]); $("answer").scrollIntoView?.(); }
   else if (b.dataset.want){ want = b.dataset.want; limit = 60; ask(); }
   else if (b.id === "more"){ limit += 120; ask(); }
   else if (b.dataset.art){   // 条文の原文を開く・閉じる

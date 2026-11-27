@@ -115,12 +115,16 @@ h1 .ao{color:var(--blue)}
 .vhead .big,.vhead .count{font-weight:700;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
 .vhead .big{font-size:clamp(1.3rem,4.4vw,2rem);line-height:1.25}
 .vhead .count{font-size:1rem}
+@media (max-width:640px){
+  .vhead{grid-template-columns:minmax(0,1fr)}
+  .densuke-bubble{border-right:0;border-bottom:2px solid var(--line)}
+}
 .law{font-family:var(--f-mono);font-size:.8rem;background:transparent;border:1px solid var(--hair);padding:0 6px;white-space:nowrap}
 button.law{cursor:pointer;color:var(--blue);font:inherit;font-family:var(--f-mono);font-size:.78rem}
 button.law:hover{border-color:var(--blue)}
 .sec{margin-top:12px;font-size:.8rem;font-weight:700;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-bottom:3px}
 .pen{font-size:.86rem}
-.tree{margin-top:6px;font-size:.88rem;min-width:22em}
+.tree{margin-top:6px;font-size:.88rem}
 .tree .tr{display:flex;align-items:stretch}
 .tree .pc{flex:0 0 1.15em;position:relative}
 .tree .pc.rv::before,.tree .pc.rt::before,.tree .pc.rl::before{content:"";position:absolute;left:1.35em;top:0;bottom:0;border-left:1.5px solid var(--muted);opacity:.6}
@@ -343,10 +347,10 @@ function treeHTML(lines){
   walk(fold(root), [], null);
   const conn = (c, n) => {
     if (!c) return "";
-    const k = n.c.length, title = String(c[2]), tail = title.includes("—") ? " — " + title.split("—").pop().trim() : "";
+    const k = n.c.length, tsu = k < 10 ? `${k}つ` : `${k}個`, title = String(c[2]), tail = title.includes("—") ? " — " + title.split("—").pop().trim() : "";
     const msg = c[1] === "in" ? title.replace("次の一覧", `下の${k}個の一覧`).replace("」の一覧", `」の一覧（下の${k}個）`)
-      : !title.startsWith("次の") ? title.replace("次のどれか", `下の${k}つのどれか`)
-      : c[1] === "and" ? `下の${k}つがすべて成り立つ必要がある` : `下の${k}つのうちどれか1つが成り立てばよい`;
+      : !title.startsWith("次の") ? title.replace("次のどれか", `下の${tsu}のどれか`)
+      : c[1] === "and" ? `下の${tsu}がすべて成り立つ必要がある` : `下の${tsu}のうちどれか1つが成り立てばよい`;
     return `<span class="conn c-${c[1]}">${esc(msg + tail)}</span>`;
   };
   return LEGEND + `<div class="tree-wrap"><div class="tree">` + rows.map(({ n, cells }) => {
